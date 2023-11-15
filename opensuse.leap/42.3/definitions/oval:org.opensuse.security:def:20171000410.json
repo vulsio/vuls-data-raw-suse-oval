@@ -1,0 +1,343 @@
+{
+  "id": "oval:org.opensuse.security:def:20171000410",
+  "version": "1",
+  "class": "vulnerability",
+  "metadata": {
+    "Title": "CVE-2017-1000410",
+    "affected": {
+      "family": "unix",
+      "Platform": [
+        "openSUSE Leap 42.3"
+      ]
+    },
+    "reference": [
+      {
+        "ref_id": "CVE-2017-1000410",
+        "ref_url": "http://cve.mitre.org/cgi-bin/cvename.cgi?name=CVE-2017-1000410",
+        "source": "CVE"
+      }
+    ],
+    "Description": "\n    The Linux kernel version 3.3-rc1 and later is affected by a vulnerability lies in the processing of incoming L2CAP commands - ConfigRequest, and ConfigResponse messages. This info leak is a result of uninitialized stack variables that may be returned to an attacker in their uninitialized state. By manipulating the code flows that precede the handling of these configuration messages, an attacker can also gain some control over which data will be held in the uninitialized stack variables. This can allow him to bypass KASLR, and stack canaries protection - as both pointers and stack canaries may be leaked in this manner. Combining this vulnerability (for example) with the previously disclosed RCE vulnerability in L2CAP configuration parsing (CVE-2017-1000251) may allow an attacker to exploit the RCE against kernels which were built with the above mitigations. These are the specifics of this vulnerability: In the function l2cap_parse_conf_rsp and in the function l2cap_parse_conf_req the following variable is declared without initialization: struct l2cap_conf_efs efs; In addition, when parsing input configuration parameters in both of these functions, the switch case for handling EFS elements may skip the memcpy call that will write to the efs variable: ... case L2CAP_CONF_EFS: if (olen == sizeof(efs)) memcpy(&efs, (void *)val, olen); ... The olen in the above if is attacker controlled, and regardless of that if, in both of these functions the efs variable would eventually be added to the outgoing configuration request that is being built: l2cap_add_conf_opt(&ptr, L2CAP_CONF_EFS, sizeof(efs), (unsigned long) &efs); So by sending a configuration request, or response, that contains an L2CAP_CONF_EFS element, but with an element length that is not sizeof(efs) - the memcpy to the uninitialized efs variable can be avoided, and the uninitialized variable would be returned to the attacker (16 bytes).\n    ",
+    "advisory": {
+      "from": "security@suse.de",
+      "Severity": "Moderate",
+      "cve": {
+        "text": "CVE-2017-1000410",
+        "href": "https://www.suse.com/security/cve/CVE-2017-1000410.html"
+      },
+      "bugzilla": [
+        {
+          "text": "SUSE bug 1070535",
+          "href": "https://bugzilla.suse.com/1070535"
+        }
+      ],
+      "issued": {},
+      "updated": {},
+      "affected_cpe_list": {
+        "Cpe": null
+      }
+    }
+  },
+  "criteria": {
+    "operator": "AND",
+    "criterias": [
+      {
+        "operator": "OR",
+        "criterias": [
+          {
+            "operator": "AND",
+            "criterions": [
+              {
+                "test_ref": "oval:org.opensuse.security:tst:2009219074",
+                "comment": "kernel-debug-4.4.103-36 is installed"
+              },
+              {
+                "test_ref": "oval:org.opensuse.security:tst:2009151957",
+                "comment": "kernel-debug is signed with openSUSE key"
+              }
+            ]
+          },
+          {
+            "operator": "AND",
+            "criterions": [
+              {
+                "test_ref": "oval:org.opensuse.security:tst:2009219075",
+                "comment": "kernel-debug-base-4.4.103-36 is installed"
+              },
+              {
+                "test_ref": "oval:org.opensuse.security:tst:2009151958",
+                "comment": "kernel-debug-base is signed with openSUSE key"
+              }
+            ]
+          },
+          {
+            "operator": "AND",
+            "criterions": [
+              {
+                "test_ref": "oval:org.opensuse.security:tst:2009219076",
+                "comment": "kernel-debug-devel-4.4.103-36 is installed"
+              },
+              {
+                "test_ref": "oval:org.opensuse.security:tst:2009151959",
+                "comment": "kernel-debug-devel is signed with openSUSE key"
+              }
+            ]
+          },
+          {
+            "operator": "AND",
+            "criterions": [
+              {
+                "test_ref": "oval:org.opensuse.security:tst:2009219077",
+                "comment": "kernel-default-4.4.103-36 is installed"
+              },
+              {
+                "test_ref": "oval:org.opensuse.security:tst:2009151354",
+                "comment": "kernel-default is signed with openSUSE key"
+              }
+            ]
+          },
+          {
+            "operator": "AND",
+            "criterions": [
+              {
+                "test_ref": "oval:org.opensuse.security:tst:2009219078",
+                "comment": "kernel-default-base-4.4.103-36 is installed"
+              },
+              {
+                "test_ref": "oval:org.opensuse.security:tst:2009151960",
+                "comment": "kernel-default-base is signed with openSUSE key"
+              }
+            ]
+          },
+          {
+            "operator": "AND",
+            "criterions": [
+              {
+                "test_ref": "oval:org.opensuse.security:tst:2009219079",
+                "comment": "kernel-default-devel-4.4.103-36 is installed"
+              },
+              {
+                "test_ref": "oval:org.opensuse.security:tst:2009151355",
+                "comment": "kernel-default-devel is signed with openSUSE key"
+              }
+            ]
+          },
+          {
+            "operator": "AND",
+            "criterions": [
+              {
+                "test_ref": "oval:org.opensuse.security:tst:2009219080",
+                "comment": "kernel-devel-4.4.103-36 is installed"
+              },
+              {
+                "test_ref": "oval:org.opensuse.security:tst:2009151356",
+                "comment": "kernel-devel is signed with openSUSE key"
+              }
+            ]
+          },
+          {
+            "operator": "AND",
+            "criterions": [
+              {
+                "test_ref": "oval:org.opensuse.security:tst:2009219081",
+                "comment": "kernel-docs-4.4.103-36 is installed"
+              },
+              {
+                "test_ref": "oval:org.opensuse.security:tst:2009151357",
+                "comment": "kernel-docs is signed with openSUSE key"
+              }
+            ]
+          },
+          {
+            "operator": "AND",
+            "criterions": [
+              {
+                "test_ref": "oval:org.opensuse.security:tst:2009219082",
+                "comment": "kernel-docs-html-4.4.103-36 is installed"
+              },
+              {
+                "test_ref": "oval:org.opensuse.security:tst:2009151961",
+                "comment": "kernel-docs-html is signed with openSUSE key"
+              }
+            ]
+          },
+          {
+            "operator": "AND",
+            "criterions": [
+              {
+                "test_ref": "oval:org.opensuse.security:tst:2009219083",
+                "comment": "kernel-docs-pdf-4.4.103-36 is installed"
+              },
+              {
+                "test_ref": "oval:org.opensuse.security:tst:2009151962",
+                "comment": "kernel-docs-pdf is signed with openSUSE key"
+              }
+            ]
+          },
+          {
+            "operator": "AND",
+            "criterions": [
+              {
+                "test_ref": "oval:org.opensuse.security:tst:2009219084",
+                "comment": "kernel-macros-4.4.103-36 is installed"
+              },
+              {
+                "test_ref": "oval:org.opensuse.security:tst:2009151358",
+                "comment": "kernel-macros is signed with openSUSE key"
+              }
+            ]
+          },
+          {
+            "operator": "AND",
+            "criterions": [
+              {
+                "test_ref": "oval:org.opensuse.security:tst:2009219085",
+                "comment": "kernel-obs-build-4.4.103-36 is installed"
+              },
+              {
+                "test_ref": "oval:org.opensuse.security:tst:2009151966",
+                "comment": "kernel-obs-build is signed with openSUSE key"
+              }
+            ]
+          },
+          {
+            "operator": "AND",
+            "criterions": [
+              {
+                "test_ref": "oval:org.opensuse.security:tst:2009219086",
+                "comment": "kernel-obs-qa-4.4.103-36 is installed"
+              },
+              {
+                "test_ref": "oval:org.opensuse.security:tst:2009151967",
+                "comment": "kernel-obs-qa is signed with openSUSE key"
+              }
+            ]
+          },
+          {
+            "operator": "AND",
+            "criterions": [
+              {
+                "test_ref": "oval:org.opensuse.security:tst:2009219087",
+                "comment": "kernel-source-4.4.103-36 is installed"
+              },
+              {
+                "test_ref": "oval:org.opensuse.security:tst:2009151360",
+                "comment": "kernel-source is signed with openSUSE key"
+              }
+            ]
+          },
+          {
+            "operator": "AND",
+            "criterions": [
+              {
+                "test_ref": "oval:org.opensuse.security:tst:2009219088",
+                "comment": "kernel-source-vanilla-4.4.103-36 is installed"
+              },
+              {
+                "test_ref": "oval:org.opensuse.security:tst:2009151974",
+                "comment": "kernel-source-vanilla is signed with openSUSE key"
+              }
+            ]
+          },
+          {
+            "operator": "AND",
+            "criterions": [
+              {
+                "test_ref": "oval:org.opensuse.security:tst:2009219089",
+                "comment": "kernel-syms-4.4.103-36 is installed"
+              },
+              {
+                "test_ref": "oval:org.opensuse.security:tst:2009151361",
+                "comment": "kernel-syms is signed with openSUSE key"
+              }
+            ]
+          },
+          {
+            "operator": "AND",
+            "criterions": [
+              {
+                "test_ref": "oval:org.opensuse.security:tst:2009219090",
+                "comment": "kernel-vanilla-4.4.103-36 is installed"
+              },
+              {
+                "test_ref": "oval:org.opensuse.security:tst:2009151975",
+                "comment": "kernel-vanilla is signed with openSUSE key"
+              }
+            ]
+          },
+          {
+            "operator": "AND",
+            "criterions": [
+              {
+                "test_ref": "oval:org.opensuse.security:tst:2009219091",
+                "comment": "kernel-vanilla-base-4.4.103-36 is installed"
+              },
+              {
+                "test_ref": "oval:org.opensuse.security:tst:2009154129",
+                "comment": "kernel-vanilla-base is signed with openSUSE key"
+              }
+            ]
+          },
+          {
+            "operator": "AND",
+            "criterions": [
+              {
+                "test_ref": "oval:org.opensuse.security:tst:2009219092",
+                "comment": "kernel-vanilla-devel-4.4.103-36 is installed"
+              },
+              {
+                "test_ref": "oval:org.opensuse.security:tst:2009151976",
+                "comment": "kernel-vanilla-devel is signed with openSUSE key"
+              }
+            ]
+          },
+          {
+            "operator": "AND",
+            "criterions": [
+              {
+                "test_ref": "oval:org.opensuse.security:tst:2009219093",
+                "comment": "kselftests-kmp-debug-4.4.103-36 is installed"
+              },
+              {
+                "test_ref": "oval:org.opensuse.security:tst:2009168713",
+                "comment": "kselftests-kmp-debug is signed with openSUSE key"
+              }
+            ]
+          },
+          {
+            "operator": "AND",
+            "criterions": [
+              {
+                "test_ref": "oval:org.opensuse.security:tst:2009219094",
+                "comment": "kselftests-kmp-default-4.4.103-36 is installed"
+              },
+              {
+                "test_ref": "oval:org.opensuse.security:tst:2009168714",
+                "comment": "kselftests-kmp-default is signed with openSUSE key"
+              }
+            ]
+          },
+          {
+            "operator": "AND",
+            "criterions": [
+              {
+                "test_ref": "oval:org.opensuse.security:tst:2009219095",
+                "comment": "kselftests-kmp-vanilla-4.4.103-36 is installed"
+              },
+              {
+                "test_ref": "oval:org.opensuse.security:tst:2009168715",
+                "comment": "kselftests-kmp-vanilla is signed with openSUSE key"
+              }
+            ]
+          }
+        ]
+      }
+    ],
+    "criterions": [
+      {
+        "test_ref": "oval:org.opensuse.security:tst:2009159611",
+        "comment": "openSUSE Leap 42.3 is installed"
+      }
+    ]
+  }
+}

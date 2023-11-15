@@ -1,0 +1,83 @@
+{
+  "id": "oval:org.opensuse.security:def:202137652",
+  "version": "1",
+  "class": "vulnerability",
+  "metadata": {
+    "Title": "CVE-2021-37652",
+    "affected": {
+      "family": "unix",
+      "Platform": [
+        "openSUSE Tumbleweed"
+      ]
+    },
+    "reference": [
+      {
+        "ref_id": "Mitre CVE-2021-37652",
+        "ref_url": "https://cve.mitre.org/cgi-bin/cvename.cgi?name=CVE-2021-37652",
+        "source": "CVE"
+      },
+      {
+        "ref_id": "SUSE CVE-2021-37652",
+        "ref_url": "https://www.suse.com/security/cve/CVE-2021-37652",
+        "source": "SUSE CVE"
+      },
+      {
+        "ref_id": "openSUSE-SU-2022:10014-1",
+        "ref_url": "https://lists.opensuse.org/archives/list/security-announce@lists.opensuse.org/thread/U25ZU2T5T4LOLSIYIMGC5PLU4PQQMJE5/",
+        "source": "SUSE-SU"
+      }
+    ],
+    "Description": "\n    TensorFlow is an end-to-end open source platform for machine learning. In affected versions the implementation for `tf.raw_ops.BoostedTreesCreateEnsemble` can result in a use after free error if an attacker supplies specially crafted arguments. The [implementation](https://github.com/tensorflow/tensorflow/blob/f24faa153ad31a4b51578f8181d3aaab77a1ddeb/tensorflow/core/kernels/boosted_trees/resource_ops.cc#L55) uses a reference counted resource and decrements the refcount if the initialization fails, as it should. However, when the code was written, the resource was represented as a naked pointer but later refactoring has changed it to be a smart pointer. Thus, when the pointer leaves the scope, a subsequent `free`-ing of the resource occurs, but this fails to take into account that the refcount has already reached 0, thus the resource has been already freed. During this double-free process, members of the resource object are accessed for cleanup but they are invalid as the entire resource has been freed. We have patched the issue in GitHub commit 5ecec9c6fbdbc6be03295685190a45e7eee726ab. The fix will be included in TensorFlow 2.6.0. We will also cherrypick this commit on TensorFlow 2.5.1, TensorFlow 2.4.3, and TensorFlow 2.3.4, as these are also affected and still in supported range.\n    ",
+    "advisory": {
+      "from": "security@suse.de",
+      "Severity": "Important",
+      "cve": {
+        "text": "CVE-2021-37652",
+        "href": "https://www.suse.com/security/cve/CVE-2021-37652/",
+        "impact": "important",
+        "cvss3": "7.8/CVSS:3.1/AV:L/AC:L/PR:L/UI:N/S:U/C:H/I:H/A:H"
+      },
+      "bugzilla": [
+        {
+          "text": "SUSE bug 1189423",
+          "href": "https://bugzilla.suse.com/1189423"
+        }
+      ],
+      "issued": {
+        "date": "2022-06-30"
+      },
+      "updated": {
+        "date": "2023-01-14"
+      },
+      "affected_cpe_list": {
+        "Cpe": [
+          "cpe:/o:opensuse:tumbleweed"
+        ]
+      }
+    }
+  },
+  "criteria": {
+    "operator": "AND",
+    "criterias": [
+      {
+        "operator": "OR",
+        "criterions": [
+          {
+            "test_ref": "oval:org.opensuse.security:tst:2009698443",
+            "comment": "tensorflow-lite-2.9.1-1.1 is installed"
+          },
+          {
+            "test_ref": "oval:org.opensuse.security:tst:2009698444",
+            "comment": "tensorflow-lite-devel-2.9.1-1.1 is installed"
+          }
+        ]
+      }
+    ],
+    "criterions": [
+      {
+        "test_ref": "oval:org.opensuse.security:tst:2009634834",
+        "comment": "openSUSE Tumbleweed is installed"
+      }
+    ]
+  }
+}

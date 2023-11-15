@@ -1,0 +1,61 @@
+{
+  "id": "oval:org.opensuse.security:def:202224791",
+  "version": "1",
+  "class": "vulnerability",
+  "metadata": {
+    "Title": "CVE-2022-24791",
+    "affected": {
+      "family": "unix",
+      "Platform": [
+        "openSUSE Tumbleweed"
+      ]
+    },
+    "reference": [
+      {
+        "ref_id": "Mitre CVE-2022-24791",
+        "ref_url": "https://cve.mitre.org/cgi-bin/cvename.cgi?name=CVE-2022-24791",
+        "source": "CVE"
+      },
+      {
+        "ref_id": "SUSE CVE-2022-24791",
+        "ref_url": "https://www.suse.com/security/cve/CVE-2022-24791",
+        "source": "SUSE CVE"
+      }
+    ],
+    "Description": "\n    Wasmtime is a standalone JIT-style runtime for WebAssembly, using Cranelift. There is a use after free vulnerability in Wasmtime when both running Wasm that uses externrefs and enabling epoch interruption in Wasmtime. If you are not explicitly enabling epoch interruption (it is disabled by default) then you are not affected. If you are explicitly disabling the Wasm reference types proposal (it is enabled by default) then you are also not affected. The use after free is caused by Cranelift failing to emit stack maps when there are safepoints inside cold blocks. Cold blocks occur when epoch interruption is enabled. Cold blocks are emitted at the end of compiled functions, and change the order blocks are emitted versus defined. This reordering accidentally caused Cranelift to skip emitting some stack maps because it expected to emit the stack maps in block definition order, rather than block emission order. When Wasmtime would eventually collect garbage, it would fail to find live references on the stack because of the missing stack maps, think that they were unreferenced garbage, and therefore reclaim them. Then after the collection ended, the Wasm code could use the reclaimed-too-early references, which is a use after free. Patches have been released in versions 0.34.2 and 0.35.2, which fix the vulnerability. All Wasmtime users are recommended to upgrade to these patched versions. If upgrading is not an option for you at this time, you can avoid the vulnerability by either: disabling the Wasm reference types proposal, config.wasm_reference_types(false); or by disabling epoch interruption if you were previously enabling it. config.epoch_interruption(false).\n    ",
+    "advisory": {
+      "from": "security@suse.de",
+      "Severity": "Moderate",
+      "cve": {
+        "text": "CVE-2022-24791",
+        "href": "https://www.suse.com/security/cve/CVE-2022-24791/",
+        "impact": "moderate",
+        "cvss3": "9.8/CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:H/I:H/A:H"
+      },
+      "issued": {
+        "date": "2022-04-23"
+      },
+      "updated": {
+        "date": "2023-01-14"
+      },
+      "affected_cpe_list": {
+        "Cpe": [
+          "cpe:/o:opensuse:tumbleweed"
+        ]
+      }
+    }
+  },
+  "criteria": {
+    "operator": "AND",
+    "criterions": [
+      {
+        "test_ref": "oval:org.opensuse.security:tst:2009634834",
+        "comment": "openSUSE Tumbleweed is installed"
+      },
+      {
+        "test_ref": "oval:org.opensuse.security:tst:2009680735",
+        "comment": "cargo-audit-advisory-db-20220420-1.1 is installed"
+      }
+    ]
+  }
+}
