@@ -1,174 +1,174 @@
 {
-  "id": "oval:org.opensuse.security:def:202241725",
-  "version": "1",
-  "class": "vulnerability",
-  "metadata": {
-    "Title": "CVE-2022-41725",
-    "affected": {
-      "family": "unix",
-      "Platform": [
-        "openSUSE Leap 15.5"
-      ]
-    },
-    "reference": [
-      {
-        "ref_id": "Mitre CVE-2022-41725",
-        "ref_url": "https://cve.mitre.org/cgi-bin/cvename.cgi?name=CVE-2022-41725",
-        "source": "CVE"
-      },
-      {
-        "ref_id": "SUSE CVE-2022-41725",
-        "ref_url": "https://www.suse.com/security/cve/CVE-2022-41725",
-        "source": "SUSE CVE"
-      },
-      {
-        "ref_id": "SUSE-CU-2023:1897-1",
-        "ref_url": "https://lists.suse.com/pipermail/sle-security-updates/2023-June/015197.html",
-        "source": "SUSE-SU"
-      },
-      {
-        "ref_id": "SUSE-CU-2023:2729-1",
-        "ref_url": "https://lists.suse.com/pipermail/sle-security-updates/2023-August/015974.html",
-        "source": "SUSE-SU"
-      },
-      {
-        "ref_id": "SUSE-CU-2023:674-1",
-        "ref_url": "https://lists.suse.com/pipermail/sle-security-updates/2023-March/014046.html",
-        "source": "SUSE-SU"
-      },
-      {
-        "ref_id": "SUSE-CU-2023:768-1",
-        "ref_url": "https://lists.suse.com/pipermail/sle-security-updates/2023-March/014137.html",
-        "source": "SUSE-SU"
-      },
-      {
-        "ref_id": "SUSE-CU-2023:776-1",
-        "ref_url": "https://lists.suse.com/pipermail/sle-security-updates/2023-March/014142.html",
-        "source": "SUSE-SU"
-      },
-      {
-        "ref_id": "SUSE-CU-2023:785-1",
-        "ref_url": "https://lists.suse.com/pipermail/sle-security-updates/2023-March/014159.html",
-        "source": "SUSE-SU"
-      },
-      {
-        "ref_id": "SUSE-CU-2023:789-1",
-        "ref_url": "https://lists.suse.com/pipermail/sle-security-updates/2023-March/014160.html",
-        "source": "SUSE-SU"
-      },
-      {
-        "ref_id": "SUSE-CU-2023:802-1",
-        "ref_url": "https://lists.suse.com/pipermail/sle-security-updates/2023-March/014176.html",
-        "source": "SUSE-SU"
-      },
-      {
-        "ref_id": "SUSE-SU-2023:0733-1",
-        "ref_url": "https://lists.suse.com/pipermail/sle-security-updates/2023-March/014038.html",
-        "source": "SUSE-SU"
-      },
-      {
-        "ref_id": "SUSE-SU-2023:0735-1",
-        "ref_url": "https://lists.suse.com/pipermail/sle-security-updates/2023-March/014037.html",
-        "source": "SUSE-SU"
-      },
-      {
-        "ref_id": "SUSE-SU-2023:0869-1",
-        "ref_url": "https://lists.suse.com/pipermail/sle-security-updates/2023-March/014132.html",
-        "source": "SUSE-SU"
-      },
-      {
-        "ref_id": "SUSE-SU-2023:0871-1",
-        "ref_url": "https://lists.suse.com/pipermail/sle-security-updates/2023-March/014139.html",
-        "source": "SUSE-SU"
-      },
-      {
-        "ref_id": "SUSE-SU-2023:2312-1",
-        "ref_url": "https://lists.suse.com/pipermail/sle-security-updates/2023-May/015005.html",
-        "source": "SUSE-SU"
-      }
-    ],
-    "Description": "\n    A denial of service is possible from excessive resource consumption in net/http and mime/multipart. Multipart form parsing with mime/multipart.Reader.ReadForm can consume largely unlimited amounts of memory and disk files. This also affects form parsing in the net/http package with the Request methods FormFile, FormValue, ParseMultipartForm, and PostFormValue. ReadForm takes a maxMemory parameter, and is documented as storing \"up to maxMemory bytes +10MB (reserved for non-file parts) in memory\". File parts which cannot be stored in memory are stored on disk in temporary files. The unconfigurable 10MB reserved for non-file parts is excessively large and can potentially open a denial of service vector on its own. However, ReadForm did not properly account for all memory consumed by a parsed form, such as map entry overhead, part names, and MIME headers, permitting a maliciously crafted form to consume well over 10MB. In addition, ReadForm contained no limit on the number of disk files created, permitting a relatively small request body to create a large number of disk temporary files. With fix, ReadForm now properly accounts for various forms of memory overhead, and should now stay within its documented limit of 10MB + maxMemory bytes of memory consumption. Users should still be aware that this limit is high and may still be hazardous. In addition, ReadForm now creates at most one on-disk temporary file, combining multiple form parts into a single temporary file. The mime/multipart.File interface type's documentation states, \"If stored on disk, the File's underlying concrete type will be an *os.File.\". This is no longer the case when a form contains more than one file part, due to this coalescing of parts into a single file. The previous behavior of using distinct files for each form part may be reenabled with the environment variable GODEBUG=multipartfiles=distinct. Users should be aware that multipart.ReadForm and the http.Request methods that call it do not limit the amount of disk consumed by temporary files. Callers can limit the size of form data with http.MaxBytesReader.\n    ",
-    "advisory": {
-      "from": "security@suse.de",
-      "Severity": "Moderate",
-      "cve": {
-        "text": "CVE-2022-41725",
-        "href": "https://www.suse.com/security/cve/CVE-2022-41725/",
-        "impact": "moderate",
-        "cvss3": "6.5/CVSS:3.1/AV:N/AC:L/PR:L/UI:N/S:U/C:N/I:N/A:H"
-      },
-      "bugzilla": [
-        {
-          "text": "SUSE bug 1208272",
-          "href": "https://bugzilla.suse.com/1208272"
-        }
-      ],
-      "issued": {
-        "date": "2023-06-22"
-      },
-      "updated": {
-        "date": "2023-08-21"
-      },
-      "affected_cpe_list": {
-        "Cpe": [
-          "cpe:/o:opensuse:leap:15.5"
-        ]
-      }
-    }
-  },
-  "criteria": {
-    "operator": "AND",
-    "criterias": [
-      {
-        "operator": "OR",
-        "criterias": [
-          {
-            "operator": "AND",
-            "criterions": [
-              {
-                "test_ref": "oval:org.opensuse.security:tst:2009762638",
-                "comment": "go1.18-openssl-1.18.10.1-150000.1.9.1 is installed"
-              },
-              {
-                "test_ref": "oval:org.opensuse.security:tst:2009763790",
-                "comment": "go1.18-openssl is signed with openSUSE key"
-              }
-            ]
-          },
-          {
-            "operator": "AND",
-            "criterions": [
-              {
-                "test_ref": "oval:org.opensuse.security:tst:2009762639",
-                "comment": "go1.18-openssl-doc-1.18.10.1-150000.1.9.1 is installed"
-              },
-              {
-                "test_ref": "oval:org.opensuse.security:tst:2009763791",
-                "comment": "go1.18-openssl-doc is signed with openSUSE key"
-              }
-            ]
-          },
-          {
-            "operator": "AND",
-            "criterions": [
-              {
-                "test_ref": "oval:org.opensuse.security:tst:2009762640",
-                "comment": "go1.18-openssl-race-1.18.10.1-150000.1.9.1 is installed"
-              },
-              {
-                "test_ref": "oval:org.opensuse.security:tst:2009763792",
-                "comment": "go1.18-openssl-race is signed with openSUSE key"
-              }
-            ]
-          }
-        ]
-      }
-    ],
-    "criterions": [
-      {
-        "test_ref": "oval:org.opensuse.security:tst:2009752682",
-        "comment": "openSUSE Leap 15.5 is installed"
-      }
-    ]
-  }
+	"id": "oval:org.opensuse.security:def:202241725",
+	"version": "1",
+	"class": "vulnerability",
+	"metadata": {
+		"Title": "CVE-2022-41725",
+		"affected": {
+			"family": "unix",
+			"Platform": [
+				"openSUSE Leap 15.5"
+			]
+		},
+		"reference": [
+			{
+				"ref_id": "Mitre CVE-2022-41725",
+				"ref_url": "https://cve.mitre.org/cgi-bin/cvename.cgi?name=CVE-2022-41725",
+				"source": "CVE"
+			},
+			{
+				"ref_id": "SUSE CVE-2022-41725",
+				"ref_url": "https://www.suse.com/security/cve/CVE-2022-41725",
+				"source": "SUSE CVE"
+			},
+			{
+				"ref_id": "SUSE-CU-2023:1897-1",
+				"ref_url": "https://lists.suse.com/pipermail/sle-security-updates/2023-June/015197.html",
+				"source": "SUSE-SU"
+			},
+			{
+				"ref_id": "SUSE-CU-2023:2729-1",
+				"ref_url": "https://lists.suse.com/pipermail/sle-security-updates/2023-August/015974.html",
+				"source": "SUSE-SU"
+			},
+			{
+				"ref_id": "SUSE-CU-2023:674-1",
+				"ref_url": "https://lists.suse.com/pipermail/sle-security-updates/2023-March/014046.html",
+				"source": "SUSE-SU"
+			},
+			{
+				"ref_id": "SUSE-CU-2023:768-1",
+				"ref_url": "https://lists.suse.com/pipermail/sle-security-updates/2023-March/014137.html",
+				"source": "SUSE-SU"
+			},
+			{
+				"ref_id": "SUSE-CU-2023:776-1",
+				"ref_url": "https://lists.suse.com/pipermail/sle-security-updates/2023-March/014142.html",
+				"source": "SUSE-SU"
+			},
+			{
+				"ref_id": "SUSE-CU-2023:785-1",
+				"ref_url": "https://lists.suse.com/pipermail/sle-security-updates/2023-March/014159.html",
+				"source": "SUSE-SU"
+			},
+			{
+				"ref_id": "SUSE-CU-2023:789-1",
+				"ref_url": "https://lists.suse.com/pipermail/sle-security-updates/2023-March/014160.html",
+				"source": "SUSE-SU"
+			},
+			{
+				"ref_id": "SUSE-CU-2023:802-1",
+				"ref_url": "https://lists.suse.com/pipermail/sle-security-updates/2023-March/014176.html",
+				"source": "SUSE-SU"
+			},
+			{
+				"ref_id": "SUSE-SU-2023:0733-1",
+				"ref_url": "https://lists.suse.com/pipermail/sle-security-updates/2023-March/014038.html",
+				"source": "SUSE-SU"
+			},
+			{
+				"ref_id": "SUSE-SU-2023:0735-1",
+				"ref_url": "https://lists.suse.com/pipermail/sle-security-updates/2023-March/014037.html",
+				"source": "SUSE-SU"
+			},
+			{
+				"ref_id": "SUSE-SU-2023:0869-1",
+				"ref_url": "https://lists.suse.com/pipermail/sle-security-updates/2023-March/014132.html",
+				"source": "SUSE-SU"
+			},
+			{
+				"ref_id": "SUSE-SU-2023:0871-1",
+				"ref_url": "https://lists.suse.com/pipermail/sle-security-updates/2023-March/014139.html",
+				"source": "SUSE-SU"
+			},
+			{
+				"ref_id": "SUSE-SU-2023:2312-1",
+				"ref_url": "https://lists.suse.com/pipermail/sle-security-updates/2023-May/015005.html",
+				"source": "SUSE-SU"
+			}
+		],
+		"Description": "\n    A denial of service is possible from excessive resource consumption in net/http and mime/multipart. Multipart form parsing with mime/multipart.Reader.ReadForm can consume largely unlimited amounts of memory and disk files. This also affects form parsing in the net/http package with the Request methods FormFile, FormValue, ParseMultipartForm, and PostFormValue. ReadForm takes a maxMemory parameter, and is documented as storing \"up to maxMemory bytes +10MB (reserved for non-file parts) in memory\". File parts which cannot be stored in memory are stored on disk in temporary files. The unconfigurable 10MB reserved for non-file parts is excessively large and can potentially open a denial of service vector on its own. However, ReadForm did not properly account for all memory consumed by a parsed form, such as map entry overhead, part names, and MIME headers, permitting a maliciously crafted form to consume well over 10MB. In addition, ReadForm contained no limit on the number of disk files created, permitting a relatively small request body to create a large number of disk temporary files. With fix, ReadForm now properly accounts for various forms of memory overhead, and should now stay within its documented limit of 10MB + maxMemory bytes of memory consumption. Users should still be aware that this limit is high and may still be hazardous. In addition, ReadForm now creates at most one on-disk temporary file, combining multiple form parts into a single temporary file. The mime/multipart.File interface type's documentation states, \"If stored on disk, the File's underlying concrete type will be an *os.File.\". This is no longer the case when a form contains more than one file part, due to this coalescing of parts into a single file. The previous behavior of using distinct files for each form part may be reenabled with the environment variable GODEBUG=multipartfiles=distinct. Users should be aware that multipart.ReadForm and the http.Request methods that call it do not limit the amount of disk consumed by temporary files. Callers can limit the size of form data with http.MaxBytesReader.\n    ",
+		"advisory": {
+			"from": "security@suse.de",
+			"Severity": "Moderate",
+			"cve": {
+				"text": "CVE-2022-41725",
+				"href": "https://www.suse.com/security/cve/CVE-2022-41725/",
+				"impact": "moderate",
+				"cvss3": "6.5/CVSS:3.1/AV:N/AC:L/PR:L/UI:N/S:U/C:N/I:N/A:H"
+			},
+			"bugzilla": [
+				{
+					"text": "SUSE bug 1208272",
+					"href": "https://bugzilla.suse.com/1208272"
+				}
+			],
+			"issued": {
+				"date": "2023-06-22"
+			},
+			"updated": {
+				"date": "2023-08-21"
+			},
+			"affected_cpe_list": {
+				"Cpe": [
+					"cpe:/o:opensuse:leap:15.5"
+				]
+			}
+		}
+	},
+	"criteria": {
+		"operator": "AND",
+		"criterias": [
+			{
+				"operator": "OR",
+				"criterias": [
+					{
+						"operator": "AND",
+						"criterions": [
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009762638",
+								"comment": "go1.18-openssl-1.18.10.1-150000.1.9.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009763790",
+								"comment": "go1.18-openssl is signed with openSUSE key"
+							}
+						]
+					},
+					{
+						"operator": "AND",
+						"criterions": [
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009762639",
+								"comment": "go1.18-openssl-doc-1.18.10.1-150000.1.9.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009763791",
+								"comment": "go1.18-openssl-doc is signed with openSUSE key"
+							}
+						]
+					},
+					{
+						"operator": "AND",
+						"criterions": [
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009762640",
+								"comment": "go1.18-openssl-race-1.18.10.1-150000.1.9.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009763792",
+								"comment": "go1.18-openssl-race is signed with openSUSE key"
+							}
+						]
+					}
+				]
+			}
+		],
+		"criterions": [
+			{
+				"test_ref": "oval:org.opensuse.security:tst:2009752682",
+				"comment": "openSUSE Leap 15.5 is installed"
+			}
+		]
+	}
 }

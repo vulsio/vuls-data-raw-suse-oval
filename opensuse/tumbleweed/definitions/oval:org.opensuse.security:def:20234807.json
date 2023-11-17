@@ -1,122 +1,122 @@
 {
-  "id": "oval:org.opensuse.security:def:20234807",
-  "version": "1",
-  "class": "vulnerability",
-  "metadata": {
-    "Title": "CVE-2023-4807",
-    "affected": {
-      "family": "unix",
-      "Platform": [
-        "openSUSE Tumbleweed"
-      ]
-    },
-    "reference": [
-      {
-        "ref_id": "Mitre CVE-2023-4807",
-        "ref_url": "https://cve.mitre.org/cgi-bin/cvename.cgi?name=CVE-2023-4807",
-        "source": "CVE"
-      },
-      {
-        "ref_id": "SUSE CVE-2023-4807",
-        "ref_url": "https://www.suse.com/security/cve/CVE-2023-4807",
-        "source": "SUSE CVE"
-      }
-    ],
-    "Description": "\n    Issue summary: The POLY1305 MAC (message authentication code) implementation\ncontains a bug that might corrupt the internal state of applications on the\nWindows 64 platform when running on newer X86_64 processors supporting the\nAVX512-IFMA instructions.\n\nImpact summary: If in an application that uses the OpenSSL library an attacker\ncan influence whether the POLY1305 MAC algorithm is used, the application\nstate might be corrupted with various application dependent consequences.\n\nThe POLY1305 MAC (message authentication code) implementation in OpenSSL does\nnot save the contents of non-volatile XMM registers on Windows 64 platform\nwhen calculating the MAC of data larger than 64 bytes. Before returning to\nthe caller all the XMM registers are set to zero rather than restoring their\nprevious content. The vulnerable code is used only on newer x86_64 processors\nsupporting the AVX512-IFMA instructions.\n\nThe consequences of this kind of internal application state corruption can\nbe various - from no consequences, if the calling application does not\ndepend on the contents of non-volatile XMM registers at all, to the worst\nconsequences, where the attacker could get complete control of the application\nprocess. However given the contents of the registers are just zeroized so\nthe attacker cannot put arbitrary values inside, the most likely consequence,\nif any, would be an incorrect result of some application dependent\ncalculations or a crash leading to a denial of service.\n\nThe POLY1305 MAC algorithm is most frequently used as part of the\nCHACHA20-POLY1305 AEAD (authenticated encryption with associated data)\nalgorithm. The most common usage of this AEAD cipher is with TLS protocol\nversions 1.2 and 1.3 and a malicious client can influence whether this AEAD\ncipher is used by the server. This implies that server applications using\nOpenSSL can be potentially impacted. However we are currently not aware of\nany concrete application that would be affected by this issue therefore we\nconsider this a Low severity security issue.\n\nAs a workaround the AVX512-IFMA instructions support can be disabled at\nruntime by setting the environment variable OPENSSL_ia32cap:\n\n   OPENSSL_ia32cap=:~0x200000\n\nThe FIPS provider is not affected by this issue.\n    ",
-    "advisory": {
-      "from": "security@suse.de",
-      "Severity": "Important",
-      "cve": {
-        "text": "CVE-2023-4807",
-        "href": "https://www.suse.com/security/cve/CVE-2023-4807/",
-        "impact": "important",
-        "cvss3": "7.8/CVSS:3.1/AV:L/AC:L/PR:L/UI:N/S:U/C:H/I:H/A:H"
-      },
-      "bugzilla": [
-        {
-          "text": "SUSE bug 1215170",
-          "href": "https://bugzilla.suse.com/1215170"
-        }
-      ],
-      "issued": {
-        "date": "2023-09-18"
-      },
-      "updated": {
-        "date": "2023-10-05"
-      },
-      "affected_cpe_list": {
-        "Cpe": [
-          "cpe:/o:opensuse:tumbleweed"
-        ]
-      }
-    }
-  },
-  "criteria": {
-    "operator": "AND",
-    "criterias": [
-      {
-        "operator": "OR",
-        "criterions": [
-          {
-            "test_ref": "oval:org.opensuse.security:tst:2009795826",
-            "comment": "libopenssl-1_1-devel-1.1.1w-1.1 is installed"
-          },
-          {
-            "test_ref": "oval:org.opensuse.security:tst:2009795827",
-            "comment": "libopenssl-1_1-devel-32bit-1.1.1w-1.1 is installed"
-          },
-          {
-            "test_ref": "oval:org.opensuse.security:tst:2009800100",
-            "comment": "libopenssl-3-devel-3.1.3-1.2 is installed"
-          },
-          {
-            "test_ref": "oval:org.opensuse.security:tst:2009800101",
-            "comment": "libopenssl-3-devel-32bit-3.1.3-1.2 is installed"
-          },
-          {
-            "test_ref": "oval:org.opensuse.security:tst:2009795828",
-            "comment": "libopenssl1_1-1.1.1w-1.1 is installed"
-          },
-          {
-            "test_ref": "oval:org.opensuse.security:tst:2009795829",
-            "comment": "libopenssl1_1-32bit-1.1.1w-1.1 is installed"
-          },
-          {
-            "test_ref": "oval:org.opensuse.security:tst:2009800102",
-            "comment": "libopenssl3-3.1.3-1.2 is installed"
-          },
-          {
-            "test_ref": "oval:org.opensuse.security:tst:2009800103",
-            "comment": "libopenssl3-32bit-3.1.3-1.2 is installed"
-          },
-          {
-            "test_ref": "oval:org.opensuse.security:tst:2009800104",
-            "comment": "libopenssl3-x86-64-v3-3.1.3-1.2 is installed"
-          },
-          {
-            "test_ref": "oval:org.opensuse.security:tst:2009795830",
-            "comment": "openssl-1_1-1.1.1w-1.1 is installed"
-          },
-          {
-            "test_ref": "oval:org.opensuse.security:tst:2009795831",
-            "comment": "openssl-1_1-doc-1.1.1w-1.1 is installed"
-          },
-          {
-            "test_ref": "oval:org.opensuse.security:tst:2009800105",
-            "comment": "openssl-3-3.1.3-1.2 is installed"
-          },
-          {
-            "test_ref": "oval:org.opensuse.security:tst:2009800106",
-            "comment": "openssl-3-doc-3.1.3-1.2 is installed"
-          }
-        ]
-      }
-    ],
-    "criterions": [
-      {
-        "test_ref": "oval:org.opensuse.security:tst:2009634834",
-        "comment": "openSUSE Tumbleweed is installed"
-      }
-    ]
-  }
+	"id": "oval:org.opensuse.security:def:20234807",
+	"version": "1",
+	"class": "vulnerability",
+	"metadata": {
+		"Title": "CVE-2023-4807",
+		"affected": {
+			"family": "unix",
+			"Platform": [
+				"openSUSE Tumbleweed"
+			]
+		},
+		"reference": [
+			{
+				"ref_id": "Mitre CVE-2023-4807",
+				"ref_url": "https://cve.mitre.org/cgi-bin/cvename.cgi?name=CVE-2023-4807",
+				"source": "CVE"
+			},
+			{
+				"ref_id": "SUSE CVE-2023-4807",
+				"ref_url": "https://www.suse.com/security/cve/CVE-2023-4807",
+				"source": "SUSE CVE"
+			}
+		],
+		"Description": "\n    Issue summary: The POLY1305 MAC (message authentication code) implementation\ncontains a bug that might corrupt the internal state of applications on the\nWindows 64 platform when running on newer X86_64 processors supporting the\nAVX512-IFMA instructions.\n\nImpact summary: If in an application that uses the OpenSSL library an attacker\ncan influence whether the POLY1305 MAC algorithm is used, the application\nstate might be corrupted with various application dependent consequences.\n\nThe POLY1305 MAC (message authentication code) implementation in OpenSSL does\nnot save the contents of non-volatile XMM registers on Windows 64 platform\nwhen calculating the MAC of data larger than 64 bytes. Before returning to\nthe caller all the XMM registers are set to zero rather than restoring their\nprevious content. The vulnerable code is used only on newer x86_64 processors\nsupporting the AVX512-IFMA instructions.\n\nThe consequences of this kind of internal application state corruption can\nbe various - from no consequences, if the calling application does not\ndepend on the contents of non-volatile XMM registers at all, to the worst\nconsequences, where the attacker could get complete control of the application\nprocess. However given the contents of the registers are just zeroized so\nthe attacker cannot put arbitrary values inside, the most likely consequence,\nif any, would be an incorrect result of some application dependent\ncalculations or a crash leading to a denial of service.\n\nThe POLY1305 MAC algorithm is most frequently used as part of the\nCHACHA20-POLY1305 AEAD (authenticated encryption with associated data)\nalgorithm. The most common usage of this AEAD cipher is with TLS protocol\nversions 1.2 and 1.3 and a malicious client can influence whether this AEAD\ncipher is used by the server. This implies that server applications using\nOpenSSL can be potentially impacted. However we are currently not aware of\nany concrete application that would be affected by this issue therefore we\nconsider this a Low severity security issue.\n\nAs a workaround the AVX512-IFMA instructions support can be disabled at\nruntime by setting the environment variable OPENSSL_ia32cap:\n\n   OPENSSL_ia32cap=:~0x200000\n\nThe FIPS provider is not affected by this issue.\n    ",
+		"advisory": {
+			"from": "security@suse.de",
+			"Severity": "Important",
+			"cve": {
+				"text": "CVE-2023-4807",
+				"href": "https://www.suse.com/security/cve/CVE-2023-4807/",
+				"impact": "important",
+				"cvss3": "7.8/CVSS:3.1/AV:L/AC:L/PR:L/UI:N/S:U/C:H/I:H/A:H"
+			},
+			"bugzilla": [
+				{
+					"text": "SUSE bug 1215170",
+					"href": "https://bugzilla.suse.com/1215170"
+				}
+			],
+			"issued": {
+				"date": "2023-09-18"
+			},
+			"updated": {
+				"date": "2023-10-05"
+			},
+			"affected_cpe_list": {
+				"Cpe": [
+					"cpe:/o:opensuse:tumbleweed"
+				]
+			}
+		}
+	},
+	"criteria": {
+		"operator": "AND",
+		"criterias": [
+			{
+				"operator": "OR",
+				"criterions": [
+					{
+						"test_ref": "oval:org.opensuse.security:tst:2009795826",
+						"comment": "libopenssl-1_1-devel-1.1.1w-1.1 is installed"
+					},
+					{
+						"test_ref": "oval:org.opensuse.security:tst:2009795827",
+						"comment": "libopenssl-1_1-devel-32bit-1.1.1w-1.1 is installed"
+					},
+					{
+						"test_ref": "oval:org.opensuse.security:tst:2009800100",
+						"comment": "libopenssl-3-devel-3.1.3-1.2 is installed"
+					},
+					{
+						"test_ref": "oval:org.opensuse.security:tst:2009800101",
+						"comment": "libopenssl-3-devel-32bit-3.1.3-1.2 is installed"
+					},
+					{
+						"test_ref": "oval:org.opensuse.security:tst:2009795828",
+						"comment": "libopenssl1_1-1.1.1w-1.1 is installed"
+					},
+					{
+						"test_ref": "oval:org.opensuse.security:tst:2009795829",
+						"comment": "libopenssl1_1-32bit-1.1.1w-1.1 is installed"
+					},
+					{
+						"test_ref": "oval:org.opensuse.security:tst:2009800102",
+						"comment": "libopenssl3-3.1.3-1.2 is installed"
+					},
+					{
+						"test_ref": "oval:org.opensuse.security:tst:2009800103",
+						"comment": "libopenssl3-32bit-3.1.3-1.2 is installed"
+					},
+					{
+						"test_ref": "oval:org.opensuse.security:tst:2009800104",
+						"comment": "libopenssl3-x86-64-v3-3.1.3-1.2 is installed"
+					},
+					{
+						"test_ref": "oval:org.opensuse.security:tst:2009795830",
+						"comment": "openssl-1_1-1.1.1w-1.1 is installed"
+					},
+					{
+						"test_ref": "oval:org.opensuse.security:tst:2009795831",
+						"comment": "openssl-1_1-doc-1.1.1w-1.1 is installed"
+					},
+					{
+						"test_ref": "oval:org.opensuse.security:tst:2009800105",
+						"comment": "openssl-3-3.1.3-1.2 is installed"
+					},
+					{
+						"test_ref": "oval:org.opensuse.security:tst:2009800106",
+						"comment": "openssl-3-doc-3.1.3-1.2 is installed"
+					}
+				]
+			}
+		],
+		"criterions": [
+			{
+				"test_ref": "oval:org.opensuse.security:tst:2009634834",
+				"comment": "openSUSE Tumbleweed is installed"
+			}
+		]
+	}
 }
