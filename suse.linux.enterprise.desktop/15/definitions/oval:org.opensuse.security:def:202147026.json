@@ -1,0 +1,162 @@
+{
+	"id": "oval:org.opensuse.security:def:202147026",
+	"version": "1",
+	"class": "vulnerability",
+	"metadata": {
+		"Title": "CVE-2021-47026",
+		"affected": {
+			"family": "unix",
+			"Platform": [
+				"SUSE Linux Enterprise Desktop 15 SP5",
+				"SUSE Linux Enterprise High Performance Computing 15 SP5",
+				"SUSE Linux Enterprise Module for Basesystem 15 SP5",
+				"SUSE Linux Enterprise Module for Development Tools 15 SP5",
+				"SUSE Linux Enterprise Server 15 SP5",
+				"SUSE Linux Enterprise Server for SAP Applications 15 SP5"
+			]
+		},
+		"reference": [
+			{
+				"ref_id": "Mitre CVE-2021-47026",
+				"ref_url": "https://cve.mitre.org/cgi-bin/cvename.cgi?name=CVE-2021-47026",
+				"source": "CVE"
+			},
+			{
+				"ref_id": "SUSE CVE-2021-47026",
+				"ref_url": "https://www.suse.com/security/cve/CVE-2021-47026",
+				"source": "SUSE CVE"
+			}
+		],
+		"Description": "\n    In the Linux kernel, the following vulnerability has been resolved:\n\nRDMA/rtrs-clt: destroy sysfs after removing session from active list\n\nA session can be removed dynamically by sysfs interface \"remove_path\" that\neventually calls rtrs_clt_remove_path_from_sysfs function.  The current\nrtrs_clt_remove_path_from_sysfs first removes the sysfs interfaces and\nfrees sess->stats object. Second it removes the session from the active\nlist.\n\nTherefore some functions could access non-connected session and access the\nfreed sess->stats object even-if they check the session status before\naccessing the session.\n\nFor instance rtrs_clt_request and get_next_path_min_inflight check the\nsession status and try to send IO to the session.  The session status\ncould be changed when they are trying to send IO but they could not catch\nthe change and update the statistics information in sess->stats object,\nand generate use-after-free problem.\n(see: \"RDMA/rtrs-clt: Check state of the rtrs_clt_sess before reading its\nstats\")\n\nThis patch changes the rtrs_clt_remove_path_from_sysfs to remove the\nsession from the active session list and then destroy the sysfs\ninterfaces.\n\nEach function still should check the session status because closing or\nerror recovery paths can change the status.\n    ",
+		"advisory": {
+			"from": "security@suse.de",
+			"Severity": "Low",
+			"cve": {
+				"text": "CVE-2021-47026",
+				"href": "https://www.suse.com/security/cve/CVE-2021-47026/",
+				"impact": "low"
+			},
+			"bugzilla": [
+				{
+					"text": "SUSE bug 1220685",
+					"href": "https://bugzilla.suse.com/1220685"
+				}
+			],
+			"issued": {
+				"date": "2024-03-01"
+			},
+			"updated": {
+				"date": "2024-03-01"
+			},
+			"affected_cpe_list": {
+				"Cpe": [
+					"cpe:/o:suse:sle-module-basesystem:15:sp5",
+					"cpe:/o:suse:sle-module-development-tools:15:sp5",
+					"cpe:/o:suse:sle_hpc:15:sp5",
+					"cpe:/o:suse:sled:15:sp5",
+					"cpe:/o:suse:sles:15:sp5",
+					"cpe:/o:suse:sles_sap:15:sp5"
+				]
+			}
+		}
+	},
+	"criteria": {
+		"operator": "OR",
+		"criterias": [
+			{
+				"operator": "AND",
+				"criterias": [
+					{
+						"operator": "OR",
+						"criterions": [
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009759898",
+								"comment": "SUSE Linux Enterprise Desktop 15 SP5 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009759899",
+								"comment": "SUSE Linux Enterprise High Performance Computing 15 SP5 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009760583",
+								"comment": "SUSE Linux Enterprise Module for Development Tools 15 SP5 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009759901",
+								"comment": "SUSE Linux Enterprise Server 15 SP5 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009759902",
+								"comment": "SUSE Linux Enterprise Server for SAP Applications 15 SP5 is installed"
+							}
+						]
+					},
+					{
+						"operator": "OR",
+						"criterions": [
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009334017",
+								"comment": "kernel-default is not affected"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009333928",
+								"comment": "kernel-source is not affected"
+							}
+						]
+					}
+				]
+			},
+			{
+				"operator": "AND",
+				"criterias": [
+					{
+						"operator": "OR",
+						"criterions": [
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009759898",
+								"comment": "SUSE Linux Enterprise Desktop 15 SP5 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009759899",
+								"comment": "SUSE Linux Enterprise High Performance Computing 15 SP5 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009759900",
+								"comment": "SUSE Linux Enterprise Module for Basesystem 15 SP5 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009759901",
+								"comment": "SUSE Linux Enterprise Server 15 SP5 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009759902",
+								"comment": "SUSE Linux Enterprise Server for SAP Applications 15 SP5 is installed"
+							}
+						]
+					},
+					{
+						"operator": "OR",
+						"criterions": [
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009334017",
+								"comment": "kernel-default is not affected"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009335423",
+								"comment": "kernel-default-devel is not affected"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009334791",
+								"comment": "kernel-devel is not affected"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009334792",
+								"comment": "kernel-macros is not affected"
+							}
+						]
+					}
+				]
+			}
+		]
+	}
+}
