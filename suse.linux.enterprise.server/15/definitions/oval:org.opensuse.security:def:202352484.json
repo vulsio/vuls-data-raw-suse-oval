@@ -1,0 +1,294 @@
+{
+	"id": "oval:org.opensuse.security:def:202352484",
+	"version": "1",
+	"class": "vulnerability",
+	"metadata": {
+		"Title": "CVE-2023-52484",
+		"affected": {
+			"family": "unix",
+			"Platform": [
+				"SUSE Enterprise Storage 7",
+				"SUSE Enterprise Storage 7.1",
+				"SUSE Linux Enterprise High Performance Computing 15 SP2",
+				"SUSE Linux Enterprise High Performance Computing 15 SP3",
+				"SUSE Linux Enterprise Module for Public Cloud 15 SP2",
+				"SUSE Linux Enterprise Module for Public Cloud 15 SP3",
+				"SUSE Linux Enterprise Server 15 SP1-LTSS",
+				"SUSE Linux Enterprise Server 15 SP2",
+				"SUSE Linux Enterprise Server 15 SP2-LTSS",
+				"SUSE Linux Enterprise Server 15 SP3",
+				"SUSE Linux Enterprise Server 15 SP3-LTSS",
+				"SUSE Linux Enterprise Server 15-LTSS",
+				"SUSE Linux Enterprise Server for SAP Applications 15 SP2",
+				"SUSE Linux Enterprise Server for SAP Applications 15 SP3",
+				"SUSE Manager Proxy 4.1",
+				"SUSE Manager Proxy 4.2",
+				"SUSE Manager Retail Branch Server 4.1",
+				"SUSE Manager Retail Branch Server 4.2",
+				"SUSE Manager Server 4.1",
+				"SUSE Manager Server 4.2"
+			]
+		},
+		"reference": [
+			{
+				"ref_id": "Mitre CVE-2023-52484",
+				"ref_url": "https://cve.mitre.org/cgi-bin/cvename.cgi?name=CVE-2023-52484",
+				"source": "CVE"
+			},
+			{
+				"ref_id": "SUSE CVE-2023-52484",
+				"ref_url": "https://www.suse.com/security/cve/CVE-2023-52484",
+				"source": "SUSE CVE"
+			}
+		],
+		"Description": "\n    In the Linux kernel, the following vulnerability has been resolved:\n\niommu/arm-smmu-v3: Fix soft lockup triggered by arm_smmu_mm_invalidate_range\n\nWhen running an SVA case, the following soft lockup is triggered:\n--------------------------------------------------------------------\nwatchdog: BUG: soft lockup - CPU#244 stuck for 26s!\npstate: 83400009 (Nzcv daif +PAN -UAO +TCO +DIT -SSBS BTYPE=--)\npc : arm_smmu_cmdq_issue_cmdlist+0x178/0xa50\nlr : arm_smmu_cmdq_issue_cmdlist+0x150/0xa50\nsp : ffff8000d83ef290\nx29: ffff8000d83ef290 x28: 000000003b9aca00 x27: 0000000000000000\nx26: ffff8000d83ef3c0 x25: da86c0812194a0e8 x24: 0000000000000000\nx23: 0000000000000040 x22: ffff8000d83ef340 x21: ffff0000c63980c0\nx20: 0000000000000001 x19: ffff0000c6398080 x18: 0000000000000000\nx17: 0000000000000000 x16: 0000000000000000 x15: ffff3000b4a3bbb0\nx14: ffff3000b4a30888 x13: ffff3000b4a3cf60 x12: 0000000000000000\nx11: 0000000000000000 x10: 0000000000000000 x9 : ffffc08120e4d6bc\nx8 : 0000000000000000 x7 : 0000000000000000 x6 : 0000000000048cfa\nx5 : 0000000000000000 x4 : 0000000000000001 x3 : 000000000000000a\nx2 : 0000000080000000 x1 : 0000000000000000 x0 : 0000000000000001\nCall trace:\n arm_smmu_cmdq_issue_cmdlist+0x178/0xa50\n __arm_smmu_tlb_inv_range+0x118/0x254\n arm_smmu_tlb_inv_range_asid+0x6c/0x130\n arm_smmu_mm_invalidate_range+0xa0/0xa4\n __mmu_notifier_invalidate_range_end+0x88/0x120\n unmap_vmas+0x194/0x1e0\n unmap_region+0xb4/0x144\n do_mas_align_munmap+0x290/0x490\n do_mas_munmap+0xbc/0x124\n __vm_munmap+0xa8/0x19c\n __arm64_sys_munmap+0x28/0x50\n invoke_syscall+0x78/0x11c\n el0_svc_common.constprop.0+0x58/0x1c0\n do_el0_svc+0x34/0x60\n el0_svc+0x2c/0xd4\n el0t_64_sync_handler+0x114/0x140\n el0t_64_sync+0x1a4/0x1a8\n--------------------------------------------------------------------\n\nNote that since 6.6-rc1 the arm_smmu_mm_invalidate_range above is renamed\nto \"arm_smmu_mm_arch_invalidate_secondary_tlbs\", yet the problem remains.\n\nThe commit 06ff87bae8d3 (\"arm64: mm: remove unused functions and variable\nprotoypes\") fixed a similar lockup on the CPU MMU side. Yet, it can occur\nto SMMU too, since arm_smmu_mm_arch_invalidate_secondary_tlbs() is called\ntypically next to MMU tlb flush function, e.g.\n\ttlb_flush_mmu_tlbonly {\n\t\ttlb_flush {\n\t\t\t__flush_tlb_range {\n\t\t\t\t// check MAX_TLBI_OPS\n\t\t\t}\n\t\t}\n\t\tmmu_notifier_arch_invalidate_secondary_tlbs {\n\t\t\tarm_smmu_mm_arch_invalidate_secondary_tlbs {\n\t\t\t\t// does not check MAX_TLBI_OPS\n\t\t\t}\n\t\t}\n\t}\n\nClone a CMDQ_MAX_TLBI_OPS from the MAX_TLBI_OPS in tlbflush.h, since in an\nSVA case SMMU uses the CPU page table, so it makes sense to align with the\ntlbflush code. Then, replace per-page TLBI commands with a single per-asid\nTLBI command, if the request size hits this threshold.\n    ",
+		"advisory": {
+			"from": "security@suse.de",
+			"Severity": "Moderate",
+			"cve": {
+				"text": "CVE-2023-52484",
+				"href": "https://www.suse.com/security/cve/CVE-2023-52484/",
+				"impact": "moderate",
+				"cvss3": "5.5/CVSS:3.1/AV:L/AC:L/PR:L/UI:N/S:U/C:N/I:N/A:H"
+			},
+			"bugzilla": [
+				{
+					"text": "SUSE bug 1220797",
+					"href": "https://bugzilla.suse.com/1220797"
+				}
+			],
+			"issued": {
+				"date": "2024-03-07"
+			},
+			"updated": {
+				"date": "2024-03-07"
+			},
+			"affected_cpe_list": {
+				"Cpe": [
+					"cpe:/o:suse:ses:7",
+					"cpe:/o:suse:ses:7.1",
+					"cpe:/o:suse:sle-module-public-cloud:15:sp2",
+					"cpe:/o:suse:sle-module-public-cloud:15:sp3",
+					"cpe:/o:suse:sle_hpc:15:sp2",
+					"cpe:/o:suse:sle_hpc:15:sp3",
+					"cpe:/o:suse:sles-ltss:15",
+					"cpe:/o:suse:sles-ltss:15:sp1",
+					"cpe:/o:suse:sles-ltss:15:sp2",
+					"cpe:/o:suse:sles-ltss:15:sp3",
+					"cpe:/o:suse:sles:15:sp2",
+					"cpe:/o:suse:sles:15:sp3",
+					"cpe:/o:suse:sles_sap:15:sp2",
+					"cpe:/o:suse:sles_sap:15:sp3",
+					"cpe:/o:suse:suse-manager-proxy:4.1",
+					"cpe:/o:suse:suse-manager-proxy:4.2",
+					"cpe:/o:suse:suse-manager-retail-branch-server:4.1",
+					"cpe:/o:suse:suse-manager-retail-branch-server:4.2",
+					"cpe:/o:suse:suse-manager-server:4.1",
+					"cpe:/o:suse:suse-manager-server:4.2"
+				]
+			}
+		}
+	},
+	"criteria": {
+		"operator": "OR",
+		"criterias": [
+			{
+				"operator": "AND",
+				"criterias": [
+					{
+						"operator": "OR",
+						"criterions": [
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009660213",
+								"comment": "SUSE Linux Enterprise Server 15 SP2-LTSS is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009729178",
+								"comment": "SUSE Linux Enterprise Server 15 SP3-LTSS is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009659637",
+								"comment": "SUSE Linux Enterprise Server for SAP Applications 15 SP2 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009669878",
+								"comment": "SUSE Linux Enterprise Server for SAP Applications 15 SP3 is installed"
+							}
+						]
+					},
+					{
+						"operator": "OR",
+						"criterions": [
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009334017",
+								"comment": "kernel-default is not affected"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009335423",
+								"comment": "kernel-default-devel is not affected"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009338037",
+								"comment": "reiserfs-kmp-default is not affected"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009334791",
+								"comment": "kernel-devel is not affected"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009334792",
+								"comment": "kernel-macros is not affected"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009333928",
+								"comment": "kernel-source is not affected"
+							}
+						]
+					}
+				]
+			},
+			{
+				"operator": "AND",
+				"criterias": [
+					{
+						"operator": "OR",
+						"criterions": [
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009341508",
+								"comment": "SUSE Linux Enterprise Server 15 SP1-LTSS is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009302033",
+								"comment": "SUSE Linux Enterprise Server 15-LTSS is installed"
+							}
+						]
+					},
+					{
+						"operator": "OR",
+						"criterions": [
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009334017",
+								"comment": "kernel-default is not affected"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009335425",
+								"comment": "kernel-default-base is not affected"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009335423",
+								"comment": "kernel-default-devel is not affected"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009335426",
+								"comment": "kernel-default-man is not affected"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009338037",
+								"comment": "reiserfs-kmp-default is not affected"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009334791",
+								"comment": "kernel-devel is not affected"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009334792",
+								"comment": "kernel-macros is not affected"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009333928",
+								"comment": "kernel-source is not affected"
+							}
+						]
+					}
+				]
+			},
+			{
+				"operator": "AND",
+				"criterias": [
+					{
+						"operator": "OR",
+						"criterions": [
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009302786",
+								"comment": "SUSE Enterprise Storage 7 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009681000",
+								"comment": "SUSE Enterprise Storage 7.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009479728",
+								"comment": "SUSE Linux Enterprise High Performance Computing 15 SP2 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009669877",
+								"comment": "SUSE Linux Enterprise High Performance Computing 15 SP3 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009287160",
+								"comment": "SUSE Linux Enterprise Module for Public Cloud 15 SP2 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009351817",
+								"comment": "SUSE Linux Enterprise Module for Public Cloud 15 SP3 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009303870",
+								"comment": "SUSE Linux Enterprise Server 15 SP2 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009476340",
+								"comment": "SUSE Linux Enterprise Server 15 SP3 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009659637",
+								"comment": "SUSE Linux Enterprise Server for SAP Applications 15 SP2 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009669878",
+								"comment": "SUSE Linux Enterprise Server for SAP Applications 15 SP3 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009302537",
+								"comment": "SUSE Manager Proxy 4.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009669879",
+								"comment": "SUSE Manager Proxy 4.2 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009346072",
+								"comment": "SUSE Manager Retail Branch Server 4.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009677266",
+								"comment": "SUSE Manager Retail Branch Server 4.2 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009302605",
+								"comment": "SUSE Manager Server 4.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009669880",
+								"comment": "SUSE Manager Server 4.2 is installed"
+							}
+						]
+					},
+					{
+						"operator": "OR",
+						"criterions": [
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009340306",
+								"comment": "kernel-devel-azure is not affected"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009340305",
+								"comment": "kernel-source-azure is not affected"
+							}
+						]
+					}
+				]
+			}
+		]
+	}
+}

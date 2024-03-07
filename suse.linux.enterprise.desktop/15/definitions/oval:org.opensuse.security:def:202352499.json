@@ -1,0 +1,162 @@
+{
+	"id": "oval:org.opensuse.security:def:202352499",
+	"version": "1",
+	"class": "vulnerability",
+	"metadata": {
+		"Title": "CVE-2023-52499",
+		"affected": {
+			"family": "unix",
+			"Platform": [
+				"SUSE Linux Enterprise Desktop 15 SP5",
+				"SUSE Linux Enterprise High Performance Computing 15 SP5",
+				"SUSE Linux Enterprise Module for Basesystem 15 SP5",
+				"SUSE Linux Enterprise Module for Development Tools 15 SP5",
+				"SUSE Linux Enterprise Server 15 SP5",
+				"SUSE Linux Enterprise Server for SAP Applications 15 SP5"
+			]
+		},
+		"reference": [
+			{
+				"ref_id": "Mitre CVE-2023-52499",
+				"ref_url": "https://cve.mitre.org/cgi-bin/cvename.cgi?name=CVE-2023-52499",
+				"source": "CVE"
+			},
+			{
+				"ref_id": "SUSE CVE-2023-52499",
+				"ref_url": "https://www.suse.com/security/cve/CVE-2023-52499",
+				"source": "SUSE CVE"
+			}
+		],
+		"Description": "\n    In the Linux kernel, the following vulnerability has been resolved:\n\npowerpc/47x: Fix 47x syscall return crash\n\nEddie reported that newer kernels were crashing during boot on his 476\nFSP2 system:\n\n  kernel tried to execute user page (b7ee2000) - exploit attempt? (uid: 0)\n  BUG: Unable to handle kernel instruction fetch\n  Faulting instruction address: 0xb7ee2000\n  Oops: Kernel access of bad area, sig: 11 [#1]\n  BE PAGE_SIZE=4K FSP-2\n  Modules linked in:\n  CPU: 0 PID: 61 Comm: mount Not tainted 6.1.55-d23900f.ppcnf-fsp2 #1\n  Hardware name: ibm,fsp2 476fpe 0x7ff520c0 FSP-2\n  NIP:? b7ee2000 LR: 8c008000 CTR: 00000000\n  REGS: bffebd83 TRAP: 0400?? Not tainted (6.1.55-d23900f.ppcnf-fs p2)\n  MSR:? 00000030 <IR,DR>? CR: 00001000? XER: 20000000\n  GPR00: c00110ac bffebe63 bffebe7e bffebe88 8c008000 00001000 00000d12 b7ee2000\n  GPR08: 00000033 00000000 00000000 c139df10 48224824 1016c314 10160000 00000000\n  GPR16: 10160000 10160000 00000008 00000000 10160000 00000000 10160000 1017f5b0\n  GPR24: 1017fa50 1017f4f0 1017fa50 1017f740 1017f630 00000000 00000000 1017f4f0\n  NIP [b7ee2000] 0xb7ee2000\n  LR [8c008000] 0x8c008000\n  Call Trace:\n  Instruction dump:\n  XXXXXXXX XXXXXXXX XXXXXXXX XXXXXXXX XXXXXXXX XXXXXXXX XXXXXXXX XXXXXXXX\n  XXXXXXXX XXXXXXXX XXXXXXXX XXXXXXXX XXXXXXXX XXXXXXXX XXXXXXXX XXXXXXXX\n  ---[ end trace 0000000000000000 ]---\n\nThe problem is in ret_from_syscall where the check for\nicache_44x_need_flush is done. When the flush is needed the code jumps\nout-of-line to do the flush, and then intends to jump back to continue\nthe syscall return.\n\nHowever the branch back to label 1b doesn't return to the correct\nlocation, instead branching back just prior to the return to userspace,\ncausing bogus register values to be used by the rfi.\n\nThe breakage was introduced by commit 6f76a01173cc\n(\"powerpc/syscall: implement system call entry/exit logic in C for PPC32\") which\ninadvertently removed the \"1\" label and reused it elsewhere.\n\nFix it by adding named local labels in the correct locations. Note that\nthe return label needs to be outside the ifdef so that CONFIG_PPC_47x=n\ncompiles.\n    ",
+		"advisory": {
+			"from": "security@suse.de",
+			"Severity": "Moderate",
+			"cve": {
+				"text": "CVE-2023-52499",
+				"href": "https://www.suse.com/security/cve/CVE-2023-52499/",
+				"impact": "moderate"
+			},
+			"bugzilla": [
+				{
+					"text": "SUSE bug 1220881",
+					"href": "https://bugzilla.suse.com/1220881"
+				}
+			],
+			"issued": {
+				"date": "2024-03-07"
+			},
+			"updated": {
+				"date": "2024-03-07"
+			},
+			"affected_cpe_list": {
+				"Cpe": [
+					"cpe:/o:suse:sle-module-basesystem:15:sp5",
+					"cpe:/o:suse:sle-module-development-tools:15:sp5",
+					"cpe:/o:suse:sle_hpc:15:sp5",
+					"cpe:/o:suse:sled:15:sp5",
+					"cpe:/o:suse:sles:15:sp5",
+					"cpe:/o:suse:sles_sap:15:sp5"
+				]
+			}
+		}
+	},
+	"criteria": {
+		"operator": "OR",
+		"criterias": [
+			{
+				"operator": "AND",
+				"criterias": [
+					{
+						"operator": "OR",
+						"criterions": [
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009759898",
+								"comment": "SUSE Linux Enterprise Desktop 15 SP5 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009759899",
+								"comment": "SUSE Linux Enterprise High Performance Computing 15 SP5 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009760583",
+								"comment": "SUSE Linux Enterprise Module for Development Tools 15 SP5 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009759901",
+								"comment": "SUSE Linux Enterprise Server 15 SP5 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009759902",
+								"comment": "SUSE Linux Enterprise Server for SAP Applications 15 SP5 is installed"
+							}
+						]
+					},
+					{
+						"operator": "OR",
+						"criterions": [
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009334017",
+								"comment": "kernel-default is not affected"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009333928",
+								"comment": "kernel-source is not affected"
+							}
+						]
+					}
+				]
+			},
+			{
+				"operator": "AND",
+				"criterias": [
+					{
+						"operator": "OR",
+						"criterions": [
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009759898",
+								"comment": "SUSE Linux Enterprise Desktop 15 SP5 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009759899",
+								"comment": "SUSE Linux Enterprise High Performance Computing 15 SP5 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009759900",
+								"comment": "SUSE Linux Enterprise Module for Basesystem 15 SP5 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009759901",
+								"comment": "SUSE Linux Enterprise Server 15 SP5 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009759902",
+								"comment": "SUSE Linux Enterprise Server for SAP Applications 15 SP5 is installed"
+							}
+						]
+					},
+					{
+						"operator": "OR",
+						"criterions": [
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009334017",
+								"comment": "kernel-default is not affected"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009335423",
+								"comment": "kernel-default-devel is not affected"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009334791",
+								"comment": "kernel-devel is not affected"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009334792",
+								"comment": "kernel-macros is not affected"
+							}
+						]
+					}
+				]
+			}
+		]
+	}
+}

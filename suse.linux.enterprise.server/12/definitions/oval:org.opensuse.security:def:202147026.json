@@ -31,11 +31,11 @@
 		"Description": "\n    In the Linux kernel, the following vulnerability has been resolved:\n\nRDMA/rtrs-clt: destroy sysfs after removing session from active list\n\nA session can be removed dynamically by sysfs interface \"remove_path\" that\neventually calls rtrs_clt_remove_path_from_sysfs function.  The current\nrtrs_clt_remove_path_from_sysfs first removes the sysfs interfaces and\nfrees sess->stats object. Second it removes the session from the active\nlist.\n\nTherefore some functions could access non-connected session and access the\nfreed sess->stats object even-if they check the session status before\naccessing the session.\n\nFor instance rtrs_clt_request and get_next_path_min_inflight check the\nsession status and try to send IO to the session.  The session status\ncould be changed when they are trying to send IO but they could not catch\nthe change and update the statistics information in sess->stats object,\nand generate use-after-free problem.\n(see: \"RDMA/rtrs-clt: Check state of the rtrs_clt_sess before reading its\nstats\")\n\nThis patch changes the rtrs_clt_remove_path_from_sysfs to remove the\nsession from the active session list and then destroy the sysfs\ninterfaces.\n\nEach function still should check the session status because closing or\nerror recovery paths can change the status.\n    ",
 		"advisory": {
 			"from": "security@suse.de",
-			"Severity": "Low",
+			"Severity": "Moderate",
 			"cve": {
 				"text": "CVE-2021-47026",
 				"href": "https://www.suse.com/security/cve/CVE-2021-47026/",
-				"impact": "low"
+				"impact": "moderate"
 			},
 			"bugzilla": [
 				{
@@ -47,7 +47,7 @@
 				"date": "2024-03-01"
 			},
 			"updated": {
-				"date": "2024-03-01"
+				"date": "2024-03-07"
 			},
 			"affected_cpe_list": {
 				"Cpe": [
