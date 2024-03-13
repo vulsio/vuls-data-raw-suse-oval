@@ -1,0 +1,197 @@
+{
+	"id": "oval:org.opensuse.security:def:202426591",
+	"version": "1",
+	"class": "vulnerability",
+	"metadata": {
+		"Title": "CVE-2024-26591",
+		"affected": {
+			"family": "unix",
+			"Platform": [
+				"SUSE Linux Enterprise Desktop 15 SP5",
+				"SUSE Linux Enterprise High Performance Computing 15 SP5",
+				"SUSE Linux Enterprise Module for Basesystem 15 SP5",
+				"SUSE Linux Enterprise Module for Development Tools 15 SP5",
+				"SUSE Linux Enterprise Server 15 SP5",
+				"SUSE Linux Enterprise Server for SAP Applications 15 SP5"
+			]
+		},
+		"reference": [
+			{
+				"ref_id": "Mitre CVE-2024-26591",
+				"ref_url": "https://cve.mitre.org/cgi-bin/cvename.cgi?name=CVE-2024-26591",
+				"source": "CVE"
+			},
+			{
+				"ref_id": "SUSE CVE-2024-26591",
+				"ref_url": "https://www.suse.com/security/cve/CVE-2024-26591",
+				"source": "SUSE CVE"
+			},
+			{
+				"ref_id": "SUSE-SU-2024:0855-1",
+				"ref_url": "https://lists.suse.com/pipermail/sle-security-updates/2024-March/018151.html",
+				"source": "SUSE-SU"
+			},
+			{
+				"ref_id": "SUSE-SU-2024:0858-1",
+				"ref_url": "https://lists.suse.com/pipermail/sle-security-updates/2024-March/018153.html",
+				"source": "SUSE-SU"
+			}
+		],
+		"Description": "\n    In the Linux kernel, the following vulnerability has been resolved:\n\nbpf: Fix re-attachment branch in bpf_tracing_prog_attach\n\nThe following case can cause a crash due to missing attach_btf:\n\n1) load rawtp program\n2) load fentry program with rawtp as target_fd\n3) create tracing link for fentry program with target_fd = 0\n4) repeat 3\n\nIn the end we have:\n\n- prog->aux->dst_trampoline == NULL\n- tgt_prog == NULL (because we did not provide target_fd to link_create)\n- prog->aux->attach_btf == NULL (the program was loaded with attach_prog_fd=X)\n- the program was loaded for tgt_prog but we have no way to find out which one\n\n    BUG: kernel NULL pointer dereference, address: 0000000000000058\n    Call Trace:\n     <TASK>\n     ? __die+0x20/0x70\n     ? page_fault_oops+0x15b/0x430\n     ? fixup_exception+0x22/0x330\n     ? exc_page_fault+0x6f/0x170\n     ? asm_exc_page_fault+0x22/0x30\n     ? bpf_tracing_prog_attach+0x279/0x560\n     ? btf_obj_id+0x5/0x10\n     bpf_tracing_prog_attach+0x439/0x560\n     __sys_bpf+0x1cf4/0x2de0\n     __x64_sys_bpf+0x1c/0x30\n     do_syscall_64+0x41/0xf0\n     entry_SYSCALL_64_after_hwframe+0x6e/0x76\n\nReturn -EINVAL in this situation.\n    ",
+		"advisory": {
+			"from": "security@suse.de",
+			"Severity": "Moderate",
+			"cve": {
+				"text": "CVE-2024-26591",
+				"href": "https://www.suse.com/security/cve/CVE-2024-26591/",
+				"impact": "moderate",
+				"cvss3": "5.5/CVSS:3.1/AV:L/AC:L/PR:L/UI:N/S:U/C:N/I:N/A:H"
+			},
+			"bugzilla": [
+				{
+					"text": "SUSE bug 1220254",
+					"href": "https://bugzilla.suse.com/1220254"
+				}
+			],
+			"issued": {
+				"date": "2024-03-13"
+			},
+			"updated": {
+				"date": "2024-03-13"
+			},
+			"affected_cpe_list": {
+				"Cpe": [
+					"cpe:/o:suse:sle-module-basesystem:15:sp5",
+					"cpe:/o:suse:sle-module-development-tools:15:sp5",
+					"cpe:/o:suse:sle_hpc:15:sp5",
+					"cpe:/o:suse:sled:15:sp5",
+					"cpe:/o:suse:sles:15:sp5",
+					"cpe:/o:suse:sles_sap:15:sp5"
+				]
+			}
+		}
+	},
+	"criteria": {
+		"operator": "OR",
+		"criterias": [
+			{
+				"operator": "AND",
+				"criterias": [
+					{
+						"operator": "OR",
+						"criterions": [
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009759898",
+								"comment": "SUSE Linux Enterprise Desktop 15 SP5 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009759899",
+								"comment": "SUSE Linux Enterprise High Performance Computing 15 SP5 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009759900",
+								"comment": "SUSE Linux Enterprise Module for Basesystem 15 SP5 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009759901",
+								"comment": "SUSE Linux Enterprise Server 15 SP5 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009759902",
+								"comment": "SUSE Linux Enterprise Server for SAP Applications 15 SP5 is installed"
+							}
+						]
+					},
+					{
+						"operator": "OR",
+						"criterions": [
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009850527",
+								"comment": "kernel-64kb-5.14.21-150500.55.52.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009850528",
+								"comment": "kernel-64kb-devel-5.14.21-150500.55.52.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009850536",
+								"comment": "kernel-default-5.14.21-150500.55.52.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009850537",
+								"comment": "kernel-default-base-5.14.21-150500.55.52.1.150500.6.23.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009850539",
+								"comment": "kernel-default-devel-5.14.21-150500.55.52.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009850545",
+								"comment": "kernel-devel-5.14.21-150500.55.52.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009850552",
+								"comment": "kernel-macros-5.14.21-150500.55.52.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009850558",
+								"comment": "kernel-zfcpdump-5.14.21-150500.55.52.1 is installed"
+							}
+						]
+					}
+				]
+			},
+			{
+				"operator": "AND",
+				"criterias": [
+					{
+						"operator": "OR",
+						"criterions": [
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009759898",
+								"comment": "SUSE Linux Enterprise Desktop 15 SP5 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009759899",
+								"comment": "SUSE Linux Enterprise High Performance Computing 15 SP5 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009760583",
+								"comment": "SUSE Linux Enterprise Module for Development Tools 15 SP5 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009759901",
+								"comment": "SUSE Linux Enterprise Server 15 SP5 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009759902",
+								"comment": "SUSE Linux Enterprise Server for SAP Applications 15 SP5 is installed"
+							}
+						]
+					},
+					{
+						"operator": "OR",
+						"criterions": [
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009850546",
+								"comment": "kernel-docs-5.14.21-150500.55.52.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009850553",
+								"comment": "kernel-obs-build-5.14.21-150500.55.52.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009850555",
+								"comment": "kernel-source-5.14.21-150500.55.52.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009850557",
+								"comment": "kernel-syms-5.14.21-150500.55.52.1 is installed"
+							}
+						]
+					}
+				]
+			}
+		]
+	}
+}
