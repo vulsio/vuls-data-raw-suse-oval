@@ -10,14 +10,18 @@
 				"SUSE Linux Enterprise Desktop 15 SP5",
 				"SUSE Linux Enterprise High Performance Computing 15 SP5",
 				"SUSE Linux Enterprise Live Patching 15 SP3",
+				"SUSE Linux Enterprise Live Patching 15 SP4",
 				"SUSE Linux Enterprise Live Patching 15 SP5",
 				"SUSE Linux Enterprise Module for Basesystem 15 SP5",
 				"SUSE Linux Enterprise Module for Development Tools 15 SP5",
 				"SUSE Linux Enterprise Module for Legacy 15 SP5",
 				"SUSE Linux Enterprise Module for Public Cloud 15 SP5",
 				"SUSE Linux Enterprise Server 15 SP3-LTSS",
+				"SUSE Linux Enterprise Server 15 SP4-LTSS",
+				"SUSE Linux Enterprise Server 15 SP4-TERADATA",
 				"SUSE Linux Enterprise Server 15 SP5",
 				"SUSE Linux Enterprise Server for SAP Applications 15 SP3",
+				"SUSE Linux Enterprise Server for SAP Applications 15 SP4",
 				"SUSE Linux Enterprise Server for SAP Applications 15 SP5",
 				"SUSE Linux Enterprise Workstation Extension 15 SP5"
 			]
@@ -52,6 +56,11 @@
 				"ref_id": "SUSE-SU-2024:0858-1",
 				"ref_url": "https://lists.suse.com/pipermail/sle-security-updates/2024-March/018153.html",
 				"source": "SUSE-SU"
+			},
+			{
+				"ref_id": "SUSE-SU-2024:0900-1",
+				"ref_url": "https://lists.suse.com/pipermail/sle-security-updates/2024-March/018167.html",
+				"source": "SUSE-SU"
 			}
 		],
 		"Description": "\n    In the Linux kernel, the following vulnerability has been resolved:\n\napparmor: avoid crash when parsed profile name is empty\n\nWhen processing a packed profile in unpack_profile() described like\n\n \"profile :ns::samba-dcerpcd /usr/lib*/samba/{,samba/}samba-dcerpcd {...}\"\n\na string \":samba-dcerpcd\" is unpacked as a fully-qualified name and then\npassed to aa_splitn_fqname().\n\naa_splitn_fqname() treats \":samba-dcerpcd\" as only containing a namespace.\nThus it returns NULL for tmpname, meanwhile tmpns is non-NULL. Later\naa_alloc_profile() crashes as the new profile name is NULL now.\n\ngeneral protection fault, probably for non-canonical address 0xdffffc0000000000: 0000 [#1] PREEMPT SMP KASAN NOPTI\nKASAN: null-ptr-deref in range [0x0000000000000000-0x0000000000000007]\nCPU: 6 PID: 1657 Comm: apparmor_parser Not tainted 6.7.0-rc2-dirty #16\nHardware name: QEMU Standard PC (i440FX + PIIX, 1996), BIOS rel-1.16.2-3-gd478f380-rebuilt.opensuse.org 04/01/2014\nRIP: 0010:strlen+0x1e/0xa0\nCall Trace:\n <TASK>\n ? strlen+0x1e/0xa0\n aa_policy_init+0x1bb/0x230\n aa_alloc_profile+0xb1/0x480\n unpack_profile+0x3bc/0x4960\n aa_unpack+0x309/0x15e0\n aa_replace_profiles+0x213/0x33c0\n policy_update+0x261/0x370\n profile_replace+0x20e/0x2a0\n vfs_write+0x2af/0xe00\n ksys_write+0x126/0x250\n do_syscall_64+0x46/0xf0\n entry_SYSCALL_64_after_hwframe+0x6e/0x76\n </TASK>\n---[ end trace 0000000000000000 ]---\nRIP: 0010:strlen+0x1e/0xa0\n\nIt seems such behaviour of aa_splitn_fqname() is expected and checked in\nother places where it is called (e.g. aa_remove_profiles). Well, there\nis an explicit comment \"a ns name without a following profile is allowed\"\ninside.\n\nAFAICS, nothing can prevent unpacked \"name\" to be in form like\n\":samba-dcerpcd\" - it is passed from userspace.\n\nDeny the whole profile set replacement in such case and inform user with\nEPROTO and an explaining message.\n\nFound by Linux Verification Center (linuxtesting.org).\n    ",
@@ -74,7 +83,7 @@
 				"date": "2024-03-13"
 			},
 			"updated": {
-				"date": "2024-03-13"
+				"date": "2024-03-15"
 			},
 			"affected_cpe_list": {
 				"Cpe": [
@@ -82,14 +91,17 @@
 					"cpe:/o:suse:sle-module-development-tools:15:sp5",
 					"cpe:/o:suse:sle-module-legacy:15:sp5",
 					"cpe:/o:suse:sle-module-live-patching:15:sp3",
+					"cpe:/o:suse:sle-module-live-patching:15:sp4",
 					"cpe:/o:suse:sle-module-live-patching:15:sp5",
 					"cpe:/o:suse:sle-module-public-cloud:15:sp5",
 					"cpe:/o:suse:sle-we:15:sp5",
 					"cpe:/o:suse:sle_hpc:15:sp5",
 					"cpe:/o:suse:sled:15:sp5",
 					"cpe:/o:suse:sles-ltss:15:sp3",
+					"cpe:/o:suse:sles-ltss:15:sp4",
 					"cpe:/o:suse:sles:15:sp5",
 					"cpe:/o:suse:sles_sap:15:sp3",
+					"cpe:/o:suse:sles_sap:15:sp4",
 					"cpe:/o:suse:sles_sap:15:sp5"
 				]
 			}
@@ -524,6 +536,158 @@
 					{
 						"test_ref": "oval:org.opensuse.security:tst:2009764853",
 						"comment": "SUSE Linux Enterprise Live Patching 15 SP5 is installed"
+					}
+				]
+			},
+			{
+				"operator": "AND",
+				"criterias": [
+					{
+						"operator": "OR",
+						"criterions": [
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009851082",
+								"comment": "kernel-default-livepatch-5.14.21-150400.24.111.2 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009851083",
+								"comment": "kernel-default-livepatch-devel-5.14.21-150400.24.111.2 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009851084",
+								"comment": "kernel-livepatch-5_14_21-150400_24_111-default-1-150400.9.3.1 is installed"
+							}
+						]
+					}
+				],
+				"criterions": [
+					{
+						"test_ref": "oval:org.opensuse.security:tst:2009698985",
+						"comment": "SUSE Linux Enterprise Live Patching 15 SP4 is installed"
+					}
+				]
+			},
+			{
+				"operator": "AND",
+				"criterias": [
+					{
+						"operator": "OR",
+						"criterions": [
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009851094",
+								"comment": "kernel-64kb-5.14.21-150400.24.111.2 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009851095",
+								"comment": "kernel-64kb-devel-5.14.21-150400.24.111.2 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009851109",
+								"comment": "kernel-default-5.14.21-150400.24.111.2 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009851110",
+								"comment": "kernel-default-base-5.14.21-150400.24.111.2.150400.24.52.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009851111",
+								"comment": "kernel-default-devel-5.14.21-150400.24.111.2 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009851099",
+								"comment": "kernel-devel-5.14.21-150400.24.111.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009851100",
+								"comment": "kernel-docs-5.14.21-150400.24.111.2 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009851101",
+								"comment": "kernel-macros-5.14.21-150400.24.111.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009851112",
+								"comment": "kernel-obs-build-5.14.21-150400.24.111.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009851103",
+								"comment": "kernel-source-5.14.21-150400.24.111.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009851113",
+								"comment": "kernel-syms-5.14.21-150400.24.111.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009851114",
+								"comment": "kernel-zfcpdump-5.14.21-150400.24.111.2 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009851115",
+								"comment": "reiserfs-kmp-default-5.14.21-150400.24.111.2 is installed"
+							}
+						]
+					}
+				],
+				"criterions": [
+					{
+						"test_ref": "oval:org.opensuse.security:tst:2009816749",
+						"comment": "SUSE Linux Enterprise Server 15 SP4-LTSS is installed"
+					}
+				]
+			},
+			{
+				"operator": "AND",
+				"criterias": [
+					{
+						"operator": "OR",
+						"criterions": [
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009851147",
+								"comment": "kernel-default-5.14.21-150400.24.111.2 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009851148",
+								"comment": "kernel-default-base-5.14.21-150400.24.111.2.150400.24.52.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009851149",
+								"comment": "kernel-default-devel-5.14.21-150400.24.111.2 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009851099",
+								"comment": "kernel-devel-5.14.21-150400.24.111.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009851100",
+								"comment": "kernel-docs-5.14.21-150400.24.111.2 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009851101",
+								"comment": "kernel-macros-5.14.21-150400.24.111.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009851150",
+								"comment": "kernel-obs-build-5.14.21-150400.24.111.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009851103",
+								"comment": "kernel-source-5.14.21-150400.24.111.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009851151",
+								"comment": "kernel-syms-5.14.21-150400.24.111.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009851152",
+								"comment": "reiserfs-kmp-default-5.14.21-150400.24.111.2 is installed"
+							}
+						]
+					}
+				],
+				"criterions": [
+					{
+						"test_ref": "oval:org.opensuse.security:tst:2009669928",
+						"comment": "SUSE Linux Enterprise Server for SAP Applications 15 SP4 is installed"
 					}
 				]
 			}
