@@ -1,0 +1,211 @@
+{
+	"id": "oval:org.opensuse.security:def:202352449",
+	"version": "1",
+	"class": "vulnerability",
+	"metadata": {
+		"Title": "CVE-2023-52449",
+		"affected": {
+			"family": "unix",
+			"Platform": [
+				"SUSE Linux Enterprise Live Patching 12 SP5",
+				"SUSE Linux Enterprise Server 12 SP5",
+				"SUSE Linux Enterprise Server for SAP Applications 12 SP5",
+				"SUSE Linux Enterprise Workstation Extension 12 SP5"
+			]
+		},
+		"reference": [
+			{
+				"ref_id": "Mitre CVE-2023-52449",
+				"ref_url": "https://cve.mitre.org/cgi-bin/cvename.cgi?name=CVE-2023-52449",
+				"source": "CVE"
+			},
+			{
+				"ref_id": "SUSE CVE-2023-52449",
+				"ref_url": "https://www.suse.com/security/cve/CVE-2023-52449",
+				"source": "SUSE CVE"
+			},
+			{
+				"ref_id": "SUSE-SU-2024:0855-1",
+				"ref_url": "https://lists.suse.com/pipermail/sle-security-updates/2024-March/018151.html",
+				"source": "SUSE-SU"
+			},
+			{
+				"ref_id": "SUSE-SU-2024:0856-1",
+				"ref_url": "https://lists.suse.com/pipermail/sle-security-updates/2024-March/018155.html",
+				"source": "SUSE-SU"
+			},
+			{
+				"ref_id": "SUSE-SU-2024:0857-1",
+				"ref_url": "https://lists.suse.com/pipermail/sle-security-updates/2024-March/018154.html",
+				"source": "SUSE-SU"
+			},
+			{
+				"ref_id": "SUSE-SU-2024:0858-1",
+				"ref_url": "https://lists.suse.com/pipermail/sle-security-updates/2024-March/018153.html",
+				"source": "SUSE-SU"
+			},
+			{
+				"ref_id": "SUSE-SU-2024:0900-1",
+				"ref_url": "https://lists.suse.com/pipermail/sle-security-updates/2024-March/018167.html",
+				"source": "SUSE-SU"
+			},
+			{
+				"ref_id": "SUSE-SU-2024:0900-2",
+				"ref_url": "https://lists.suse.com/pipermail/sle-security-updates/2024-March/018182.html",
+				"source": "SUSE-SU"
+			},
+			{
+				"ref_id": "SUSE-SU-2024:0910-1",
+				"ref_url": "https://lists.suse.com/pipermail/sle-security-updates/2024-March/018181.html",
+				"source": "SUSE-SU"
+			}
+		],
+		"Description": "\n    In the Linux kernel, the following vulnerability has been resolved:\n\nmtd: Fix gluebi NULL pointer dereference caused by ftl notifier\n\nIf both ftl.ko and gluebi.ko are loaded, the notifier of ftl\ntriggers NULL pointer dereference when trying to access\n‘gluebi->desc’ in gluebi_read().\n\nubi_gluebi_init\n  ubi_register_volume_notifier\n    ubi_enumerate_volumes\n      ubi_notify_all\n        gluebi_notify    nb->notifier_call()\n          gluebi_create\n            mtd_device_register\n              mtd_device_parse_register\n                add_mtd_device\n                  blktrans_notify_add   not->add()\n                    ftl_add_mtd         tr->add_mtd()\n                      scan_header\n                        mtd_read\n                          mtd_read_oob\n                            mtd_read_oob_std\n                              gluebi_read   mtd->read()\n                                gluebi->desc - NULL\n\nDetailed reproduction information available at the Link [1],\n\nIn the normal case, obtain gluebi->desc in the gluebi_get_device(),\nand access gluebi->desc in the gluebi_read(). However,\ngluebi_get_device() is not executed in advance in the\nftl_add_mtd() process, which leads to NULL pointer dereference.\n\nThe solution for the gluebi module is to run jffs2 on the UBI\nvolume without considering working with ftl or mtdblock [2].\nTherefore, this problem can be avoided by preventing gluebi from\ncreating the mtdblock device after creating mtd partition of the\ntype MTD_UBIVOLUME.\n    ",
+		"advisory": {
+			"from": "security@suse.de",
+			"Severity": "Moderate",
+			"cve": {
+				"text": "CVE-2023-52449",
+				"href": "https://www.suse.com/security/cve/CVE-2023-52449/",
+				"impact": "moderate",
+				"cvss3": "5.5/CVSS:3.1/AV:L/AC:L/PR:L/UI:N/S:U/C:N/I:N/A:H"
+			},
+			"bugzilla": [
+				{
+					"text": "SUSE bug 1220238",
+					"href": "https://bugzilla.suse.com/1220238"
+				}
+			],
+			"issued": {
+				"date": "2024-03-19"
+			},
+			"updated": {
+				"date": "2024-03-19"
+			},
+			"affected_cpe_list": {
+				"Cpe": [
+					"cpe:/o:suse:sle-live-patching:12:sp5",
+					"cpe:/o:suse:sle-we:12:sp5",
+					"cpe:/o:suse:sles:12:sp5",
+					"cpe:/o:suse:sles_sap:12:sp5"
+				]
+			}
+		}
+	},
+	"criteria": {
+		"operator": "OR",
+		"criterias": [
+			{
+				"operator": "AND",
+				"criterias": [
+					{
+						"operator": "OR",
+						"criterions": [
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009258033",
+								"comment": "SUSE Linux Enterprise Server 12 SP5 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009258806",
+								"comment": "SUSE Linux Enterprise Server for SAP Applications 12 SP5 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009258650",
+								"comment": "SUSE Linux Enterprise Workstation Extension 12 SP5 is installed"
+							}
+						]
+					}
+				],
+				"criterions": [
+					{
+						"test_ref": "oval:org.opensuse.security:tst:2009851656",
+						"comment": "kernel-default-extra-4.12.14-122.201.1 is installed"
+					}
+				]
+			},
+			{
+				"operator": "AND",
+				"criterias": [
+					{
+						"operator": "OR",
+						"criterions": [
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009851635",
+								"comment": "kernel-default-kgraft-4.12.14-122.201.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009851636",
+								"comment": "kernel-default-kgraft-devel-4.12.14-122.201.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009851637",
+								"comment": "kgraft-patch-4_12_14-122_201-default-1-8.7.1 is installed"
+							}
+						]
+					}
+				],
+				"criterions": [
+					{
+						"test_ref": "oval:org.opensuse.security:tst:2009273148",
+						"comment": "SUSE Linux Enterprise Live Patching 12 SP5 is installed"
+					}
+				]
+			},
+			{
+				"operator": "AND",
+				"criterias": [
+					{
+						"operator": "OR",
+						"criterions": [
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009258033",
+								"comment": "SUSE Linux Enterprise Server 12 SP5 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009258806",
+								"comment": "SUSE Linux Enterprise Server for SAP Applications 12 SP5 is installed"
+							}
+						]
+					},
+					{
+						"operator": "OR",
+						"criterions": [
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009851648",
+								"comment": "kernel-default-4.12.14-122.201.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009851649",
+								"comment": "kernel-default-base-4.12.14-122.201.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009851650",
+								"comment": "kernel-default-devel-4.12.14-122.201.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009851651",
+								"comment": "kernel-default-man-4.12.14-122.201.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009851652",
+								"comment": "kernel-devel-4.12.14-122.201.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009851653",
+								"comment": "kernel-macros-4.12.14-122.201.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009851654",
+								"comment": "kernel-source-4.12.14-122.201.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009851655",
+								"comment": "kernel-syms-4.12.14-122.201.1 is installed"
+							}
+						]
+					}
+				]
+			}
+		]
+	}
+}

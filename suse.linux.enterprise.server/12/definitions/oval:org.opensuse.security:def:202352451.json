@@ -1,0 +1,211 @@
+{
+	"id": "oval:org.opensuse.security:def:202352451",
+	"version": "1",
+	"class": "vulnerability",
+	"metadata": {
+		"Title": "CVE-2023-52451",
+		"affected": {
+			"family": "unix",
+			"Platform": [
+				"SUSE Linux Enterprise Live Patching 12 SP5",
+				"SUSE Linux Enterprise Server 12 SP5",
+				"SUSE Linux Enterprise Server for SAP Applications 12 SP5",
+				"SUSE Linux Enterprise Workstation Extension 12 SP5"
+			]
+		},
+		"reference": [
+			{
+				"ref_id": "Mitre CVE-2023-52451",
+				"ref_url": "https://cve.mitre.org/cgi-bin/cvename.cgi?name=CVE-2023-52451",
+				"source": "CVE"
+			},
+			{
+				"ref_id": "SUSE CVE-2023-52451",
+				"ref_url": "https://www.suse.com/security/cve/CVE-2023-52451",
+				"source": "SUSE CVE"
+			},
+			{
+				"ref_id": "SUSE-SU-2024:0855-1",
+				"ref_url": "https://lists.suse.com/pipermail/sle-security-updates/2024-March/018151.html",
+				"source": "SUSE-SU"
+			},
+			{
+				"ref_id": "SUSE-SU-2024:0856-1",
+				"ref_url": "https://lists.suse.com/pipermail/sle-security-updates/2024-March/018155.html",
+				"source": "SUSE-SU"
+			},
+			{
+				"ref_id": "SUSE-SU-2024:0857-1",
+				"ref_url": "https://lists.suse.com/pipermail/sle-security-updates/2024-March/018154.html",
+				"source": "SUSE-SU"
+			},
+			{
+				"ref_id": "SUSE-SU-2024:0858-1",
+				"ref_url": "https://lists.suse.com/pipermail/sle-security-updates/2024-March/018153.html",
+				"source": "SUSE-SU"
+			},
+			{
+				"ref_id": "SUSE-SU-2024:0900-1",
+				"ref_url": "https://lists.suse.com/pipermail/sle-security-updates/2024-March/018167.html",
+				"source": "SUSE-SU"
+			},
+			{
+				"ref_id": "SUSE-SU-2024:0900-2",
+				"ref_url": "https://lists.suse.com/pipermail/sle-security-updates/2024-March/018182.html",
+				"source": "SUSE-SU"
+			},
+			{
+				"ref_id": "SUSE-SU-2024:0910-1",
+				"ref_url": "https://lists.suse.com/pipermail/sle-security-updates/2024-March/018181.html",
+				"source": "SUSE-SU"
+			}
+		],
+		"Description": "\n    In the Linux kernel, the following vulnerability has been resolved:\n\npowerpc/pseries/memhp: Fix access beyond end of drmem array\n\ndlpar_memory_remove_by_index() may access beyond the bounds of the\ndrmem lmb array when the LMB lookup fails to match an entry with the\ngiven DRC index. When the search fails, the cursor is left pointing to\n&drmem_info->lmbs[drmem_info->n_lmbs], which is one element past the\nlast valid entry in the array. The debug message at the end of the\nfunction then dereferences this pointer:\n\n        pr_debug(\"Failed to hot-remove memory at %llx\\n\",\n                 lmb->base_addr);\n\nThis was found by inspection and confirmed with KASAN:\n\n  pseries-hotplug-mem: Attempting to hot-remove LMB, drc index 1234\n  ==================================================================\n  BUG: KASAN: slab-out-of-bounds in dlpar_memory+0x298/0x1658\n  Read of size 8 at addr c000000364e97fd0 by task bash/949\n\n  dump_stack_lvl+0xa4/0xfc (unreliable)\n  print_report+0x214/0x63c\n  kasan_report+0x140/0x2e0\n  __asan_load8+0xa8/0xe0\n  dlpar_memory+0x298/0x1658\n  handle_dlpar_errorlog+0x130/0x1d0\n  dlpar_store+0x18c/0x3e0\n  kobj_attr_store+0x68/0xa0\n  sysfs_kf_write+0xc4/0x110\n  kernfs_fop_write_iter+0x26c/0x390\n  vfs_write+0x2d4/0x4e0\n  ksys_write+0xac/0x1a0\n  system_call_exception+0x268/0x530\n  system_call_vectored_common+0x15c/0x2ec\n\n  Allocated by task 1:\n   kasan_save_stack+0x48/0x80\n   kasan_set_track+0x34/0x50\n   kasan_save_alloc_info+0x34/0x50\n   __kasan_kmalloc+0xd0/0x120\n   __kmalloc+0x8c/0x320\n   kmalloc_array.constprop.0+0x48/0x5c\n   drmem_init+0x2a0/0x41c\n   do_one_initcall+0xe0/0x5c0\n   kernel_init_freeable+0x4ec/0x5a0\n   kernel_init+0x30/0x1e0\n   ret_from_kernel_user_thread+0x14/0x1c\n\n  The buggy address belongs to the object at c000000364e80000\n   which belongs to the cache kmalloc-128k of size 131072\n  The buggy address is located 0 bytes to the right of\n   allocated 98256-byte region [c000000364e80000, c000000364e97fd0)\n\n  ==================================================================\n  pseries-hotplug-mem: Failed to hot-remove memory at 0\n\nLog failed lookups with a separate message and dereference the\ncursor only when it points to a valid entry.\n    ",
+		"advisory": {
+			"from": "security@suse.de",
+			"Severity": "Moderate",
+			"cve": {
+				"text": "CVE-2023-52451",
+				"href": "https://www.suse.com/security/cve/CVE-2023-52451/",
+				"impact": "moderate",
+				"cvss3": "5.1/CVSS:3.1/AV:L/AC:L/PR:H/UI:N/S:U/C:L/I:N/A:H"
+			},
+			"bugzilla": [
+				{
+					"text": "SUSE bug 1220250",
+					"href": "https://bugzilla.suse.com/1220250"
+				}
+			],
+			"issued": {
+				"date": "2024-03-19"
+			},
+			"updated": {
+				"date": "2024-03-19"
+			},
+			"affected_cpe_list": {
+				"Cpe": [
+					"cpe:/o:suse:sle-live-patching:12:sp5",
+					"cpe:/o:suse:sle-we:12:sp5",
+					"cpe:/o:suse:sles:12:sp5",
+					"cpe:/o:suse:sles_sap:12:sp5"
+				]
+			}
+		}
+	},
+	"criteria": {
+		"operator": "OR",
+		"criterias": [
+			{
+				"operator": "AND",
+				"criterias": [
+					{
+						"operator": "OR",
+						"criterions": [
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009258033",
+								"comment": "SUSE Linux Enterprise Server 12 SP5 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009258806",
+								"comment": "SUSE Linux Enterprise Server for SAP Applications 12 SP5 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009258650",
+								"comment": "SUSE Linux Enterprise Workstation Extension 12 SP5 is installed"
+							}
+						]
+					}
+				],
+				"criterions": [
+					{
+						"test_ref": "oval:org.opensuse.security:tst:2009851656",
+						"comment": "kernel-default-extra-4.12.14-122.201.1 is installed"
+					}
+				]
+			},
+			{
+				"operator": "AND",
+				"criterias": [
+					{
+						"operator": "OR",
+						"criterions": [
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009851635",
+								"comment": "kernel-default-kgraft-4.12.14-122.201.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009851636",
+								"comment": "kernel-default-kgraft-devel-4.12.14-122.201.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009851637",
+								"comment": "kgraft-patch-4_12_14-122_201-default-1-8.7.1 is installed"
+							}
+						]
+					}
+				],
+				"criterions": [
+					{
+						"test_ref": "oval:org.opensuse.security:tst:2009273148",
+						"comment": "SUSE Linux Enterprise Live Patching 12 SP5 is installed"
+					}
+				]
+			},
+			{
+				"operator": "AND",
+				"criterias": [
+					{
+						"operator": "OR",
+						"criterions": [
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009258033",
+								"comment": "SUSE Linux Enterprise Server 12 SP5 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009258806",
+								"comment": "SUSE Linux Enterprise Server for SAP Applications 12 SP5 is installed"
+							}
+						]
+					},
+					{
+						"operator": "OR",
+						"criterions": [
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009851648",
+								"comment": "kernel-default-4.12.14-122.201.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009851649",
+								"comment": "kernel-default-base-4.12.14-122.201.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009851650",
+								"comment": "kernel-default-devel-4.12.14-122.201.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009851651",
+								"comment": "kernel-default-man-4.12.14-122.201.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009851652",
+								"comment": "kernel-devel-4.12.14-122.201.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009851653",
+								"comment": "kernel-macros-4.12.14-122.201.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009851654",
+								"comment": "kernel-source-4.12.14-122.201.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009851655",
+								"comment": "kernel-syms-4.12.14-122.201.1 is installed"
+							}
+						]
+					}
+				]
+			}
+		]
+	}
+}
