@@ -1,0 +1,236 @@
+{
+	"id": "oval:org.opensuse.security:def:202426696",
+	"version": "1",
+	"class": "vulnerability",
+	"metadata": {
+		"Title": "CVE-2024-26696",
+		"affected": {
+			"family": "unix",
+			"Platform": [
+				"SUSE Enterprise Storage 7",
+				"SUSE Linux Enterprise High Performance Computing 15 SP2",
+				"SUSE Linux Enterprise Module for Public Cloud 15 SP2",
+				"SUSE Linux Enterprise Server 15 SP1-LTSS",
+				"SUSE Linux Enterprise Server 15 SP2",
+				"SUSE Linux Enterprise Server 15 SP2-LTSS",
+				"SUSE Linux Enterprise Server 15-LTSS",
+				"SUSE Linux Enterprise Server for SAP Applications 15 SP2",
+				"SUSE Manager Proxy 4.1",
+				"SUSE Manager Retail Branch Server 4.1",
+				"SUSE Manager Server 4.1"
+			]
+		},
+		"reference": [
+			{
+				"ref_id": "Mitre CVE-2024-26696",
+				"ref_url": "https://cve.mitre.org/cgi-bin/cvename.cgi?name=CVE-2024-26696",
+				"source": "CVE"
+			},
+			{
+				"ref_id": "SUSE CVE-2024-26696",
+				"ref_url": "https://www.suse.com/security/cve/CVE-2024-26696",
+				"source": "SUSE CVE"
+			}
+		],
+		"Description": "\n    In the Linux kernel, the following vulnerability has been resolved:\n\nnilfs2: fix hang in nilfs_lookup_dirty_data_buffers()\n\nSyzbot reported a hang issue in migrate_pages_batch() called by mbind()\nand nilfs_lookup_dirty_data_buffers() called in the log writer of nilfs2.\n\nWhile migrate_pages_batch() locks a folio and waits for the writeback to\ncomplete, the log writer thread that should bring the writeback to\ncompletion picks up the folio being written back in\nnilfs_lookup_dirty_data_buffers() that it calls for subsequent log\ncreation and was trying to lock the folio.  Thus causing a deadlock.\n\nIn the first place, it is unexpected that folios/pages in the middle of\nwriteback will be updated and become dirty.  Nilfs2 adds a checksum to\nverify the validity of the log being written and uses it for recovery at\nmount, so data changes during writeback are suppressed.  Since this is\nbroken, an unclean shutdown could potentially cause recovery to fail.\n\nInvestigation revealed that the root cause is that the wait for writeback\ncompletion in nilfs_page_mkwrite() is conditional, and if the backing\ndevice does not require stable writes, data may be modified without\nwaiting.\n\nFix these issues by making nilfs_page_mkwrite() wait for writeback to\nfinish regardless of the stable write requirement of the backing device.\n    ",
+		"advisory": {
+			"from": "security@suse.de",
+			"Severity": "Moderate",
+			"cve": {
+				"text": "CVE-2024-26696",
+				"href": "https://www.suse.com/security/cve/CVE-2024-26696/",
+				"impact": "moderate",
+				"cvss3": "5.5/CVSS:3.1/AV:L/AC:L/PR:L/UI:N/S:U/C:N/I:N/A:H"
+			},
+			"bugzilla": [
+				{
+					"text": "SUSE bug 1222549",
+					"href": "https://bugzilla.suse.com/1222549"
+				}
+			],
+			"issued": {
+				"date": "2024-04-10"
+			},
+			"updated": {
+				"date": "2024-04-10"
+			},
+			"affected_cpe_list": {
+				"Cpe": [
+					"cpe:/o:suse:ses:7",
+					"cpe:/o:suse:sle-module-public-cloud:15:sp2",
+					"cpe:/o:suse:sle_hpc:15:sp2",
+					"cpe:/o:suse:sles-ltss:15",
+					"cpe:/o:suse:sles-ltss:15:sp1",
+					"cpe:/o:suse:sles-ltss:15:sp2",
+					"cpe:/o:suse:sles:15:sp2",
+					"cpe:/o:suse:sles_sap:15:sp2",
+					"cpe:/o:suse:suse-manager-proxy:4.1",
+					"cpe:/o:suse:suse-manager-retail-branch-server:4.1",
+					"cpe:/o:suse:suse-manager-server:4.1"
+				]
+			}
+		}
+	},
+	"criteria": {
+		"operator": "OR",
+		"criterias": [
+			{
+				"operator": "AND",
+				"criterias": [
+					{
+						"operator": "OR",
+						"criterions": [
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009660213",
+								"comment": "SUSE Linux Enterprise Server 15 SP2-LTSS is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009659637",
+								"comment": "SUSE Linux Enterprise Server for SAP Applications 15 SP2 is installed"
+							}
+						]
+					},
+					{
+						"operator": "OR",
+						"criterions": [
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009334017",
+								"comment": "kernel-default is not affected"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009335423",
+								"comment": "kernel-default-devel is not affected"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009338037",
+								"comment": "reiserfs-kmp-default is not affected"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009334791",
+								"comment": "kernel-devel is not affected"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009334792",
+								"comment": "kernel-macros is not affected"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009333928",
+								"comment": "kernel-source is not affected"
+							}
+						]
+					}
+				]
+			},
+			{
+				"operator": "AND",
+				"criterias": [
+					{
+						"operator": "OR",
+						"criterions": [
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009341508",
+								"comment": "SUSE Linux Enterprise Server 15 SP1-LTSS is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009302033",
+								"comment": "SUSE Linux Enterprise Server 15-LTSS is installed"
+							}
+						]
+					},
+					{
+						"operator": "OR",
+						"criterions": [
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009334017",
+								"comment": "kernel-default is not affected"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009335425",
+								"comment": "kernel-default-base is not affected"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009335423",
+								"comment": "kernel-default-devel is not affected"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009335426",
+								"comment": "kernel-default-man is not affected"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009338037",
+								"comment": "reiserfs-kmp-default is not affected"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009334791",
+								"comment": "kernel-devel is not affected"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009334792",
+								"comment": "kernel-macros is not affected"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009333928",
+								"comment": "kernel-source is not affected"
+							}
+						]
+					}
+				]
+			},
+			{
+				"operator": "AND",
+				"criterias": [
+					{
+						"operator": "OR",
+						"criterions": [
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009302786",
+								"comment": "SUSE Enterprise Storage 7 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009479728",
+								"comment": "SUSE Linux Enterprise High Performance Computing 15 SP2 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009287160",
+								"comment": "SUSE Linux Enterprise Module for Public Cloud 15 SP2 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009303870",
+								"comment": "SUSE Linux Enterprise Server 15 SP2 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009659637",
+								"comment": "SUSE Linux Enterprise Server for SAP Applications 15 SP2 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009302537",
+								"comment": "SUSE Manager Proxy 4.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009346072",
+								"comment": "SUSE Manager Retail Branch Server 4.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009302605",
+								"comment": "SUSE Manager Server 4.1 is installed"
+							}
+						]
+					},
+					{
+						"operator": "OR",
+						"criterions": [
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009340306",
+								"comment": "kernel-devel-azure is not affected"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009340305",
+								"comment": "kernel-source-azure is not affected"
+							}
+						]
+					}
+				]
+			}
+		]
+	}
+}
