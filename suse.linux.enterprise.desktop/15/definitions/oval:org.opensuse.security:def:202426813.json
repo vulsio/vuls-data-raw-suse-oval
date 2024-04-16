@@ -1,0 +1,163 @@
+{
+	"id": "oval:org.opensuse.security:def:202426813",
+	"version": "1",
+	"class": "vulnerability",
+	"metadata": {
+		"Title": "CVE-2024-26813",
+		"affected": {
+			"family": "unix",
+			"Platform": [
+				"SUSE Linux Enterprise Desktop 15 SP5",
+				"SUSE Linux Enterprise High Performance Computing 15 SP5",
+				"SUSE Linux Enterprise Module for Basesystem 15 SP5",
+				"SUSE Linux Enterprise Module for Development Tools 15 SP5",
+				"SUSE Linux Enterprise Server 15 SP5",
+				"SUSE Linux Enterprise Server for SAP Applications 15 SP5"
+			]
+		},
+		"reference": [
+			{
+				"ref_id": "Mitre CVE-2024-26813",
+				"ref_url": "https://cve.mitre.org/cgi-bin/cvename.cgi?name=CVE-2024-26813",
+				"source": "CVE"
+			},
+			{
+				"ref_id": "SUSE CVE-2024-26813",
+				"ref_url": "https://www.suse.com/security/cve/CVE-2024-26813",
+				"source": "SUSE CVE"
+			}
+		],
+		"Description": "\n    In the Linux kernel, the following vulnerability has been resolved:\n\nvfio/platform: Create persistent IRQ handlers\n\nThe vfio-platform SET_IRQS ioctl currently allows loopback triggering of\nan interrupt before a signaling eventfd has been configured by the user,\nwhich thereby allows a NULL pointer dereference.\n\nRather than register the IRQ relative to a valid trigger, register all\nIRQs in a disabled state in the device open path.  This allows mask\noperations on the IRQ to nest within the overall enable state governed\nby a valid eventfd signal.  This decouples @masked, protected by the\n@locked spinlock from @trigger, protected via the @igate mutex.\n\nIn doing so, it's guaranteed that changes to @trigger cannot race the\nIRQ handlers because the IRQ handler is synchronously disabled before\nmodifying the trigger, and loopback triggering of the IRQ via ioctl is\nsafe due to serialization with trigger changes via igate.\n\nFor compatibility, request_irq() failures are maintained to be local to\nthe SET_IRQS ioctl rather than a fatal error in the open device path.\nThis allows, for example, a userspace driver with polling mode support\nto continue to work regardless of moving the request_irq() call site.\nThis necessarily blocks all SET_IRQS access to the failed index.\n    ",
+		"advisory": {
+			"from": "security@suse.de",
+			"Severity": "Moderate",
+			"cve": {
+				"text": "CVE-2024-26813",
+				"href": "https://www.suse.com/security/cve/CVE-2024-26813/",
+				"impact": "moderate",
+				"cvss3": "4.4/CVSS:3.1/AV:L/AC:L/PR:H/UI:N/S:U/C:N/I:N/A:H"
+			},
+			"bugzilla": [
+				{
+					"text": "SUSE bug 1222809",
+					"href": "https://bugzilla.suse.com/1222809"
+				}
+			],
+			"issued": {
+				"date": "2024-04-16"
+			},
+			"updated": {
+				"date": "2024-04-16"
+			},
+			"affected_cpe_list": {
+				"Cpe": [
+					"cpe:/o:suse:sle-module-basesystem:15:sp5",
+					"cpe:/o:suse:sle-module-development-tools:15:sp5",
+					"cpe:/o:suse:sle_hpc:15:sp5",
+					"cpe:/o:suse:sled:15:sp5",
+					"cpe:/o:suse:sles:15:sp5",
+					"cpe:/o:suse:sles_sap:15:sp5"
+				]
+			}
+		}
+	},
+	"criteria": {
+		"operator": "OR",
+		"criterias": [
+			{
+				"operator": "AND",
+				"criterias": [
+					{
+						"operator": "OR",
+						"criterions": [
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009759898",
+								"comment": "SUSE Linux Enterprise Desktop 15 SP5 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009759899",
+								"comment": "SUSE Linux Enterprise High Performance Computing 15 SP5 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009760583",
+								"comment": "SUSE Linux Enterprise Module for Development Tools 15 SP5 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009759901",
+								"comment": "SUSE Linux Enterprise Server 15 SP5 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009759902",
+								"comment": "SUSE Linux Enterprise Server for SAP Applications 15 SP5 is installed"
+							}
+						]
+					},
+					{
+						"operator": "OR",
+						"criterions": [
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009334017",
+								"comment": "kernel-default is not affected"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009333928",
+								"comment": "kernel-source is not affected"
+							}
+						]
+					}
+				]
+			},
+			{
+				"operator": "AND",
+				"criterias": [
+					{
+						"operator": "OR",
+						"criterions": [
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009759898",
+								"comment": "SUSE Linux Enterprise Desktop 15 SP5 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009759899",
+								"comment": "SUSE Linux Enterprise High Performance Computing 15 SP5 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009759900",
+								"comment": "SUSE Linux Enterprise Module for Basesystem 15 SP5 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009759901",
+								"comment": "SUSE Linux Enterprise Server 15 SP5 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009759902",
+								"comment": "SUSE Linux Enterprise Server for SAP Applications 15 SP5 is installed"
+							}
+						]
+					},
+					{
+						"operator": "OR",
+						"criterions": [
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009334017",
+								"comment": "kernel-default is not affected"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009335423",
+								"comment": "kernel-default-devel is not affected"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009334791",
+								"comment": "kernel-devel is not affected"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009334792",
+								"comment": "kernel-macros is not affected"
+							}
+						]
+					}
+				]
+			}
+		]
+	}
+}
