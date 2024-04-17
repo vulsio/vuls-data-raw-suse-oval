@@ -1,0 +1,365 @@
+{
+	"id": "oval:org.opensuse.security:def:202352574",
+	"version": "1",
+	"class": "vulnerability",
+	"metadata": {
+		"Title": "CVE-2023-52574",
+		"affected": {
+			"family": "unix",
+			"Platform": [
+				"openSUSE Leap 15.5"
+			]
+		},
+		"reference": [
+			{
+				"ref_id": "Mitre CVE-2023-52574",
+				"ref_url": "https://cve.mitre.org/cgi-bin/cvename.cgi?name=CVE-2023-52574",
+				"source": "CVE"
+			},
+			{
+				"ref_id": "SUSE CVE-2023-52574",
+				"ref_url": "https://www.suse.com/security/cve/CVE-2023-52574",
+				"source": "SUSE CVE"
+			},
+			{
+				"ref_id": "SUSE-SU-2024:0856-1",
+				"ref_url": "https://lists.suse.com/pipermail/sle-security-updates/2024-March/018155.html",
+				"source": "SUSE-SU"
+			},
+			{
+				"ref_id": "SUSE-SU-2024:0857-1",
+				"ref_url": "https://lists.suse.com/pipermail/sle-security-updates/2024-March/018154.html",
+				"source": "SUSE-SU"
+			},
+			{
+				"ref_id": "SUSE-SU-2024:0925-1",
+				"ref_url": "https://lists.suse.com/pipermail/sle-security-updates/2024-March/018205.html",
+				"source": "SUSE-SU"
+			},
+			{
+				"ref_id": "SUSE-SU-2024:0926-1",
+				"ref_url": "https://lists.suse.com/pipermail/sle-security-updates/2024-March/018204.html",
+				"source": "SUSE-SU"
+			},
+			{
+				"ref_id": "SUSE-SU-2024:0975-1",
+				"ref_url": "https://lists.suse.com/pipermail/sle-security-updates/2024-March/018186.html",
+				"source": "SUSE-SU"
+			},
+			{
+				"ref_id": "SUSE-SU-2024:0976-1",
+				"ref_url": "https://lists.suse.com/pipermail/sle-security-updates/2024-March/018185.html",
+				"source": "SUSE-SU"
+			},
+			{
+				"ref_id": "SUSE-SU-2024:1320-1",
+				"ref_url": "https://lists.suse.com/pipermail/sle-updates/2024-April/035000.html",
+				"source": "SUSE-SU"
+			}
+		],
+		"Description": "\n    In the Linux kernel, the following vulnerability has been resolved:\n\nteam: fix null-ptr-deref when team device type is changed\n\nGet a null-ptr-deref bug as follows with reproducer [1].\n\nBUG: kernel NULL pointer dereference, address: 0000000000000228\n...\nRIP: 0010:vlan_dev_hard_header+0x35/0x140 [8021q]\n...\nCall Trace:\n <TASK>\n ? __die+0x24/0x70\n ? page_fault_oops+0x82/0x150\n ? exc_page_fault+0x69/0x150\n ? asm_exc_page_fault+0x26/0x30\n ? vlan_dev_hard_header+0x35/0x140 [8021q]\n ? vlan_dev_hard_header+0x8e/0x140 [8021q]\n neigh_connected_output+0xb2/0x100\n ip6_finish_output2+0x1cb/0x520\n ? nf_hook_slow+0x43/0xc0\n ? ip6_mtu+0x46/0x80\n ip6_finish_output+0x2a/0xb0\n mld_sendpack+0x18f/0x250\n mld_ifc_work+0x39/0x160\n process_one_work+0x1e6/0x3f0\n worker_thread+0x4d/0x2f0\n ? __pfx_worker_thread+0x10/0x10\n kthread+0xe5/0x120\n ? __pfx_kthread+0x10/0x10\n ret_from_fork+0x34/0x50\n ? __pfx_kthread+0x10/0x10\n ret_from_fork_asm+0x1b/0x30\n\n[1]\n$ teamd -t team0 -d -c '{\"runner\": {\"name\": \"loadbalance\"}}'\n$ ip link add name t-dummy type dummy\n$ ip link add link t-dummy name t-dummy.100 type vlan id 100\n$ ip link add name t-nlmon type nlmon\n$ ip link set t-nlmon master team0\n$ ip link set t-nlmon nomaster\n$ ip link set t-dummy up\n$ ip link set team0 up\n$ ip link set t-dummy.100 down\n$ ip link set t-dummy.100 master team0\n\nWhen enslave a vlan device to team device and team device type is changed\nfrom non-ether to ether, header_ops of team device is changed to\nvlan_header_ops. That is incorrect and will trigger null-ptr-deref\nfor vlan->real_dev in vlan_dev_hard_header() because team device is not\na vlan device.\n\nCache eth_header_ops in team_setup(), then assign cached header_ops to\nheader_ops of team net device when its type is changed from non-ether\nto ether to fix the bug.\n    ",
+		"advisory": {
+			"from": "security@suse.de",
+			"Severity": "Moderate",
+			"cve": {
+				"text": "CVE-2023-52574",
+				"href": "https://www.suse.com/security/cve/CVE-2023-52574/",
+				"impact": "moderate",
+				"cvss3": "5.5/CVSS:3.1/AV:L/AC:L/PR:L/UI:N/S:U/C:N/I:N/A:H"
+			},
+			"bugzilla": [
+				{
+					"text": "SUSE bug 1220870",
+					"href": "https://bugzilla.suse.com/1220870"
+				}
+			],
+			"issued": {
+				"date": "2024-04-17"
+			},
+			"updated": {
+				"date": "2024-04-17"
+			},
+			"affected_cpe_list": {
+				"Cpe": [
+					"cpe:/o:opensuse:leap:15.5"
+				]
+			}
+		}
+	},
+	"criteria": {
+		"operator": "AND",
+		"criterias": [
+			{
+				"operator": "OR",
+				"criterias": [
+					{
+						"operator": "AND",
+						"criterions": [
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009855110",
+								"comment": "cluster-md-kmp-rt-5.14.21-150500.13.43.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009342853",
+								"comment": "cluster-md-kmp-rt is signed with openSUSE key"
+							}
+						]
+					},
+					{
+						"operator": "AND",
+						"criterions": [
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009855111",
+								"comment": "dlm-kmp-rt-5.14.21-150500.13.43.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009342855",
+								"comment": "dlm-kmp-rt is signed with openSUSE key"
+							}
+						]
+					},
+					{
+						"operator": "AND",
+						"criterions": [
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009855112",
+								"comment": "gfs2-kmp-rt-5.14.21-150500.13.43.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009342857",
+								"comment": "gfs2-kmp-rt is signed with openSUSE key"
+							}
+						]
+					},
+					{
+						"operator": "AND",
+						"criterions": [
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009855113",
+								"comment": "kernel-devel-rt-5.14.21-150500.13.43.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009342859",
+								"comment": "kernel-devel-rt is signed with openSUSE key"
+							}
+						]
+					},
+					{
+						"operator": "AND",
+						"criterions": [
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009855114",
+								"comment": "kernel-rt-5.14.21-150500.13.43.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009342860",
+								"comment": "kernel-rt is signed with openSUSE key"
+							}
+						]
+					},
+					{
+						"operator": "AND",
+						"criterions": [
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009855115",
+								"comment": "kernel-rt-devel-5.14.21-150500.13.43.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009342861",
+								"comment": "kernel-rt-devel is signed with openSUSE key"
+							}
+						]
+					},
+					{
+						"operator": "AND",
+						"criterions": [
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009855116",
+								"comment": "kernel-rt-extra-5.14.21-150500.13.43.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009342862",
+								"comment": "kernel-rt-extra is signed with openSUSE key"
+							}
+						]
+					},
+					{
+						"operator": "AND",
+						"criterions": [
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009855117",
+								"comment": "kernel-rt-livepatch-5.14.21-150500.13.43.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009771783",
+								"comment": "kernel-rt-livepatch is signed with openSUSE key"
+							}
+						]
+					},
+					{
+						"operator": "AND",
+						"criterions": [
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009855118",
+								"comment": "kernel-rt-livepatch-devel-5.14.21-150500.13.43.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009623297",
+								"comment": "kernel-rt-livepatch-devel is signed with openSUSE key"
+							}
+						]
+					},
+					{
+						"operator": "AND",
+						"criterions": [
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009855119",
+								"comment": "kernel-rt-optional-5.14.21-150500.13.43.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009771784",
+								"comment": "kernel-rt-optional is signed with openSUSE key"
+							}
+						]
+					},
+					{
+						"operator": "AND",
+						"criterions": [
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009855120",
+								"comment": "kernel-rt-vdso-5.14.21-150500.13.43.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009771785",
+								"comment": "kernel-rt-vdso is signed with openSUSE key"
+							}
+						]
+					},
+					{
+						"operator": "AND",
+						"criterions": [
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009855121",
+								"comment": "kernel-rt_debug-5.14.21-150500.13.43.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009342863",
+								"comment": "kernel-rt_debug is signed with openSUSE key"
+							}
+						]
+					},
+					{
+						"operator": "AND",
+						"criterions": [
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009855122",
+								"comment": "kernel-rt_debug-devel-5.14.21-150500.13.43.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009342864",
+								"comment": "kernel-rt_debug-devel is signed with openSUSE key"
+							}
+						]
+					},
+					{
+						"operator": "AND",
+						"criterions": [
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009855123",
+								"comment": "kernel-rt_debug-livepatch-devel-5.14.21-150500.13.43.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009623299",
+								"comment": "kernel-rt_debug-livepatch-devel is signed with openSUSE key"
+							}
+						]
+					},
+					{
+						"operator": "AND",
+						"criterions": [
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009855124",
+								"comment": "kernel-rt_debug-vdso-5.14.21-150500.13.43.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009771786",
+								"comment": "kernel-rt_debug-vdso is signed with openSUSE key"
+							}
+						]
+					},
+					{
+						"operator": "AND",
+						"criterions": [
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009855125",
+								"comment": "kernel-source-rt-5.14.21-150500.13.43.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009342866",
+								"comment": "kernel-source-rt is signed with openSUSE key"
+							}
+						]
+					},
+					{
+						"operator": "AND",
+						"criterions": [
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009855126",
+								"comment": "kernel-syms-rt-5.14.21-150500.13.43.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009342867",
+								"comment": "kernel-syms-rt is signed with openSUSE key"
+							}
+						]
+					},
+					{
+						"operator": "AND",
+						"criterions": [
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009855127",
+								"comment": "kselftests-kmp-rt-5.14.21-150500.13.43.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009342868",
+								"comment": "kselftests-kmp-rt is signed with openSUSE key"
+							}
+						]
+					},
+					{
+						"operator": "AND",
+						"criterions": [
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009855128",
+								"comment": "ocfs2-kmp-rt-5.14.21-150500.13.43.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009342870",
+								"comment": "ocfs2-kmp-rt is signed with openSUSE key"
+							}
+						]
+					},
+					{
+						"operator": "AND",
+						"criterions": [
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009855129",
+								"comment": "reiserfs-kmp-rt-5.14.21-150500.13.43.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009342872",
+								"comment": "reiserfs-kmp-rt is signed with openSUSE key"
+							}
+						]
+					}
+				]
+			}
+		],
+		"criterions": [
+			{
+				"test_ref": "oval:org.opensuse.security:tst:2009752682",
+				"comment": "openSUSE Leap 15.5 is installed"
+			}
+		]
+	}
+}

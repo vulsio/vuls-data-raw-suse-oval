@@ -1,0 +1,67 @@
+{
+	"id": "oval:org.opensuse.security:def:202352598",
+	"version": "1",
+	"class": "vulnerability",
+	"metadata": {
+		"Title": "CVE-2023-52598",
+		"affected": {
+			"family": "unix",
+			"Platform": [
+				"SUSE Linux Enterprise Live Patching 15 SP5"
+			]
+		},
+		"reference": [
+			{
+				"ref_id": "Mitre CVE-2023-52598",
+				"ref_url": "https://cve.mitre.org/cgi-bin/cvename.cgi?name=CVE-2023-52598",
+				"source": "CVE"
+			},
+			{
+				"ref_id": "SUSE CVE-2023-52598",
+				"ref_url": "https://www.suse.com/security/cve/CVE-2023-52598",
+				"source": "SUSE CVE"
+			}
+		],
+		"Description": "\n    In the Linux kernel, the following vulnerability has been resolved:\n\ns390/ptrace: handle setting of fpc register correctly\n\nIf the content of the floating point control (fpc) register of a traced\nprocess is modified with the ptrace interface the new value is tested for\nvalidity by temporarily loading it into the fpc register.\n\nThis may lead to corruption of the fpc register of the tracing process:\nif an interrupt happens while the value is temporarily loaded into the\nfpc register, and within interrupt context floating point or vector\nregisters are used, the current fp/vx registers are saved with\nsave_fpu_regs() assuming they belong to user space and will be loaded into\nfp/vx registers when returning to user space.\n\ntest_fp_ctl() restores the original user space fpc register value, however\nit will be discarded, when returning to user space.\n\nIn result the tracer will incorrectly continue to run with the value that\nwas supposed to be used for the traced process.\n\nFix this by saving fpu register contents with save_fpu_regs() before using\ntest_fp_ctl().\n    ",
+		"advisory": {
+			"from": "security@suse.de",
+			"Severity": "Moderate",
+			"cve": {
+				"text": "CVE-2023-52598",
+				"href": "https://www.suse.com/security/cve/CVE-2023-52598/",
+				"impact": "moderate",
+				"cvss3": "5.5/CVSS:3.1/AV:L/AC:L/PR:L/UI:N/S:U/C:N/I:N/A:H"
+			},
+			"bugzilla": [
+				{
+					"text": "SUSE bug 1221060",
+					"href": "https://bugzilla.suse.com/1221060"
+				}
+			],
+			"issued": {
+				"date": "2024-04-17"
+			},
+			"updated": {
+				"date": "2024-04-17"
+			},
+			"affected_cpe_list": {
+				"Cpe": [
+					"cpe:/o:suse:sle-module-live-patching:15:sp5"
+				]
+			}
+		}
+	},
+	"criteria": {
+		"operator": "AND",
+		"criterions": [
+			{
+				"test_ref": "oval:org.opensuse.security:tst:2009764853",
+				"comment": "SUSE Linux Enterprise Live Patching 15 SP5 is installed"
+			},
+			{
+				"test_ref": "oval:org.opensuse.security:tst:2009855203",
+				"comment": "kernel-livepatch-5_14_21-150500_13_43-rt-1-150500.11.5.1 is installed"
+			}
+		]
+	}
+}

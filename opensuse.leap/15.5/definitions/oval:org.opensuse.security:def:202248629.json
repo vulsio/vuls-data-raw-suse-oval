@@ -1,0 +1,335 @@
+{
+	"id": "oval:org.opensuse.security:def:202248629",
+	"version": "1",
+	"class": "vulnerability",
+	"metadata": {
+		"Title": "CVE-2022-48629",
+		"affected": {
+			"family": "unix",
+			"Platform": [
+				"openSUSE Leap 15.5"
+			]
+		},
+		"reference": [
+			{
+				"ref_id": "Mitre CVE-2022-48629",
+				"ref_url": "https://cve.mitre.org/cgi-bin/cvename.cgi?name=CVE-2022-48629",
+				"source": "CVE"
+			},
+			{
+				"ref_id": "SUSE CVE-2022-48629",
+				"ref_url": "https://www.suse.com/security/cve/CVE-2022-48629",
+				"source": "SUSE CVE"
+			},
+			{
+				"ref_id": "SUSE-SU-2024:1320-1",
+				"ref_url": "https://lists.suse.com/pipermail/sle-updates/2024-April/035000.html",
+				"source": "SUSE-SU"
+			}
+		],
+		"Description": "\n    In the Linux kernel, the following vulnerability has been resolved:\n\ncrypto: qcom-rng - ensure buffer for generate is completely filled\n\nThe generate function in struct rng_alg expects that the destination\nbuffer is completely filled if the function returns 0. qcom_rng_read()\ncan run into a situation where the buffer is partially filled with\nrandomness and the remaining part of the buffer is zeroed since\nqcom_rng_generate() doesn't check the return value. This issue can\nbe reproduced by running the following from libkcapi:\n\n    kcapi-rng -b 9000000 > OUTFILE\n\nThe generated OUTFILE will have three huge sections that contain all\nzeros, and this is caused by the code where the test\n'val & PRNG_STATUS_DATA_AVAIL' fails.\n\nLet's fix this issue by ensuring that qcom_rng_read() always returns\nwith a full buffer if the function returns success. Let's also have\nqcom_rng_generate() return the correct value.\n\nHere's some statistics from the ent project\n(https://www.fourmilab.ch/random/) that shows information about the\nquality of the generated numbers:\n\n    $ ent -c qcom-random-before\n    Value Char Occurrences Fraction\n      0           606748   0.067416\n      1            33104   0.003678\n      2            33001   0.003667\n    ...\n    253   �        32883   0.003654\n    254   �        33035   0.003671\n    255   �        33239   0.003693\n\n    Total:       9000000   1.000000\n\n    Entropy = 7.811590 bits per byte.\n\n    Optimum compression would reduce the size\n    of this 9000000 byte file by 2 percent.\n\n    Chi square distribution for 9000000 samples is 9329962.81, and\n    randomly would exceed this value less than 0.01 percent of the\n    times.\n\n    Arithmetic mean value of data bytes is 119.3731 (127.5 = random).\n    Monte Carlo value for Pi is 3.197293333 (error 1.77 percent).\n    Serial correlation coefficient is 0.159130 (totally uncorrelated =\n    0.0).\n\nWithout this patch, the results of the chi-square test is 0.01%, and\nthe numbers are certainly not random according to ent's project page.\nThe results improve with this patch:\n\n    $ ent -c qcom-random-after\n    Value Char Occurrences Fraction\n      0            35432   0.003937\n      1            35127   0.003903\n      2            35424   0.003936\n    ...\n    253   �        35201   0.003911\n    254   �        34835   0.003871\n    255   �        35368   0.003930\n\n    Total:       9000000   1.000000\n\n    Entropy = 7.999979 bits per byte.\n\n    Optimum compression would reduce the size\n    of this 9000000 byte file by 0 percent.\n\n    Chi square distribution for 9000000 samples is 258.77, and randomly\n    would exceed this value 42.24 percent of the times.\n\n    Arithmetic mean value of data bytes is 127.5006 (127.5 = random).\n    Monte Carlo value for Pi is 3.141277333 (error 0.01 percent).\n    Serial correlation coefficient is 0.000468 (totally uncorrelated =\n    0.0).\n\nThis change was tested on a Nexus 5 phone (msm8974 SoC).\n    ",
+		"advisory": {
+			"from": "security@suse.de",
+			"Severity": "Moderate",
+			"cve": {
+				"text": "CVE-2022-48629",
+				"href": "https://www.suse.com/security/cve/CVE-2022-48629/",
+				"impact": "moderate",
+				"cvss3": "5.5/CVSS:3.1/AV:L/AC:L/PR:L/UI:N/S:U/C:H/I:N/A:N"
+			},
+			"bugzilla": [
+				{
+					"text": "SUSE bug 1220989",
+					"href": "https://bugzilla.suse.com/1220989"
+				}
+			],
+			"issued": {
+				"date": "2024-04-17"
+			},
+			"updated": {
+				"date": "2024-04-17"
+			},
+			"affected_cpe_list": {
+				"Cpe": [
+					"cpe:/o:opensuse:leap:15.5"
+				]
+			}
+		}
+	},
+	"criteria": {
+		"operator": "AND",
+		"criterias": [
+			{
+				"operator": "OR",
+				"criterias": [
+					{
+						"operator": "AND",
+						"criterions": [
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009855110",
+								"comment": "cluster-md-kmp-rt-5.14.21-150500.13.43.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009342853",
+								"comment": "cluster-md-kmp-rt is signed with openSUSE key"
+							}
+						]
+					},
+					{
+						"operator": "AND",
+						"criterions": [
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009855111",
+								"comment": "dlm-kmp-rt-5.14.21-150500.13.43.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009342855",
+								"comment": "dlm-kmp-rt is signed with openSUSE key"
+							}
+						]
+					},
+					{
+						"operator": "AND",
+						"criterions": [
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009855112",
+								"comment": "gfs2-kmp-rt-5.14.21-150500.13.43.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009342857",
+								"comment": "gfs2-kmp-rt is signed with openSUSE key"
+							}
+						]
+					},
+					{
+						"operator": "AND",
+						"criterions": [
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009855113",
+								"comment": "kernel-devel-rt-5.14.21-150500.13.43.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009342859",
+								"comment": "kernel-devel-rt is signed with openSUSE key"
+							}
+						]
+					},
+					{
+						"operator": "AND",
+						"criterions": [
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009855114",
+								"comment": "kernel-rt-5.14.21-150500.13.43.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009342860",
+								"comment": "kernel-rt is signed with openSUSE key"
+							}
+						]
+					},
+					{
+						"operator": "AND",
+						"criterions": [
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009855115",
+								"comment": "kernel-rt-devel-5.14.21-150500.13.43.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009342861",
+								"comment": "kernel-rt-devel is signed with openSUSE key"
+							}
+						]
+					},
+					{
+						"operator": "AND",
+						"criterions": [
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009855116",
+								"comment": "kernel-rt-extra-5.14.21-150500.13.43.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009342862",
+								"comment": "kernel-rt-extra is signed with openSUSE key"
+							}
+						]
+					},
+					{
+						"operator": "AND",
+						"criterions": [
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009855117",
+								"comment": "kernel-rt-livepatch-5.14.21-150500.13.43.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009771783",
+								"comment": "kernel-rt-livepatch is signed with openSUSE key"
+							}
+						]
+					},
+					{
+						"operator": "AND",
+						"criterions": [
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009855118",
+								"comment": "kernel-rt-livepatch-devel-5.14.21-150500.13.43.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009623297",
+								"comment": "kernel-rt-livepatch-devel is signed with openSUSE key"
+							}
+						]
+					},
+					{
+						"operator": "AND",
+						"criterions": [
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009855119",
+								"comment": "kernel-rt-optional-5.14.21-150500.13.43.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009771784",
+								"comment": "kernel-rt-optional is signed with openSUSE key"
+							}
+						]
+					},
+					{
+						"operator": "AND",
+						"criterions": [
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009855120",
+								"comment": "kernel-rt-vdso-5.14.21-150500.13.43.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009771785",
+								"comment": "kernel-rt-vdso is signed with openSUSE key"
+							}
+						]
+					},
+					{
+						"operator": "AND",
+						"criterions": [
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009855121",
+								"comment": "kernel-rt_debug-5.14.21-150500.13.43.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009342863",
+								"comment": "kernel-rt_debug is signed with openSUSE key"
+							}
+						]
+					},
+					{
+						"operator": "AND",
+						"criterions": [
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009855122",
+								"comment": "kernel-rt_debug-devel-5.14.21-150500.13.43.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009342864",
+								"comment": "kernel-rt_debug-devel is signed with openSUSE key"
+							}
+						]
+					},
+					{
+						"operator": "AND",
+						"criterions": [
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009855123",
+								"comment": "kernel-rt_debug-livepatch-devel-5.14.21-150500.13.43.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009623299",
+								"comment": "kernel-rt_debug-livepatch-devel is signed with openSUSE key"
+							}
+						]
+					},
+					{
+						"operator": "AND",
+						"criterions": [
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009855124",
+								"comment": "kernel-rt_debug-vdso-5.14.21-150500.13.43.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009771786",
+								"comment": "kernel-rt_debug-vdso is signed with openSUSE key"
+							}
+						]
+					},
+					{
+						"operator": "AND",
+						"criterions": [
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009855125",
+								"comment": "kernel-source-rt-5.14.21-150500.13.43.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009342866",
+								"comment": "kernel-source-rt is signed with openSUSE key"
+							}
+						]
+					},
+					{
+						"operator": "AND",
+						"criterions": [
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009855126",
+								"comment": "kernel-syms-rt-5.14.21-150500.13.43.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009342867",
+								"comment": "kernel-syms-rt is signed with openSUSE key"
+							}
+						]
+					},
+					{
+						"operator": "AND",
+						"criterions": [
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009855127",
+								"comment": "kselftests-kmp-rt-5.14.21-150500.13.43.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009342868",
+								"comment": "kselftests-kmp-rt is signed with openSUSE key"
+							}
+						]
+					},
+					{
+						"operator": "AND",
+						"criterions": [
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009855128",
+								"comment": "ocfs2-kmp-rt-5.14.21-150500.13.43.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009342870",
+								"comment": "ocfs2-kmp-rt is signed with openSUSE key"
+							}
+						]
+					},
+					{
+						"operator": "AND",
+						"criterions": [
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009855129",
+								"comment": "reiserfs-kmp-rt-5.14.21-150500.13.43.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009342872",
+								"comment": "reiserfs-kmp-rt is signed with openSUSE key"
+							}
+						]
+					}
+				]
+			}
+		],
+		"criterions": [
+			{
+				"test_ref": "oval:org.opensuse.security:tst:2009752682",
+				"comment": "openSUSE Leap 15.5 is installed"
+			}
+		]
+	}
+}

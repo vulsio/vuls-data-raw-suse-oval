@@ -1,0 +1,330 @@
+{
+	"id": "oval:org.opensuse.security:def:202426670",
+	"version": "1",
+	"class": "vulnerability",
+	"metadata": {
+		"Title": "CVE-2024-26670",
+		"affected": {
+			"family": "unix",
+			"Platform": [
+				"openSUSE Leap 15.5"
+			]
+		},
+		"reference": [
+			{
+				"ref_id": "Mitre CVE-2024-26670",
+				"ref_url": "https://cve.mitre.org/cgi-bin/cvename.cgi?name=CVE-2024-26670",
+				"source": "CVE"
+			},
+			{
+				"ref_id": "SUSE CVE-2024-26670",
+				"ref_url": "https://www.suse.com/security/cve/CVE-2024-26670",
+				"source": "SUSE CVE"
+			}
+		],
+		"Description": "\n    In the Linux kernel, the following vulnerability has been resolved:\n\narm64: entry: fix ARM64_WORKAROUND_SPECULATIVE_UNPRIV_LOAD\n\nCurrently the ARM64_WORKAROUND_SPECULATIVE_UNPRIV_LOAD workaround isn't\nquite right, as it is supposed to be applied after the last explicit\nmemory access, but is immediately followed by an LDR.\n\nThe ARM64_WORKAROUND_SPECULATIVE_UNPRIV_LOAD workaround is used to\nhandle Cortex-A520 erratum 2966298 and Cortex-A510 erratum 3117295,\nwhich are described in:\n\n* https://developer.arm.com/documentation/SDEN2444153/0600/?lang=en\n* https://developer.arm.com/documentation/SDEN1873361/1600/?lang=en\n\nIn both cases the workaround is described as:\n\n| If pagetable isolation is disabled, the context switch logic in the\n| kernel can be updated to execute the following sequence on affected\n| cores before exiting to EL0, and after all explicit memory accesses:\n|\n| 1. A non-shareable TLBI to any context and/or address, including\n|    unused contexts or addresses, such as a `TLBI VALE1 Xzr`.\n|\n| 2. A DSB NSH to guarantee completion of the TLBI.\n\nThe important part being that the TLBI+DSB must be placed \"after all\nexplicit memory accesses\".\n\nUnfortunately, as-implemented, the TLBI+DSB is immediately followed by\nan LDR, as we have:\n\n| alternative_if ARM64_WORKAROUND_SPECULATIVE_UNPRIV_LOAD\n| \ttlbi\tvale1, xzr\n| \tdsb\tnsh\n| alternative_else_nop_endif\n| alternative_if_not ARM64_UNMAP_KERNEL_AT_EL0\n| \tldr\tlr, [sp, #S_LR]\n| \tadd\tsp, sp, #PT_REGS_SIZE\t\t// restore sp\n| \teret\n| alternative_else_nop_endif\n|\n| [ ... KPTI exception return path ... ]\n\nThis patch fixes this by reworking the logic to place the TLBI+DSB\nimmediately before the ERET, after all explicit memory accesses.\n\nThe ERET is currently in a separate alternative block, and alternatives\ncannot be nested. To account for this, the alternative block for\nARM64_UNMAP_KERNEL_AT_EL0 is replaced with a single alternative branch\nto skip the KPTI logic, with the new shape of the logic being:\n\n| alternative_insn \"b .L_skip_tramp_exit_\\@\", nop, ARM64_UNMAP_KERNEL_AT_EL0\n| \t[ ... KPTI exception return path ... ]\n| .L_skip_tramp_exit_\\@:\n|\n| \tldr\tlr, [sp, #S_LR]\n| \tadd\tsp, sp, #PT_REGS_SIZE\t\t// restore sp\n|\n| alternative_if ARM64_WORKAROUND_SPECULATIVE_UNPRIV_LOAD\n| \ttlbi\tvale1, xzr\n| \tdsb\tnsh\n| alternative_else_nop_endif\n| \teret\n\nThe new structure means that the workaround is only applied when KPTI is\nnot in use; this is fine as noted in the documented implications of the\nerratum:\n\n| Pagetable isolation between EL0 and higher level ELs prevents the\n| issue from occurring.\n\n... and as per the workaround description quoted above, the workaround\nis only necessary \"If pagetable isolation is disabled\".\n    ",
+		"advisory": {
+			"from": "security@suse.de",
+			"Severity": "Moderate",
+			"cve": {
+				"text": "CVE-2024-26670",
+				"href": "https://www.suse.com/security/cve/CVE-2024-26670/",
+				"impact": "moderate",
+				"cvss3": "5.5/CVSS:3.1/AV:L/AC:L/PR:L/UI:N/S:U/C:N/I:N/A:H"
+			},
+			"bugzilla": [
+				{
+					"text": "SUSE bug 1222356",
+					"href": "https://bugzilla.suse.com/1222356"
+				}
+			],
+			"issued": {
+				"date": "2024-04-17"
+			},
+			"updated": {
+				"date": "2024-04-17"
+			},
+			"affected_cpe_list": {
+				"Cpe": [
+					"cpe:/o:opensuse:leap:15.5"
+				]
+			}
+		}
+	},
+	"criteria": {
+		"operator": "AND",
+		"criterias": [
+			{
+				"operator": "OR",
+				"criterias": [
+					{
+						"operator": "AND",
+						"criterions": [
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009855110",
+								"comment": "cluster-md-kmp-rt-5.14.21-150500.13.43.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009342853",
+								"comment": "cluster-md-kmp-rt is signed with openSUSE key"
+							}
+						]
+					},
+					{
+						"operator": "AND",
+						"criterions": [
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009855111",
+								"comment": "dlm-kmp-rt-5.14.21-150500.13.43.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009342855",
+								"comment": "dlm-kmp-rt is signed with openSUSE key"
+							}
+						]
+					},
+					{
+						"operator": "AND",
+						"criterions": [
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009855112",
+								"comment": "gfs2-kmp-rt-5.14.21-150500.13.43.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009342857",
+								"comment": "gfs2-kmp-rt is signed with openSUSE key"
+							}
+						]
+					},
+					{
+						"operator": "AND",
+						"criterions": [
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009855113",
+								"comment": "kernel-devel-rt-5.14.21-150500.13.43.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009342859",
+								"comment": "kernel-devel-rt is signed with openSUSE key"
+							}
+						]
+					},
+					{
+						"operator": "AND",
+						"criterions": [
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009855114",
+								"comment": "kernel-rt-5.14.21-150500.13.43.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009342860",
+								"comment": "kernel-rt is signed with openSUSE key"
+							}
+						]
+					},
+					{
+						"operator": "AND",
+						"criterions": [
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009855115",
+								"comment": "kernel-rt-devel-5.14.21-150500.13.43.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009342861",
+								"comment": "kernel-rt-devel is signed with openSUSE key"
+							}
+						]
+					},
+					{
+						"operator": "AND",
+						"criterions": [
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009855116",
+								"comment": "kernel-rt-extra-5.14.21-150500.13.43.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009342862",
+								"comment": "kernel-rt-extra is signed with openSUSE key"
+							}
+						]
+					},
+					{
+						"operator": "AND",
+						"criterions": [
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009855117",
+								"comment": "kernel-rt-livepatch-5.14.21-150500.13.43.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009771783",
+								"comment": "kernel-rt-livepatch is signed with openSUSE key"
+							}
+						]
+					},
+					{
+						"operator": "AND",
+						"criterions": [
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009855118",
+								"comment": "kernel-rt-livepatch-devel-5.14.21-150500.13.43.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009623297",
+								"comment": "kernel-rt-livepatch-devel is signed with openSUSE key"
+							}
+						]
+					},
+					{
+						"operator": "AND",
+						"criterions": [
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009855119",
+								"comment": "kernel-rt-optional-5.14.21-150500.13.43.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009771784",
+								"comment": "kernel-rt-optional is signed with openSUSE key"
+							}
+						]
+					},
+					{
+						"operator": "AND",
+						"criterions": [
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009855120",
+								"comment": "kernel-rt-vdso-5.14.21-150500.13.43.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009771785",
+								"comment": "kernel-rt-vdso is signed with openSUSE key"
+							}
+						]
+					},
+					{
+						"operator": "AND",
+						"criterions": [
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009855121",
+								"comment": "kernel-rt_debug-5.14.21-150500.13.43.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009342863",
+								"comment": "kernel-rt_debug is signed with openSUSE key"
+							}
+						]
+					},
+					{
+						"operator": "AND",
+						"criterions": [
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009855122",
+								"comment": "kernel-rt_debug-devel-5.14.21-150500.13.43.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009342864",
+								"comment": "kernel-rt_debug-devel is signed with openSUSE key"
+							}
+						]
+					},
+					{
+						"operator": "AND",
+						"criterions": [
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009855123",
+								"comment": "kernel-rt_debug-livepatch-devel-5.14.21-150500.13.43.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009623299",
+								"comment": "kernel-rt_debug-livepatch-devel is signed with openSUSE key"
+							}
+						]
+					},
+					{
+						"operator": "AND",
+						"criterions": [
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009855124",
+								"comment": "kernel-rt_debug-vdso-5.14.21-150500.13.43.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009771786",
+								"comment": "kernel-rt_debug-vdso is signed with openSUSE key"
+							}
+						]
+					},
+					{
+						"operator": "AND",
+						"criterions": [
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009855125",
+								"comment": "kernel-source-rt-5.14.21-150500.13.43.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009342866",
+								"comment": "kernel-source-rt is signed with openSUSE key"
+							}
+						]
+					},
+					{
+						"operator": "AND",
+						"criterions": [
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009855126",
+								"comment": "kernel-syms-rt-5.14.21-150500.13.43.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009342867",
+								"comment": "kernel-syms-rt is signed with openSUSE key"
+							}
+						]
+					},
+					{
+						"operator": "AND",
+						"criterions": [
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009855127",
+								"comment": "kselftests-kmp-rt-5.14.21-150500.13.43.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009342868",
+								"comment": "kselftests-kmp-rt is signed with openSUSE key"
+							}
+						]
+					},
+					{
+						"operator": "AND",
+						"criterions": [
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009855128",
+								"comment": "ocfs2-kmp-rt-5.14.21-150500.13.43.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009342870",
+								"comment": "ocfs2-kmp-rt is signed with openSUSE key"
+							}
+						]
+					},
+					{
+						"operator": "AND",
+						"criterions": [
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009855129",
+								"comment": "reiserfs-kmp-rt-5.14.21-150500.13.43.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009342872",
+								"comment": "reiserfs-kmp-rt is signed with openSUSE key"
+							}
+						]
+					}
+				]
+			}
+		],
+		"criterions": [
+			{
+				"test_ref": "oval:org.opensuse.security:tst:2009752682",
+				"comment": "openSUSE Leap 15.5 is installed"
+			}
+		]
+	}
+}

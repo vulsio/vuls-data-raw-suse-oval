@@ -11,6 +11,8 @@
 				"SUSE Enterprise Storage 7.1",
 				"SUSE Linux Enterprise High Performance Computing 15 SP2",
 				"SUSE Linux Enterprise High Performance Computing 15 SP3",
+				"SUSE Linux Enterprise Live Patching 15 SP4",
+				"SUSE Linux Enterprise Live Patching 15 SP5",
 				"SUSE Linux Enterprise Module for Public Cloud 15 SP2",
 				"SUSE Linux Enterprise Module for Public Cloud 15 SP3",
 				"SUSE Linux Enterprise Server 15 SP1-LTSS",
@@ -18,9 +20,12 @@
 				"SUSE Linux Enterprise Server 15 SP2-LTSS",
 				"SUSE Linux Enterprise Server 15 SP3",
 				"SUSE Linux Enterprise Server 15 SP3-LTSS",
+				"SUSE Linux Enterprise Server 15 SP4-LTSS",
+				"SUSE Linux Enterprise Server 15 SP4-TERADATA",
 				"SUSE Linux Enterprise Server 15-LTSS",
 				"SUSE Linux Enterprise Server for SAP Applications 15 SP2",
 				"SUSE Linux Enterprise Server for SAP Applications 15 SP3",
+				"SUSE Linux Enterprise Server for SAP Applications 15 SP4",
 				"SUSE Manager Proxy 4.1",
 				"SUSE Manager Proxy 4.2",
 				"SUSE Manager Retail Branch Server 4.1",
@@ -39,6 +44,11 @@
 				"ref_id": "SUSE CVE-2021-47099",
 				"ref_url": "https://www.suse.com/security/cve/CVE-2021-47099",
 				"source": "SUSE CVE"
+			},
+			{
+				"ref_id": "SUSE-SU-2024:1320-1",
+				"ref_url": "https://lists.suse.com/pipermail/sle-updates/2024-April/035000.html",
+				"source": "SUSE-SU"
 			}
 		],
 		"Description": "\n    In the Linux kernel, the following vulnerability has been resolved:\n\nveth: ensure skb entering GRO are not cloned.\n\nAfter commit d3256efd8e8b (\"veth: allow enabling NAPI even without XDP\"),\nif GRO is enabled on a veth device and TSO is disabled on the peer\ndevice, TCP skbs will go through the NAPI callback. If there is no XDP\nprogram attached, the veth code does not perform any share check, and\nshared/cloned skbs could enter the GRO engine.\n\nIgnat reported a BUG triggered later-on due to the above condition:\n\n[   53.970529][    C1] kernel BUG at net/core/skbuff.c:3574!\n[   53.981755][    C1] invalid opcode: 0000 [#1] PREEMPT SMP KASAN PTI\n[   53.982634][    C1] CPU: 1 PID: 19 Comm: ksoftirqd/1 Not tainted 5.16.0-rc5+ #25\n[   53.982634][    C1] Hardware name: QEMU Standard PC (Q35 + ICH9, 2009), BIOS 0.0.0 02/06/2015\n[   53.982634][    C1] RIP: 0010:skb_shift+0x13ef/0x23b0\n[   53.982634][    C1] Code: ea 03 0f b6 04 02 48 89 fa 83 e2 07 38 d0\n7f 08 84 c0 0f 85 41 0c 00 00 41 80 7f 02 00 4d 8d b5 d0 00 00 00 0f\n85 74 f5 ff ff <0f> 0b 4d 8d 77 20 be 04 00 00 00 4c 89 44 24 78 4c 89\nf7 4c 89 8c\n[   53.982634][    C1] RSP: 0018:ffff8881008f7008 EFLAGS: 00010246\n[   53.982634][    C1] RAX: 0000000000000000 RBX: ffff8881180b4c80 RCX: 0000000000000000\n[   53.982634][    C1] RDX: 0000000000000002 RSI: ffff8881180b4d3c RDI: ffff88810bc9cac2\n[   53.982634][    C1] RBP: ffff8881008f70b8 R08: ffff8881180b4cf4 R09: ffff8881180b4cf0\n[   53.982634][    C1] R10: ffffed1022999e5c R11: 0000000000000002 R12: 0000000000000590\n[   53.982634][    C1] R13: ffff88810f940c80 R14: ffff88810f940d50 R15: ffff88810bc9cac0\n[   53.982634][    C1] FS:  0000000000000000(0000) GS:ffff888235880000(0000) knlGS:0000000000000000\n[   53.982634][    C1] CS:  0010 DS: 0000 ES: 0000 CR0: 0000000080050033\n[   53.982634][    C1] CR2: 00007ff5f9b86680 CR3: 0000000108ce8004 CR4: 0000000000170ee0\n[   53.982634][    C1] Call Trace:\n[   53.982634][    C1]  <TASK>\n[   53.982634][    C1]  tcp_sacktag_walk+0xaba/0x18e0\n[   53.982634][    C1]  tcp_sacktag_write_queue+0xe7b/0x3460\n[   53.982634][    C1]  tcp_ack+0x2666/0x54b0\n[   53.982634][    C1]  tcp_rcv_established+0x4d9/0x20f0\n[   53.982634][    C1]  tcp_v4_do_rcv+0x551/0x810\n[   53.982634][    C1]  tcp_v4_rcv+0x22ed/0x2ed0\n[   53.982634][    C1]  ip_protocol_deliver_rcu+0x96/0xaf0\n[   53.982634][    C1]  ip_local_deliver_finish+0x1e0/0x2f0\n[   53.982634][    C1]  ip_sublist_rcv_finish+0x211/0x440\n[   53.982634][    C1]  ip_list_rcv_finish.constprop.0+0x424/0x660\n[   53.982634][    C1]  ip_list_rcv+0x2c8/0x410\n[   53.982634][    C1]  __netif_receive_skb_list_core+0x65c/0x910\n[   53.982634][    C1]  netif_receive_skb_list_internal+0x5f9/0xcb0\n[   53.982634][    C1]  napi_complete_done+0x188/0x6e0\n[   53.982634][    C1]  gro_cell_poll+0x10c/0x1d0\n[   53.982634][    C1]  __napi_poll+0xa1/0x530\n[   53.982634][    C1]  net_rx_action+0x567/0x1270\n[   53.982634][    C1]  __do_softirq+0x28a/0x9ba\n[   53.982634][    C1]  run_ksoftirqd+0x32/0x60\n[   53.982634][    C1]  smpboot_thread_fn+0x559/0x8c0\n[   53.982634][    C1]  kthread+0x3b9/0x490\n[   53.982634][    C1]  ret_from_fork+0x22/0x30\n[   53.982634][    C1]  </TASK>\n\nAddress the issue by skipping the GRO stage for shared or cloned skbs.\nTo reduce the chance of OoO, try to unclone the skbs before giving up.\n\nv1 -> v2:\n - use avoid skb_copy and fallback to netif_receive_skb  - Eric\n    ",
@@ -61,12 +71,14 @@
 				"date": "2024-03-07"
 			},
 			"updated": {
-				"date": "2024-03-07"
+				"date": "2024-04-17"
 			},
 			"affected_cpe_list": {
 				"Cpe": [
 					"cpe:/o:suse:ses:7",
 					"cpe:/o:suse:ses:7.1",
+					"cpe:/o:suse:sle-module-live-patching:15:sp4",
+					"cpe:/o:suse:sle-module-live-patching:15:sp5",
 					"cpe:/o:suse:sle-module-public-cloud:15:sp2",
 					"cpe:/o:suse:sle-module-public-cloud:15:sp3",
 					"cpe:/o:suse:sle_hpc:15:sp2",
@@ -75,10 +87,12 @@
 					"cpe:/o:suse:sles-ltss:15:sp1",
 					"cpe:/o:suse:sles-ltss:15:sp2",
 					"cpe:/o:suse:sles-ltss:15:sp3",
+					"cpe:/o:suse:sles-ltss:15:sp4",
 					"cpe:/o:suse:sles:15:sp2",
 					"cpe:/o:suse:sles:15:sp3",
 					"cpe:/o:suse:sles_sap:15:sp2",
 					"cpe:/o:suse:sles_sap:15:sp3",
+					"cpe:/o:suse:sles_sap:15:sp4",
 					"cpe:/o:suse:suse-manager-proxy:4.1",
 					"cpe:/o:suse:suse-manager-proxy:4.2",
 					"cpe:/o:suse:suse-manager-retail-branch-server:4.1",
@@ -92,6 +106,19 @@
 	"criteria": {
 		"operator": "OR",
 		"criterias": [
+			{
+				"operator": "AND",
+				"criterions": [
+					{
+						"test_ref": "oval:org.opensuse.security:tst:2009764853",
+						"comment": "SUSE Linux Enterprise Live Patching 15 SP5 is installed"
+					},
+					{
+						"test_ref": "oval:org.opensuse.security:tst:2009855203",
+						"comment": "kernel-livepatch-5_14_21-150500_13_43-rt-1-150500.11.5.1 is installed"
+					}
+				]
+			},
 			{
 				"operator": "AND",
 				"criterias": [
@@ -286,6 +313,158 @@
 								"comment": "kernel-source-azure is not affected"
 							}
 						]
+					}
+				]
+			},
+			{
+				"operator": "AND",
+				"criterias": [
+					{
+						"operator": "OR",
+						"criterions": [
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009855149",
+								"comment": "kernel-default-livepatch-5.14.21-150400.24.116.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009855150",
+								"comment": "kernel-default-livepatch-devel-5.14.21-150400.24.116.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009855151",
+								"comment": "kernel-livepatch-5_14_21-150400_24_116-default-1-150400.9.5.1 is installed"
+							}
+						]
+					}
+				],
+				"criterions": [
+					{
+						"test_ref": "oval:org.opensuse.security:tst:2009698985",
+						"comment": "SUSE Linux Enterprise Live Patching 15 SP4 is installed"
+					}
+				]
+			},
+			{
+				"operator": "AND",
+				"criterias": [
+					{
+						"operator": "OR",
+						"criterions": [
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009855163",
+								"comment": "kernel-64kb-5.14.21-150400.24.116.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009855164",
+								"comment": "kernel-64kb-devel-5.14.21-150400.24.116.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009855178",
+								"comment": "kernel-default-5.14.21-150400.24.116.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009855179",
+								"comment": "kernel-default-base-5.14.21-150400.24.116.1.150400.24.54.5 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009855180",
+								"comment": "kernel-default-devel-5.14.21-150400.24.116.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009855168",
+								"comment": "kernel-devel-5.14.21-150400.24.116.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009855169",
+								"comment": "kernel-docs-5.14.21-150400.24.116.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009855170",
+								"comment": "kernel-macros-5.14.21-150400.24.116.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009855181",
+								"comment": "kernel-obs-build-5.14.21-150400.24.116.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009855172",
+								"comment": "kernel-source-5.14.21-150400.24.116.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009855182",
+								"comment": "kernel-syms-5.14.21-150400.24.116.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009855183",
+								"comment": "kernel-zfcpdump-5.14.21-150400.24.116.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009855184",
+								"comment": "reiserfs-kmp-default-5.14.21-150400.24.116.1 is installed"
+							}
+						]
+					}
+				],
+				"criterions": [
+					{
+						"test_ref": "oval:org.opensuse.security:tst:2009816749",
+						"comment": "SUSE Linux Enterprise Server 15 SP4-LTSS is installed"
+					}
+				]
+			},
+			{
+				"operator": "AND",
+				"criterias": [
+					{
+						"operator": "OR",
+						"criterions": [
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009855197",
+								"comment": "kernel-default-5.14.21-150400.24.116.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009855198",
+								"comment": "kernel-default-base-5.14.21-150400.24.116.1.150400.24.54.5 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009855199",
+								"comment": "kernel-default-devel-5.14.21-150400.24.116.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009855168",
+								"comment": "kernel-devel-5.14.21-150400.24.116.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009855169",
+								"comment": "kernel-docs-5.14.21-150400.24.116.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009855170",
+								"comment": "kernel-macros-5.14.21-150400.24.116.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009855200",
+								"comment": "kernel-obs-build-5.14.21-150400.24.116.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009855172",
+								"comment": "kernel-source-5.14.21-150400.24.116.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009855201",
+								"comment": "kernel-syms-5.14.21-150400.24.116.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009855202",
+								"comment": "reiserfs-kmp-default-5.14.21-150400.24.116.1 is installed"
+							}
+						]
+					}
+				],
+				"criterions": [
+					{
+						"test_ref": "oval:org.opensuse.security:tst:2009669928",
+						"comment": "SUSE Linux Enterprise Server for SAP Applications 15 SP4 is installed"
 					}
 				]
 			}
