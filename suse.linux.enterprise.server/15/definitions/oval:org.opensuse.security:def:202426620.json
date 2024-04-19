@@ -14,13 +14,11 @@
 				"SUSE Linux Enterprise High Performance Computing 15 SP3",
 				"SUSE Linux Enterprise High Performance Computing 15 SP4",
 				"SUSE Linux Enterprise High Performance Computing 15 SP5",
-				"SUSE Linux Enterprise Live Patching 15 SP5",
 				"SUSE Linux Enterprise Module for Basesystem 15 SP5",
 				"SUSE Linux Enterprise Module for Development Tools 15 SP5",
 				"SUSE Linux Enterprise Module for Public Cloud 15 SP2",
 				"SUSE Linux Enterprise Module for Public Cloud 15 SP3",
 				"SUSE Linux Enterprise Module for Public Cloud 15 SP4",
-				"SUSE Linux Enterprise Module for Public Cloud 15 SP5",
 				"SUSE Linux Enterprise Server 15 SP1-LTSS",
 				"SUSE Linux Enterprise Server 15 SP2",
 				"SUSE Linux Enterprise Server 15 SP2-LTSS",
@@ -60,6 +58,21 @@
 				"ref_id": "SUSE-SU-2024:1322-1",
 				"ref_url": "https://lists.suse.com/pipermail/sle-updates/2024-April/035002.html",
 				"source": "SUSE-SU"
+			},
+			{
+				"ref_id": "SUSE-SU-2024:1322-2",
+				"ref_url": "https://lists.suse.com/pipermail/sle-security-updates/2024-April/018377.html",
+				"source": "SUSE-SU"
+			},
+			{
+				"ref_id": "SUSE-SU-2024:1332-1",
+				"ref_url": "https://lists.suse.com/pipermail/sle-updates/2024-April/035014.html",
+				"source": "SUSE-SU"
+			},
+			{
+				"ref_id": "SUSE-SU-2024:1332-2",
+				"ref_url": "https://lists.suse.com/pipermail/sle-security-updates/2024-April/018378.html",
+				"source": "SUSE-SU"
 			}
 		],
 		"Description": "\n    In the Linux kernel, the following vulnerability has been resolved:\n\ns390/vfio-ap: always filter entire AP matrix\n\nThe vfio_ap_mdev_filter_matrix function is called whenever a new adapter or\ndomain is assigned to the mdev. The purpose of the function is to update\nthe guest's AP configuration by filtering the matrix of adapters and\ndomains assigned to the mdev. When an adapter or domain is assigned, only\nthe APQNs associated with the APID of the new adapter or APQI of the new\ndomain are inspected. If an APQN does not reference a queue device bound to\nthe vfio_ap device driver, then it's APID will be filtered from the mdev's\nmatrix when updating the guest's AP configuration.\n\nInspecting only the APID of the new adapter or APQI of the new domain will\nresult in passing AP queues through to a guest that are not bound to the\nvfio_ap device driver under certain circumstances. Consider the following:\n\nguest's AP configuration (all also assigned to the mdev's matrix):\n14.0004\n14.0005\n14.0006\n16.0004\n16.0005\n16.0006\n\nunassign domain 4\nunbind queue 16.0005\nassign domain 4\n\nWhen domain 4 is re-assigned, since only domain 4 will be inspected, the\nAPQNs that will be examined will be:\n14.0004\n16.0004\n\nSince both of those APQNs reference queue devices that are bound to the\nvfio_ap device driver, nothing will get filtered from the mdev's matrix\nwhen updating the guest's AP configuration. Consequently, queue 16.0005\nwill get passed through despite not being bound to the driver. This\nviolates the linux device model requirement that a guest shall only be\ngiven access to devices bound to the device driver facilitating their\npass-through.\n\nTo resolve this problem, every adapter and domain assigned to the mdev will\nbe inspected when filtering the mdev's matrix.\n    ",
@@ -81,7 +94,7 @@
 				"date": "2024-03-13"
 			},
 			"updated": {
-				"date": "2024-04-18"
+				"date": "2024-04-19"
 			},
 			"affected_cpe_list": {
 				"Cpe": [
@@ -89,11 +102,9 @@
 					"cpe:/o:suse:ses:7.1",
 					"cpe:/o:suse:sle-module-basesystem:15:sp5",
 					"cpe:/o:suse:sle-module-development-tools:15:sp5",
-					"cpe:/o:suse:sle-module-live-patching:15:sp5",
 					"cpe:/o:suse:sle-module-public-cloud:15:sp2",
 					"cpe:/o:suse:sle-module-public-cloud:15:sp3",
 					"cpe:/o:suse:sle-module-public-cloud:15:sp4",
-					"cpe:/o:suse:sle-module-public-cloud:15:sp5",
 					"cpe:/o:suse:sle_hpc:15:sp2",
 					"cpe:/o:suse:sle_hpc:15:sp3",
 					"cpe:/o:suse:sle_hpc:15:sp4",
@@ -130,14 +141,109 @@
 		"criterias": [
 			{
 				"operator": "AND",
+				"criterias": [
+					{
+						"operator": "OR",
+						"criterions": [
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009302786",
+								"comment": "SUSE Enterprise Storage 7 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009681000",
+								"comment": "SUSE Enterprise Storage 7.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009479728",
+								"comment": "SUSE Linux Enterprise High Performance Computing 15 SP2 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009669877",
+								"comment": "SUSE Linux Enterprise High Performance Computing 15 SP3 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009669926",
+								"comment": "SUSE Linux Enterprise High Performance Computing 15 SP4 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009287160",
+								"comment": "SUSE Linux Enterprise Module for Public Cloud 15 SP2 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009351817",
+								"comment": "SUSE Linux Enterprise Module for Public Cloud 15 SP3 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009677250",
+								"comment": "SUSE Linux Enterprise Module for Public Cloud 15 SP4 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009303870",
+								"comment": "SUSE Linux Enterprise Server 15 SP2 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009476340",
+								"comment": "SUSE Linux Enterprise Server 15 SP3 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009669927",
+								"comment": "SUSE Linux Enterprise Server 15 SP4 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009659637",
+								"comment": "SUSE Linux Enterprise Server for SAP Applications 15 SP2 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009669878",
+								"comment": "SUSE Linux Enterprise Server for SAP Applications 15 SP3 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009669928",
+								"comment": "SUSE Linux Enterprise Server for SAP Applications 15 SP4 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009302537",
+								"comment": "SUSE Manager Proxy 4.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009669879",
+								"comment": "SUSE Manager Proxy 4.2 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009681297",
+								"comment": "SUSE Manager Proxy 4.3 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009346072",
+								"comment": "SUSE Manager Retail Branch Server 4.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009677266",
+								"comment": "SUSE Manager Retail Branch Server 4.2 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009681298",
+								"comment": "SUSE Manager Retail Branch Server 4.3 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009302605",
+								"comment": "SUSE Manager Server 4.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009669880",
+								"comment": "SUSE Manager Server 4.2 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009681299",
+								"comment": "SUSE Manager Server 4.3 is installed"
+							}
+						]
+					}
+				],
 				"criterions": [
 					{
-						"test_ref": "oval:org.opensuse.security:tst:2009764853",
-						"comment": "SUSE Linux Enterprise Live Patching 15 SP5 is installed"
-					},
-					{
-						"test_ref": "oval:org.opensuse.security:tst:2009855203",
-						"comment": "kernel-livepatch-5_14_21-150500_13_43-rt-1-150500.11.5.1 is installed"
+						"test_ref": "oval:org.opensuse.security:tst:2009340305",
+						"comment": "kernel-source-azure is not affected"
 					}
 				]
 			},
@@ -348,137 +454,6 @@
 							{
 								"test_ref": "oval:org.opensuse.security:tst:2009333928",
 								"comment": "kernel-source is not affected"
-							}
-						]
-					}
-				]
-			},
-			{
-				"operator": "AND",
-				"criterias": [
-					{
-						"operator": "OR",
-						"criterions": [
-							{
-								"test_ref": "oval:org.opensuse.security:tst:2009302786",
-								"comment": "SUSE Enterprise Storage 7 is installed"
-							},
-							{
-								"test_ref": "oval:org.opensuse.security:tst:2009681000",
-								"comment": "SUSE Enterprise Storage 7.1 is installed"
-							},
-							{
-								"test_ref": "oval:org.opensuse.security:tst:2009479728",
-								"comment": "SUSE Linux Enterprise High Performance Computing 15 SP2 is installed"
-							},
-							{
-								"test_ref": "oval:org.opensuse.security:tst:2009669877",
-								"comment": "SUSE Linux Enterprise High Performance Computing 15 SP3 is installed"
-							},
-							{
-								"test_ref": "oval:org.opensuse.security:tst:2009669926",
-								"comment": "SUSE Linux Enterprise High Performance Computing 15 SP4 is installed"
-							},
-							{
-								"test_ref": "oval:org.opensuse.security:tst:2009759899",
-								"comment": "SUSE Linux Enterprise High Performance Computing 15 SP5 is installed"
-							},
-							{
-								"test_ref": "oval:org.opensuse.security:tst:2009287160",
-								"comment": "SUSE Linux Enterprise Module for Public Cloud 15 SP2 is installed"
-							},
-							{
-								"test_ref": "oval:org.opensuse.security:tst:2009351817",
-								"comment": "SUSE Linux Enterprise Module for Public Cloud 15 SP3 is installed"
-							},
-							{
-								"test_ref": "oval:org.opensuse.security:tst:2009677250",
-								"comment": "SUSE Linux Enterprise Module for Public Cloud 15 SP4 is installed"
-							},
-							{
-								"test_ref": "oval:org.opensuse.security:tst:2009762868",
-								"comment": "SUSE Linux Enterprise Module for Public Cloud 15 SP5 is installed"
-							},
-							{
-								"test_ref": "oval:org.opensuse.security:tst:2009303870",
-								"comment": "SUSE Linux Enterprise Server 15 SP2 is installed"
-							},
-							{
-								"test_ref": "oval:org.opensuse.security:tst:2009476340",
-								"comment": "SUSE Linux Enterprise Server 15 SP3 is installed"
-							},
-							{
-								"test_ref": "oval:org.opensuse.security:tst:2009669927",
-								"comment": "SUSE Linux Enterprise Server 15 SP4 is installed"
-							},
-							{
-								"test_ref": "oval:org.opensuse.security:tst:2009759901",
-								"comment": "SUSE Linux Enterprise Server 15 SP5 is installed"
-							},
-							{
-								"test_ref": "oval:org.opensuse.security:tst:2009659637",
-								"comment": "SUSE Linux Enterprise Server for SAP Applications 15 SP2 is installed"
-							},
-							{
-								"test_ref": "oval:org.opensuse.security:tst:2009669878",
-								"comment": "SUSE Linux Enterprise Server for SAP Applications 15 SP3 is installed"
-							},
-							{
-								"test_ref": "oval:org.opensuse.security:tst:2009669928",
-								"comment": "SUSE Linux Enterprise Server for SAP Applications 15 SP4 is installed"
-							},
-							{
-								"test_ref": "oval:org.opensuse.security:tst:2009759902",
-								"comment": "SUSE Linux Enterprise Server for SAP Applications 15 SP5 is installed"
-							},
-							{
-								"test_ref": "oval:org.opensuse.security:tst:2009302537",
-								"comment": "SUSE Manager Proxy 4.1 is installed"
-							},
-							{
-								"test_ref": "oval:org.opensuse.security:tst:2009669879",
-								"comment": "SUSE Manager Proxy 4.2 is installed"
-							},
-							{
-								"test_ref": "oval:org.opensuse.security:tst:2009681297",
-								"comment": "SUSE Manager Proxy 4.3 is installed"
-							},
-							{
-								"test_ref": "oval:org.opensuse.security:tst:2009346072",
-								"comment": "SUSE Manager Retail Branch Server 4.1 is installed"
-							},
-							{
-								"test_ref": "oval:org.opensuse.security:tst:2009677266",
-								"comment": "SUSE Manager Retail Branch Server 4.2 is installed"
-							},
-							{
-								"test_ref": "oval:org.opensuse.security:tst:2009681298",
-								"comment": "SUSE Manager Retail Branch Server 4.3 is installed"
-							},
-							{
-								"test_ref": "oval:org.opensuse.security:tst:2009302605",
-								"comment": "SUSE Manager Server 4.1 is installed"
-							},
-							{
-								"test_ref": "oval:org.opensuse.security:tst:2009669880",
-								"comment": "SUSE Manager Server 4.2 is installed"
-							},
-							{
-								"test_ref": "oval:org.opensuse.security:tst:2009681299",
-								"comment": "SUSE Manager Server 4.3 is installed"
-							}
-						]
-					},
-					{
-						"operator": "OR",
-						"criterions": [
-							{
-								"test_ref": "oval:org.opensuse.security:tst:2009340306",
-								"comment": "kernel-devel-azure is not affected"
-							},
-							{
-								"test_ref": "oval:org.opensuse.security:tst:2009340305",
-								"comment": "kernel-source-azure is not affected"
 							}
 						]
 					}

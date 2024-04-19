@@ -12,7 +12,6 @@
 				"SUSE Linux Enterprise High Performance Computing 15 SP2",
 				"SUSE Linux Enterprise High Performance Computing 15 SP3",
 				"SUSE Linux Enterprise Live Patching 15 SP4",
-				"SUSE Linux Enterprise Live Patching 15 SP5",
 				"SUSE Linux Enterprise Module for Public Cloud 15 SP2",
 				"SUSE Linux Enterprise Module for Public Cloud 15 SP3",
 				"SUSE Linux Enterprise Server 15 SP1-LTSS",
@@ -59,6 +58,21 @@
 				"ref_id": "SUSE-SU-2024:1322-1",
 				"ref_url": "https://lists.suse.com/pipermail/sle-updates/2024-April/035002.html",
 				"source": "SUSE-SU"
+			},
+			{
+				"ref_id": "SUSE-SU-2024:1322-2",
+				"ref_url": "https://lists.suse.com/pipermail/sle-security-updates/2024-April/018377.html",
+				"source": "SUSE-SU"
+			},
+			{
+				"ref_id": "SUSE-SU-2024:1332-1",
+				"ref_url": "https://lists.suse.com/pipermail/sle-updates/2024-April/035014.html",
+				"source": "SUSE-SU"
+			},
+			{
+				"ref_id": "SUSE-SU-2024:1332-2",
+				"ref_url": "https://lists.suse.com/pipermail/sle-security-updates/2024-April/018378.html",
+				"source": "SUSE-SU"
 			}
 		],
 		"Description": "\n    In the Linux kernel, the following vulnerability has been resolved:\n\nring-buffer: Do not attempt to read past \"commit\"\n\nWhen iterating over the ring buffer while the ring buffer is active, the\nwriter can corrupt the reader. There's barriers to help detect this and\nhandle it, but that code missed the case where the last event was at the\nvery end of the page and has only 4 bytes left.\n\nThe checks to detect the corruption by the writer to reads needs to see the\nlength of the event. If the length in the first 4 bytes is zero then the\nlength is stored in the second 4 bytes. But if the writer is in the process\nof updating that code, there's a small window where the length in the first\n4 bytes could be zero even though the length is only 4 bytes. That will\ncause rb_event_length() to read the next 4 bytes which could happen to be off the\nallocated page.\n\nTo protect against this, fail immediately if the next event pointer is\nless than 8 bytes from the end of the commit (last byte of data), as all\nevents must be a minimum of 8 bytes anyway.\n    ",
@@ -81,14 +95,13 @@
 				"date": "2024-03-07"
 			},
 			"updated": {
-				"date": "2024-04-18"
+				"date": "2024-04-19"
 			},
 			"affected_cpe_list": {
 				"Cpe": [
 					"cpe:/o:suse:ses:7",
 					"cpe:/o:suse:ses:7.1",
 					"cpe:/o:suse:sle-module-live-patching:15:sp4",
-					"cpe:/o:suse:sle-module-live-patching:15:sp5",
 					"cpe:/o:suse:sle-module-public-cloud:15:sp2",
 					"cpe:/o:suse:sle-module-public-cloud:15:sp3",
 					"cpe:/o:suse:sle_hpc:15:sp2",
@@ -118,14 +131,81 @@
 		"criterias": [
 			{
 				"operator": "AND",
+				"criterias": [
+					{
+						"operator": "OR",
+						"criterions": [
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009302786",
+								"comment": "SUSE Enterprise Storage 7 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009681000",
+								"comment": "SUSE Enterprise Storage 7.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009479728",
+								"comment": "SUSE Linux Enterprise High Performance Computing 15 SP2 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009669877",
+								"comment": "SUSE Linux Enterprise High Performance Computing 15 SP3 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009287160",
+								"comment": "SUSE Linux Enterprise Module for Public Cloud 15 SP2 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009351817",
+								"comment": "SUSE Linux Enterprise Module for Public Cloud 15 SP3 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009303870",
+								"comment": "SUSE Linux Enterprise Server 15 SP2 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009476340",
+								"comment": "SUSE Linux Enterprise Server 15 SP3 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009659637",
+								"comment": "SUSE Linux Enterprise Server for SAP Applications 15 SP2 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009669878",
+								"comment": "SUSE Linux Enterprise Server for SAP Applications 15 SP3 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009302537",
+								"comment": "SUSE Manager Proxy 4.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009669879",
+								"comment": "SUSE Manager Proxy 4.2 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009346072",
+								"comment": "SUSE Manager Retail Branch Server 4.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009677266",
+								"comment": "SUSE Manager Retail Branch Server 4.2 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009302605",
+								"comment": "SUSE Manager Server 4.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009669880",
+								"comment": "SUSE Manager Server 4.2 is installed"
+							}
+						]
+					}
+				],
 				"criterions": [
 					{
-						"test_ref": "oval:org.opensuse.security:tst:2009764853",
-						"comment": "SUSE Linux Enterprise Live Patching 15 SP5 is installed"
-					},
-					{
-						"test_ref": "oval:org.opensuse.security:tst:2009855203",
-						"comment": "kernel-livepatch-5_14_21-150500_13_43-rt-1-150500.11.5.1 is installed"
+						"test_ref": "oval:org.opensuse.security:tst:2009340305",
+						"comment": "kernel-source-azure is not affected"
 					}
 				]
 			},
@@ -234,93 +314,6 @@
 							{
 								"test_ref": "oval:org.opensuse.security:tst:2009333928",
 								"comment": "kernel-source is not affected"
-							}
-						]
-					}
-				]
-			},
-			{
-				"operator": "AND",
-				"criterias": [
-					{
-						"operator": "OR",
-						"criterions": [
-							{
-								"test_ref": "oval:org.opensuse.security:tst:2009302786",
-								"comment": "SUSE Enterprise Storage 7 is installed"
-							},
-							{
-								"test_ref": "oval:org.opensuse.security:tst:2009681000",
-								"comment": "SUSE Enterprise Storage 7.1 is installed"
-							},
-							{
-								"test_ref": "oval:org.opensuse.security:tst:2009479728",
-								"comment": "SUSE Linux Enterprise High Performance Computing 15 SP2 is installed"
-							},
-							{
-								"test_ref": "oval:org.opensuse.security:tst:2009669877",
-								"comment": "SUSE Linux Enterprise High Performance Computing 15 SP3 is installed"
-							},
-							{
-								"test_ref": "oval:org.opensuse.security:tst:2009287160",
-								"comment": "SUSE Linux Enterprise Module for Public Cloud 15 SP2 is installed"
-							},
-							{
-								"test_ref": "oval:org.opensuse.security:tst:2009351817",
-								"comment": "SUSE Linux Enterprise Module for Public Cloud 15 SP3 is installed"
-							},
-							{
-								"test_ref": "oval:org.opensuse.security:tst:2009303870",
-								"comment": "SUSE Linux Enterprise Server 15 SP2 is installed"
-							},
-							{
-								"test_ref": "oval:org.opensuse.security:tst:2009476340",
-								"comment": "SUSE Linux Enterprise Server 15 SP3 is installed"
-							},
-							{
-								"test_ref": "oval:org.opensuse.security:tst:2009659637",
-								"comment": "SUSE Linux Enterprise Server for SAP Applications 15 SP2 is installed"
-							},
-							{
-								"test_ref": "oval:org.opensuse.security:tst:2009669878",
-								"comment": "SUSE Linux Enterprise Server for SAP Applications 15 SP3 is installed"
-							},
-							{
-								"test_ref": "oval:org.opensuse.security:tst:2009302537",
-								"comment": "SUSE Manager Proxy 4.1 is installed"
-							},
-							{
-								"test_ref": "oval:org.opensuse.security:tst:2009669879",
-								"comment": "SUSE Manager Proxy 4.2 is installed"
-							},
-							{
-								"test_ref": "oval:org.opensuse.security:tst:2009346072",
-								"comment": "SUSE Manager Retail Branch Server 4.1 is installed"
-							},
-							{
-								"test_ref": "oval:org.opensuse.security:tst:2009677266",
-								"comment": "SUSE Manager Retail Branch Server 4.2 is installed"
-							},
-							{
-								"test_ref": "oval:org.opensuse.security:tst:2009302605",
-								"comment": "SUSE Manager Server 4.1 is installed"
-							},
-							{
-								"test_ref": "oval:org.opensuse.security:tst:2009669880",
-								"comment": "SUSE Manager Server 4.2 is installed"
-							}
-						]
-					},
-					{
-						"operator": "OR",
-						"criterions": [
-							{
-								"test_ref": "oval:org.opensuse.security:tst:2009340306",
-								"comment": "kernel-devel-azure is not affected"
-							},
-							{
-								"test_ref": "oval:org.opensuse.security:tst:2009340305",
-								"comment": "kernel-source-azure is not affected"
 							}
 						]
 					}
