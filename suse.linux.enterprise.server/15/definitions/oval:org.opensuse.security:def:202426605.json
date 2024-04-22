@@ -3,10 +3,10 @@
 	"version": "1",
 	"class": "vulnerability",
 	"metadata": {
-		"Title": "CVE-2024-26605",
+		"title": "CVE-2024-26605",
 		"affected": {
 			"family": "unix",
-			"Platform": [
+			"platform": [
 				"SUSE Enterprise Storage 7",
 				"SUSE Enterprise Storage 7.1",
 				"SUSE Linux Enterprise Desktop 15 SP5",
@@ -57,16 +57,24 @@
 				"source": "SUSE CVE"
 			}
 		],
-		"Description": "\n    In the Linux kernel, the following vulnerability has been resolved:\n\nPCI/ASPM: Fix deadlock when enabling ASPM\n\nA last minute revert in 6.7-final introduced a potential deadlock when\nenabling ASPM during probe of Qualcomm PCIe controllers as reported by\nlockdep:\n\n  ============================================\n  WARNING: possible recursive locking detected\n  6.7.0 #40 Not tainted\n  --------------------------------------------\n  kworker/u16:5/90 is trying to acquire lock:\n  ffffacfa78ced000 (pci_bus_sem){++++}-{3:3}, at: pcie_aspm_pm_state_change+0x58/0xdc\n\n              but task is already holding lock:\n  ffffacfa78ced000 (pci_bus_sem){++++}-{3:3}, at: pci_walk_bus+0x34/0xbc\n\n              other info that might help us debug this:\n   Possible unsafe locking scenario:\n\n         CPU0\n         ----\n    lock(pci_bus_sem);\n    lock(pci_bus_sem);\n\n               *** DEADLOCK ***\n\n  Call trace:\n   print_deadlock_bug+0x25c/0x348\n   __lock_acquire+0x10a4/0x2064\n   lock_acquire+0x1e8/0x318\n   down_read+0x60/0x184\n   pcie_aspm_pm_state_change+0x58/0xdc\n   pci_set_full_power_state+0xa8/0x114\n   pci_set_power_state+0xc4/0x120\n   qcom_pcie_enable_aspm+0x1c/0x3c [pcie_qcom]\n   pci_walk_bus+0x64/0xbc\n   qcom_pcie_host_post_init_2_7_0+0x28/0x34 [pcie_qcom]\n\nThe deadlock can easily be reproduced on machines like the Lenovo ThinkPad\nX13s by adding a delay to increase the race window during asynchronous\nprobe where another thread can take a write lock.\n\nAdd a new pci_set_power_state_locked() and associated helper functions that\ncan be called with the PCI bus semaphore held to avoid taking the read lock\ntwice.\n    ",
+		"description": "\n    In the Linux kernel, the following vulnerability has been resolved:\n\nPCI/ASPM: Fix deadlock when enabling ASPM\n\nA last minute revert in 6.7-final introduced a potential deadlock when\nenabling ASPM during probe of Qualcomm PCIe controllers as reported by\nlockdep:\n\n  ============================================\n  WARNING: possible recursive locking detected\n  6.7.0 #40 Not tainted\n  --------------------------------------------\n  kworker/u16:5/90 is trying to acquire lock:\n  ffffacfa78ced000 (pci_bus_sem){++++}-{3:3}, at: pcie_aspm_pm_state_change+0x58/0xdc\n\n              but task is already holding lock:\n  ffffacfa78ced000 (pci_bus_sem){++++}-{3:3}, at: pci_walk_bus+0x34/0xbc\n\n              other info that might help us debug this:\n   Possible unsafe locking scenario:\n\n         CPU0\n         ----\n    lock(pci_bus_sem);\n    lock(pci_bus_sem);\n\n               *** DEADLOCK ***\n\n  Call trace:\n   print_deadlock_bug+0x25c/0x348\n   __lock_acquire+0x10a4/0x2064\n   lock_acquire+0x1e8/0x318\n   down_read+0x60/0x184\n   pcie_aspm_pm_state_change+0x58/0xdc\n   pci_set_full_power_state+0xa8/0x114\n   pci_set_power_state+0xc4/0x120\n   qcom_pcie_enable_aspm+0x1c/0x3c [pcie_qcom]\n   pci_walk_bus+0x64/0xbc\n   qcom_pcie_host_post_init_2_7_0+0x28/0x34 [pcie_qcom]\n\nThe deadlock can easily be reproduced on machines like the Lenovo ThinkPad\nX13s by adding a delay to increase the race window during asynchronous\nprobe where another thread can take a write lock.\n\nAdd a new pci_set_power_state_locked() and associated helper functions that\ncan be called with the PCI bus semaphore held to avoid taking the read lock\ntwice.\n    ",
 		"advisory": {
 			"from": "security@suse.de",
-			"Severity": "Moderate",
-			"cve": {
-				"text": "CVE-2024-26605 at NVD",
-				"href": "https://nvd.nist.gov/vuln/detail/CVE-2024-26605",
-				"impact": "moderate",
-				"cvss3": "5.5/CVSS:3.1/AV:L/AC:L/PR:L/UI:N/S:U/C:N/I:N/A:H"
-			},
+			"severity": "Moderate",
+			"cve": [
+				{
+					"text": "CVE-2024-26605 at SUSE",
+					"href": "https://www.suse.com/security/cve/CVE-2024-26605/",
+					"impact": "moderate",
+					"cvss3": "5.5/CVSS:3.1/AV:L/AC:L/PR:L/UI:N/S:U/C:N/I:N/A:H"
+				},
+				{
+					"text": "CVE-2024-26605 at NVD",
+					"href": "https://nvd.nist.gov/vuln/detail/CVE-2024-26605",
+					"impact": "moderate",
+					"cvss3": "5.5/CVSS:3.1/AV:L/AC:L/PR:L/UI:N/S:U/C:N/I:N/A:H"
+				}
+			],
 			"bugzilla": [
 				{
 					"text": "SUSE bug 1220336",
@@ -80,7 +88,7 @@
 				"date": "2024-04-19"
 			},
 			"affected_cpe_list": {
-				"Cpe": [
+				"cpe": [
 					"cpe:/o:suse:ses:7",
 					"cpe:/o:suse:ses:7.1",
 					"cpe:/o:suse:sle-module-basesystem:15:sp5",

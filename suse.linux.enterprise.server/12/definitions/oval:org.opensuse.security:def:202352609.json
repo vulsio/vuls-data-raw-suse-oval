@@ -3,10 +3,10 @@
 	"version": "1",
 	"class": "vulnerability",
 	"metadata": {
-		"Title": "CVE-2023-52609",
+		"title": "CVE-2023-52609",
 		"affected": {
 			"family": "unix",
-			"Platform": [
+			"platform": [
 				"SUSE Linux Enterprise Real Time 12 SP5",
 				"SUSE Linux Enterprise Server 12 SP2-LTSS",
 				"SUSE Linux Enterprise Server 12 SP4-LTSS",
@@ -28,15 +28,22 @@
 				"source": "SUSE CVE"
 			}
 		],
-		"Description": "\n    In the Linux kernel, the following vulnerability has been resolved:\n\nbinder: fix race between mmput() and do_exit()\n\nTask A calls binder_update_page_range() to allocate and insert pages on\na remote address space from Task B. For this, Task A pins the remote mm\nvia mmget_not_zero() first. This can race with Task B do_exit() and the\nfinal mmput() refcount decrement will come from Task A.\n\n  Task A            | Task B\n  ------------------+------------------\n  mmget_not_zero()  |\n                    |  do_exit()\n                    |    exit_mm()\n                    |      mmput()\n  mmput()           |\n    exit_mmap()     |\n      remove_vma()  |\n        fput()      |\n\nIn this case, the work of ____fput() from Task B is queued up in Task A\nas TWA_RESUME. So in theory, Task A returns to userspace and the cleanup\nwork gets executed. However, Task A instead sleep, waiting for a reply\nfrom Task B that never comes (it's dead).\n\nThis means the binder_deferred_release() is blocked until an unrelated\nbinder event forces Task A to go back to userspace. All the associated\ndeath notifications will also be delayed until then.\n\nIn order to fix this use mmput_async() that will schedule the work in\nthe corresponding mm->async_put_work WQ instead of Task A.\n    ",
+		"description": "\n    In the Linux kernel, the following vulnerability has been resolved:\n\nbinder: fix race between mmput() and do_exit()\n\nTask A calls binder_update_page_range() to allocate and insert pages on\na remote address space from Task B. For this, Task A pins the remote mm\nvia mmget_not_zero() first. This can race with Task B do_exit() and the\nfinal mmput() refcount decrement will come from Task A.\n\n  Task A            | Task B\n  ------------------+------------------\n  mmget_not_zero()  |\n                    |  do_exit()\n                    |    exit_mm()\n                    |      mmput()\n  mmput()           |\n    exit_mmap()     |\n      remove_vma()  |\n        fput()      |\n\nIn this case, the work of ____fput() from Task B is queued up in Task A\nas TWA_RESUME. So in theory, Task A returns to userspace and the cleanup\nwork gets executed. However, Task A instead sleep, waiting for a reply\nfrom Task B that never comes (it's dead).\n\nThis means the binder_deferred_release() is blocked until an unrelated\nbinder event forces Task A to go back to userspace. All the associated\ndeath notifications will also be delayed until then.\n\nIn order to fix this use mmput_async() that will schedule the work in\nthe corresponding mm->async_put_work WQ instead of Task A.\n    ",
 		"advisory": {
 			"from": "security@suse.de",
-			"Severity": "Moderate",
-			"cve": {
-				"text": "CVE-2023-52609 at NVD",
-				"href": "https://nvd.nist.gov/vuln/detail/CVE-2023-52609",
-				"impact": "moderate"
-			},
+			"severity": "Moderate",
+			"cve": [
+				{
+					"text": "CVE-2023-52609 at SUSE",
+					"href": "https://www.suse.com/security/cve/CVE-2023-52609/",
+					"impact": "moderate"
+				},
+				{
+					"text": "CVE-2023-52609 at NVD",
+					"href": "https://nvd.nist.gov/vuln/detail/CVE-2023-52609",
+					"impact": "moderate"
+				}
+			],
 			"bugzilla": [
 				{
 					"text": "SUSE bug 1221609",
@@ -50,7 +57,7 @@
 				"date": "2024-04-18"
 			},
 			"affected_cpe_list": {
-				"Cpe": [
+				"cpe": [
 					"cpe:/o:suse:sles-ltss:12:sp2",
 					"cpe:/o:suse:sles-ltss:12:sp4",
 					"cpe:/o:suse:sles:12:sp5",

@@ -3,10 +3,10 @@
 	"version": "1",
 	"class": "vulnerability",
 	"metadata": {
-		"Title": "CVE-2023-52476",
+		"title": "CVE-2023-52476",
 		"affected": {
 			"family": "unix",
-			"Platform": [
+			"platform": [
 				"SUSE Linux Enterprise Server 12 SP3-LTSS-TERADATA"
 			]
 		},
@@ -42,16 +42,23 @@
 				"source": "SUSE-SU"
 			}
 		],
-		"Description": "\n    In the Linux kernel, the following vulnerability has been resolved:\n\nperf/x86/lbr: Filter vsyscall addresses\n\nWe found that a panic can occur when a vsyscall is made while LBR sampling\nis active. If the vsyscall is interrupted (NMI) for perf sampling, this\ncall sequence can occur (most recent at top):\n\n    __insn_get_emulate_prefix()\n    insn_get_emulate_prefix()\n    insn_get_prefixes()\n    insn_get_opcode()\n    decode_branch_type()\n    get_branch_type()\n    intel_pmu_lbr_filter()\n    intel_pmu_handle_irq()\n    perf_event_nmi_handler()\n\nWithin __insn_get_emulate_prefix() at frame 0, a macro is called:\n\n    peek_nbyte_next(insn_byte_t, insn, i)\n\nWithin this macro, this dereference occurs:\n\n    (insn)->next_byte\n\nInspecting registers at this point, the value of the next_byte field is the\naddress of the vsyscall made, for example the location of the vsyscall\nversion of gettimeofday() at 0xffffffffff600000. The access to an address\nin the vsyscall region will trigger an oops due to an unhandled page fault.\n\nTo fix the bug, filtering for vsyscalls can be done when\ndetermining the branch type. This patch will return\na \"none\" branch if a kernel address if found to lie in the\nvsyscall region.\n    ",
+		"description": "\n    In the Linux kernel, the following vulnerability has been resolved:\n\nperf/x86/lbr: Filter vsyscall addresses\n\nWe found that a panic can occur when a vsyscall is made while LBR sampling\nis active. If the vsyscall is interrupted (NMI) for perf sampling, this\ncall sequence can occur (most recent at top):\n\n    __insn_get_emulate_prefix()\n    insn_get_emulate_prefix()\n    insn_get_prefixes()\n    insn_get_opcode()\n    decode_branch_type()\n    get_branch_type()\n    intel_pmu_lbr_filter()\n    intel_pmu_handle_irq()\n    perf_event_nmi_handler()\n\nWithin __insn_get_emulate_prefix() at frame 0, a macro is called:\n\n    peek_nbyte_next(insn_byte_t, insn, i)\n\nWithin this macro, this dereference occurs:\n\n    (insn)->next_byte\n\nInspecting registers at this point, the value of the next_byte field is the\naddress of the vsyscall made, for example the location of the vsyscall\nversion of gettimeofday() at 0xffffffffff600000. The access to an address\nin the vsyscall region will trigger an oops due to an unhandled page fault.\n\nTo fix the bug, filtering for vsyscalls can be done when\ndetermining the branch type. This patch will return\na \"none\" branch if a kernel address if found to lie in the\nvsyscall region.\n    ",
 		"advisory": {
 			"from": "security@suse.de",
-			"Severity": "Moderate",
-			"cve": {
-				"text": "CVE-2023-52476 at NVD",
-				"href": "https://nvd.nist.gov/vuln/detail/CVE-2023-52476",
-				"impact": "moderate",
-				"cvss3": "4.7/CVSS:3.1/AV:L/AC:H/PR:L/UI:N/S:U/C:N/I:N/A:H"
-			},
+			"severity": "Moderate",
+			"cve": [
+				{
+					"text": "CVE-2023-52476 at SUSE",
+					"href": "https://www.suse.com/security/cve/CVE-2023-52476/",
+					"impact": "moderate",
+					"cvss3": "4.7/CVSS:3.1/AV:L/AC:H/PR:L/UI:N/S:U/C:N/I:N/A:H"
+				},
+				{
+					"text": "CVE-2023-52476 at NVD",
+					"href": "https://nvd.nist.gov/vuln/detail/CVE-2023-52476",
+					"impact": "moderate"
+				}
+			],
 			"bugzilla": [
 				{
 					"text": "SUSE bug 1220703",
@@ -65,7 +72,7 @@
 				"date": "2024-04-19"
 			},
 			"affected_cpe_list": {
-				"Cpe": [
+				"cpe": [
 					"cpe:/o:suse:sles_teradata:12:sp3-ltss"
 				]
 			}

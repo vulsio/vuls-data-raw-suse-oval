@@ -3,10 +3,10 @@
 	"version": "1",
 	"class": "vulnerability",
 	"metadata": {
-		"Title": "CVE-2024-26755",
+		"title": "CVE-2024-26755",
 		"affected": {
 			"family": "unix",
-			"Platform": [
+			"platform": [
 				"SUSE Linux Enterprise Real Time 12 SP5",
 				"SUSE Linux Enterprise Server 12 SP4-LTSS",
 				"SUSE Linux Enterprise Server 12 SP5",
@@ -26,16 +26,23 @@
 				"source": "SUSE CVE"
 			}
 		],
-		"Description": "\n    In the Linux kernel, the following vulnerability has been resolved:\n\nmd: Don't suspend the array for interrupted reshape\n\nmd_start_sync() will suspend the array if there are spares that can be\nadded or removed from conf, however, if reshape is still in progress,\nthis won't happen at all or data will be corrupted(remove_and_add_spares\nwon't be called from md_choose_sync_action for reshape), hence there is\nno need to suspend the array if reshape is not done yet.\n\nMeanwhile, there is a potential deadlock for raid456:\n\n1) reshape is interrupted;\n\n2) set one of the disk WantReplacement, and add a new disk to the array,\n   however, recovery won't start until the reshape is finished;\n\n3) then issue an IO across reshpae position, this IO will wait for\n   reshape to make progress;\n\n4) continue to reshape, then md_start_sync() found there is a spare disk\n   that can be added to conf, mddev_suspend() is called;\n\nStep 4 and step 3 is waiting for each other, deadlock triggered. Noted\nthis problem is found by code review, and it's not reporduced yet.\n\nFix this porblem by don't suspend the array for interrupted reshape,\nthis is safe because conf won't be changed until reshape is done.\n    ",
+		"description": "\n    In the Linux kernel, the following vulnerability has been resolved:\n\nmd: Don't suspend the array for interrupted reshape\n\nmd_start_sync() will suspend the array if there are spares that can be\nadded or removed from conf, however, if reshape is still in progress,\nthis won't happen at all or data will be corrupted(remove_and_add_spares\nwon't be called from md_choose_sync_action for reshape), hence there is\nno need to suspend the array if reshape is not done yet.\n\nMeanwhile, there is a potential deadlock for raid456:\n\n1) reshape is interrupted;\n\n2) set one of the disk WantReplacement, and add a new disk to the array,\n   however, recovery won't start until the reshape is finished;\n\n3) then issue an IO across reshpae position, this IO will wait for\n   reshape to make progress;\n\n4) continue to reshape, then md_start_sync() found there is a spare disk\n   that can be added to conf, mddev_suspend() is called;\n\nStep 4 and step 3 is waiting for each other, deadlock triggered. Noted\nthis problem is found by code review, and it's not reporduced yet.\n\nFix this porblem by don't suspend the array for interrupted reshape,\nthis is safe because conf won't be changed until reshape is done.\n    ",
 		"advisory": {
 			"from": "security@suse.de",
-			"Severity": "Moderate",
-			"cve": {
-				"text": "CVE-2024-26755 at NVD",
-				"href": "https://nvd.nist.gov/vuln/detail/CVE-2024-26755",
-				"impact": "moderate",
-				"cvss3": "5.5/CVSS:3.1/AV:L/AC:L/PR:L/UI:N/S:U/C:N/I:N/A:H"
-			},
+			"severity": "Moderate",
+			"cve": [
+				{
+					"text": "CVE-2024-26755 at SUSE",
+					"href": "https://www.suse.com/security/cve/CVE-2024-26755/",
+					"impact": "moderate",
+					"cvss3": "5.5/CVSS:3.1/AV:L/AC:L/PR:L/UI:N/S:U/C:N/I:N/A:H"
+				},
+				{
+					"text": "CVE-2024-26755 at NVD",
+					"href": "https://nvd.nist.gov/vuln/detail/CVE-2024-26755",
+					"impact": "moderate"
+				}
+			],
 			"bugzilla": [
 				{
 					"text": "SUSE bug 1222529",
@@ -49,7 +56,7 @@
 				"date": "2024-04-18"
 			},
 			"affected_cpe_list": {
-				"Cpe": [
+				"cpe": [
 					"cpe:/o:suse:sles-ltss:12:sp4",
 					"cpe:/o:suse:sles:12:sp5",
 					"cpe:/o:suse:sles_sap:12:sp4",

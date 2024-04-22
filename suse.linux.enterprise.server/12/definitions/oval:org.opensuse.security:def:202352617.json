@@ -3,10 +3,10 @@
 	"version": "1",
 	"class": "vulnerability",
 	"metadata": {
-		"Title": "CVE-2023-52617",
+		"title": "CVE-2023-52617",
 		"affected": {
 			"family": "unix",
-			"Platform": [
+			"platform": [
 				"SUSE Linux Enterprise Server 12 SP2-LTSS",
 				"SUSE Linux Enterprise Server for SAP Applications 12 SP2"
 			]
@@ -43,16 +43,23 @@
 				"source": "SUSE-SU"
 			}
 		],
-		"Description": "\n    In the Linux kernel, the following vulnerability has been resolved:\n\nPCI: switchtec: Fix stdev_release() crash after surprise hot remove\n\nA PCI device hot removal may occur while stdev->cdev is held open. The call\nto stdev_release() then happens during close or exit, at a point way past\nswitchtec_pci_remove(). Otherwise the last ref would vanish with the\ntrailing put_device(), just before return.\n\nAt that later point in time, the devm cleanup has already removed the\nstdev->mmio_mrpc mapping. Also, the stdev->pdev reference was not a counted\none. Therefore, in DMA mode, the iowrite32() in stdev_release() will cause\na fatal page fault, and the subsequent dma_free_coherent(), if reached,\nwould pass a stale &stdev->pdev->dev pointer.\n\nFix by moving MRPC DMA shutdown into switchtec_pci_remove(), after\nstdev_kill(). Counting the stdev->pdev ref is now optional, but may prevent\nfuture accidents.\n\nReproducible via the script at\nhttps://lore.kernel.org/r/20231113212150.96410-1-dns@arista.com\n    ",
+		"description": "\n    In the Linux kernel, the following vulnerability has been resolved:\n\nPCI: switchtec: Fix stdev_release() crash after surprise hot remove\n\nA PCI device hot removal may occur while stdev->cdev is held open. The call\nto stdev_release() then happens during close or exit, at a point way past\nswitchtec_pci_remove(). Otherwise the last ref would vanish with the\ntrailing put_device(), just before return.\n\nAt that later point in time, the devm cleanup has already removed the\nstdev->mmio_mrpc mapping. Also, the stdev->pdev reference was not a counted\none. Therefore, in DMA mode, the iowrite32() in stdev_release() will cause\na fatal page fault, and the subsequent dma_free_coherent(), if reached,\nwould pass a stale &stdev->pdev->dev pointer.\n\nFix by moving MRPC DMA shutdown into switchtec_pci_remove(), after\nstdev_kill(). Counting the stdev->pdev ref is now optional, but may prevent\nfuture accidents.\n\nReproducible via the script at\nhttps://lore.kernel.org/r/20231113212150.96410-1-dns@arista.com\n    ",
 		"advisory": {
 			"from": "security@suse.de",
-			"Severity": "Moderate",
-			"cve": {
-				"text": "CVE-2023-52617 at NVD",
-				"href": "https://nvd.nist.gov/vuln/detail/CVE-2023-52617",
-				"impact": "moderate",
-				"cvss3": "4.4/CVSS:3.1/AV:L/AC:L/PR:H/UI:N/S:U/C:N/I:N/A:H"
-			},
+			"severity": "Moderate",
+			"cve": [
+				{
+					"text": "CVE-2023-52617 at SUSE",
+					"href": "https://www.suse.com/security/cve/CVE-2023-52617/",
+					"impact": "moderate",
+					"cvss3": "4.4/CVSS:3.1/AV:L/AC:L/PR:H/UI:N/S:U/C:N/I:N/A:H"
+				},
+				{
+					"text": "CVE-2023-52617 at NVD",
+					"href": "https://nvd.nist.gov/vuln/detail/CVE-2023-52617",
+					"impact": "moderate"
+				}
+			],
 			"bugzilla": [
 				{
 					"text": "SUSE bug 1221613",
@@ -66,7 +73,7 @@
 				"date": "2024-04-19"
 			},
 			"affected_cpe_list": {
-				"Cpe": [
+				"cpe": [
 					"cpe:/o:suse:sles-ltss:12:sp2",
 					"cpe:/o:suse:sles_sap:12:sp2"
 				]

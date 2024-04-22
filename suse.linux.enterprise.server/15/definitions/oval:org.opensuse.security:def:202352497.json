@@ -3,10 +3,10 @@
 	"version": "1",
 	"class": "vulnerability",
 	"metadata": {
-		"Title": "CVE-2023-52497",
+		"title": "CVE-2023-52497",
 		"affected": {
 			"family": "unix",
-			"Platform": [
+			"platform": [
 				"SUSE Enterprise Storage 7",
 				"SUSE Enterprise Storage 7.1",
 				"SUSE Linux Enterprise High Performance Computing 15 SP2",
@@ -75,16 +75,23 @@
 				"source": "SUSE-SU"
 			}
 		],
-		"Description": "\n    In the Linux kernel, the following vulnerability has been resolved:\n\nerofs: fix lz4 inplace decompression\n\nCurrently EROFS can map another compressed buffer for inplace\ndecompression, that was used to handle the cases that some pages of\ncompressed data are actually not in-place I/O.\n\nHowever, like most simple LZ77 algorithms, LZ4 expects the compressed\ndata is arranged at the end of the decompressed buffer and it\nexplicitly uses memmove() to handle overlapping:\n  __________________________________________________________\n |_ direction of decompression --> ____ |_ compressed data _|\n\nAlthough EROFS arranges compressed data like this, it typically maps two\nindividual virtual buffers so the relative order is uncertain.\nPreviously, it was hardly observed since LZ4 only uses memmove() for\nshort overlapped literals and x86/arm64 memmove implementations seem to\ncompletely cover it up and they don't have this issue.  Juhyung reported\nthat EROFS data corruption can be found on a new Intel x86 processor.\nAfter some analysis, it seems that recent x86 processors with the new\nFSRM feature expose this issue with \"rep movsb\".\n\nLet's strictly use the decompressed buffer for lz4 inplace\ndecompression for now.  Later, as an useful improvement, we could try\nto tie up these two buffers together in the correct order.\n    ",
+		"description": "\n    In the Linux kernel, the following vulnerability has been resolved:\n\nerofs: fix lz4 inplace decompression\n\nCurrently EROFS can map another compressed buffer for inplace\ndecompression, that was used to handle the cases that some pages of\ncompressed data are actually not in-place I/O.\n\nHowever, like most simple LZ77 algorithms, LZ4 expects the compressed\ndata is arranged at the end of the decompressed buffer and it\nexplicitly uses memmove() to handle overlapping:\n  __________________________________________________________\n |_ direction of decompression --> ____ |_ compressed data _|\n\nAlthough EROFS arranges compressed data like this, it typically maps two\nindividual virtual buffers so the relative order is uncertain.\nPreviously, it was hardly observed since LZ4 only uses memmove() for\nshort overlapped literals and x86/arm64 memmove implementations seem to\ncompletely cover it up and they don't have this issue.  Juhyung reported\nthat EROFS data corruption can be found on a new Intel x86 processor.\nAfter some analysis, it seems that recent x86 processors with the new\nFSRM feature expose this issue with \"rep movsb\".\n\nLet's strictly use the decompressed buffer for lz4 inplace\ndecompression for now.  Later, as an useful improvement, we could try\nto tie up these two buffers together in the correct order.\n    ",
 		"advisory": {
 			"from": "security@suse.de",
-			"Severity": "Moderate",
-			"cve": {
-				"text": "CVE-2023-52497 at NVD",
-				"href": "https://nvd.nist.gov/vuln/detail/CVE-2023-52497",
-				"impact": "moderate",
-				"cvss3": "4.4/CVSS:3.1/AV:L/AC:L/PR:L/UI:N/S:U/C:N/I:L/A:L"
-			},
+			"severity": "Moderate",
+			"cve": [
+				{
+					"text": "CVE-2023-52497 at SUSE",
+					"href": "https://www.suse.com/security/cve/CVE-2023-52497/",
+					"impact": "moderate",
+					"cvss3": "4.4/CVSS:3.1/AV:L/AC:L/PR:L/UI:N/S:U/C:N/I:L/A:L"
+				},
+				{
+					"text": "CVE-2023-52497 at NVD",
+					"href": "https://nvd.nist.gov/vuln/detail/CVE-2023-52497",
+					"impact": "moderate"
+				}
+			],
 			"bugzilla": [
 				{
 					"text": "SUSE bug 1220879",
@@ -98,7 +105,7 @@
 				"date": "2024-04-19"
 			},
 			"affected_cpe_list": {
-				"Cpe": [
+				"cpe": [
 					"cpe:/o:suse:ses:7",
 					"cpe:/o:suse:ses:7.1",
 					"cpe:/o:suse:sle-module-live-patching:15:sp4",

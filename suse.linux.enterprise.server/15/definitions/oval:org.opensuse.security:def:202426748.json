@@ -3,10 +3,10 @@
 	"version": "1",
 	"class": "vulnerability",
 	"metadata": {
-		"Title": "CVE-2024-26748",
+		"title": "CVE-2024-26748",
 		"affected": {
 			"family": "unix",
-			"Platform": [
+			"platform": [
 				"SUSE Enterprise Storage 7",
 				"SUSE Enterprise Storage 7.1",
 				"SUSE Linux Enterprise Desktop 15 SP5",
@@ -48,16 +48,23 @@
 				"source": "SUSE CVE"
 			}
 		],
-		"Description": "\n    In the Linux kernel, the following vulnerability has been resolved:\n\nusb: cdns3: fix memory double free when handle zero packet\n\n829  if (request->complete) {\n830          spin_unlock(&priv_dev->lock);\n831          usb_gadget_giveback_request(&priv_ep->endpoint,\n832                                    request);\n833          spin_lock(&priv_dev->lock);\n834  }\n835\n836  if (request->buf == priv_dev->zlp_buf)\n837      cdns3_gadget_ep_free_request(&priv_ep->endpoint, request);\n\nDriver append an additional zero packet request when queue a packet, which\nlength mod max packet size is 0. When transfer complete, run to line 831,\nusb_gadget_giveback_request() will free this requestion. 836 condition is\ntrue, so cdns3_gadget_ep_free_request() free this request again.\n\nLog:\n\n[ 1920.140696][  T150] BUG: KFENCE: use-after-free read in cdns3_gadget_giveback+0x134/0x2c0 [cdns3]\n[ 1920.140696][  T150]\n[ 1920.151837][  T150] Use-after-free read at 0x000000003d1cd10b (in kfence-#36):\n[ 1920.159082][  T150]  cdns3_gadget_giveback+0x134/0x2c0 [cdns3]\n[ 1920.164988][  T150]  cdns3_transfer_completed+0x438/0x5f8 [cdns3]\n\nAdd check at line 829, skip call usb_gadget_giveback_request() if it is\nadditional zero length packet request. Needn't call\nusb_gadget_giveback_request() because it is allocated in this driver.\n    ",
+		"description": "\n    In the Linux kernel, the following vulnerability has been resolved:\n\nusb: cdns3: fix memory double free when handle zero packet\n\n829  if (request->complete) {\n830          spin_unlock(&priv_dev->lock);\n831          usb_gadget_giveback_request(&priv_ep->endpoint,\n832                                    request);\n833          spin_lock(&priv_dev->lock);\n834  }\n835\n836  if (request->buf == priv_dev->zlp_buf)\n837      cdns3_gadget_ep_free_request(&priv_ep->endpoint, request);\n\nDriver append an additional zero packet request when queue a packet, which\nlength mod max packet size is 0. When transfer complete, run to line 831,\nusb_gadget_giveback_request() will free this requestion. 836 condition is\ntrue, so cdns3_gadget_ep_free_request() free this request again.\n\nLog:\n\n[ 1920.140696][  T150] BUG: KFENCE: use-after-free read in cdns3_gadget_giveback+0x134/0x2c0 [cdns3]\n[ 1920.140696][  T150]\n[ 1920.151837][  T150] Use-after-free read at 0x000000003d1cd10b (in kfence-#36):\n[ 1920.159082][  T150]  cdns3_gadget_giveback+0x134/0x2c0 [cdns3]\n[ 1920.164988][  T150]  cdns3_transfer_completed+0x438/0x5f8 [cdns3]\n\nAdd check at line 829, skip call usb_gadget_giveback_request() if it is\nadditional zero length packet request. Needn't call\nusb_gadget_giveback_request() because it is allocated in this driver.\n    ",
 		"advisory": {
 			"from": "security@suse.de",
-			"Severity": "Moderate",
-			"cve": {
-				"text": "CVE-2024-26748 at NVD",
-				"href": "https://nvd.nist.gov/vuln/detail/CVE-2024-26748",
-				"impact": "moderate",
-				"cvss3": "5.5/CVSS:3.1/AV:L/AC:L/PR:L/UI:N/S:U/C:N/I:N/A:H"
-			},
+			"severity": "Moderate",
+			"cve": [
+				{
+					"text": "CVE-2024-26748 at SUSE",
+					"href": "https://www.suse.com/security/cve/CVE-2024-26748/",
+					"impact": "moderate",
+					"cvss3": "5.5/CVSS:3.1/AV:L/AC:L/PR:L/UI:N/S:U/C:N/I:N/A:H"
+				},
+				{
+					"text": "CVE-2024-26748 at NVD",
+					"href": "https://nvd.nist.gov/vuln/detail/CVE-2024-26748",
+					"impact": "moderate"
+				}
+			],
 			"bugzilla": [
 				{
 					"text": "SUSE bug 1222513",
@@ -71,7 +78,7 @@
 				"date": "2024-04-19"
 			},
 			"affected_cpe_list": {
-				"Cpe": [
+				"cpe": [
 					"cpe:/o:suse:ses:7",
 					"cpe:/o:suse:ses:7.1",
 					"cpe:/o:suse:sle-module-basesystem:15:sp5",

@@ -3,10 +3,10 @@
 	"version": "1",
 	"class": "vulnerability",
 	"metadata": {
-		"Title": "CVE-2023-52449",
+		"title": "CVE-2023-52449",
 		"affected": {
 			"family": "unix",
-			"Platform": [
+			"platform": [
 				"openSUSE Leap 15.5"
 			]
 		},
@@ -82,16 +82,24 @@
 				"source": "SUSE-SU"
 			}
 		],
-		"Description": "\n    In the Linux kernel, the following vulnerability has been resolved:\n\nmtd: Fix gluebi NULL pointer dereference caused by ftl notifier\n\nIf both ftl.ko and gluebi.ko are loaded, the notifier of ftl\ntriggers NULL pointer dereference when trying to access\n‘gluebi->desc’ in gluebi_read().\n\nubi_gluebi_init\n  ubi_register_volume_notifier\n    ubi_enumerate_volumes\n      ubi_notify_all\n        gluebi_notify    nb->notifier_call()\n          gluebi_create\n            mtd_device_register\n              mtd_device_parse_register\n                add_mtd_device\n                  blktrans_notify_add   not->add()\n                    ftl_add_mtd         tr->add_mtd()\n                      scan_header\n                        mtd_read\n                          mtd_read_oob\n                            mtd_read_oob_std\n                              gluebi_read   mtd->read()\n                                gluebi->desc - NULL\n\nDetailed reproduction information available at the Link [1],\n\nIn the normal case, obtain gluebi->desc in the gluebi_get_device(),\nand access gluebi->desc in the gluebi_read(). However,\ngluebi_get_device() is not executed in advance in the\nftl_add_mtd() process, which leads to NULL pointer dereference.\n\nThe solution for the gluebi module is to run jffs2 on the UBI\nvolume without considering working with ftl or mtdblock [2].\nTherefore, this problem can be avoided by preventing gluebi from\ncreating the mtdblock device after creating mtd partition of the\ntype MTD_UBIVOLUME.\n    ",
+		"description": "\n    In the Linux kernel, the following vulnerability has been resolved:\n\nmtd: Fix gluebi NULL pointer dereference caused by ftl notifier\n\nIf both ftl.ko and gluebi.ko are loaded, the notifier of ftl\ntriggers NULL pointer dereference when trying to access\n‘gluebi->desc’ in gluebi_read().\n\nubi_gluebi_init\n  ubi_register_volume_notifier\n    ubi_enumerate_volumes\n      ubi_notify_all\n        gluebi_notify    nb->notifier_call()\n          gluebi_create\n            mtd_device_register\n              mtd_device_parse_register\n                add_mtd_device\n                  blktrans_notify_add   not->add()\n                    ftl_add_mtd         tr->add_mtd()\n                      scan_header\n                        mtd_read\n                          mtd_read_oob\n                            mtd_read_oob_std\n                              gluebi_read   mtd->read()\n                                gluebi->desc - NULL\n\nDetailed reproduction information available at the Link [1],\n\nIn the normal case, obtain gluebi->desc in the gluebi_get_device(),\nand access gluebi->desc in the gluebi_read(). However,\ngluebi_get_device() is not executed in advance in the\nftl_add_mtd() process, which leads to NULL pointer dereference.\n\nThe solution for the gluebi module is to run jffs2 on the UBI\nvolume without considering working with ftl or mtdblock [2].\nTherefore, this problem can be avoided by preventing gluebi from\ncreating the mtdblock device after creating mtd partition of the\ntype MTD_UBIVOLUME.\n    ",
 		"advisory": {
 			"from": "security@suse.de",
-			"Severity": "Moderate",
-			"cve": {
-				"text": "CVE-2023-52449 at NVD",
-				"href": "https://nvd.nist.gov/vuln/detail/CVE-2023-52449",
-				"impact": "moderate",
-				"cvss3": "5.5/CVSS:3.1/AV:L/AC:L/PR:L/UI:N/S:U/C:N/I:N/A:H"
-			},
+			"severity": "Moderate",
+			"cve": [
+				{
+					"text": "CVE-2023-52449 at SUSE",
+					"href": "https://www.suse.com/security/cve/CVE-2023-52449/",
+					"impact": "moderate",
+					"cvss3": "5.5/CVSS:3.1/AV:L/AC:L/PR:L/UI:N/S:U/C:N/I:N/A:H"
+				},
+				{
+					"text": "CVE-2023-52449 at NVD",
+					"href": "https://nvd.nist.gov/vuln/detail/CVE-2023-52449",
+					"impact": "moderate",
+					"cvss3": "5.5/CVSS:3.1/AV:L/AC:L/PR:L/UI:N/S:U/C:N/I:N/A:H"
+				}
+			],
 			"bugzilla": [
 				{
 					"text": "SUSE bug 1220238",
@@ -105,7 +113,7 @@
 				"date": "2024-04-18"
 			},
 			"affected_cpe_list": {
-				"Cpe": [
+				"cpe": [
 					"cpe:/o:opensuse:leap:15.5"
 				]
 			}
