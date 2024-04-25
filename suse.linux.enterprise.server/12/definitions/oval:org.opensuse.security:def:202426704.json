@@ -1,0 +1,62 @@
+{
+	"id": "oval:org.opensuse.security:def:202426704",
+	"version": "1",
+	"class": "vulnerability",
+	"metadata": {
+		"title": "CVE-2024-26704",
+		"affected": {
+			"family": "unix",
+			"platform": [
+				"SUSE Linux Enterprise Server 12 SP3-TERADATA"
+			]
+		},
+		"reference": [
+			{
+				"ref_id": "Mitre CVE-2024-26704",
+				"ref_url": "https://cve.mitre.org/cgi-bin/cvename.cgi?name=CVE-2024-26704",
+				"source": "CVE"
+			},
+			{
+				"ref_id": "SUSE CVE-2024-26704",
+				"ref_url": "https://www.suse.com/security/cve/CVE-2024-26704",
+				"source": "SUSE CVE"
+			}
+		],
+		"description": "\n    In the Linux kernel, the following vulnerability has been resolved:\n\next4: fix double-free of blocks due to wrong extents moved_len\n\nIn ext4_move_extents(), moved_len is only updated when all moves are\nsuccessfully executed, and only discards orig_inode and donor_inode\npreallocations when moved_len is not zero. When the loop fails to exit\nafter successfully moving some extents, moved_len is not updated and\nremains at 0, so it does not discard the preallocations.\n\nIf the moved extents overlap with the preallocated extents, the\noverlapped extents are freed twice in ext4_mb_release_inode_pa() and\next4_process_freed_data() (as described in commit 94d7c16cbbbd (\"ext4:\nFix double-free of blocks with EXT4_IOC_MOVE_EXT\")), and bb_free is\nincremented twice. Hence when trim is executed, a zero-division bug is\ntriggered in mb_update_avg_fragment_size() because bb_free is not zero\nand bb_fragments is zero.\n\nTherefore, update move_len after each extent move to avoid the issue.\n    ",
+		"advisory": {
+			"from": "security@suse.de",
+			"severity": "Moderate",
+			"cve": [
+				{
+					"text": "CVE-2024-26704 at SUSE",
+					"href": "https://www.suse.com/security/cve/CVE-2024-26704/",
+					"impact": "moderate",
+					"cvss3": "5.5/CVSS:3.1/AV:L/AC:L/PR:L/UI:N/S:U/C:N/I:N/A:H"
+				},
+				{
+					"text": "CVE-2024-26704 at NVD",
+					"href": "https://nvd.nist.gov/vuln/detail/CVE-2024-26704",
+					"impact": "moderate"
+				}
+			],
+			"bugzilla": [
+				{
+					"text": "SUSE bug 1222422",
+					"href": "https://bugzilla.suse.com/1222422"
+				}
+			],
+			"issued": {
+				"date": "2024-04-25"
+			},
+			"updated": {
+				"date": "2024-04-25"
+			},
+			"affected_cpe_list": {
+				"cpe": [
+					"cpe:/o:suse:sles_teradata:12:sp3"
+				]
+			}
+		}
+	},
+	"criteria": {}
+}
