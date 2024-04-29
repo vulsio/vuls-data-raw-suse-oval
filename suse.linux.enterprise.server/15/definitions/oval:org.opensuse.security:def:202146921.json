@@ -1,0 +1,245 @@
+{
+	"id": "oval:org.opensuse.security:def:202146921",
+	"version": "1",
+	"class": "vulnerability",
+	"metadata": {
+		"title": "CVE-2021-46921",
+		"affected": {
+			"family": "unix",
+			"platform": [
+				"SUSE Linux Enterprise Live Patching 15 SP2",
+				"SUSE Linux Enterprise Server 15 SP2-LTSS",
+				"SUSE Linux Enterprise Server for SAP Applications 15 SP2"
+			]
+		},
+		"reference": [
+			{
+				"ref_id": "Mitre CVE-2021-46921",
+				"ref_url": "https://cve.mitre.org/cgi-bin/cvename.cgi?name=CVE-2021-46921",
+				"source": "CVE"
+			},
+			{
+				"ref_id": "SUSE CVE-2021-46921",
+				"ref_url": "https://www.suse.com/security/cve/CVE-2021-46921",
+				"source": "SUSE CVE"
+			},
+			{
+				"ref_id": "SUSE-SU-2024:0925-1",
+				"ref_url": "https://lists.suse.com/pipermail/sle-security-updates/2024-March/018205.html",
+				"source": "SUSE-SU"
+			},
+			{
+				"ref_id": "SUSE-SU-2024:0975-1",
+				"ref_url": "https://lists.suse.com/pipermail/sle-security-updates/2024-March/018186.html",
+				"source": "SUSE-SU"
+			},
+			{
+				"ref_id": "SUSE-SU-2024:0976-1",
+				"ref_url": "https://lists.suse.com/pipermail/sle-security-updates/2024-March/018185.html",
+				"source": "SUSE-SU"
+			},
+			{
+				"ref_id": "SUSE-SU-2024:1454-1",
+				"ref_url": "https://lists.suse.com/pipermail/sle-updates/2024-April/035109.html",
+				"source": "SUSE-SU"
+			}
+		],
+		"description": "\n    In the Linux kernel, the following vulnerability has been resolved:\n\nlocking/qrwlock: Fix ordering in queued_write_lock_slowpath()\n\nWhile this code is executed with the wait_lock held, a reader can\nacquire the lock without holding wait_lock.  The writer side loops\nchecking the value with the atomic_cond_read_acquire(), but only truly\nacquires the lock when the compare-and-exchange is completed\nsuccessfully which isn’t ordered. This exposes the window between the\nacquire and the cmpxchg to an A-B-A problem which allows reads\nfollowing the lock acquisition to observe values speculatively before\nthe write lock is truly acquired.\n\nWe've seen a problem in epoll where the reader does a xchg while\nholding the read lock, but the writer can see a value change out from\nunder it.\n\n  Writer                                | Reader\n  --------------------------------------------------------------------------------\n  ep_scan_ready_list()                  |\n  |- write_lock_irq()                   |\n      |- queued_write_lock_slowpath()   |\n\t|- atomic_cond_read_acquire()   |\n\t\t\t\t        | read_lock_irqsave(&ep->lock, flags);\n     --> (observes value before unlock) |  chain_epi_lockless()\n     |                                  |    epi->next = xchg(&ep->ovflist, epi);\n     |                                  | read_unlock_irqrestore(&ep->lock, flags);\n     |                                  |\n     |     atomic_cmpxchg_relaxed()     |\n     |-- READ_ONCE(ep->ovflist);        |\n\nA core can order the read of the ovflist ahead of the\natomic_cmpxchg_relaxed(). Switching the cmpxchg to use acquire\nsemantics addresses this issue at which point the atomic_cond_read can\nbe switched to use relaxed semantics.\n\n[peterz: use try_cmpxchg()]\n    ",
+		"advisory": {
+			"from": "security@suse.de",
+			"severity": "Moderate",
+			"cve": [
+				{
+					"text": "CVE-2021-46921 at SUSE",
+					"href": "https://www.suse.com/security/cve/CVE-2021-46921/",
+					"impact": "medium",
+					"cvss3": "4.4/CVSS:3.1/AV:L/AC:L/PR:H/UI:N/S:U/C:H/I:N/A:N"
+				},
+				{
+					"text": "CVE-2021-46921 at NVD",
+					"href": "https://nvd.nist.gov/vuln/detail/CVE-2021-46921"
+				}
+			],
+			"bugzilla": [
+				{
+					"text": "SUSE bug 1220468",
+					"href": "https://bugzilla.suse.com/1220468"
+				}
+			],
+			"issued": {
+				"date": "2024-04-27"
+			},
+			"updated": {
+				"date": "2024-04-27"
+			},
+			"affected_cpe_list": {
+				"cpe": [
+					"cpe:/o:suse:sle-module-live-patching:15:sp2",
+					"cpe:/o:suse:sles-ltss:15:sp2",
+					"cpe:/o:suse:sles_sap:15:sp2"
+				]
+			}
+		}
+	},
+	"criteria": {
+		"operator": "OR",
+		"criterias": [
+			{
+				"operator": "AND",
+				"criterias": [
+					{
+						"operator": "OR",
+						"criterions": [
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009858120",
+								"comment": "kernel-default-livepatch-5.3.18-150200.24.188.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009858121",
+								"comment": "kernel-default-livepatch-devel-5.3.18-150200.24.188.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009858122",
+								"comment": "kernel-livepatch-5_3_18-150200_24_188-default-1-150200.5.3.3 is installed"
+							}
+						]
+					}
+				],
+				"criterions": [
+					{
+						"test_ref": "oval:org.opensuse.security:tst:2009288462",
+						"comment": "SUSE Linux Enterprise Live Patching 15 SP2 is installed"
+					}
+				]
+			},
+			{
+				"operator": "AND",
+				"criterias": [
+					{
+						"operator": "OR",
+						"criterions": [
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009858138",
+								"comment": "kernel-default-5.3.18-150200.24.188.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009858139",
+								"comment": "kernel-default-base-5.3.18-150200.24.188.1.150200.9.95.3 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009858140",
+								"comment": "kernel-default-devel-5.3.18-150200.24.188.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009858130",
+								"comment": "kernel-devel-5.3.18-150200.24.188.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009858131",
+								"comment": "kernel-docs-5.3.18-150200.24.188.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009858132",
+								"comment": "kernel-macros-5.3.18-150200.24.188.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009858141",
+								"comment": "kernel-obs-build-5.3.18-150200.24.188.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009858134",
+								"comment": "kernel-preempt-5.3.18-150200.24.188.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009858135",
+								"comment": "kernel-preempt-devel-5.3.18-150200.24.188.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009858136",
+								"comment": "kernel-source-5.3.18-150200.24.188.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009858142",
+								"comment": "kernel-syms-5.3.18-150200.24.188.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009858143",
+								"comment": "reiserfs-kmp-default-5.3.18-150200.24.188.1 is installed"
+							}
+						]
+					}
+				],
+				"criterions": [
+					{
+						"test_ref": "oval:org.opensuse.security:tst:2009660213",
+						"comment": "SUSE Linux Enterprise Server 15 SP2-LTSS is installed"
+					}
+				]
+			},
+			{
+				"operator": "AND",
+				"criterias": [
+					{
+						"operator": "OR",
+						"criterions": [
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009858144",
+								"comment": "kernel-default-5.3.18-150200.24.188.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009858145",
+								"comment": "kernel-default-base-5.3.18-150200.24.188.1.150200.9.95.3 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009858146",
+								"comment": "kernel-default-devel-5.3.18-150200.24.188.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009858130",
+								"comment": "kernel-devel-5.3.18-150200.24.188.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009858131",
+								"comment": "kernel-docs-5.3.18-150200.24.188.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009858132",
+								"comment": "kernel-macros-5.3.18-150200.24.188.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009858147",
+								"comment": "kernel-obs-build-5.3.18-150200.24.188.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009858148",
+								"comment": "kernel-preempt-5.3.18-150200.24.188.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009858149",
+								"comment": "kernel-preempt-devel-5.3.18-150200.24.188.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009858136",
+								"comment": "kernel-source-5.3.18-150200.24.188.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009858150",
+								"comment": "kernel-syms-5.3.18-150200.24.188.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009858151",
+								"comment": "reiserfs-kmp-default-5.3.18-150200.24.188.1 is installed"
+							}
+						]
+					}
+				],
+				"criterions": [
+					{
+						"test_ref": "oval:org.opensuse.security:tst:2009659637",
+						"comment": "SUSE Linux Enterprise Server for SAP Applications 15 SP2 is installed"
+					}
+				]
+			}
+		]
+	}
+}

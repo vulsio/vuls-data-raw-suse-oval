@@ -10,15 +10,18 @@
 				"SUSE Linux Enterprise Desktop 15 SP5",
 				"SUSE Linux Enterprise High Performance Computing 15 SP4",
 				"SUSE Linux Enterprise High Performance Computing 15 SP5",
+				"SUSE Linux Enterprise Live Patching 15 SP2",
 				"SUSE Linux Enterprise Module for Basesystem 15 SP5",
 				"SUSE Linux Enterprise Module for Development Tools 15 SP5",
 				"SUSE Linux Enterprise Module for Public Cloud 15 SP4",
 				"SUSE Linux Enterprise Module for Public Cloud 15 SP5",
 				"SUSE Linux Enterprise Server 15 SP1-LTSS",
+				"SUSE Linux Enterprise Server 15 SP2-LTSS",
 				"SUSE Linux Enterprise Server 15 SP4",
 				"SUSE Linux Enterprise Server 15 SP4-LTSS",
 				"SUSE Linux Enterprise Server 15 SP5",
 				"SUSE Linux Enterprise Server 15-LTSS",
+				"SUSE Linux Enterprise Server for SAP Applications 15 SP2",
 				"SUSE Linux Enterprise Server for SAP Applications 15 SP4",
 				"SUSE Linux Enterprise Server for SAP Applications 15 SP5",
 				"SUSE Manager Proxy 4.3",
@@ -36,6 +39,11 @@
 				"ref_id": "SUSE CVE-2021-47015",
 				"ref_url": "https://www.suse.com/security/cve/CVE-2021-47015",
 				"source": "SUSE CVE"
+			},
+			{
+				"ref_id": "SUSE-SU-2024:1454-1",
+				"ref_url": "https://lists.suse.com/pipermail/sle-updates/2024-April/035109.html",
+				"source": "SUSE-SU"
 			}
 		],
 		"description": "\n    In the Linux kernel, the following vulnerability has been resolved:\n\nbnxt_en: Fix RX consumer index logic in the error path.\n\nIn bnxt_rx_pkt(), the RX buffers are expected to complete in order.\nIf the RX consumer index indicates an out of order buffer completion,\nit means we are hitting a hardware bug and the driver will abort all\nremaining RX packets and reset the RX ring.  The RX consumer index\nthat we pass to bnxt_discard_rx() is not correct.  We should be\npassing the current index (tmp_raw_cons) instead of the old index\n(raw_cons).  This bug can cause us to be at the wrong index when\ntrying to abort the next RX packet.  It can crash like this:\n\n #0 [ffff9bbcdf5c39a8] machine_kexec at ffffffff9b05e007\n #1 [ffff9bbcdf5c3a00] __crash_kexec at ffffffff9b111232\n #2 [ffff9bbcdf5c3ad0] panic at ffffffff9b07d61e\n #3 [ffff9bbcdf5c3b50] oops_end at ffffffff9b030978\n #4 [ffff9bbcdf5c3b78] no_context at ffffffff9b06aaf0\n #5 [ffff9bbcdf5c3bd8] __bad_area_nosemaphore at ffffffff9b06ae2e\n #6 [ffff9bbcdf5c3c28] bad_area_nosemaphore at ffffffff9b06af24\n #7 [ffff9bbcdf5c3c38] __do_page_fault at ffffffff9b06b67e\n #8 [ffff9bbcdf5c3cb0] do_page_fault at ffffffff9b06bb12\n #9 [ffff9bbcdf5c3ce0] page_fault at ffffffff9bc015c5\n    [exception RIP: bnxt_rx_pkt+237]\n    RIP: ffffffffc0259cdd  RSP: ffff9bbcdf5c3d98  RFLAGS: 00010213\n    RAX: 000000005dd8097f  RBX: ffff9ba4cb11b7e0  RCX: ffffa923cf6e9000\n    RDX: 0000000000000fff  RSI: 0000000000000627  RDI: 0000000000001000\n    RBP: ffff9bbcdf5c3e60   R8: 0000000000420003   R9: 000000000000020d\n    R10: ffffa923cf6ec138  R11: ffff9bbcdf5c3e83  R12: ffff9ba4d6f928c0\n    R13: ffff9ba4cac28080  R14: ffff9ba4cb11b7f0  R15: ffff9ba4d5a30000\n    ORIG_RAX: ffffffffffffffff  CS: 0010  SS: 0018\n    ",
@@ -62,12 +70,13 @@
 				"date": "2024-03-07"
 			},
 			"updated": {
-				"date": "2024-04-26"
+				"date": "2024-04-27"
 			},
 			"affected_cpe_list": {
 				"cpe": [
 					"cpe:/o:suse:sle-module-basesystem:15:sp5",
 					"cpe:/o:suse:sle-module-development-tools:15:sp5",
+					"cpe:/o:suse:sle-module-live-patching:15:sp2",
 					"cpe:/o:suse:sle-module-public-cloud:15:sp4",
 					"cpe:/o:suse:sle-module-public-cloud:15:sp5",
 					"cpe:/o:suse:sle_hpc:15:sp4",
@@ -75,9 +84,11 @@
 					"cpe:/o:suse:sled:15:sp5",
 					"cpe:/o:suse:sles-ltss:15",
 					"cpe:/o:suse:sles-ltss:15:sp1",
+					"cpe:/o:suse:sles-ltss:15:sp2",
 					"cpe:/o:suse:sles-ltss:15:sp4",
 					"cpe:/o:suse:sles:15:sp4",
 					"cpe:/o:suse:sles:15:sp5",
+					"cpe:/o:suse:sles_sap:15:sp2",
 					"cpe:/o:suse:sles_sap:15:sp4",
 					"cpe:/o:suse:sles_sap:15:sp5",
 					"cpe:/o:suse:suse-manager-proxy:4.3",
@@ -366,6 +377,162 @@
 								"comment": "kernel-source-azure is not affected"
 							}
 						]
+					}
+				]
+			},
+			{
+				"operator": "AND",
+				"criterias": [
+					{
+						"operator": "OR",
+						"criterions": [
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009858120",
+								"comment": "kernel-default-livepatch-5.3.18-150200.24.188.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009858121",
+								"comment": "kernel-default-livepatch-devel-5.3.18-150200.24.188.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009858122",
+								"comment": "kernel-livepatch-5_3_18-150200_24_188-default-1-150200.5.3.3 is installed"
+							}
+						]
+					}
+				],
+				"criterions": [
+					{
+						"test_ref": "oval:org.opensuse.security:tst:2009288462",
+						"comment": "SUSE Linux Enterprise Live Patching 15 SP2 is installed"
+					}
+				]
+			},
+			{
+				"operator": "AND",
+				"criterias": [
+					{
+						"operator": "OR",
+						"criterions": [
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009858138",
+								"comment": "kernel-default-5.3.18-150200.24.188.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009858139",
+								"comment": "kernel-default-base-5.3.18-150200.24.188.1.150200.9.95.3 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009858140",
+								"comment": "kernel-default-devel-5.3.18-150200.24.188.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009858130",
+								"comment": "kernel-devel-5.3.18-150200.24.188.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009858131",
+								"comment": "kernel-docs-5.3.18-150200.24.188.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009858132",
+								"comment": "kernel-macros-5.3.18-150200.24.188.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009858141",
+								"comment": "kernel-obs-build-5.3.18-150200.24.188.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009858134",
+								"comment": "kernel-preempt-5.3.18-150200.24.188.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009858135",
+								"comment": "kernel-preempt-devel-5.3.18-150200.24.188.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009858136",
+								"comment": "kernel-source-5.3.18-150200.24.188.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009858142",
+								"comment": "kernel-syms-5.3.18-150200.24.188.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009858143",
+								"comment": "reiserfs-kmp-default-5.3.18-150200.24.188.1 is installed"
+							}
+						]
+					}
+				],
+				"criterions": [
+					{
+						"test_ref": "oval:org.opensuse.security:tst:2009660213",
+						"comment": "SUSE Linux Enterprise Server 15 SP2-LTSS is installed"
+					}
+				]
+			},
+			{
+				"operator": "AND",
+				"criterias": [
+					{
+						"operator": "OR",
+						"criterions": [
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009858144",
+								"comment": "kernel-default-5.3.18-150200.24.188.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009858145",
+								"comment": "kernel-default-base-5.3.18-150200.24.188.1.150200.9.95.3 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009858146",
+								"comment": "kernel-default-devel-5.3.18-150200.24.188.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009858130",
+								"comment": "kernel-devel-5.3.18-150200.24.188.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009858131",
+								"comment": "kernel-docs-5.3.18-150200.24.188.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009858132",
+								"comment": "kernel-macros-5.3.18-150200.24.188.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009858147",
+								"comment": "kernel-obs-build-5.3.18-150200.24.188.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009858148",
+								"comment": "kernel-preempt-5.3.18-150200.24.188.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009858149",
+								"comment": "kernel-preempt-devel-5.3.18-150200.24.188.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009858136",
+								"comment": "kernel-source-5.3.18-150200.24.188.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009858150",
+								"comment": "kernel-syms-5.3.18-150200.24.188.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009858151",
+								"comment": "reiserfs-kmp-default-5.3.18-150200.24.188.1 is installed"
+							}
+						]
+					}
+				],
+				"criterions": [
+					{
+						"test_ref": "oval:org.opensuse.security:tst:2009659637",
+						"comment": "SUSE Linux Enterprise Server for SAP Applications 15 SP2 is installed"
 					}
 				]
 			}

@@ -10,13 +10,16 @@
 				"SUSE Linux Enterprise Desktop 15 SP5",
 				"SUSE Linux Enterprise High Performance Computing 15 SP4",
 				"SUSE Linux Enterprise High Performance Computing 15 SP5",
+				"SUSE Linux Enterprise Live Patching 15 SP2",
 				"SUSE Linux Enterprise Module for Basesystem 15 SP5",
 				"SUSE Linux Enterprise Module for Development Tools 15 SP5",
 				"SUSE Linux Enterprise Module for Public Cloud 15 SP4",
 				"SUSE Linux Enterprise Module for Public Cloud 15 SP5",
+				"SUSE Linux Enterprise Server 15 SP2-LTSS",
 				"SUSE Linux Enterprise Server 15 SP4",
 				"SUSE Linux Enterprise Server 15 SP4-LTSS",
 				"SUSE Linux Enterprise Server 15 SP5",
+				"SUSE Linux Enterprise Server for SAP Applications 15 SP2",
 				"SUSE Linux Enterprise Server for SAP Applications 15 SP4",
 				"SUSE Linux Enterprise Server for SAP Applications 15 SP5",
 				"SUSE Manager Proxy 4.3",
@@ -34,6 +37,11 @@
 				"ref_id": "SUSE CVE-2021-47117",
 				"ref_url": "https://www.suse.com/security/cve/CVE-2021-47117",
 				"source": "SUSE CVE"
+			},
+			{
+				"ref_id": "SUSE-SU-2024:1454-1",
+				"ref_url": "https://lists.suse.com/pipermail/sle-updates/2024-April/035109.html",
+				"source": "SUSE-SU"
 			}
 		],
 		"description": "\n    In the Linux kernel, the following vulnerability has been resolved:\n\next4: fix bug on in ext4_es_cache_extent as ext4_split_extent_at failed\n\nWe got follow bug_on when run fsstress with injecting IO fault:\n[130747.323114] kernel BUG at fs/ext4/extents_status.c:762!\n[130747.323117] Internal error: Oops - BUG: 0 [#1] SMP\n......\n[130747.334329] Call trace:\n[130747.334553]  ext4_es_cache_extent+0x150/0x168 [ext4]\n[130747.334975]  ext4_cache_extents+0x64/0xe8 [ext4]\n[130747.335368]  ext4_find_extent+0x300/0x330 [ext4]\n[130747.335759]  ext4_ext_map_blocks+0x74/0x1178 [ext4]\n[130747.336179]  ext4_map_blocks+0x2f4/0x5f0 [ext4]\n[130747.336567]  ext4_mpage_readpages+0x4a8/0x7a8 [ext4]\n[130747.336995]  ext4_readpage+0x54/0x100 [ext4]\n[130747.337359]  generic_file_buffered_read+0x410/0xae8\n[130747.337767]  generic_file_read_iter+0x114/0x190\n[130747.338152]  ext4_file_read_iter+0x5c/0x140 [ext4]\n[130747.338556]  __vfs_read+0x11c/0x188\n[130747.338851]  vfs_read+0x94/0x150\n[130747.339110]  ksys_read+0x74/0xf0\n\nThis patch's modification is according to Jan Kara's suggestion in:\nhttps://patchwork.ozlabs.org/project/linux-ext4/patch/20210428085158.3728201-1-yebin10@huawei.com/\n\"I see. Now I understand your patch. Honestly, seeing how fragile is trying\nto fix extent tree after split has failed in the middle, I would probably\ngo even further and make sure we fix the tree properly in case of ENOSPC\nand EDQUOT (those are easily user triggerable).  Anything else indicates a\nHW problem or fs corruption so I'd rather leave the extent tree as is and\ndon't try to fix it (which also means we will not create overlapping\nextents).\"\n    ",
@@ -62,20 +70,23 @@
 				"date": "2024-03-19"
 			},
 			"updated": {
-				"date": "2024-04-26"
+				"date": "2024-04-27"
 			},
 			"affected_cpe_list": {
 				"cpe": [
 					"cpe:/o:suse:sle-module-basesystem:15:sp5",
 					"cpe:/o:suse:sle-module-development-tools:15:sp5",
+					"cpe:/o:suse:sle-module-live-patching:15:sp2",
 					"cpe:/o:suse:sle-module-public-cloud:15:sp4",
 					"cpe:/o:suse:sle-module-public-cloud:15:sp5",
 					"cpe:/o:suse:sle_hpc:15:sp4",
 					"cpe:/o:suse:sle_hpc:15:sp5",
 					"cpe:/o:suse:sled:15:sp5",
+					"cpe:/o:suse:sles-ltss:15:sp2",
 					"cpe:/o:suse:sles-ltss:15:sp4",
 					"cpe:/o:suse:sles:15:sp4",
 					"cpe:/o:suse:sles:15:sp5",
+					"cpe:/o:suse:sles_sap:15:sp2",
 					"cpe:/o:suse:sles_sap:15:sp4",
 					"cpe:/o:suse:sles_sap:15:sp5",
 					"cpe:/o:suse:suse-manager-proxy:4.3",
@@ -309,6 +320,162 @@
 								"comment": "kernel-source-azure is not affected"
 							}
 						]
+					}
+				]
+			},
+			{
+				"operator": "AND",
+				"criterias": [
+					{
+						"operator": "OR",
+						"criterions": [
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009858120",
+								"comment": "kernel-default-livepatch-5.3.18-150200.24.188.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009858121",
+								"comment": "kernel-default-livepatch-devel-5.3.18-150200.24.188.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009858122",
+								"comment": "kernel-livepatch-5_3_18-150200_24_188-default-1-150200.5.3.3 is installed"
+							}
+						]
+					}
+				],
+				"criterions": [
+					{
+						"test_ref": "oval:org.opensuse.security:tst:2009288462",
+						"comment": "SUSE Linux Enterprise Live Patching 15 SP2 is installed"
+					}
+				]
+			},
+			{
+				"operator": "AND",
+				"criterias": [
+					{
+						"operator": "OR",
+						"criterions": [
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009858138",
+								"comment": "kernel-default-5.3.18-150200.24.188.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009858139",
+								"comment": "kernel-default-base-5.3.18-150200.24.188.1.150200.9.95.3 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009858140",
+								"comment": "kernel-default-devel-5.3.18-150200.24.188.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009858130",
+								"comment": "kernel-devel-5.3.18-150200.24.188.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009858131",
+								"comment": "kernel-docs-5.3.18-150200.24.188.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009858132",
+								"comment": "kernel-macros-5.3.18-150200.24.188.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009858141",
+								"comment": "kernel-obs-build-5.3.18-150200.24.188.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009858134",
+								"comment": "kernel-preempt-5.3.18-150200.24.188.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009858135",
+								"comment": "kernel-preempt-devel-5.3.18-150200.24.188.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009858136",
+								"comment": "kernel-source-5.3.18-150200.24.188.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009858142",
+								"comment": "kernel-syms-5.3.18-150200.24.188.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009858143",
+								"comment": "reiserfs-kmp-default-5.3.18-150200.24.188.1 is installed"
+							}
+						]
+					}
+				],
+				"criterions": [
+					{
+						"test_ref": "oval:org.opensuse.security:tst:2009660213",
+						"comment": "SUSE Linux Enterprise Server 15 SP2-LTSS is installed"
+					}
+				]
+			},
+			{
+				"operator": "AND",
+				"criterias": [
+					{
+						"operator": "OR",
+						"criterions": [
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009858144",
+								"comment": "kernel-default-5.3.18-150200.24.188.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009858145",
+								"comment": "kernel-default-base-5.3.18-150200.24.188.1.150200.9.95.3 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009858146",
+								"comment": "kernel-default-devel-5.3.18-150200.24.188.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009858130",
+								"comment": "kernel-devel-5.3.18-150200.24.188.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009858131",
+								"comment": "kernel-docs-5.3.18-150200.24.188.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009858132",
+								"comment": "kernel-macros-5.3.18-150200.24.188.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009858147",
+								"comment": "kernel-obs-build-5.3.18-150200.24.188.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009858148",
+								"comment": "kernel-preempt-5.3.18-150200.24.188.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009858149",
+								"comment": "kernel-preempt-devel-5.3.18-150200.24.188.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009858136",
+								"comment": "kernel-source-5.3.18-150200.24.188.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009858150",
+								"comment": "kernel-syms-5.3.18-150200.24.188.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009858151",
+								"comment": "reiserfs-kmp-default-5.3.18-150200.24.188.1 is installed"
+							}
+						]
+					}
+				],
+				"criterions": [
+					{
+						"test_ref": "oval:org.opensuse.security:tst:2009659637",
+						"comment": "SUSE Linux Enterprise Server for SAP Applications 15 SP2 is installed"
 					}
 				]
 			}

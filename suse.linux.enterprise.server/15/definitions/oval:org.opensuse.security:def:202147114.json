@@ -10,13 +10,16 @@
 				"SUSE Linux Enterprise Desktop 15 SP5",
 				"SUSE Linux Enterprise High Performance Computing 15 SP4",
 				"SUSE Linux Enterprise High Performance Computing 15 SP5",
+				"SUSE Linux Enterprise Live Patching 15 SP2",
 				"SUSE Linux Enterprise Module for Basesystem 15 SP5",
 				"SUSE Linux Enterprise Module for Development Tools 15 SP5",
 				"SUSE Linux Enterprise Module for Public Cloud 15 SP4",
 				"SUSE Linux Enterprise Module for Public Cloud 15 SP5",
+				"SUSE Linux Enterprise Server 15 SP2-LTSS",
 				"SUSE Linux Enterprise Server 15 SP4",
 				"SUSE Linux Enterprise Server 15 SP4-LTSS",
 				"SUSE Linux Enterprise Server 15 SP5",
+				"SUSE Linux Enterprise Server for SAP Applications 15 SP2",
 				"SUSE Linux Enterprise Server for SAP Applications 15 SP4",
 				"SUSE Linux Enterprise Server for SAP Applications 15 SP5",
 				"SUSE Manager Proxy 4.3",
@@ -34,6 +37,11 @@
 				"ref_id": "SUSE CVE-2021-47114",
 				"ref_url": "https://www.suse.com/security/cve/CVE-2021-47114",
 				"source": "SUSE CVE"
+			},
+			{
+				"ref_id": "SUSE-SU-2024:1454-1",
+				"ref_url": "https://lists.suse.com/pipermail/sle-updates/2024-April/035109.html",
+				"source": "SUSE-SU"
 			}
 		],
 		"description": "\n    In the Linux kernel, the following vulnerability has been resolved:\n\nocfs2: fix data corruption by fallocate\n\nWhen fallocate punches holes out of inode size, if original isize is in\nthe middle of last cluster, then the part from isize to the end of the\ncluster will be zeroed with buffer write, at that time isize is not yet\nupdated to match the new size, if writeback is kicked in, it will invoke\nocfs2_writepage()->block_write_full_page() where the pages out of inode\nsize will be dropped.  That will cause file corruption.  Fix this by\nzero out eof blocks when extending the inode size.\n\nRunning the following command with qemu-image 4.2.1 can get a corrupted\ncoverted image file easily.\n\n    qemu-img convert -p -t none -T none -f qcow2 $qcow_image \\\n             -O qcow2 -o compat=1.1 $qcow_image.conv\n\nThe usage of fallocate in qemu is like this, it first punches holes out\nof inode size, then extend the inode size.\n\n    fallocate(11, FALLOC_FL_KEEP_SIZE|FALLOC_FL_PUNCH_HOLE, 2276196352, 65536) = 0\n    fallocate(11, 0, 2276196352, 65536) = 0\n\nv1: https://www.spinics.net/lists/linux-fsdevel/msg193999.html\nv2: https://lore.kernel.org/linux-fsdevel/20210525093034.GB4112@quack2.suse.cz/T/\n    ",
@@ -62,20 +70,23 @@
 				"date": "2024-03-19"
 			},
 			"updated": {
-				"date": "2024-04-26"
+				"date": "2024-04-27"
 			},
 			"affected_cpe_list": {
 				"cpe": [
 					"cpe:/o:suse:sle-module-basesystem:15:sp5",
 					"cpe:/o:suse:sle-module-development-tools:15:sp5",
+					"cpe:/o:suse:sle-module-live-patching:15:sp2",
 					"cpe:/o:suse:sle-module-public-cloud:15:sp4",
 					"cpe:/o:suse:sle-module-public-cloud:15:sp5",
 					"cpe:/o:suse:sle_hpc:15:sp4",
 					"cpe:/o:suse:sle_hpc:15:sp5",
 					"cpe:/o:suse:sled:15:sp5",
+					"cpe:/o:suse:sles-ltss:15:sp2",
 					"cpe:/o:suse:sles-ltss:15:sp4",
 					"cpe:/o:suse:sles:15:sp4",
 					"cpe:/o:suse:sles:15:sp5",
+					"cpe:/o:suse:sles_sap:15:sp2",
 					"cpe:/o:suse:sles_sap:15:sp4",
 					"cpe:/o:suse:sles_sap:15:sp5",
 					"cpe:/o:suse:suse-manager-proxy:4.3",
@@ -309,6 +320,162 @@
 								"comment": "kernel-source-azure is not affected"
 							}
 						]
+					}
+				]
+			},
+			{
+				"operator": "AND",
+				"criterias": [
+					{
+						"operator": "OR",
+						"criterions": [
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009858120",
+								"comment": "kernel-default-livepatch-5.3.18-150200.24.188.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009858121",
+								"comment": "kernel-default-livepatch-devel-5.3.18-150200.24.188.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009858122",
+								"comment": "kernel-livepatch-5_3_18-150200_24_188-default-1-150200.5.3.3 is installed"
+							}
+						]
+					}
+				],
+				"criterions": [
+					{
+						"test_ref": "oval:org.opensuse.security:tst:2009288462",
+						"comment": "SUSE Linux Enterprise Live Patching 15 SP2 is installed"
+					}
+				]
+			},
+			{
+				"operator": "AND",
+				"criterias": [
+					{
+						"operator": "OR",
+						"criterions": [
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009858138",
+								"comment": "kernel-default-5.3.18-150200.24.188.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009858139",
+								"comment": "kernel-default-base-5.3.18-150200.24.188.1.150200.9.95.3 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009858140",
+								"comment": "kernel-default-devel-5.3.18-150200.24.188.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009858130",
+								"comment": "kernel-devel-5.3.18-150200.24.188.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009858131",
+								"comment": "kernel-docs-5.3.18-150200.24.188.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009858132",
+								"comment": "kernel-macros-5.3.18-150200.24.188.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009858141",
+								"comment": "kernel-obs-build-5.3.18-150200.24.188.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009858134",
+								"comment": "kernel-preempt-5.3.18-150200.24.188.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009858135",
+								"comment": "kernel-preempt-devel-5.3.18-150200.24.188.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009858136",
+								"comment": "kernel-source-5.3.18-150200.24.188.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009858142",
+								"comment": "kernel-syms-5.3.18-150200.24.188.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009858143",
+								"comment": "reiserfs-kmp-default-5.3.18-150200.24.188.1 is installed"
+							}
+						]
+					}
+				],
+				"criterions": [
+					{
+						"test_ref": "oval:org.opensuse.security:tst:2009660213",
+						"comment": "SUSE Linux Enterprise Server 15 SP2-LTSS is installed"
+					}
+				]
+			},
+			{
+				"operator": "AND",
+				"criterias": [
+					{
+						"operator": "OR",
+						"criterions": [
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009858144",
+								"comment": "kernel-default-5.3.18-150200.24.188.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009858145",
+								"comment": "kernel-default-base-5.3.18-150200.24.188.1.150200.9.95.3 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009858146",
+								"comment": "kernel-default-devel-5.3.18-150200.24.188.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009858130",
+								"comment": "kernel-devel-5.3.18-150200.24.188.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009858131",
+								"comment": "kernel-docs-5.3.18-150200.24.188.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009858132",
+								"comment": "kernel-macros-5.3.18-150200.24.188.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009858147",
+								"comment": "kernel-obs-build-5.3.18-150200.24.188.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009858148",
+								"comment": "kernel-preempt-5.3.18-150200.24.188.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009858149",
+								"comment": "kernel-preempt-devel-5.3.18-150200.24.188.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009858136",
+								"comment": "kernel-source-5.3.18-150200.24.188.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009858150",
+								"comment": "kernel-syms-5.3.18-150200.24.188.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009858151",
+								"comment": "reiserfs-kmp-default-5.3.18-150200.24.188.1 is installed"
+							}
+						]
+					}
+				],
+				"criterions": [
+					{
+						"test_ref": "oval:org.opensuse.security:tst:2009659637",
+						"comment": "SUSE Linux Enterprise Server for SAP Applications 15 SP2 is installed"
 					}
 				]
 			}
