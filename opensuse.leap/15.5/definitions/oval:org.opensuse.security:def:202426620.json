@@ -1,0 +1,359 @@
+{
+	"id": "oval:org.opensuse.security:def:202426620",
+	"version": "1",
+	"class": "vulnerability",
+	"metadata": {
+		"title": "CVE-2024-26620",
+		"affected": {
+			"family": "unix",
+			"platform": [
+				"openSUSE Leap 15.5"
+			]
+		},
+		"reference": [
+			{
+				"ref_id": "Mitre CVE-2024-26620",
+				"ref_url": "https://cve.mitre.org/cgi-bin/cvename.cgi?name=CVE-2024-26620",
+				"source": "CVE"
+			},
+			{
+				"ref_id": "SUSE CVE-2024-26620",
+				"ref_url": "https://www.suse.com/security/cve/CVE-2024-26620",
+				"source": "SUSE CVE"
+			},
+			{
+				"ref_id": "SUSE-SU-2024:1322-1",
+				"ref_url": "https://lists.suse.com/pipermail/sle-updates/2024-April/035002.html",
+				"source": "SUSE-SU"
+			},
+			{
+				"ref_id": "SUSE-SU-2024:1322-2",
+				"ref_url": "https://lists.suse.com/pipermail/sle-security-updates/2024-April/018377.html",
+				"source": "SUSE-SU"
+			},
+			{
+				"ref_id": "SUSE-SU-2024:1332-1",
+				"ref_url": "https://lists.suse.com/pipermail/sle-updates/2024-April/035014.html",
+				"source": "SUSE-SU"
+			},
+			{
+				"ref_id": "SUSE-SU-2024:1332-2",
+				"ref_url": "https://lists.suse.com/pipermail/sle-security-updates/2024-April/018378.html",
+				"source": "SUSE-SU"
+			},
+			{
+				"ref_id": "SUSE-SU-2024:1466-1",
+				"ref_url": "https://lists.suse.com/pipermail/sle-updates/2024-April/035122.html",
+				"source": "SUSE-SU"
+			}
+		],
+		"description": "\n    In the Linux kernel, the following vulnerability has been resolved:\n\ns390/vfio-ap: always filter entire AP matrix\n\nThe vfio_ap_mdev_filter_matrix function is called whenever a new adapter or\ndomain is assigned to the mdev. The purpose of the function is to update\nthe guest's AP configuration by filtering the matrix of adapters and\ndomains assigned to the mdev. When an adapter or domain is assigned, only\nthe APQNs associated with the APID of the new adapter or APQI of the new\ndomain are inspected. If an APQN does not reference a queue device bound to\nthe vfio_ap device driver, then it's APID will be filtered from the mdev's\nmatrix when updating the guest's AP configuration.\n\nInspecting only the APID of the new adapter or APQI of the new domain will\nresult in passing AP queues through to a guest that are not bound to the\nvfio_ap device driver under certain circumstances. Consider the following:\n\nguest's AP configuration (all also assigned to the mdev's matrix):\n14.0004\n14.0005\n14.0006\n16.0004\n16.0005\n16.0006\n\nunassign domain 4\nunbind queue 16.0005\nassign domain 4\n\nWhen domain 4 is re-assigned, since only domain 4 will be inspected, the\nAPQNs that will be examined will be:\n14.0004\n16.0004\n\nSince both of those APQNs reference queue devices that are bound to the\nvfio_ap device driver, nothing will get filtered from the mdev's matrix\nwhen updating the guest's AP configuration. Consequently, queue 16.0005\nwill get passed through despite not being bound to the driver. This\nviolates the linux device model requirement that a guest shall only be\ngiven access to devices bound to the device driver facilitating their\npass-through.\n\nTo resolve this problem, every adapter and domain assigned to the mdev will\nbe inspected when filtering the mdev's matrix.\n    ",
+		"advisory": {
+			"from": "security@suse.de",
+			"severity": "Low",
+			"cve": [
+				{
+					"text": "CVE-2024-26620 at SUSE",
+					"href": "https://www.suse.com/security/cve/CVE-2024-26620/"
+				},
+				{
+					"text": "CVE-2024-26620 at NVD",
+					"href": "https://nvd.nist.gov/vuln/detail/CVE-2024-26620"
+				}
+			],
+			"bugzilla": [
+				{
+					"text": "SUSE bug 1221298",
+					"href": "https://bugzilla.suse.com/1221298"
+				}
+			],
+			"issued": {
+				"date": "2024-04-30"
+			},
+			"updated": {
+				"date": "2024-04-30"
+			},
+			"affected_cpe_list": {
+				"cpe": [
+					"cpe:/o:opensuse:leap:15.5"
+				]
+			}
+		}
+	},
+	"criteria": {
+		"operator": "AND",
+		"criterias": [
+			{
+				"operator": "OR",
+				"criterias": [
+					{
+						"operator": "AND",
+						"criterions": [
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009858171",
+								"comment": "cluster-md-kmp-rt-5.14.21-150500.13.47.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009342853",
+								"comment": "cluster-md-kmp-rt is signed with openSUSE key"
+							}
+						]
+					},
+					{
+						"operator": "AND",
+						"criterions": [
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009858172",
+								"comment": "dlm-kmp-rt-5.14.21-150500.13.47.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009342855",
+								"comment": "dlm-kmp-rt is signed with openSUSE key"
+							}
+						]
+					},
+					{
+						"operator": "AND",
+						"criterions": [
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009858173",
+								"comment": "gfs2-kmp-rt-5.14.21-150500.13.47.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009342857",
+								"comment": "gfs2-kmp-rt is signed with openSUSE key"
+							}
+						]
+					},
+					{
+						"operator": "AND",
+						"criterions": [
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009858174",
+								"comment": "kernel-devel-rt-5.14.21-150500.13.47.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009342859",
+								"comment": "kernel-devel-rt is signed with openSUSE key"
+							}
+						]
+					},
+					{
+						"operator": "AND",
+						"criterions": [
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009858175",
+								"comment": "kernel-rt-5.14.21-150500.13.47.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009342860",
+								"comment": "kernel-rt is signed with openSUSE key"
+							}
+						]
+					},
+					{
+						"operator": "AND",
+						"criterions": [
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009858176",
+								"comment": "kernel-rt-devel-5.14.21-150500.13.47.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009342861",
+								"comment": "kernel-rt-devel is signed with openSUSE key"
+							}
+						]
+					},
+					{
+						"operator": "AND",
+						"criterions": [
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009858177",
+								"comment": "kernel-rt-extra-5.14.21-150500.13.47.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009342862",
+								"comment": "kernel-rt-extra is signed with openSUSE key"
+							}
+						]
+					},
+					{
+						"operator": "AND",
+						"criterions": [
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009858178",
+								"comment": "kernel-rt-livepatch-5.14.21-150500.13.47.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009771783",
+								"comment": "kernel-rt-livepatch is signed with openSUSE key"
+							}
+						]
+					},
+					{
+						"operator": "AND",
+						"criterions": [
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009858179",
+								"comment": "kernel-rt-livepatch-devel-5.14.21-150500.13.47.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009623297",
+								"comment": "kernel-rt-livepatch-devel is signed with openSUSE key"
+							}
+						]
+					},
+					{
+						"operator": "AND",
+						"criterions": [
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009858180",
+								"comment": "kernel-rt-optional-5.14.21-150500.13.47.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009771784",
+								"comment": "kernel-rt-optional is signed with openSUSE key"
+							}
+						]
+					},
+					{
+						"operator": "AND",
+						"criterions": [
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009858181",
+								"comment": "kernel-rt-vdso-5.14.21-150500.13.47.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009771785",
+								"comment": "kernel-rt-vdso is signed with openSUSE key"
+							}
+						]
+					},
+					{
+						"operator": "AND",
+						"criterions": [
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009858182",
+								"comment": "kernel-rt_debug-5.14.21-150500.13.47.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009342863",
+								"comment": "kernel-rt_debug is signed with openSUSE key"
+							}
+						]
+					},
+					{
+						"operator": "AND",
+						"criterions": [
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009858183",
+								"comment": "kernel-rt_debug-devel-5.14.21-150500.13.47.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009342864",
+								"comment": "kernel-rt_debug-devel is signed with openSUSE key"
+							}
+						]
+					},
+					{
+						"operator": "AND",
+						"criterions": [
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009858184",
+								"comment": "kernel-rt_debug-livepatch-devel-5.14.21-150500.13.47.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009623299",
+								"comment": "kernel-rt_debug-livepatch-devel is signed with openSUSE key"
+							}
+						]
+					},
+					{
+						"operator": "AND",
+						"criterions": [
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009858185",
+								"comment": "kernel-rt_debug-vdso-5.14.21-150500.13.47.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009771786",
+								"comment": "kernel-rt_debug-vdso is signed with openSUSE key"
+							}
+						]
+					},
+					{
+						"operator": "AND",
+						"criterions": [
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009858186",
+								"comment": "kernel-source-rt-5.14.21-150500.13.47.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009342866",
+								"comment": "kernel-source-rt is signed with openSUSE key"
+							}
+						]
+					},
+					{
+						"operator": "AND",
+						"criterions": [
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009858187",
+								"comment": "kernel-syms-rt-5.14.21-150500.13.47.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009342867",
+								"comment": "kernel-syms-rt is signed with openSUSE key"
+							}
+						]
+					},
+					{
+						"operator": "AND",
+						"criterions": [
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009858188",
+								"comment": "kselftests-kmp-rt-5.14.21-150500.13.47.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009342868",
+								"comment": "kselftests-kmp-rt is signed with openSUSE key"
+							}
+						]
+					},
+					{
+						"operator": "AND",
+						"criterions": [
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009858189",
+								"comment": "ocfs2-kmp-rt-5.14.21-150500.13.47.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009342870",
+								"comment": "ocfs2-kmp-rt is signed with openSUSE key"
+							}
+						]
+					},
+					{
+						"operator": "AND",
+						"criterions": [
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009858190",
+								"comment": "reiserfs-kmp-rt-5.14.21-150500.13.47.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009342872",
+								"comment": "reiserfs-kmp-rt is signed with openSUSE key"
+							}
+						]
+					}
+				]
+			}
+		],
+		"criterions": [
+			{
+				"test_ref": "oval:org.opensuse.security:tst:2009752682",
+				"comment": "openSUSE Leap 15.5 is installed"
+			}
+		]
+	}
+}
