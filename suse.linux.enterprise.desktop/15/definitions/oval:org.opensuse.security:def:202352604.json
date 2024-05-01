@@ -50,6 +50,11 @@
 				"ref_id": "SUSE-SU-2024:1466-1",
 				"ref_url": "https://lists.suse.com/pipermail/sle-updates/2024-April/035122.html",
 				"source": "SUSE-SU"
+			},
+			{
+				"ref_id": "SUSE-SU-2024:1480-1",
+				"ref_url": "https://lists.suse.com/pipermail/sle-updates/2024-April/035134.html",
+				"source": "SUSE-SU"
 			}
 		],
 		"description": "\n    In the Linux kernel, the following vulnerability has been resolved:\n\nFS:JFS:UBSAN:array-index-out-of-bounds in dbAdjTree\n\nSyzkaller reported the following issue:\n\nUBSAN: array-index-out-of-bounds in fs/jfs/jfs_dmap.c:2867:6\nindex 196694 is out of range for type 's8[1365]' (aka 'signed char[1365]')\nCPU: 1 PID: 109 Comm: jfsCommit Not tainted 6.6.0-rc3-syzkaller #0\nHardware name: Google Google Compute Engine/Google Compute Engine, BIOS Google 08/04/2023\nCall Trace:\n <TASK>\n __dump_stack lib/dump_stack.c:88 [inline]\n dump_stack_lvl+0x1e7/0x2d0 lib/dump_stack.c:106\n ubsan_epilogue lib/ubsan.c:217 [inline]\n __ubsan_handle_out_of_bounds+0x11c/0x150 lib/ubsan.c:348\n dbAdjTree+0x474/0x4f0 fs/jfs/jfs_dmap.c:2867\n dbJoin+0x210/0x2d0 fs/jfs/jfs_dmap.c:2834\n dbFreeBits+0x4eb/0xda0 fs/jfs/jfs_dmap.c:2331\n dbFreeDmap fs/jfs/jfs_dmap.c:2080 [inline]\n dbFree+0x343/0x650 fs/jfs/jfs_dmap.c:402\n txFreeMap+0x798/0xd50 fs/jfs/jfs_txnmgr.c:2534\n txUpdateMap+0x342/0x9e0\n txLazyCommit fs/jfs/jfs_txnmgr.c:2664 [inline]\n jfs_lazycommit+0x47a/0xb70 fs/jfs/jfs_txnmgr.c:2732\n kthread+0x2d3/0x370 kernel/kthread.c:388\n ret_from_fork+0x48/0x80 arch/x86/kernel/process.c:147\n ret_from_fork_asm+0x11/0x20 arch/x86/entry/entry_64.S:304\n </TASK>\n================================================================================\nKernel panic - not syncing: UBSAN: panic_on_warn set ...\nCPU: 1 PID: 109 Comm: jfsCommit Not tainted 6.6.0-rc3-syzkaller #0\nHardware name: Google Google Compute Engine/Google Compute Engine, BIOS Google 08/04/2023\nCall Trace:\n <TASK>\n __dump_stack lib/dump_stack.c:88 [inline]\n dump_stack_lvl+0x1e7/0x2d0 lib/dump_stack.c:106\n panic+0x30f/0x770 kernel/panic.c:340\n check_panic_on_warn+0x82/0xa0 kernel/panic.c:236\n ubsan_epilogue lib/ubsan.c:223 [inline]\n __ubsan_handle_out_of_bounds+0x13c/0x150 lib/ubsan.c:348\n dbAdjTree+0x474/0x4f0 fs/jfs/jfs_dmap.c:2867\n dbJoin+0x210/0x2d0 fs/jfs/jfs_dmap.c:2834\n dbFreeBits+0x4eb/0xda0 fs/jfs/jfs_dmap.c:2331\n dbFreeDmap fs/jfs/jfs_dmap.c:2080 [inline]\n dbFree+0x343/0x650 fs/jfs/jfs_dmap.c:402\n txFreeMap+0x798/0xd50 fs/jfs/jfs_txnmgr.c:2534\n txUpdateMap+0x342/0x9e0\n txLazyCommit fs/jfs/jfs_txnmgr.c:2664 [inline]\n jfs_lazycommit+0x47a/0xb70 fs/jfs/jfs_txnmgr.c:2732\n kthread+0x2d3/0x370 kernel/kthread.c:388\n ret_from_fork+0x48/0x80 arch/x86/kernel/process.c:147\n ret_from_fork_asm+0x11/0x20 arch/x86/entry/entry_64.S:304\n </TASK>\nKernel Offset: disabled\nRebooting in 86400 seconds..\n\nThe issue is caused when the value of lp becomes greater than\nCTLTREESIZE which is the max size of stree. Adding a simple check\nsolves this issue.\n\nDave:\nAs the function returns a void, good error handling\nwould require a more intrusive code reorganization, so I modified\nOsama's patch at use WARN_ON_ONCE for lack of a cleaner option.\n\nThe patch is tested via syzbot.\n    ",
@@ -76,7 +81,7 @@
 				"date": "2024-03-07"
 			},
 			"updated": {
-				"date": "2024-04-30"
+				"date": "2024-05-01"
 			},
 			"affected_cpe_list": {
 				"cpe": [
@@ -93,49 +98,6 @@
 	"criteria": {
 		"operator": "OR",
 		"criterias": [
-			{
-				"operator": "AND",
-				"criterias": [
-					{
-						"operator": "OR",
-						"criterions": [
-							{
-								"test_ref": "oval:org.opensuse.security:tst:2009759898",
-								"comment": "SUSE Linux Enterprise Desktop 15 SP5 is installed"
-							},
-							{
-								"test_ref": "oval:org.opensuse.security:tst:2009759899",
-								"comment": "SUSE Linux Enterprise High Performance Computing 15 SP5 is installed"
-							},
-							{
-								"test_ref": "oval:org.opensuse.security:tst:2009760583",
-								"comment": "SUSE Linux Enterprise Module for Development Tools 15 SP5 is installed"
-							},
-							{
-								"test_ref": "oval:org.opensuse.security:tst:2009759901",
-								"comment": "SUSE Linux Enterprise Server 15 SP5 is installed"
-							},
-							{
-								"test_ref": "oval:org.opensuse.security:tst:2009759902",
-								"comment": "SUSE Linux Enterprise Server for SAP Applications 15 SP5 is installed"
-							}
-						]
-					},
-					{
-						"operator": "OR",
-						"criterions": [
-							{
-								"test_ref": "oval:org.opensuse.security:tst:2009334017",
-								"comment": "kernel-default is not affected"
-							},
-							{
-								"test_ref": "oval:org.opensuse.security:tst:2009333928",
-								"comment": "kernel-source is not affected"
-							}
-						]
-					}
-				]
-			},
 			{
 				"operator": "AND",
 				"criterias": [
@@ -168,20 +130,87 @@
 						"operator": "OR",
 						"criterions": [
 							{
-								"test_ref": "oval:org.opensuse.security:tst:2009334017",
-								"comment": "kernel-default is not affected"
+								"test_ref": "oval:org.opensuse.security:tst:2009858523",
+								"comment": "kernel-64kb-5.14.21-150500.55.59.1 is installed"
 							},
 							{
-								"test_ref": "oval:org.opensuse.security:tst:2009335423",
-								"comment": "kernel-default-devel is not affected"
+								"test_ref": "oval:org.opensuse.security:tst:2009858524",
+								"comment": "kernel-64kb-devel-5.14.21-150500.55.59.1 is installed"
 							},
 							{
-								"test_ref": "oval:org.opensuse.security:tst:2009334791",
-								"comment": "kernel-devel is not affected"
+								"test_ref": "oval:org.opensuse.security:tst:2009858532",
+								"comment": "kernel-default-5.14.21-150500.55.59.1 is installed"
 							},
 							{
-								"test_ref": "oval:org.opensuse.security:tst:2009334792",
-								"comment": "kernel-macros is not affected"
+								"test_ref": "oval:org.opensuse.security:tst:2009858533",
+								"comment": "kernel-default-base-5.14.21-150500.55.59.1.150500.6.25.7 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009858535",
+								"comment": "kernel-default-devel-5.14.21-150500.55.59.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009858541",
+								"comment": "kernel-devel-5.14.21-150500.55.59.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009858548",
+								"comment": "kernel-macros-5.14.21-150500.55.59.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009858554",
+								"comment": "kernel-zfcpdump-5.14.21-150500.55.59.1 is installed"
+							}
+						]
+					}
+				]
+			},
+			{
+				"operator": "AND",
+				"criterias": [
+					{
+						"operator": "OR",
+						"criterions": [
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009759898",
+								"comment": "SUSE Linux Enterprise Desktop 15 SP5 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009759899",
+								"comment": "SUSE Linux Enterprise High Performance Computing 15 SP5 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009760583",
+								"comment": "SUSE Linux Enterprise Module for Development Tools 15 SP5 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009759901",
+								"comment": "SUSE Linux Enterprise Server 15 SP5 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009759902",
+								"comment": "SUSE Linux Enterprise Server for SAP Applications 15 SP5 is installed"
+							}
+						]
+					},
+					{
+						"operator": "OR",
+						"criterions": [
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009858542",
+								"comment": "kernel-docs-5.14.21-150500.55.59.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009858549",
+								"comment": "kernel-obs-build-5.14.21-150500.55.59.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009858551",
+								"comment": "kernel-source-5.14.21-150500.55.59.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009858553",
+								"comment": "kernel-syms-5.14.21-150500.55.59.1 is installed"
 							}
 						]
 					}

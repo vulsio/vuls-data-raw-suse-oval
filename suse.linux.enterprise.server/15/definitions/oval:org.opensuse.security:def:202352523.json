@@ -7,17 +7,25 @@
 		"affected": {
 			"family": "unix",
 			"platform": [
+				"SUSE Linux Enterprise Desktop 15 SP5",
+				"SUSE Linux Enterprise High Performance Computing 15 SP5",
 				"SUSE Linux Enterprise Live Patching 15 SP4",
 				"SUSE Linux Enterprise Live Patching 15 SP5",
+				"SUSE Linux Enterprise Module for Basesystem 15 SP5",
+				"SUSE Linux Enterprise Module for Development Tools 15 SP5",
+				"SUSE Linux Enterprise Module for Legacy 15 SP5",
 				"SUSE Linux Enterprise Server 15 SP1-LTSS",
 				"SUSE Linux Enterprise Server 15 SP2-LTSS",
 				"SUSE Linux Enterprise Server 15 SP3-LTSS",
 				"SUSE Linux Enterprise Server 15 SP4-LTSS",
 				"SUSE Linux Enterprise Server 15 SP4-TERADATA",
+				"SUSE Linux Enterprise Server 15 SP5",
 				"SUSE Linux Enterprise Server 15-LTSS",
 				"SUSE Linux Enterprise Server for SAP Applications 15 SP2",
 				"SUSE Linux Enterprise Server for SAP Applications 15 SP3",
-				"SUSE Linux Enterprise Server for SAP Applications 15 SP4"
+				"SUSE Linux Enterprise Server for SAP Applications 15 SP4",
+				"SUSE Linux Enterprise Server for SAP Applications 15 SP5",
+				"SUSE Linux Enterprise Workstation Extension 15 SP5"
 			]
 		},
 		"reference": [
@@ -65,6 +73,11 @@
 				"ref_id": "SUSE-SU-2024:1466-1",
 				"ref_url": "https://lists.suse.com/pipermail/sle-updates/2024-April/035122.html",
 				"source": "SUSE-SU"
+			},
+			{
+				"ref_id": "SUSE-SU-2024:1480-1",
+				"ref_url": "https://lists.suse.com/pipermail/sle-updates/2024-April/035134.html",
+				"source": "SUSE-SU"
 			}
 		],
 		"description": "\n    In the Linux kernel, the following vulnerability has been resolved:\n\nbpf, sockmap: Reject sk_msg egress redirects to non-TCP sockets\n\nWith a SOCKMAP/SOCKHASH map and an sk_msg program user can steer messages\nsent from one TCP socket (s1) to actually egress from another TCP\nsocket (s2):\n\ntcp_bpf_sendmsg(s1)\t\t// = sk_prot->sendmsg\n  tcp_bpf_send_verdict(s1)\t// __SK_REDIRECT case\n    tcp_bpf_sendmsg_redir(s2)\n      tcp_bpf_push_locked(s2)\n\ttcp_bpf_push(s2)\n\t  tcp_rate_check_app_limited(s2) // expects tcp_sock\n\t  tcp_sendmsg_locked(s2)\t // ditto\n\nThere is a hard-coded assumption in the call-chain, that the egress\nsocket (s2) is a TCP socket.\n\nHowever in commit 122e6c79efe1 (\"sock_map: Update sock type checks for\nUDP\") we have enabled redirects to non-TCP sockets. This was done for the\nsake of BPF sk_skb programs. There was no indention to support sk_msg\nsend-to-egress use case.\n\nAs a result, attempts to send-to-egress through a non-TCP socket lead to a\ncrash due to invalid downcast from sock to tcp_sock:\n\n BUG: kernel NULL pointer dereference, address: 000000000000002f\n ...\n Call Trace:\n  <TASK>\n  ? show_regs+0x60/0x70\n  ? __die+0x1f/0x70\n  ? page_fault_oops+0x80/0x160\n  ? do_user_addr_fault+0x2d7/0x800\n  ? rcu_is_watching+0x11/0x50\n  ? exc_page_fault+0x70/0x1c0\n  ? asm_exc_page_fault+0x27/0x30\n  ? tcp_tso_segs+0x14/0xa0\n  tcp_write_xmit+0x67/0xce0\n  __tcp_push_pending_frames+0x32/0xf0\n  tcp_push+0x107/0x140\n  tcp_sendmsg_locked+0x99f/0xbb0\n  tcp_bpf_push+0x19d/0x3a0\n  tcp_bpf_sendmsg_redir+0x55/0xd0\n  tcp_bpf_send_verdict+0x407/0x550\n  tcp_bpf_sendmsg+0x1a1/0x390\n  inet_sendmsg+0x6a/0x70\n  sock_sendmsg+0x9d/0xc0\n  ? sockfd_lookup_light+0x12/0x80\n  __sys_sendto+0x10e/0x160\n  ? syscall_enter_from_user_mode+0x20/0x60\n  ? __this_cpu_preempt_check+0x13/0x20\n  ? lockdep_hardirqs_on+0x82/0x110\n  __x64_sys_sendto+0x1f/0x30\n  do_syscall_64+0x38/0x90\n  entry_SYSCALL_64_after_hwframe+0x63/0xcd\n\nReject selecting a non-TCP sockets as redirect target from a BPF sk_msg\nprogram to prevent the crash. When attempted, user will receive an EACCES\nerror from send/sendto/sendmsg() syscall.\n    ",
@@ -93,20 +106,28 @@
 				"date": "2024-03-07"
 			},
 			"updated": {
-				"date": "2024-04-30"
+				"date": "2024-05-01"
 			},
 			"affected_cpe_list": {
 				"cpe": [
+					"cpe:/o:suse:sle-module-basesystem:15:sp5",
+					"cpe:/o:suse:sle-module-development-tools:15:sp5",
+					"cpe:/o:suse:sle-module-legacy:15:sp5",
 					"cpe:/o:suse:sle-module-live-patching:15:sp4",
 					"cpe:/o:suse:sle-module-live-patching:15:sp5",
+					"cpe:/o:suse:sle-we:15:sp5",
+					"cpe:/o:suse:sle_hpc:15:sp5",
+					"cpe:/o:suse:sled:15:sp5",
 					"cpe:/o:suse:sles-ltss:15",
 					"cpe:/o:suse:sles-ltss:15:sp1",
 					"cpe:/o:suse:sles-ltss:15:sp2",
 					"cpe:/o:suse:sles-ltss:15:sp3",
 					"cpe:/o:suse:sles-ltss:15:sp4",
+					"cpe:/o:suse:sles:15:sp5",
 					"cpe:/o:suse:sles_sap:15:sp2",
 					"cpe:/o:suse:sles_sap:15:sp3",
-					"cpe:/o:suse:sles_sap:15:sp4"
+					"cpe:/o:suse:sles_sap:15:sp4",
+					"cpe:/o:suse:sles_sap:15:sp5"
 				]
 			}
 		}
@@ -116,14 +137,65 @@
 		"criterias": [
 			{
 				"operator": "AND",
+				"criterias": [
+					{
+						"operator": "OR",
+						"criterions": [
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009759899",
+								"comment": "SUSE Linux Enterprise High Performance Computing 15 SP5 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009760608",
+								"comment": "SUSE Linux Enterprise Module for Legacy 15 SP5 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009759901",
+								"comment": "SUSE Linux Enterprise Server 15 SP5 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009759902",
+								"comment": "SUSE Linux Enterprise Server for SAP Applications 15 SP5 is installed"
+							}
+						]
+					}
+				],
 				"criterions": [
 					{
-						"test_ref": "oval:org.opensuse.security:tst:2009764853",
-						"comment": "SUSE Linux Enterprise Live Patching 15 SP5 is installed"
-					},
+						"test_ref": "oval:org.opensuse.security:tst:2009858560",
+						"comment": "reiserfs-kmp-default-5.14.21-150500.55.59.1 is installed"
+					}
+				]
+			},
+			{
+				"operator": "AND",
+				"criterias": [
 					{
-						"test_ref": "oval:org.opensuse.security:tst:2009858305",
-						"comment": "kernel-livepatch-5_14_21-150500_13_47-rt-1-150500.11.3.1 is installed"
+						"operator": "OR",
+						"criterions": [
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009759898",
+								"comment": "SUSE Linux Enterprise Desktop 15 SP5 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009759901",
+								"comment": "SUSE Linux Enterprise Server 15 SP5 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009759902",
+								"comment": "SUSE Linux Enterprise Server for SAP Applications 15 SP5 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009766857",
+								"comment": "SUSE Linux Enterprise Workstation Extension 15 SP5 is installed"
+							}
+						]
+					}
+				],
+				"criterions": [
+					{
+						"test_ref": "oval:org.opensuse.security:tst:2009858609",
+						"comment": "kernel-default-extra-5.14.21-150500.55.59.1 is installed"
 					}
 				]
 			},
@@ -386,6 +458,156 @@
 					{
 						"test_ref": "oval:org.opensuse.security:tst:2009669928",
 						"comment": "SUSE Linux Enterprise Server for SAP Applications 15 SP4 is installed"
+					}
+				]
+			},
+			{
+				"operator": "AND",
+				"criterias": [
+					{
+						"operator": "OR",
+						"criterions": [
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009759898",
+								"comment": "SUSE Linux Enterprise Desktop 15 SP5 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009759899",
+								"comment": "SUSE Linux Enterprise High Performance Computing 15 SP5 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009759900",
+								"comment": "SUSE Linux Enterprise Module for Basesystem 15 SP5 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009759901",
+								"comment": "SUSE Linux Enterprise Server 15 SP5 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009759902",
+								"comment": "SUSE Linux Enterprise Server for SAP Applications 15 SP5 is installed"
+							}
+						]
+					},
+					{
+						"operator": "OR",
+						"criterions": [
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009858523",
+								"comment": "kernel-64kb-5.14.21-150500.55.59.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009858524",
+								"comment": "kernel-64kb-devel-5.14.21-150500.55.59.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009858532",
+								"comment": "kernel-default-5.14.21-150500.55.59.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009858533",
+								"comment": "kernel-default-base-5.14.21-150500.55.59.1.150500.6.25.7 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009858535",
+								"comment": "kernel-default-devel-5.14.21-150500.55.59.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009858541",
+								"comment": "kernel-devel-5.14.21-150500.55.59.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009858548",
+								"comment": "kernel-macros-5.14.21-150500.55.59.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009858554",
+								"comment": "kernel-zfcpdump-5.14.21-150500.55.59.1 is installed"
+							}
+						]
+					}
+				]
+			},
+			{
+				"operator": "AND",
+				"criterias": [
+					{
+						"operator": "OR",
+						"criterions": [
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009759898",
+								"comment": "SUSE Linux Enterprise Desktop 15 SP5 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009759899",
+								"comment": "SUSE Linux Enterprise High Performance Computing 15 SP5 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009760583",
+								"comment": "SUSE Linux Enterprise Module for Development Tools 15 SP5 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009759901",
+								"comment": "SUSE Linux Enterprise Server 15 SP5 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009759902",
+								"comment": "SUSE Linux Enterprise Server for SAP Applications 15 SP5 is installed"
+							}
+						]
+					},
+					{
+						"operator": "OR",
+						"criterions": [
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009858542",
+								"comment": "kernel-docs-5.14.21-150500.55.59.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009858549",
+								"comment": "kernel-obs-build-5.14.21-150500.55.59.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009858551",
+								"comment": "kernel-source-5.14.21-150500.55.59.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009858553",
+								"comment": "kernel-syms-5.14.21-150500.55.59.1 is installed"
+							}
+						]
+					}
+				]
+			},
+			{
+				"operator": "AND",
+				"criterias": [
+					{
+						"operator": "OR",
+						"criterions": [
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009858606",
+								"comment": "kernel-default-livepatch-5.14.21-150500.55.59.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009858607",
+								"comment": "kernel-default-livepatch-devel-5.14.21-150500.55.59.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009858305",
+								"comment": "kernel-livepatch-5_14_21-150500_13_47-rt-1-150500.11.3.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009858608",
+								"comment": "kernel-livepatch-5_14_21-150500_55_59-default-1-150500.11.7.1 is installed"
+							}
+						]
+					}
+				],
+				"criterions": [
+					{
+						"test_ref": "oval:org.opensuse.security:tst:2009764853",
+						"comment": "SUSE Linux Enterprise Live Patching 15 SP5 is installed"
 					}
 				]
 			}

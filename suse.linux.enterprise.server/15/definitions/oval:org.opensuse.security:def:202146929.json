@@ -7,17 +7,25 @@
 		"affected": {
 			"family": "unix",
 			"platform": [
+				"SUSE Linux Enterprise Desktop 15 SP5",
+				"SUSE Linux Enterprise High Performance Computing 15 SP5",
 				"SUSE Linux Enterprise Live Patching 15 SP2",
 				"SUSE Linux Enterprise Live Patching 15 SP3",
 				"SUSE Linux Enterprise Live Patching 15 SP4",
 				"SUSE Linux Enterprise Live Patching 15 SP5",
+				"SUSE Linux Enterprise Module for Basesystem 15 SP5",
+				"SUSE Linux Enterprise Module for Development Tools 15 SP5",
+				"SUSE Linux Enterprise Module for Legacy 15 SP5",
 				"SUSE Linux Enterprise Server 15 SP2-LTSS",
 				"SUSE Linux Enterprise Server 15 SP3-LTSS",
 				"SUSE Linux Enterprise Server 15 SP4-LTSS",
 				"SUSE Linux Enterprise Server 15 SP4-TERADATA",
+				"SUSE Linux Enterprise Server 15 SP5",
 				"SUSE Linux Enterprise Server for SAP Applications 15 SP2",
 				"SUSE Linux Enterprise Server for SAP Applications 15 SP3",
-				"SUSE Linux Enterprise Server for SAP Applications 15 SP4"
+				"SUSE Linux Enterprise Server for SAP Applications 15 SP4",
+				"SUSE Linux Enterprise Server for SAP Applications 15 SP5",
+				"SUSE Linux Enterprise Workstation Extension 15 SP5"
 			]
 		},
 		"reference": [
@@ -95,6 +103,11 @@
 				"ref_id": "SUSE-SU-2024:1466-1",
 				"ref_url": "https://lists.suse.com/pipermail/sle-updates/2024-April/035122.html",
 				"source": "SUSE-SU"
+			},
+			{
+				"ref_id": "SUSE-SU-2024:1480-1",
+				"ref_url": "https://lists.suse.com/pipermail/sle-updates/2024-April/035134.html",
+				"source": "SUSE-SU"
 			}
 		],
 		"description": "\n    In the Linux kernel, the following vulnerability has been resolved:\n\nsctp: use call_rcu to free endpoint\n\nThis patch is to delay the endpoint free by calling call_rcu() to fix\nanother use-after-free issue in sctp_sock_dump():\n\n  BUG: KASAN: use-after-free in __lock_acquire+0x36d9/0x4c20\n  Call Trace:\n    __lock_acquire+0x36d9/0x4c20 kernel/locking/lockdep.c:3218\n    lock_acquire+0x1ed/0x520 kernel/locking/lockdep.c:3844\n    __raw_spin_lock_bh include/linux/spinlock_api_smp.h:135 [inline]\n    _raw_spin_lock_bh+0x31/0x40 kernel/locking/spinlock.c:168\n    spin_lock_bh include/linux/spinlock.h:334 [inline]\n    __lock_sock+0x203/0x350 net/core/sock.c:2253\n    lock_sock_nested+0xfe/0x120 net/core/sock.c:2774\n    lock_sock include/net/sock.h:1492 [inline]\n    sctp_sock_dump+0x122/0xb20 net/sctp/diag.c:324\n    sctp_for_each_transport+0x2b5/0x370 net/sctp/socket.c:5091\n    sctp_diag_dump+0x3ac/0x660 net/sctp/diag.c:527\n    __inet_diag_dump+0xa8/0x140 net/ipv4/inet_diag.c:1049\n    inet_diag_dump+0x9b/0x110 net/ipv4/inet_diag.c:1065\n    netlink_dump+0x606/0x1080 net/netlink/af_netlink.c:2244\n    __netlink_dump_start+0x59a/0x7c0 net/netlink/af_netlink.c:2352\n    netlink_dump_start include/linux/netlink.h:216 [inline]\n    inet_diag_handler_cmd+0x2ce/0x3f0 net/ipv4/inet_diag.c:1170\n    __sock_diag_cmd net/core/sock_diag.c:232 [inline]\n    sock_diag_rcv_msg+0x31d/0x410 net/core/sock_diag.c:263\n    netlink_rcv_skb+0x172/0x440 net/netlink/af_netlink.c:2477\n    sock_diag_rcv+0x2a/0x40 net/core/sock_diag.c:274\n\nThis issue occurs when asoc is peeled off and the old sk is freed after\ngetting it by asoc->base.sk and before calling lock_sock(sk).\n\nTo prevent the sk free, as a holder of the sk, ep should be alive when\ncalling lock_sock(). This patch uses call_rcu() and moves sock_put and\nep free into sctp_endpoint_destroy_rcu(), so that it's safe to try to\nhold the ep under rcu_read_lock in sctp_transport_traverse_process().\n\nIf sctp_endpoint_hold() returns true, it means this ep is still alive\nand we have held it and can continue to dump it; If it returns false,\nit means this ep is dead and can be freed after rcu_read_unlock, and\nwe should skip it.\n\nIn sctp_sock_dump(), after locking the sk, if this ep is different from\ntsp->asoc->ep, it means during this dumping, this asoc was peeled off\nbefore calling lock_sock(), and the sk should be skipped; If this ep is\nthe same with tsp->asoc->ep, it means no peeloff happens on this asoc,\nand due to lock_sock, no peeloff will happen either until release_sock.\n\nNote that delaying endpoint free won't delay the port release, as the\nport release happens in sctp_endpoint_destroy() before calling call_rcu().\nAlso, freeing endpoint by call_rcu() makes it safe to access the sk by\nasoc->base.sk in sctp_assocs_seq_show() and sctp_rcv().\n\nThanks Jones to bring this issue up.\n\nv1->v2:\n  - improve the changelog.\n  - add kfree(ep) into sctp_endpoint_destroy_rcu(), as Jakub noticed.\n    ",
@@ -129,20 +142,28 @@
 				"date": "2024-03-13"
 			},
 			"updated": {
-				"date": "2024-04-30"
+				"date": "2024-05-01"
 			},
 			"affected_cpe_list": {
 				"cpe": [
+					"cpe:/o:suse:sle-module-basesystem:15:sp5",
+					"cpe:/o:suse:sle-module-development-tools:15:sp5",
+					"cpe:/o:suse:sle-module-legacy:15:sp5",
 					"cpe:/o:suse:sle-module-live-patching:15:sp2",
 					"cpe:/o:suse:sle-module-live-patching:15:sp3",
 					"cpe:/o:suse:sle-module-live-patching:15:sp4",
 					"cpe:/o:suse:sle-module-live-patching:15:sp5",
+					"cpe:/o:suse:sle-we:15:sp5",
+					"cpe:/o:suse:sle_hpc:15:sp5",
+					"cpe:/o:suse:sled:15:sp5",
 					"cpe:/o:suse:sles-ltss:15:sp2",
 					"cpe:/o:suse:sles-ltss:15:sp3",
 					"cpe:/o:suse:sles-ltss:15:sp4",
+					"cpe:/o:suse:sles:15:sp5",
 					"cpe:/o:suse:sles_sap:15:sp2",
 					"cpe:/o:suse:sles_sap:15:sp3",
-					"cpe:/o:suse:sles_sap:15:sp4"
+					"cpe:/o:suse:sles_sap:15:sp4",
+					"cpe:/o:suse:sles_sap:15:sp5"
 				]
 			}
 		}
@@ -152,14 +173,65 @@
 		"criterias": [
 			{
 				"operator": "AND",
+				"criterias": [
+					{
+						"operator": "OR",
+						"criterions": [
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009759899",
+								"comment": "SUSE Linux Enterprise High Performance Computing 15 SP5 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009760608",
+								"comment": "SUSE Linux Enterprise Module for Legacy 15 SP5 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009759901",
+								"comment": "SUSE Linux Enterprise Server 15 SP5 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009759902",
+								"comment": "SUSE Linux Enterprise Server for SAP Applications 15 SP5 is installed"
+							}
+						]
+					}
+				],
 				"criterions": [
 					{
-						"test_ref": "oval:org.opensuse.security:tst:2009764853",
-						"comment": "SUSE Linux Enterprise Live Patching 15 SP5 is installed"
-					},
+						"test_ref": "oval:org.opensuse.security:tst:2009858560",
+						"comment": "reiserfs-kmp-default-5.14.21-150500.55.59.1 is installed"
+					}
+				]
+			},
+			{
+				"operator": "AND",
+				"criterias": [
 					{
-						"test_ref": "oval:org.opensuse.security:tst:2009858305",
-						"comment": "kernel-livepatch-5_14_21-150500_13_47-rt-1-150500.11.3.1 is installed"
+						"operator": "OR",
+						"criterions": [
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009759898",
+								"comment": "SUSE Linux Enterprise Desktop 15 SP5 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009759901",
+								"comment": "SUSE Linux Enterprise Server 15 SP5 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009759902",
+								"comment": "SUSE Linux Enterprise Server for SAP Applications 15 SP5 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009766857",
+								"comment": "SUSE Linux Enterprise Workstation Extension 15 SP5 is installed"
+							}
+						]
+					}
+				],
+				"criterions": [
+					{
+						"test_ref": "oval:org.opensuse.security:tst:2009858609",
+						"comment": "kernel-default-extra-5.14.21-150500.55.59.1 is installed"
 					}
 				]
 			},
@@ -636,6 +708,156 @@
 					{
 						"test_ref": "oval:org.opensuse.security:tst:2009669928",
 						"comment": "SUSE Linux Enterprise Server for SAP Applications 15 SP4 is installed"
+					}
+				]
+			},
+			{
+				"operator": "AND",
+				"criterias": [
+					{
+						"operator": "OR",
+						"criterions": [
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009759898",
+								"comment": "SUSE Linux Enterprise Desktop 15 SP5 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009759899",
+								"comment": "SUSE Linux Enterprise High Performance Computing 15 SP5 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009759900",
+								"comment": "SUSE Linux Enterprise Module for Basesystem 15 SP5 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009759901",
+								"comment": "SUSE Linux Enterprise Server 15 SP5 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009759902",
+								"comment": "SUSE Linux Enterprise Server for SAP Applications 15 SP5 is installed"
+							}
+						]
+					},
+					{
+						"operator": "OR",
+						"criterions": [
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009858523",
+								"comment": "kernel-64kb-5.14.21-150500.55.59.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009858524",
+								"comment": "kernel-64kb-devel-5.14.21-150500.55.59.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009858532",
+								"comment": "kernel-default-5.14.21-150500.55.59.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009858533",
+								"comment": "kernel-default-base-5.14.21-150500.55.59.1.150500.6.25.7 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009858535",
+								"comment": "kernel-default-devel-5.14.21-150500.55.59.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009858541",
+								"comment": "kernel-devel-5.14.21-150500.55.59.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009858548",
+								"comment": "kernel-macros-5.14.21-150500.55.59.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009858554",
+								"comment": "kernel-zfcpdump-5.14.21-150500.55.59.1 is installed"
+							}
+						]
+					}
+				]
+			},
+			{
+				"operator": "AND",
+				"criterias": [
+					{
+						"operator": "OR",
+						"criterions": [
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009759898",
+								"comment": "SUSE Linux Enterprise Desktop 15 SP5 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009759899",
+								"comment": "SUSE Linux Enterprise High Performance Computing 15 SP5 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009760583",
+								"comment": "SUSE Linux Enterprise Module for Development Tools 15 SP5 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009759901",
+								"comment": "SUSE Linux Enterprise Server 15 SP5 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009759902",
+								"comment": "SUSE Linux Enterprise Server for SAP Applications 15 SP5 is installed"
+							}
+						]
+					},
+					{
+						"operator": "OR",
+						"criterions": [
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009858542",
+								"comment": "kernel-docs-5.14.21-150500.55.59.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009858549",
+								"comment": "kernel-obs-build-5.14.21-150500.55.59.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009858551",
+								"comment": "kernel-source-5.14.21-150500.55.59.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009858553",
+								"comment": "kernel-syms-5.14.21-150500.55.59.1 is installed"
+							}
+						]
+					}
+				]
+			},
+			{
+				"operator": "AND",
+				"criterias": [
+					{
+						"operator": "OR",
+						"criterions": [
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009858606",
+								"comment": "kernel-default-livepatch-5.14.21-150500.55.59.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009858607",
+								"comment": "kernel-default-livepatch-devel-5.14.21-150500.55.59.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009858305",
+								"comment": "kernel-livepatch-5_14_21-150500_13_47-rt-1-150500.11.3.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009858608",
+								"comment": "kernel-livepatch-5_14_21-150500_55_59-default-1-150500.11.7.1 is installed"
+							}
+						]
+					}
+				],
+				"criterions": [
+					{
+						"test_ref": "oval:org.opensuse.security:tst:2009764853",
+						"comment": "SUSE Linux Enterprise Live Patching 15 SP5 is installed"
 					}
 				]
 			}

@@ -9,10 +9,15 @@
 			"platform": [
 				"SUSE Enterprise Storage 7",
 				"SUSE Enterprise Storage 7.1",
+				"SUSE Linux Enterprise Desktop 15 SP5",
 				"SUSE Linux Enterprise High Performance Computing 15 SP2",
 				"SUSE Linux Enterprise High Performance Computing 15 SP3",
+				"SUSE Linux Enterprise High Performance Computing 15 SP5",
 				"SUSE Linux Enterprise Live Patching 15 SP4",
 				"SUSE Linux Enterprise Live Patching 15 SP5",
+				"SUSE Linux Enterprise Module for Basesystem 15 SP5",
+				"SUSE Linux Enterprise Module for Development Tools 15 SP5",
+				"SUSE Linux Enterprise Module for Legacy 15 SP5",
 				"SUSE Linux Enterprise Module for Public Cloud 15 SP2",
 				"SUSE Linux Enterprise Module for Public Cloud 15 SP3",
 				"SUSE Linux Enterprise Server 15 SP1-LTSS",
@@ -22,10 +27,13 @@
 				"SUSE Linux Enterprise Server 15 SP3-LTSS",
 				"SUSE Linux Enterprise Server 15 SP4-LTSS",
 				"SUSE Linux Enterprise Server 15 SP4-TERADATA",
+				"SUSE Linux Enterprise Server 15 SP5",
 				"SUSE Linux Enterprise Server 15-LTSS",
 				"SUSE Linux Enterprise Server for SAP Applications 15 SP2",
 				"SUSE Linux Enterprise Server for SAP Applications 15 SP3",
 				"SUSE Linux Enterprise Server for SAP Applications 15 SP4",
+				"SUSE Linux Enterprise Server for SAP Applications 15 SP5",
+				"SUSE Linux Enterprise Workstation Extension 15 SP5",
 				"SUSE Manager Proxy 4.1",
 				"SUSE Manager Proxy 4.2",
 				"SUSE Manager Retail Branch Server 4.1",
@@ -79,6 +87,11 @@
 				"ref_id": "SUSE-SU-2024:1466-1",
 				"ref_url": "https://lists.suse.com/pipermail/sle-updates/2024-April/035122.html",
 				"source": "SUSE-SU"
+			},
+			{
+				"ref_id": "SUSE-SU-2024:1480-1",
+				"ref_url": "https://lists.suse.com/pipermail/sle-updates/2024-April/035134.html",
+				"source": "SUSE-SU"
 			}
 		],
 		"description": "\n    In the Linux kernel, the following vulnerability has been resolved:\n\nKVM: x86/mmu: Don't advance iterator after restart due to yielding\n\nAfter dropping mmu_lock in the TDP MMU, restart the iterator during\ntdp_iter_next() and do not advance the iterator.  Advancing the iterator\nresults in skipping the top-level SPTE and all its children, which is\nfatal if any of the skipped SPTEs were not visited before yielding.\n\nWhen zapping all SPTEs, i.e. when min_level == root_level, restarting the\niter and then invoking tdp_iter_next() is always fatal if the current gfn\nhas as a valid SPTE, as advancing the iterator results in try_step_side()\nskipping the current gfn, which wasn't visited before yielding.\n\nSprinkle WARNs on iter->yielded being true in various helpers that are\noften used in conjunction with yielding, and tag the helper with\n__must_check to reduce the probabily of improper usage.\n\nFailing to zap a top-level SPTE manifests in one of two ways.  If a valid\nSPTE is skipped by both kvm_tdp_mmu_zap_all() and kvm_tdp_mmu_put_root(),\nthe shadow page will be leaked and KVM will WARN accordingly.\n\n  WARNING: CPU: 1 PID: 3509 at arch/x86/kvm/mmu/tdp_mmu.c:46 [kvm]\n  RIP: 0010:kvm_mmu_uninit_tdp_mmu+0x3e/0x50 [kvm]\n  Call Trace:\n   <TASK>\n   kvm_arch_destroy_vm+0x130/0x1b0 [kvm]\n   kvm_destroy_vm+0x162/0x2a0 [kvm]\n   kvm_vcpu_release+0x34/0x60 [kvm]\n   __fput+0x82/0x240\n   task_work_run+0x5c/0x90\n   do_exit+0x364/0xa10\n   ? futex_unqueue+0x38/0x60\n   do_group_exit+0x33/0xa0\n   get_signal+0x155/0x850\n   arch_do_signal_or_restart+0xed/0x750\n   exit_to_user_mode_prepare+0xc5/0x120\n   syscall_exit_to_user_mode+0x1d/0x40\n   do_syscall_64+0x48/0xc0\n   entry_SYSCALL_64_after_hwframe+0x44/0xae\n\nIf kvm_tdp_mmu_zap_all() skips a gfn/SPTE but that SPTE is then zapped by\nkvm_tdp_mmu_put_root(), KVM triggers a use-after-free in the form of\nmarking a struct page as dirty/accessed after it has been put back on the\nfree list.  This directly triggers a WARN due to encountering a page with\npage_count() == 0, but it can also lead to data corruption and additional\nerrors in the kernel.\n\n  WARNING: CPU: 7 PID: 1995658 at arch/x86/kvm/../../../virt/kvm/kvm_main.c:171\n  RIP: 0010:kvm_is_zone_device_pfn.part.0+0x9e/0xd0 [kvm]\n  Call Trace:\n   <TASK>\n   kvm_set_pfn_dirty+0x120/0x1d0 [kvm]\n   __handle_changed_spte+0x92e/0xca0 [kvm]\n   __handle_changed_spte+0x63c/0xca0 [kvm]\n   __handle_changed_spte+0x63c/0xca0 [kvm]\n   __handle_changed_spte+0x63c/0xca0 [kvm]\n   zap_gfn_range+0x549/0x620 [kvm]\n   kvm_tdp_mmu_put_root+0x1b6/0x270 [kvm]\n   mmu_free_root_page+0x219/0x2c0 [kvm]\n   kvm_mmu_free_roots+0x1b4/0x4e0 [kvm]\n   kvm_mmu_unload+0x1c/0xa0 [kvm]\n   kvm_arch_destroy_vm+0x1f2/0x5c0 [kvm]\n   kvm_put_kvm+0x3b1/0x8b0 [kvm]\n   kvm_vcpu_release+0x4e/0x70 [kvm]\n   __fput+0x1f7/0x8c0\n   task_work_run+0xf8/0x1a0\n   do_exit+0x97b/0x2230\n   do_group_exit+0xda/0x2a0\n   get_signal+0x3be/0x1e50\n   arch_do_signal_or_restart+0x244/0x17f0\n   exit_to_user_mode_prepare+0xcb/0x120\n   syscall_exit_to_user_mode+0x1d/0x40\n   do_syscall_64+0x4d/0x90\n   entry_SYSCALL_64_after_hwframe+0x44/0xae\n\nNote, the underlying bug existed even before commit 1af4a96025b3 (\"KVM:\nx86/mmu: Yield in TDU MMU iter even if no SPTES changed\") moved calls to\ntdp_mmu_iter_cond_resched() to the beginning of loops, as KVM could still\nincorrectly advance past a top-level entry when yielding on a lower-level\nentry.  But with respect to leaking shadow pages, the bug was introduced\nby yielding before processing the current gfn.\n\nAlternatively, tdp_mmu_iter_cond_resched() could simply fall through, or\ncallers could jump to their \"retry\" label.  The downside of that approach\nis that tdp_mmu_iter_cond_resched() _must_ be called before anything else\nin the loop, and there's no easy way to enfornce that requirement.\n\nIdeally, KVM would handling the cond_resched() fully within the iterator\nmacro (the code is actually quite clean) and avoid this entire class of\nbugs, but that is extremely difficult do wh\n---truncated---\n    ",
@@ -111,18 +124,24 @@
 				"date": "2024-03-19"
 			},
 			"updated": {
-				"date": "2024-04-30"
+				"date": "2024-05-01"
 			},
 			"affected_cpe_list": {
 				"cpe": [
 					"cpe:/o:suse:ses:7",
 					"cpe:/o:suse:ses:7.1",
+					"cpe:/o:suse:sle-module-basesystem:15:sp5",
+					"cpe:/o:suse:sle-module-development-tools:15:sp5",
+					"cpe:/o:suse:sle-module-legacy:15:sp5",
 					"cpe:/o:suse:sle-module-live-patching:15:sp4",
 					"cpe:/o:suse:sle-module-live-patching:15:sp5",
 					"cpe:/o:suse:sle-module-public-cloud:15:sp2",
 					"cpe:/o:suse:sle-module-public-cloud:15:sp3",
+					"cpe:/o:suse:sle-we:15:sp5",
 					"cpe:/o:suse:sle_hpc:15:sp2",
 					"cpe:/o:suse:sle_hpc:15:sp3",
+					"cpe:/o:suse:sle_hpc:15:sp5",
+					"cpe:/o:suse:sled:15:sp5",
 					"cpe:/o:suse:sles-ltss:15",
 					"cpe:/o:suse:sles-ltss:15:sp1",
 					"cpe:/o:suse:sles-ltss:15:sp2",
@@ -130,9 +149,11 @@
 					"cpe:/o:suse:sles-ltss:15:sp4",
 					"cpe:/o:suse:sles:15:sp2",
 					"cpe:/o:suse:sles:15:sp3",
+					"cpe:/o:suse:sles:15:sp5",
 					"cpe:/o:suse:sles_sap:15:sp2",
 					"cpe:/o:suse:sles_sap:15:sp3",
 					"cpe:/o:suse:sles_sap:15:sp4",
+					"cpe:/o:suse:sles_sap:15:sp5",
 					"cpe:/o:suse:suse-manager-proxy:4.1",
 					"cpe:/o:suse:suse-manager-proxy:4.2",
 					"cpe:/o:suse:suse-manager-retail-branch-server:4.1",
@@ -228,14 +249,65 @@
 			},
 			{
 				"operator": "AND",
+				"criterias": [
+					{
+						"operator": "OR",
+						"criterions": [
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009759899",
+								"comment": "SUSE Linux Enterprise High Performance Computing 15 SP5 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009760608",
+								"comment": "SUSE Linux Enterprise Module for Legacy 15 SP5 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009759901",
+								"comment": "SUSE Linux Enterprise Server 15 SP5 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009759902",
+								"comment": "SUSE Linux Enterprise Server for SAP Applications 15 SP5 is installed"
+							}
+						]
+					}
+				],
 				"criterions": [
 					{
-						"test_ref": "oval:org.opensuse.security:tst:2009764853",
-						"comment": "SUSE Linux Enterprise Live Patching 15 SP5 is installed"
-					},
+						"test_ref": "oval:org.opensuse.security:tst:2009858560",
+						"comment": "reiserfs-kmp-default-5.14.21-150500.55.59.1 is installed"
+					}
+				]
+			},
+			{
+				"operator": "AND",
+				"criterias": [
 					{
-						"test_ref": "oval:org.opensuse.security:tst:2009858305",
-						"comment": "kernel-livepatch-5_14_21-150500_13_47-rt-1-150500.11.3.1 is installed"
+						"operator": "OR",
+						"criterions": [
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009759898",
+								"comment": "SUSE Linux Enterprise Desktop 15 SP5 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009759901",
+								"comment": "SUSE Linux Enterprise Server 15 SP5 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009759902",
+								"comment": "SUSE Linux Enterprise Server for SAP Applications 15 SP5 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009766857",
+								"comment": "SUSE Linux Enterprise Workstation Extension 15 SP5 is installed"
+							}
+						]
+					}
+				],
+				"criterions": [
+					{
+						"test_ref": "oval:org.opensuse.security:tst:2009858609",
+						"comment": "kernel-default-extra-5.14.21-150500.55.59.1 is installed"
 					}
 				]
 			},
@@ -498,6 +570,156 @@
 					{
 						"test_ref": "oval:org.opensuse.security:tst:2009669928",
 						"comment": "SUSE Linux Enterprise Server for SAP Applications 15 SP4 is installed"
+					}
+				]
+			},
+			{
+				"operator": "AND",
+				"criterias": [
+					{
+						"operator": "OR",
+						"criterions": [
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009759898",
+								"comment": "SUSE Linux Enterprise Desktop 15 SP5 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009759899",
+								"comment": "SUSE Linux Enterprise High Performance Computing 15 SP5 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009759900",
+								"comment": "SUSE Linux Enterprise Module for Basesystem 15 SP5 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009759901",
+								"comment": "SUSE Linux Enterprise Server 15 SP5 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009759902",
+								"comment": "SUSE Linux Enterprise Server for SAP Applications 15 SP5 is installed"
+							}
+						]
+					},
+					{
+						"operator": "OR",
+						"criterions": [
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009858523",
+								"comment": "kernel-64kb-5.14.21-150500.55.59.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009858524",
+								"comment": "kernel-64kb-devel-5.14.21-150500.55.59.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009858532",
+								"comment": "kernel-default-5.14.21-150500.55.59.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009858533",
+								"comment": "kernel-default-base-5.14.21-150500.55.59.1.150500.6.25.7 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009858535",
+								"comment": "kernel-default-devel-5.14.21-150500.55.59.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009858541",
+								"comment": "kernel-devel-5.14.21-150500.55.59.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009858548",
+								"comment": "kernel-macros-5.14.21-150500.55.59.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009858554",
+								"comment": "kernel-zfcpdump-5.14.21-150500.55.59.1 is installed"
+							}
+						]
+					}
+				]
+			},
+			{
+				"operator": "AND",
+				"criterias": [
+					{
+						"operator": "OR",
+						"criterions": [
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009759898",
+								"comment": "SUSE Linux Enterprise Desktop 15 SP5 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009759899",
+								"comment": "SUSE Linux Enterprise High Performance Computing 15 SP5 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009760583",
+								"comment": "SUSE Linux Enterprise Module for Development Tools 15 SP5 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009759901",
+								"comment": "SUSE Linux Enterprise Server 15 SP5 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009759902",
+								"comment": "SUSE Linux Enterprise Server for SAP Applications 15 SP5 is installed"
+							}
+						]
+					},
+					{
+						"operator": "OR",
+						"criterions": [
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009858542",
+								"comment": "kernel-docs-5.14.21-150500.55.59.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009858549",
+								"comment": "kernel-obs-build-5.14.21-150500.55.59.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009858551",
+								"comment": "kernel-source-5.14.21-150500.55.59.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009858553",
+								"comment": "kernel-syms-5.14.21-150500.55.59.1 is installed"
+							}
+						]
+					}
+				]
+			},
+			{
+				"operator": "AND",
+				"criterias": [
+					{
+						"operator": "OR",
+						"criterions": [
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009858606",
+								"comment": "kernel-default-livepatch-5.14.21-150500.55.59.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009858607",
+								"comment": "kernel-default-livepatch-devel-5.14.21-150500.55.59.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009858305",
+								"comment": "kernel-livepatch-5_14_21-150500_13_47-rt-1-150500.11.3.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009858608",
+								"comment": "kernel-livepatch-5_14_21-150500_55_59-default-1-150500.11.7.1 is installed"
+							}
+						]
+					}
+				],
+				"criterions": [
+					{
+						"test_ref": "oval:org.opensuse.security:tst:2009764853",
+						"comment": "SUSE Linux Enterprise Live Patching 15 SP5 is installed"
 					}
 				]
 			}
