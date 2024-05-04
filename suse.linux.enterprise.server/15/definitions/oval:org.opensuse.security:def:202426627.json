@@ -13,6 +13,7 @@
 				"SUSE Linux Enterprise Module for Basesystem 15 SP5",
 				"SUSE Linux Enterprise Module for Development Tools 15 SP5",
 				"SUSE Linux Enterprise Module for Legacy 15 SP5",
+				"SUSE Linux Enterprise Module for Public Cloud 15 SP5",
 				"SUSE Linux Enterprise Server 15 SP1-LTSS",
 				"SUSE Linux Enterprise Server 15 SP5",
 				"SUSE Linux Enterprise Server 15-LTSS",
@@ -60,6 +61,11 @@
 				"ref_id": "SUSE-SU-2024:1480-1",
 				"ref_url": "https://lists.suse.com/pipermail/sle-updates/2024-April/035134.html",
 				"source": "SUSE-SU"
+			},
+			{
+				"ref_id": "SUSE-SU-2024:1490-1",
+				"ref_url": "https://lists.suse.com/pipermail/sle-updates/2024-May/035140.html",
+				"source": "SUSE-SU"
 			}
 		],
 		"description": "\n    In the Linux kernel, the following vulnerability has been resolved:\n\nscsi: core: Move scsi_host_busy() out of host lock for waking up EH handler\n\nInside scsi_eh_wakeup(), scsi_host_busy() is called & checked with host\nlock every time for deciding if error handler kthread needs to be waken up.\n\nThis can be too heavy in case of recovery, such as:\n\n - N hardware queues\n\n - queue depth is M for each hardware queue\n\n - each scsi_host_busy() iterates over (N * M) tag/requests\n\nIf recovery is triggered in case that all requests are in-flight, each\nscsi_eh_wakeup() is strictly serialized, when scsi_eh_wakeup() is called\nfor the last in-flight request, scsi_host_busy() has been run for (N * M -\n1) times, and request has been iterated for (N*M - 1) * (N * M) times.\n\nIf both N and M are big enough, hard lockup can be triggered on acquiring\nhost lock, and it is observed on mpi3mr(128 hw queues, queue depth 8169).\n\nFix the issue by calling scsi_host_busy() outside the host lock. We don't\nneed the host lock for getting busy count because host the lock never\ncovers that.\n\n[mkp: Drop unnecessary 'busy' variables pointed out by Bart]\n    ",
@@ -88,7 +94,7 @@
 				"date": "2024-03-07"
 			},
 			"updated": {
-				"date": "2024-05-01"
+				"date": "2024-05-04"
 			},
 			"affected_cpe_list": {
 				"cpe": [
@@ -96,6 +102,7 @@
 					"cpe:/o:suse:sle-module-development-tools:15:sp5",
 					"cpe:/o:suse:sle-module-legacy:15:sp5",
 					"cpe:/o:suse:sle-module-live-patching:15:sp5",
+					"cpe:/o:suse:sle-module-public-cloud:15:sp5",
 					"cpe:/o:suse:sle-we:15:sp5",
 					"cpe:/o:suse:sle_hpc:15:sp5",
 					"cpe:/o:suse:sled:15:sp5",
@@ -376,6 +383,57 @@
 					{
 						"test_ref": "oval:org.opensuse.security:tst:2009764853",
 						"comment": "SUSE Linux Enterprise Live Patching 15 SP5 is installed"
+					}
+				]
+			},
+			{
+				"operator": "AND",
+				"criterias": [
+					{
+						"operator": "OR",
+						"criterions": [
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009759899",
+								"comment": "SUSE Linux Enterprise High Performance Computing 15 SP5 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009762868",
+								"comment": "SUSE Linux Enterprise Module for Public Cloud 15 SP5 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009759901",
+								"comment": "SUSE Linux Enterprise Server 15 SP5 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009759902",
+								"comment": "SUSE Linux Enterprise Server for SAP Applications 15 SP5 is installed"
+							}
+						]
+					},
+					{
+						"operator": "OR",
+						"criterions": [
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009858785",
+								"comment": "kernel-azure-5.14.21-150500.33.48.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009858786",
+								"comment": "kernel-azure-devel-5.14.21-150500.33.48.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009858791",
+								"comment": "kernel-devel-azure-5.14.21-150500.33.48.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009858792",
+								"comment": "kernel-source-azure-5.14.21-150500.33.48.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009858793",
+								"comment": "kernel-syms-azure-5.14.21-150500.33.48.1 is installed"
+							}
+						]
 					}
 				]
 			}

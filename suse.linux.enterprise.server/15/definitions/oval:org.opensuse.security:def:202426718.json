@@ -11,16 +11,20 @@
 				"SUSE Enterprise Storage 7.1",
 				"SUSE Linux Enterprise High Performance Computing 15 SP2",
 				"SUSE Linux Enterprise High Performance Computing 15 SP3",
+				"SUSE Linux Enterprise High Performance Computing 15 SP5",
 				"SUSE Linux Enterprise Module for Public Cloud 15 SP2",
 				"SUSE Linux Enterprise Module for Public Cloud 15 SP3",
+				"SUSE Linux Enterprise Module for Public Cloud 15 SP5",
 				"SUSE Linux Enterprise Server 15 SP1-LTSS",
 				"SUSE Linux Enterprise Server 15 SP2",
 				"SUSE Linux Enterprise Server 15 SP2-LTSS",
 				"SUSE Linux Enterprise Server 15 SP3",
 				"SUSE Linux Enterprise Server 15 SP3-LTSS",
+				"SUSE Linux Enterprise Server 15 SP5",
 				"SUSE Linux Enterprise Server 15-LTSS",
 				"SUSE Linux Enterprise Server for SAP Applications 15 SP2",
 				"SUSE Linux Enterprise Server for SAP Applications 15 SP3",
+				"SUSE Linux Enterprise Server for SAP Applications 15 SP5",
 				"SUSE Manager Proxy 4.1",
 				"SUSE Manager Proxy 4.2",
 				"SUSE Manager Retail Branch Server 4.1",
@@ -39,6 +43,11 @@
 				"ref_id": "SUSE CVE-2024-26718",
 				"ref_url": "https://www.suse.com/security/cve/CVE-2024-26718",
 				"source": "SUSE CVE"
+			},
+			{
+				"ref_id": "SUSE-SU-2024:1490-1",
+				"ref_url": "https://lists.suse.com/pipermail/sle-updates/2024-May/035140.html",
+				"source": "SUSE-SU"
 			}
 		],
 		"description": "\n    In the Linux kernel, the following vulnerability has been resolved:\n\ndm-crypt, dm-verity: disable tasklets\n\nTasklets have an inherent problem with memory corruption. The function\ntasklet_action_common calls tasklet_trylock, then it calls the tasklet\ncallback and then it calls tasklet_unlock. If the tasklet callback frees\nthe structure that contains the tasklet or if it calls some code that may\nfree it, tasklet_unlock will write into free memory.\n\nThe commits 8e14f610159d and d9a02e016aaf try to fix it for dm-crypt, but\nit is not a sufficient fix and the data corruption can still happen [1].\nThere is no fix for dm-verity and dm-verity will write into free memory\nwith every tasklet-processed bio.\n\nThere will be atomic workqueues implemented in the kernel 6.9 [2]. They\nwill have better interface and they will not suffer from the memory\ncorruption problem.\n\nBut we need something that stops the memory corruption now and that can be\nbackported to the stable kernels. So, I'm proposing this commit that\ndisables tasklets in both dm-crypt and dm-verity. This commit doesn't\nremove the tasklet support, because the tasklet code will be reused when\natomic workqueues will be implemented.\n\n[1] https://lore.kernel.org/all/d390d7ee-f142-44d3-822a-87949e14608b@suse.de/T/\n[2] https://lore.kernel.org/lkml/20240130091300.2968534-1-tj@kernel.org/\n    ",
@@ -67,7 +76,7 @@
 				"date": "2024-04-09"
 			},
 			"updated": {
-				"date": "2024-04-26"
+				"date": "2024-05-04"
 			},
 			"affected_cpe_list": {
 				"cpe": [
@@ -75,16 +84,20 @@
 					"cpe:/o:suse:ses:7.1",
 					"cpe:/o:suse:sle-module-public-cloud:15:sp2",
 					"cpe:/o:suse:sle-module-public-cloud:15:sp3",
+					"cpe:/o:suse:sle-module-public-cloud:15:sp5",
 					"cpe:/o:suse:sle_hpc:15:sp2",
 					"cpe:/o:suse:sle_hpc:15:sp3",
+					"cpe:/o:suse:sle_hpc:15:sp5",
 					"cpe:/o:suse:sles-ltss:15",
 					"cpe:/o:suse:sles-ltss:15:sp1",
 					"cpe:/o:suse:sles-ltss:15:sp2",
 					"cpe:/o:suse:sles-ltss:15:sp3",
 					"cpe:/o:suse:sles:15:sp2",
 					"cpe:/o:suse:sles:15:sp3",
+					"cpe:/o:suse:sles:15:sp5",
 					"cpe:/o:suse:sles_sap:15:sp2",
 					"cpe:/o:suse:sles_sap:15:sp3",
+					"cpe:/o:suse:sles_sap:15:sp5",
 					"cpe:/o:suse:suse-manager-proxy:4.1",
 					"cpe:/o:suse:suse-manager-proxy:4.2",
 					"cpe:/o:suse:suse-manager-retail-branch-server:4.1",
@@ -283,6 +296,57 @@
 							{
 								"test_ref": "oval:org.opensuse.security:tst:2009333928",
 								"comment": "kernel-source is not affected"
+							}
+						]
+					}
+				]
+			},
+			{
+				"operator": "AND",
+				"criterias": [
+					{
+						"operator": "OR",
+						"criterions": [
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009759899",
+								"comment": "SUSE Linux Enterprise High Performance Computing 15 SP5 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009762868",
+								"comment": "SUSE Linux Enterprise Module for Public Cloud 15 SP5 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009759901",
+								"comment": "SUSE Linux Enterprise Server 15 SP5 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009759902",
+								"comment": "SUSE Linux Enterprise Server for SAP Applications 15 SP5 is installed"
+							}
+						]
+					},
+					{
+						"operator": "OR",
+						"criterions": [
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009858785",
+								"comment": "kernel-azure-5.14.21-150500.33.48.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009858786",
+								"comment": "kernel-azure-devel-5.14.21-150500.33.48.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009858791",
+								"comment": "kernel-devel-azure-5.14.21-150500.33.48.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009858792",
+								"comment": "kernel-source-azure-5.14.21-150500.33.48.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009858793",
+								"comment": "kernel-syms-azure-5.14.21-150500.33.48.1 is installed"
 							}
 						]
 					}

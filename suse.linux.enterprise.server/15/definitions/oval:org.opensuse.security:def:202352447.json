@@ -119,6 +119,11 @@
 				"ref_id": "SUSE-SU-2024:1480-1",
 				"ref_url": "https://lists.suse.com/pipermail/sle-updates/2024-April/035134.html",
 				"source": "SUSE-SU"
+			},
+			{
+				"ref_id": "SUSE-SU-2024:1490-1",
+				"ref_url": "https://lists.suse.com/pipermail/sle-updates/2024-May/035140.html",
+				"source": "SUSE-SU"
 			}
 		],
 		"description": "\n    In the Linux kernel, the following vulnerability has been resolved:\n\nbpf: Defer the free of inner map when necessary\n\nWhen updating or deleting an inner map in map array or map htab, the map\nmay still be accessed by non-sleepable program or sleepable program.\nHowever bpf_map_fd_put_ptr() decreases the ref-counter of the inner map\ndirectly through bpf_map_put(), if the ref-counter is the last one\n(which is true for most cases), the inner map will be freed by\nops->map_free() in a kworker. But for now, most .map_free() callbacks\ndon't use synchronize_rcu() or its variants to wait for the elapse of a\nRCU grace period, so after the invocation of ops->map_free completes,\nthe bpf program which is accessing the inner map may incur\nuse-after-free problem.\n\nFix the free of inner map by invoking bpf_map_free_deferred() after both\none RCU grace period and one tasks trace RCU grace period if the inner\nmap has been removed from the outer map before. The deferment is\naccomplished by using call_rcu() or call_rcu_tasks_trace() when\nreleasing the last ref-counter of bpf map. The newly-added rcu_head\nfield in bpf_map shares the same storage space with work field to\nreduce the size of bpf_map.\n    ",
@@ -149,7 +154,7 @@
 				"date": "2024-02-24"
 			},
 			"updated": {
-				"date": "2024-05-01"
+				"date": "2024-05-04"
 			},
 			"affected_cpe_list": {
 				"cpe": [
@@ -499,57 +504,6 @@
 						"operator": "OR",
 						"criterions": [
 							{
-								"test_ref": "oval:org.opensuse.security:tst:2009759899",
-								"comment": "SUSE Linux Enterprise High Performance Computing 15 SP5 is installed"
-							},
-							{
-								"test_ref": "oval:org.opensuse.security:tst:2009762868",
-								"comment": "SUSE Linux Enterprise Module for Public Cloud 15 SP5 is installed"
-							},
-							{
-								"test_ref": "oval:org.opensuse.security:tst:2009759901",
-								"comment": "SUSE Linux Enterprise Server 15 SP5 is installed"
-							},
-							{
-								"test_ref": "oval:org.opensuse.security:tst:2009759902",
-								"comment": "SUSE Linux Enterprise Server for SAP Applications 15 SP5 is installed"
-							}
-						]
-					},
-					{
-						"operator": "OR",
-						"criterions": [
-							{
-								"test_ref": "oval:org.opensuse.security:tst:2009850486",
-								"comment": "kernel-azure-5.14.21-150500.33.37.1 is installed"
-							},
-							{
-								"test_ref": "oval:org.opensuse.security:tst:2009850487",
-								"comment": "kernel-azure-devel-5.14.21-150500.33.37.1 is installed"
-							},
-							{
-								"test_ref": "oval:org.opensuse.security:tst:2009850492",
-								"comment": "kernel-devel-azure-5.14.21-150500.33.37.1 is installed"
-							},
-							{
-								"test_ref": "oval:org.opensuse.security:tst:2009850493",
-								"comment": "kernel-source-azure-5.14.21-150500.33.37.1 is installed"
-							},
-							{
-								"test_ref": "oval:org.opensuse.security:tst:2009850494",
-								"comment": "kernel-syms-azure-5.14.21-150500.33.37.1 is installed"
-							}
-						]
-					}
-				]
-			},
-			{
-				"operator": "AND",
-				"criterias": [
-					{
-						"operator": "OR",
-						"criterions": [
-							{
 								"test_ref": "oval:org.opensuse.security:tst:2009855149",
 								"comment": "kernel-default-livepatch-5.14.21-150400.24.116.1 is installed"
 							},
@@ -858,6 +812,57 @@
 					{
 						"test_ref": "oval:org.opensuse.security:tst:2009764853",
 						"comment": "SUSE Linux Enterprise Live Patching 15 SP5 is installed"
+					}
+				]
+			},
+			{
+				"operator": "AND",
+				"criterias": [
+					{
+						"operator": "OR",
+						"criterions": [
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009759899",
+								"comment": "SUSE Linux Enterprise High Performance Computing 15 SP5 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009762868",
+								"comment": "SUSE Linux Enterprise Module for Public Cloud 15 SP5 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009759901",
+								"comment": "SUSE Linux Enterprise Server 15 SP5 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009759902",
+								"comment": "SUSE Linux Enterprise Server for SAP Applications 15 SP5 is installed"
+							}
+						]
+					},
+					{
+						"operator": "OR",
+						"criterions": [
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009858785",
+								"comment": "kernel-azure-5.14.21-150500.33.48.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009858786",
+								"comment": "kernel-azure-devel-5.14.21-150500.33.48.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009858791",
+								"comment": "kernel-devel-azure-5.14.21-150500.33.48.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009858792",
+								"comment": "kernel-source-azure-5.14.21-150500.33.48.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009858793",
+								"comment": "kernel-syms-azure-5.14.21-150500.33.48.1 is installed"
+							}
+						]
 					}
 				]
 			}

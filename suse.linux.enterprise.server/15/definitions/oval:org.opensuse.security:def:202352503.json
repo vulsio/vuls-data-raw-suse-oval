@@ -11,16 +11,20 @@
 				"SUSE Enterprise Storage 7.1",
 				"SUSE Linux Enterprise High Performance Computing 15 SP2",
 				"SUSE Linux Enterprise High Performance Computing 15 SP3",
+				"SUSE Linux Enterprise High Performance Computing 15 SP5",
 				"SUSE Linux Enterprise Module for Public Cloud 15 SP2",
 				"SUSE Linux Enterprise Module for Public Cloud 15 SP3",
+				"SUSE Linux Enterprise Module for Public Cloud 15 SP5",
 				"SUSE Linux Enterprise Server 15 SP1-LTSS",
 				"SUSE Linux Enterprise Server 15 SP2",
 				"SUSE Linux Enterprise Server 15 SP2-LTSS",
 				"SUSE Linux Enterprise Server 15 SP3",
 				"SUSE Linux Enterprise Server 15 SP3-LTSS",
+				"SUSE Linux Enterprise Server 15 SP5",
 				"SUSE Linux Enterprise Server 15-LTSS",
 				"SUSE Linux Enterprise Server for SAP Applications 15 SP2",
 				"SUSE Linux Enterprise Server for SAP Applications 15 SP3",
+				"SUSE Linux Enterprise Server for SAP Applications 15 SP5",
 				"SUSE Manager Proxy 4.1",
 				"SUSE Manager Proxy 4.2",
 				"SUSE Manager Retail Branch Server 4.1",
@@ -39,6 +43,11 @@
 				"ref_id": "SUSE CVE-2023-52503",
 				"ref_url": "https://www.suse.com/security/cve/CVE-2023-52503",
 				"source": "SUSE CVE"
+			},
+			{
+				"ref_id": "SUSE-SU-2024:1490-1",
+				"ref_url": "https://lists.suse.com/pipermail/sle-updates/2024-May/035140.html",
+				"source": "SUSE-SU"
 			}
 		],
 		"description": "\n    In the Linux kernel, the following vulnerability has been resolved:\n\ntee: amdtee: fix use-after-free vulnerability in amdtee_close_session\n\nThere is a potential race condition in amdtee_close_session that may\ncause use-after-free in amdtee_open_session. For instance, if a session\nhas refcount == 1, and one thread tries to free this session via:\n\n    kref_put(&sess->refcount, destroy_session);\n\nthe reference count will get decremented, and the next step would be to\ncall destroy_session(). However, if in another thread,\namdtee_open_session() is called before destroy_session() has completed\nexecution, alloc_session() may return 'sess' that will be freed up\nlater in destroy_session() leading to use-after-free in\namdtee_open_session.\n\nTo fix this issue, treat decrement of sess->refcount and removal of\n'sess' from session list in destroy_session() as a critical section, so\nthat it is executed atomically.\n    ",
@@ -67,7 +76,7 @@
 				"date": "2024-03-07"
 			},
 			"updated": {
-				"date": "2024-04-26"
+				"date": "2024-05-04"
 			},
 			"affected_cpe_list": {
 				"cpe": [
@@ -75,16 +84,20 @@
 					"cpe:/o:suse:ses:7.1",
 					"cpe:/o:suse:sle-module-public-cloud:15:sp2",
 					"cpe:/o:suse:sle-module-public-cloud:15:sp3",
+					"cpe:/o:suse:sle-module-public-cloud:15:sp5",
 					"cpe:/o:suse:sle_hpc:15:sp2",
 					"cpe:/o:suse:sle_hpc:15:sp3",
+					"cpe:/o:suse:sle_hpc:15:sp5",
 					"cpe:/o:suse:sles-ltss:15",
 					"cpe:/o:suse:sles-ltss:15:sp1",
 					"cpe:/o:suse:sles-ltss:15:sp2",
 					"cpe:/o:suse:sles-ltss:15:sp3",
 					"cpe:/o:suse:sles:15:sp2",
 					"cpe:/o:suse:sles:15:sp3",
+					"cpe:/o:suse:sles:15:sp5",
 					"cpe:/o:suse:sles_sap:15:sp2",
 					"cpe:/o:suse:sles_sap:15:sp3",
+					"cpe:/o:suse:sles_sap:15:sp5",
 					"cpe:/o:suse:suse-manager-proxy:4.1",
 					"cpe:/o:suse:suse-manager-proxy:4.2",
 					"cpe:/o:suse:suse-manager-retail-branch-server:4.1",
@@ -283,6 +296,57 @@
 							{
 								"test_ref": "oval:org.opensuse.security:tst:2009333928",
 								"comment": "kernel-source is not affected"
+							}
+						]
+					}
+				]
+			},
+			{
+				"operator": "AND",
+				"criterias": [
+					{
+						"operator": "OR",
+						"criterions": [
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009759899",
+								"comment": "SUSE Linux Enterprise High Performance Computing 15 SP5 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009762868",
+								"comment": "SUSE Linux Enterprise Module for Public Cloud 15 SP5 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009759901",
+								"comment": "SUSE Linux Enterprise Server 15 SP5 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009759902",
+								"comment": "SUSE Linux Enterprise Server for SAP Applications 15 SP5 is installed"
+							}
+						]
+					},
+					{
+						"operator": "OR",
+						"criterions": [
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009858785",
+								"comment": "kernel-azure-5.14.21-150500.33.48.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009858786",
+								"comment": "kernel-azure-devel-5.14.21-150500.33.48.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009858791",
+								"comment": "kernel-devel-azure-5.14.21-150500.33.48.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009858792",
+								"comment": "kernel-source-azure-5.14.21-150500.33.48.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009858793",
+								"comment": "kernel-syms-azure-5.14.21-150500.33.48.1 is installed"
 							}
 						]
 					}

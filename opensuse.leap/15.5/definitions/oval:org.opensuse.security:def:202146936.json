@@ -60,6 +60,11 @@
 				"ref_id": "SUSE-SU-2024:1480-1",
 				"ref_url": "https://lists.suse.com/pipermail/sle-updates/2024-April/035134.html",
 				"source": "SUSE-SU"
+			},
+			{
+				"ref_id": "SUSE-SU-2024:1490-1",
+				"ref_url": "https://lists.suse.com/pipermail/sle-updates/2024-May/035140.html",
+				"source": "SUSE-SU"
 			}
 		],
 		"description": "\n    In the Linux kernel, the following vulnerability has been resolved:\n\nnet: fix use-after-free in tw_timer_handler\n\nA real world panic issue was found as follow in Linux 5.4.\n\n    BUG: unable to handle page fault for address: ffffde49a863de28\n    PGD 7e6fe62067 P4D 7e6fe62067 PUD 7e6fe63067 PMD f51e064067 PTE 0\n    RIP: 0010:tw_timer_handler+0x20/0x40\n    Call Trace:\n     <IRQ>\n     call_timer_fn+0x2b/0x120\n     run_timer_softirq+0x1ef/0x450\n     __do_softirq+0x10d/0x2b8\n     irq_exit+0xc7/0xd0\n     smp_apic_timer_interrupt+0x68/0x120\n     apic_timer_interrupt+0xf/0x20\n\nThis issue was also reported since 2017 in the thread [1],\nunfortunately, the issue was still can be reproduced after fixing\nDCCP.\n\nThe ipv4_mib_exit_net is called before tcp_sk_exit_batch when a net\nnamespace is destroyed since tcp_sk_ops is registered befrore\nipv4_mib_ops, which means tcp_sk_ops is in the front of ipv4_mib_ops\nin the list of pernet_list. There will be a use-after-free on\nnet->mib.net_statistics in tw_timer_handler after ipv4_mib_exit_net\nif there are some inflight time-wait timers.\n\nThis bug is not introduced by commit f2bf415cfed7 (\"mib: add net to\nNET_ADD_STATS_BH\") since the net_statistics is a global variable\ninstead of dynamic allocation and freeing. Actually, commit\n61a7e26028b9 (\"mib: put net statistics on struct net\") introduces\nthe bug since it put net statistics on struct net and free it when\nnet namespace is destroyed.\n\nMoving init_ipv4_mibs() to the front of tcp_init() to fix this bug\nand replace pr_crit() with panic() since continuing is meaningless\nwhen init_ipv4_mibs() fails.\n\n[1] https://groups.google.com/g/syzkaller/c/p1tn-_Kc6l4/m/smuL_FMAAgAJ?pli=1\n    ",
@@ -90,7 +95,7 @@
 				"date": "2024-04-30"
 			},
 			"updated": {
-				"date": "2024-05-01"
+				"date": "2024-05-04"
 			},
 			"affected_cpe_list": {
 				"cpe": [
@@ -115,6 +120,19 @@
 							{
 								"test_ref": "oval:org.opensuse.security:tst:2009623416",
 								"comment": "cluster-md-kmp-64kb is signed with openSUSE key"
+							}
+						]
+					},
+					{
+						"operator": "AND",
+						"criterions": [
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009858782",
+								"comment": "cluster-md-kmp-azure-5.14.21-150500.33.48.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009623277",
+								"comment": "cluster-md-kmp-azure is signed with openSUSE key"
 							}
 						]
 					},
@@ -154,6 +172,19 @@
 							{
 								"test_ref": "oval:org.opensuse.security:tst:2009623418",
 								"comment": "dlm-kmp-64kb is signed with openSUSE key"
+							}
+						]
+					},
+					{
+						"operator": "AND",
+						"criterions": [
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009858783",
+								"comment": "dlm-kmp-azure-5.14.21-150500.33.48.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009623279",
+								"comment": "dlm-kmp-azure is signed with openSUSE key"
 							}
 						]
 					},
@@ -499,6 +530,19 @@
 						"operator": "AND",
 						"criterions": [
 							{
+								"test_ref": "oval:org.opensuse.security:tst:2009858784",
+								"comment": "gfs2-kmp-azure-5.14.21-150500.33.48.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009623281",
+								"comment": "gfs2-kmp-azure is signed with openSUSE key"
+							}
+						]
+					},
+					{
+						"operator": "AND",
+						"criterions": [
+							{
 								"test_ref": "oval:org.opensuse.security:tst:2009858522",
 								"comment": "gfs2-kmp-default-5.14.21-150500.55.59.1 is installed"
 							},
@@ -583,6 +627,84 @@
 							{
 								"test_ref": "oval:org.opensuse.security:tst:2009623426",
 								"comment": "kernel-64kb-optional is signed with openSUSE key"
+							}
+						]
+					},
+					{
+						"operator": "AND",
+						"criterions": [
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009858785",
+								"comment": "kernel-azure-5.14.21-150500.33.48.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009623283",
+								"comment": "kernel-azure is signed with openSUSE key"
+							}
+						]
+					},
+					{
+						"operator": "AND",
+						"criterions": [
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009858786",
+								"comment": "kernel-azure-devel-5.14.21-150500.33.48.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009623285",
+								"comment": "kernel-azure-devel is signed with openSUSE key"
+							}
+						]
+					},
+					{
+						"operator": "AND",
+						"criterions": [
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009858787",
+								"comment": "kernel-azure-extra-5.14.21-150500.33.48.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009623286",
+								"comment": "kernel-azure-extra is signed with openSUSE key"
+							}
+						]
+					},
+					{
+						"operator": "AND",
+						"criterions": [
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009858788",
+								"comment": "kernel-azure-livepatch-devel-5.14.21-150500.33.48.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009623287",
+								"comment": "kernel-azure-livepatch-devel is signed with openSUSE key"
+							}
+						]
+					},
+					{
+						"operator": "AND",
+						"criterions": [
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009858789",
+								"comment": "kernel-azure-optional-5.14.21-150500.33.48.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009623427",
+								"comment": "kernel-azure-optional is signed with openSUSE key"
+							}
+						]
+					},
+					{
+						"operator": "AND",
+						"criterions": [
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009858790",
+								"comment": "kernel-azure-vdso-5.14.21-150500.33.48.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009769740",
+								"comment": "kernel-azure-vdso is signed with openSUSE key"
 							}
 						]
 					},
@@ -765,6 +887,19 @@
 							{
 								"test_ref": "oval:org.opensuse.security:tst:2009151356",
 								"comment": "kernel-devel is signed with openSUSE key"
+							}
+						]
+					},
+					{
+						"operator": "AND",
+						"criterions": [
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009858791",
+								"comment": "kernel-devel-azure-5.14.21-150500.33.48.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009623293",
+								"comment": "kernel-devel-azure is signed with openSUSE key"
 							}
 						]
 					},
@@ -1058,6 +1193,19 @@
 						"operator": "AND",
 						"criterions": [
 							{
+								"test_ref": "oval:org.opensuse.security:tst:2009858792",
+								"comment": "kernel-source-azure-5.14.21-150500.33.48.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009623300",
+								"comment": "kernel-source-azure is signed with openSUSE key"
+							}
+						]
+					},
+					{
+						"operator": "AND",
+						"criterions": [
+							{
 								"test_ref": "oval:org.opensuse.security:tst:2009858186",
 								"comment": "kernel-source-rt-5.14.21-150500.13.47.1 is installed"
 							},
@@ -1090,6 +1238,19 @@
 							{
 								"test_ref": "oval:org.opensuse.security:tst:2009151361",
 								"comment": "kernel-syms is signed with openSUSE key"
+							}
+						]
+					},
+					{
+						"operator": "AND",
+						"criterions": [
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009858793",
+								"comment": "kernel-syms-azure-5.14.21-150500.33.48.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009623301",
+								"comment": "kernel-syms-azure is signed with openSUSE key"
 							}
 						]
 					},
@@ -1136,6 +1297,19 @@
 						"operator": "AND",
 						"criterions": [
 							{
+								"test_ref": "oval:org.opensuse.security:tst:2009858794",
+								"comment": "kselftests-kmp-azure-5.14.21-150500.33.48.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009623305",
+								"comment": "kselftests-kmp-azure is signed with openSUSE key"
+							}
+						]
+					},
+					{
+						"operator": "AND",
+						"criterions": [
+							{
 								"test_ref": "oval:org.opensuse.security:tst:2009858556",
 								"comment": "kselftests-kmp-default-5.14.21-150500.55.59.1 is installed"
 							},
@@ -1175,6 +1349,19 @@
 						"operator": "AND",
 						"criterions": [
 							{
+								"test_ref": "oval:org.opensuse.security:tst:2009858795",
+								"comment": "ocfs2-kmp-azure-5.14.21-150500.33.48.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009623306",
+								"comment": "ocfs2-kmp-azure is signed with openSUSE key"
+							}
+						]
+					},
+					{
+						"operator": "AND",
+						"criterions": [
+							{
 								"test_ref": "oval:org.opensuse.security:tst:2009858558",
 								"comment": "ocfs2-kmp-default-5.14.21-150500.55.59.1 is installed"
 							},
@@ -1207,6 +1394,19 @@
 							{
 								"test_ref": "oval:org.opensuse.security:tst:2009623440",
 								"comment": "reiserfs-kmp-64kb is signed with openSUSE key"
+							}
+						]
+					},
+					{
+						"operator": "AND",
+						"criterions": [
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009858796",
+								"comment": "reiserfs-kmp-azure-5.14.21-150500.33.48.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009623308",
+								"comment": "reiserfs-kmp-azure is signed with openSUSE key"
 							}
 						]
 					},
