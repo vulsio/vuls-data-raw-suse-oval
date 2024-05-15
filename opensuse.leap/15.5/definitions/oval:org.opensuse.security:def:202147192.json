@@ -1,0 +1,284 @@
+{
+	"id": "oval:org.opensuse.security:def:202147192",
+	"version": "1",
+	"class": "vulnerability",
+	"metadata": {
+		"title": "CVE-2021-47192",
+		"affected": {
+			"family": "unix",
+			"platform": [
+				"openSUSE Leap 15.5"
+			]
+		},
+		"reference": [
+			{
+				"ref_id": "Mitre CVE-2021-47192",
+				"ref_url": "https://cve.mitre.org/cgi-bin/cvename.cgi?name=CVE-2021-47192",
+				"source": "CVE"
+			},
+			{
+				"ref_id": "SUSE CVE-2021-47192",
+				"ref_url": "https://www.suse.com/security/cve/CVE-2021-47192",
+				"source": "SUSE CVE"
+			},
+			{
+				"ref_id": "SUSE-SU-2024:1641-1",
+				"ref_url": "https://lists.suse.com/pipermail/sle-updates/2024-May/035266.html",
+				"source": "SUSE-SU"
+			},
+			{
+				"ref_id": "SUSE-SU-2024:1644-1",
+				"ref_url": "https://lists.suse.com/pipermail/sle-updates/2024-May/035263.html",
+				"source": "SUSE-SU"
+			},
+			{
+				"ref_id": "SUSE-SU-2024:1647-1",
+				"ref_url": "https://lists.suse.com/pipermail/sle-updates/2024-May/035260.html",
+				"source": "SUSE-SU"
+			}
+		],
+		"description": "\n    In the Linux kernel, the following vulnerability has been resolved:\n\nscsi: core: sysfs: Fix hang when device state is set via sysfs\n\nThis fixes a regression added with:\n\ncommit f0f82e2476f6 (\"scsi: core: Fix capacity set to zero after\nofflinining device\")\n\nThe problem is that after iSCSI recovery, iscsid will call into the kernel\nto set the dev's state to running, and with that patch we now call\nscsi_rescan_device() with the state_mutex held. If the SCSI error handler\nthread is just starting to test the device in scsi_send_eh_cmnd() then it's\ngoing to try to grab the state_mutex.\n\nWe are then stuck, because when scsi_rescan_device() tries to send its I/O\nscsi_queue_rq() calls -> scsi_host_queue_ready() -> scsi_host_in_recovery()\nwhich will return true (the host state is still in recovery) and I/O will\njust be requeued. scsi_send_eh_cmnd() will then never be able to grab the\nstate_mutex to finish error handling.\n\nTo prevent the deadlock move the rescan-related code to after we drop the\nstate_mutex.\n\nThis also adds a check for if we are already in the running state. This\nprevents extra scans and helps the iscsid case where if the transport class\nhas already onlined the device during its recovery process then we don't\nneed userspace to do it again plus possibly block that daemon.\n    ",
+		"advisory": {
+			"from": "security@suse.de",
+			"severity": "Moderate",
+			"cve": [
+				{
+					"text": "CVE-2021-47192 at SUSE",
+					"href": "https://www.suse.com/security/cve/CVE-2021-47192/"
+				},
+				{
+					"text": "CVE-2021-47192 at NVD",
+					"href": "https://nvd.nist.gov/vuln/detail/CVE-2021-47192"
+				}
+			],
+			"bugzilla": [
+				{
+					"text": "SUSE bug 1222867",
+					"href": "https://bugzilla.suse.com/1222867"
+				}
+			],
+			"issued": {
+				"date": "2024-05-15"
+			},
+			"updated": {
+				"date": "2024-05-15"
+			},
+			"affected_cpe_list": {
+				"cpe": [
+					"cpe:/o:opensuse:leap:15.5"
+				]
+			}
+		}
+	},
+	"criteria": {
+		"operator": "AND",
+		"criterias": [
+			{
+				"operator": "OR",
+				"criterias": [
+					{
+						"operator": "AND",
+						"criterions": [
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009860706",
+								"comment": "cluster-md-kmp-azure-5.14.21-150500.33.51.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009623277",
+								"comment": "cluster-md-kmp-azure is signed with openSUSE key"
+							}
+						]
+					},
+					{
+						"operator": "AND",
+						"criterions": [
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009860707",
+								"comment": "dlm-kmp-azure-5.14.21-150500.33.51.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009623279",
+								"comment": "dlm-kmp-azure is signed with openSUSE key"
+							}
+						]
+					},
+					{
+						"operator": "AND",
+						"criterions": [
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009860708",
+								"comment": "gfs2-kmp-azure-5.14.21-150500.33.51.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009623281",
+								"comment": "gfs2-kmp-azure is signed with openSUSE key"
+							}
+						]
+					},
+					{
+						"operator": "AND",
+						"criterions": [
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009860709",
+								"comment": "kernel-azure-5.14.21-150500.33.51.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009623283",
+								"comment": "kernel-azure is signed with openSUSE key"
+							}
+						]
+					},
+					{
+						"operator": "AND",
+						"criterions": [
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009860710",
+								"comment": "kernel-azure-devel-5.14.21-150500.33.51.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009623285",
+								"comment": "kernel-azure-devel is signed with openSUSE key"
+							}
+						]
+					},
+					{
+						"operator": "AND",
+						"criterions": [
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009860711",
+								"comment": "kernel-azure-extra-5.14.21-150500.33.51.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009623286",
+								"comment": "kernel-azure-extra is signed with openSUSE key"
+							}
+						]
+					},
+					{
+						"operator": "AND",
+						"criterions": [
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009860712",
+								"comment": "kernel-azure-livepatch-devel-5.14.21-150500.33.51.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009623287",
+								"comment": "kernel-azure-livepatch-devel is signed with openSUSE key"
+							}
+						]
+					},
+					{
+						"operator": "AND",
+						"criterions": [
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009860713",
+								"comment": "kernel-azure-optional-5.14.21-150500.33.51.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009623427",
+								"comment": "kernel-azure-optional is signed with openSUSE key"
+							}
+						]
+					},
+					{
+						"operator": "AND",
+						"criterions": [
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009860714",
+								"comment": "kernel-azure-vdso-5.14.21-150500.33.51.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009769740",
+								"comment": "kernel-azure-vdso is signed with openSUSE key"
+							}
+						]
+					},
+					{
+						"operator": "AND",
+						"criterions": [
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009860715",
+								"comment": "kernel-devel-azure-5.14.21-150500.33.51.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009623293",
+								"comment": "kernel-devel-azure is signed with openSUSE key"
+							}
+						]
+					},
+					{
+						"operator": "AND",
+						"criterions": [
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009860716",
+								"comment": "kernel-source-azure-5.14.21-150500.33.51.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009623300",
+								"comment": "kernel-source-azure is signed with openSUSE key"
+							}
+						]
+					},
+					{
+						"operator": "AND",
+						"criterions": [
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009860717",
+								"comment": "kernel-syms-azure-5.14.21-150500.33.51.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009623301",
+								"comment": "kernel-syms-azure is signed with openSUSE key"
+							}
+						]
+					},
+					{
+						"operator": "AND",
+						"criterions": [
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009860718",
+								"comment": "kselftests-kmp-azure-5.14.21-150500.33.51.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009623305",
+								"comment": "kselftests-kmp-azure is signed with openSUSE key"
+							}
+						]
+					},
+					{
+						"operator": "AND",
+						"criterions": [
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009860719",
+								"comment": "ocfs2-kmp-azure-5.14.21-150500.33.51.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009623306",
+								"comment": "ocfs2-kmp-azure is signed with openSUSE key"
+							}
+						]
+					},
+					{
+						"operator": "AND",
+						"criterions": [
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009860720",
+								"comment": "reiserfs-kmp-azure-5.14.21-150500.33.51.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009623308",
+								"comment": "reiserfs-kmp-azure is signed with openSUSE key"
+							}
+						]
+					}
+				]
+			}
+		],
+		"criterions": [
+			{
+				"test_ref": "oval:org.opensuse.security:tst:2009752682",
+				"comment": "openSUSE Leap 15.5 is installed"
+			}
+		]
+	}
+}

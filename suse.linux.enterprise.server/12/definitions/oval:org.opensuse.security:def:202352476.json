@@ -7,8 +7,13 @@
 		"affected": {
 			"family": "unix",
 			"platform": [
+				"SUSE Linux Enterprise Live Patching 12 SP5",
+				"SUSE Linux Enterprise Real Time 12 SP5",
 				"SUSE Linux Enterprise Server 12 SP3-LTSS-TERADATA",
-				"SUSE Linux Enterprise Server 12 SP3-TERADATA"
+				"SUSE Linux Enterprise Server 12 SP3-TERADATA",
+				"SUSE Linux Enterprise Server 12 SP5",
+				"SUSE Linux Enterprise Server for SAP Applications 12 SP5",
+				"SUSE Linux Enterprise Workstation Extension 12 SP5"
 			]
 		},
 		"reference": [
@@ -61,6 +66,31 @@
 				"ref_id": "SUSE-SU-2024:1490-1",
 				"ref_url": "https://lists.suse.com/pipermail/sle-updates/2024-May/035140.html",
 				"source": "SUSE-SU"
+			},
+			{
+				"ref_id": "SUSE-SU-2024:1641-1",
+				"ref_url": "https://lists.suse.com/pipermail/sle-updates/2024-May/035266.html",
+				"source": "SUSE-SU"
+			},
+			{
+				"ref_id": "SUSE-SU-2024:1643-1",
+				"ref_url": "https://lists.suse.com/pipermail/sle-updates/2024-May/035264.html",
+				"source": "SUSE-SU"
+			},
+			{
+				"ref_id": "SUSE-SU-2024:1646-1",
+				"ref_url": "https://lists.suse.com/pipermail/sle-updates/2024-May/035261.html",
+				"source": "SUSE-SU"
+			},
+			{
+				"ref_id": "SUSE-SU-2024:1647-1",
+				"ref_url": "https://lists.suse.com/pipermail/sle-updates/2024-May/035260.html",
+				"source": "SUSE-SU"
+			},
+			{
+				"ref_id": "SUSE-SU-2024:1648-1",
+				"ref_url": "https://lists.suse.com/pipermail/sle-updates/2024-May/035259.html",
+				"source": "SUSE-SU"
 			}
 		],
 		"description": "\n    In the Linux kernel, the following vulnerability has been resolved:\n\nperf/x86/lbr: Filter vsyscall addresses\n\nWe found that a panic can occur when a vsyscall is made while LBR sampling\nis active. If the vsyscall is interrupted (NMI) for perf sampling, this\ncall sequence can occur (most recent at top):\n\n    __insn_get_emulate_prefix()\n    insn_get_emulate_prefix()\n    insn_get_prefixes()\n    insn_get_opcode()\n    decode_branch_type()\n    get_branch_type()\n    intel_pmu_lbr_filter()\n    intel_pmu_handle_irq()\n    perf_event_nmi_handler()\n\nWithin __insn_get_emulate_prefix() at frame 0, a macro is called:\n\n    peek_nbyte_next(insn_byte_t, insn, i)\n\nWithin this macro, this dereference occurs:\n\n    (insn)->next_byte\n\nInspecting registers at this point, the value of the next_byte field is the\naddress of the vsyscall made, for example the location of the vsyscall\nversion of gettimeofday() at 0xffffffffff600000. The access to an address\nin the vsyscall region will trigger an oops due to an unhandled page fault.\n\nTo fix the bug, filtering for vsyscalls can be done when\ndetermining the branch type. This patch will return\na \"none\" branch if a kernel address if found to lie in the\nvsyscall region.\n    ",
@@ -89,15 +119,223 @@
 				"date": "2024-04-12"
 			},
 			"updated": {
-				"date": "2024-05-04"
+				"date": "2024-05-15"
 			},
 			"affected_cpe_list": {
 				"cpe": [
+					"cpe:/o:suse:sle-live-patching:12:sp5",
+					"cpe:/o:suse:sle-we:12:sp5",
+					"cpe:/o:suse:sles:12:sp5",
+					"cpe:/o:suse:sles_sap:12:sp5",
 					"cpe:/o:suse:sles_teradata:12:sp3",
-					"cpe:/o:suse:sles_teradata:12:sp3-ltss"
+					"cpe:/o:suse:sles_teradata:12:sp3-ltss",
+					"cpe:/o:suse:suse-linux-enterprise-rt:12:sp5"
 				]
 			}
 		}
 	},
-	"criteria": {}
+	"criteria": {
+		"operator": "OR",
+		"criterias": [
+			{
+				"operator": "AND",
+				"criterias": [
+					{
+						"operator": "OR",
+						"criterions": [
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009258033",
+								"comment": "SUSE Linux Enterprise Server 12 SP5 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009258806",
+								"comment": "SUSE Linux Enterprise Server for SAP Applications 12 SP5 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009258650",
+								"comment": "SUSE Linux Enterprise Workstation Extension 12 SP5 is installed"
+							}
+						]
+					}
+				],
+				"criterions": [
+					{
+						"test_ref": "oval:org.opensuse.security:tst:2009861004",
+						"comment": "kernel-default-extra-4.12.14-122.212.1 is installed"
+					}
+				]
+			},
+			{
+				"operator": "AND",
+				"criterias": [
+					{
+						"operator": "OR",
+						"criterions": [
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009860964",
+								"comment": "kernel-default-kgraft-4.12.14-122.212.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009860965",
+								"comment": "kernel-default-kgraft-devel-4.12.14-122.212.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009860966",
+								"comment": "kgraft-patch-4_12_14-122_212-default-1-8.11.1 is installed"
+							}
+						]
+					}
+				],
+				"criterions": [
+					{
+						"test_ref": "oval:org.opensuse.security:tst:2009273148",
+						"comment": "SUSE Linux Enterprise Live Patching 12 SP5 is installed"
+					}
+				]
+			},
+			{
+				"operator": "AND",
+				"criterias": [
+					{
+						"operator": "OR",
+						"criterions": [
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009860967",
+								"comment": "cluster-md-kmp-rt-4.12.14-10.182.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009860968",
+								"comment": "dlm-kmp-rt-4.12.14-10.182.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009860969",
+								"comment": "gfs2-kmp-rt-4.12.14-10.182.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009860970",
+								"comment": "kernel-devel-rt-4.12.14-10.182.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009860971",
+								"comment": "kernel-rt-4.12.14-10.182.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009860972",
+								"comment": "kernel-rt-base-4.12.14-10.182.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009860973",
+								"comment": "kernel-rt-devel-4.12.14-10.182.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009860974",
+								"comment": "kernel-rt_debug-4.12.14-10.182.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009860975",
+								"comment": "kernel-rt_debug-devel-4.12.14-10.182.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009860976",
+								"comment": "kernel-source-rt-4.12.14-10.182.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009860977",
+								"comment": "kernel-syms-rt-4.12.14-10.182.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009860978",
+								"comment": "ocfs2-kmp-rt-4.12.14-10.182.1 is installed"
+							}
+						]
+					}
+				],
+				"criterions": [
+					{
+						"test_ref": "oval:org.opensuse.security:tst:2009279486",
+						"comment": "SUSE Linux Enterprise Real Time 12 SP5 is installed"
+					}
+				]
+			},
+			{
+				"operator": "AND",
+				"criterias": [
+					{
+						"operator": "OR",
+						"criterions": [
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009258033",
+								"comment": "SUSE Linux Enterprise Server 12 SP5 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009258806",
+								"comment": "SUSE Linux Enterprise Server for SAP Applications 12 SP5 is installed"
+							}
+						]
+					},
+					{
+						"operator": "OR",
+						"criterions": [
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009860989",
+								"comment": "kernel-azure-4.12.14-16.182.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009860990",
+								"comment": "kernel-azure-base-4.12.14-16.182.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009860991",
+								"comment": "kernel-azure-devel-4.12.14-16.182.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009860995",
+								"comment": "kernel-default-4.12.14-122.212.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009860996",
+								"comment": "kernel-default-base-4.12.14-122.212.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009860997",
+								"comment": "kernel-default-devel-4.12.14-122.212.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009860998",
+								"comment": "kernel-default-man-4.12.14-122.212.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009860999",
+								"comment": "kernel-devel-4.12.14-122.212.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009860992",
+								"comment": "kernel-devel-azure-4.12.14-16.182.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009861000",
+								"comment": "kernel-macros-4.12.14-122.212.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009861001",
+								"comment": "kernel-source-4.12.14-122.212.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009860993",
+								"comment": "kernel-source-azure-4.12.14-16.182.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009861002",
+								"comment": "kernel-syms-4.12.14-122.212.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009860994",
+								"comment": "kernel-syms-azure-4.12.14-16.182.1 is installed"
+							}
+						]
+					}
+				]
+			}
+		]
+	}
 }

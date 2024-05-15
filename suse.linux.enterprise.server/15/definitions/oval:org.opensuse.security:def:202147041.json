@@ -1,0 +1,409 @@
+{
+	"id": "oval:org.opensuse.security:def:202147041",
+	"version": "1",
+	"class": "vulnerability",
+	"metadata": {
+		"title": "CVE-2021-47041",
+		"affected": {
+			"family": "unix",
+			"platform": [
+				"SUSE Linux Enterprise Live Patching 15 SP2",
+				"SUSE Linux Enterprise Live Patching 15 SP3",
+				"SUSE Linux Enterprise Server 15 SP2-LTSS",
+				"SUSE Linux Enterprise Server 15 SP3-LTSS",
+				"SUSE Linux Enterprise Server for SAP Applications 15 SP2",
+				"SUSE Linux Enterprise Server for SAP Applications 15 SP3"
+			]
+		},
+		"reference": [
+			{
+				"ref_id": "Mitre CVE-2021-47041",
+				"ref_url": "https://cve.mitre.org/cgi-bin/cvename.cgi?name=CVE-2021-47041",
+				"source": "CVE"
+			},
+			{
+				"ref_id": "SUSE CVE-2021-47041",
+				"ref_url": "https://www.suse.com/security/cve/CVE-2021-47041",
+				"source": "SUSE CVE"
+			},
+			{
+				"ref_id": "SUSE-SU-2024:1642-1",
+				"ref_url": "https://lists.suse.com/pipermail/sle-updates/2024-May/035265.html",
+				"source": "SUSE-SU"
+			},
+			{
+				"ref_id": "SUSE-SU-2024:1645-1",
+				"ref_url": "https://lists.suse.com/pipermail/sle-updates/2024-May/035262.html",
+				"source": "SUSE-SU"
+			}
+		],
+		"description": "\n    In the Linux kernel, the following vulnerability has been resolved:\n\nnvmet-tcp: fix incorrect locking in state_change sk callback\n\nWe are not changing anything in the TCP connection state so\nwe should not take a write_lock but rather a read lock.\n\nThis caused a deadlock when running nvmet-tcp and nvme-tcp\non the same system, where state_change callbacks on the\nhost and on the controller side have causal relationship\nand made lockdep report on this with blktests:\n\n================================\nWARNING: inconsistent lock state\n5.12.0-rc3 #1 Tainted: G          I\n--------------------------------\ninconsistent {IN-SOFTIRQ-W} -> {SOFTIRQ-ON-R} usage.\nnvme/1324 [HC0[0]:SC0[0]:HE1:SE1] takes:\nffff888363151000 (clock-AF_INET){++-?}-{2:2}, at: nvme_tcp_state_change+0x21/0x150 [nvme_tcp]\n{IN-SOFTIRQ-W} state was registered at:\n  __lock_acquire+0x79b/0x18d0\n  lock_acquire+0x1ca/0x480\n  _raw_write_lock_bh+0x39/0x80\n  nvmet_tcp_state_change+0x21/0x170 [nvmet_tcp]\n  tcp_fin+0x2a8/0x780\n  tcp_data_queue+0xf94/0x1f20\n  tcp_rcv_established+0x6ba/0x1f00\n  tcp_v4_do_rcv+0x502/0x760\n  tcp_v4_rcv+0x257e/0x3430\n  ip_protocol_deliver_rcu+0x69/0x6a0\n  ip_local_deliver_finish+0x1e2/0x2f0\n  ip_local_deliver+0x1a2/0x420\n  ip_rcv+0x4fb/0x6b0\n  __netif_receive_skb_one_core+0x162/0x1b0\n  process_backlog+0x1ff/0x770\n  __napi_poll.constprop.0+0xa9/0x5c0\n  net_rx_action+0x7b3/0xb30\n  __do_softirq+0x1f0/0x940\n  do_softirq+0xa1/0xd0\n  __local_bh_enable_ip+0xd8/0x100\n  ip_finish_output2+0x6b7/0x18a0\n  __ip_queue_xmit+0x706/0x1aa0\n  __tcp_transmit_skb+0x2068/0x2e20\n  tcp_write_xmit+0xc9e/0x2bb0\n  __tcp_push_pending_frames+0x92/0x310\n  inet_shutdown+0x158/0x300\n  __nvme_tcp_stop_queue+0x36/0x270 [nvme_tcp]\n  nvme_tcp_stop_queue+0x87/0xb0 [nvme_tcp]\n  nvme_tcp_teardown_admin_queue+0x69/0xe0 [nvme_tcp]\n  nvme_do_delete_ctrl+0x100/0x10c [nvme_core]\n  nvme_sysfs_delete.cold+0x8/0xd [nvme_core]\n  kernfs_fop_write_iter+0x2c7/0x460\n  new_sync_write+0x36c/0x610\n  vfs_write+0x5c0/0x870\n  ksys_write+0xf9/0x1d0\n  do_syscall_64+0x33/0x40\n  entry_SYSCALL_64_after_hwframe+0x44/0xae\nirq event stamp: 10687\nhardirqs last  enabled at (10687): [<ffffffff9ec376bd>] _raw_spin_unlock_irqrestore+0x2d/0x40\nhardirqs last disabled at (10686): [<ffffffff9ec374d8>] _raw_spin_lock_irqsave+0x68/0x90\nsoftirqs last  enabled at (10684): [<ffffffff9f000608>] __do_softirq+0x608/0x940\nsoftirqs last disabled at (10649): [<ffffffff9cdedd31>] do_softirq+0xa1/0xd0\n\nother info that might help us debug this:\n Possible unsafe locking scenario:\n\n       CPU0\n       ----\n  lock(clock-AF_INET);\n  <Interrupt>\n    lock(clock-AF_INET);\n\n *** DEADLOCK ***\n\n5 locks held by nvme/1324:\n #0: ffff8884a01fe470 (sb_writers#4){.+.+}-{0:0}, at: ksys_write+0xf9/0x1d0\n #1: ffff8886e435c090 (&of->mutex){+.+.}-{3:3}, at: kernfs_fop_write_iter+0x216/0x460\n #2: ffff888104d90c38 (kn->active#255){++++}-{0:0}, at: kernfs_remove_self+0x22d/0x330\n #3: ffff8884634538d0 (&queue->queue_lock){+.+.}-{3:3}, at: nvme_tcp_stop_queue+0x52/0xb0 [nvme_tcp]\n #4: ffff888363150d30 (sk_lock-AF_INET){+.+.}-{0:0}, at: inet_shutdown+0x59/0x300\n\nstack backtrace:\nCPU: 26 PID: 1324 Comm: nvme Tainted: G          I       5.12.0-rc3 #1\nHardware name: Dell Inc. PowerEdge R640/06NR82, BIOS 2.10.0 11/12/2020\nCall Trace:\n dump_stack+0x93/0xc2\n mark_lock_irq.cold+0x2c/0xb3\n ? verify_lock_unused+0x390/0x390\n ? stack_trace_consume_entry+0x160/0x160\n ? lock_downgrade+0x100/0x100\n ? save_trace+0x88/0x5e0\n ? _raw_spin_unlock_irqrestore+0x2d/0x40\n mark_lock+0x530/0x1470\n ? mark_lock_irq+0x1d10/0x1d10\n ? enqueue_timer+0x660/0x660\n mark_usage+0x215/0x2a0\n __lock_acquire+0x79b/0x18d0\n ? tcp_schedule_loss_probe.part.0+0x38c/0x520\n lock_acquire+0x1ca/0x480\n ? nvme_tcp_state_change+0x21/0x150 [nvme_tcp]\n ? rcu_read_unlock+0x40/0x40\n ? tcp_mtu_probe+0x1ae0/0x1ae0\n ? kmalloc_reserve+0xa0/0xa0\n ? sysfs_file_ops+0x170/0x170\n _raw_read_lock+0x3d/0xa0\n ? nvme_tcp_state_change+0x21/0x150 [nvme_tcp]\n nvme_tcp_state_change+0x21/0x150 [nvme_tcp]\n ? sysfs_file_ops\n---truncated---\n    ",
+		"advisory": {
+			"from": "security@suse.de",
+			"severity": "Moderate",
+			"cve": [
+				{
+					"text": "CVE-2021-47041 at SUSE",
+					"href": "https://www.suse.com/security/cve/CVE-2021-47041/",
+					"impact": "medium",
+					"cvss3": "5.5/CVSS:3.1/AV:L/AC:L/PR:L/UI:N/S:U/C:N/I:N/A:H"
+				},
+				{
+					"text": "CVE-2021-47041 at NVD",
+					"href": "https://nvd.nist.gov/vuln/detail/CVE-2021-47041"
+				}
+			],
+			"bugzilla": [
+				{
+					"text": "SUSE bug 1220755",
+					"href": "https://bugzilla.suse.com/1220755"
+				}
+			],
+			"issued": {
+				"date": "2024-05-15"
+			},
+			"updated": {
+				"date": "2024-05-15"
+			},
+			"affected_cpe_list": {
+				"cpe": [
+					"cpe:/o:suse:sle-module-live-patching:15:sp2",
+					"cpe:/o:suse:sle-module-live-patching:15:sp3",
+					"cpe:/o:suse:sles-ltss:15:sp2",
+					"cpe:/o:suse:sles-ltss:15:sp3",
+					"cpe:/o:suse:sles_sap:15:sp2",
+					"cpe:/o:suse:sles_sap:15:sp3"
+				]
+			}
+		}
+	},
+	"criteria": {
+		"operator": "OR",
+		"criterias": [
+			{
+				"operator": "AND",
+				"criterias": [
+					{
+						"operator": "OR",
+						"criterions": [
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009860811",
+								"comment": "kernel-default-livepatch-5.3.18-150300.59.161.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009860812",
+								"comment": "kernel-default-livepatch-devel-5.3.18-150300.59.161.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009860813",
+								"comment": "kernel-livepatch-5_3_18-150300_59_161-default-1-150300.7.3.1 is installed"
+							}
+						]
+					}
+				],
+				"criterions": [
+					{
+						"test_ref": "oval:org.opensuse.security:tst:2009478738",
+						"comment": "SUSE Linux Enterprise Live Patching 15 SP3 is installed"
+					}
+				]
+			},
+			{
+				"operator": "AND",
+				"criterias": [
+					{
+						"operator": "OR",
+						"criterions": [
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009860826",
+								"comment": "kernel-64kb-5.3.18-150300.59.161.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009860827",
+								"comment": "kernel-64kb-devel-5.3.18-150300.59.161.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009860844",
+								"comment": "kernel-default-5.3.18-150300.59.161.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009860845",
+								"comment": "kernel-default-base-5.3.18-150300.59.161.1.150300.18.94.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009860846",
+								"comment": "kernel-default-devel-5.3.18-150300.59.161.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009860831",
+								"comment": "kernel-devel-5.3.18-150300.59.161.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009860832",
+								"comment": "kernel-docs-5.3.18-150300.59.161.2 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009860833",
+								"comment": "kernel-macros-5.3.18-150300.59.161.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009860847",
+								"comment": "kernel-obs-build-5.3.18-150300.59.161.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009860835",
+								"comment": "kernel-preempt-5.3.18-150300.59.161.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009860836",
+								"comment": "kernel-preempt-devel-5.3.18-150300.59.161.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009860837",
+								"comment": "kernel-source-5.3.18-150300.59.161.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009860848",
+								"comment": "kernel-syms-5.3.18-150300.59.161.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009860849",
+								"comment": "kernel-zfcpdump-5.3.18-150300.59.161.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009860850",
+								"comment": "reiserfs-kmp-default-5.3.18-150300.59.161.1 is installed"
+							}
+						]
+					}
+				],
+				"criterions": [
+					{
+						"test_ref": "oval:org.opensuse.security:tst:2009729178",
+						"comment": "SUSE Linux Enterprise Server 15 SP3-LTSS is installed"
+					}
+				]
+			},
+			{
+				"operator": "AND",
+				"criterias": [
+					{
+						"operator": "OR",
+						"criterions": [
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009860855",
+								"comment": "kernel-default-5.3.18-150300.59.161.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009860856",
+								"comment": "kernel-default-base-5.3.18-150300.59.161.1.150300.18.94.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009860857",
+								"comment": "kernel-default-devel-5.3.18-150300.59.161.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009860831",
+								"comment": "kernel-devel-5.3.18-150300.59.161.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009860832",
+								"comment": "kernel-docs-5.3.18-150300.59.161.2 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009860833",
+								"comment": "kernel-macros-5.3.18-150300.59.161.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009860858",
+								"comment": "kernel-obs-build-5.3.18-150300.59.161.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009860859",
+								"comment": "kernel-preempt-5.3.18-150300.59.161.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009860860",
+								"comment": "kernel-preempt-devel-5.3.18-150300.59.161.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009860837",
+								"comment": "kernel-source-5.3.18-150300.59.161.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009860861",
+								"comment": "kernel-syms-5.3.18-150300.59.161.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009860862",
+								"comment": "reiserfs-kmp-default-5.3.18-150300.59.161.1 is installed"
+							}
+						]
+					}
+				],
+				"criterions": [
+					{
+						"test_ref": "oval:org.opensuse.security:tst:2009669878",
+						"comment": "SUSE Linux Enterprise Server for SAP Applications 15 SP3 is installed"
+					}
+				]
+			},
+			{
+				"operator": "AND",
+				"criterias": [
+					{
+						"operator": "OR",
+						"criterions": [
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009861012",
+								"comment": "kernel-default-livepatch-5.3.18-150200.24.191.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009861013",
+								"comment": "kernel-default-livepatch-devel-5.3.18-150200.24.191.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009861014",
+								"comment": "kernel-livepatch-5_3_18-150200_24_191-default-1-150200.5.3.1 is installed"
+							}
+						]
+					}
+				],
+				"criterions": [
+					{
+						"test_ref": "oval:org.opensuse.security:tst:2009288462",
+						"comment": "SUSE Linux Enterprise Live Patching 15 SP2 is installed"
+					}
+				]
+			},
+			{
+				"operator": "AND",
+				"criterias": [
+					{
+						"operator": "OR",
+						"criterions": [
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009861036",
+								"comment": "kernel-default-5.3.18-150200.24.191.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009861037",
+								"comment": "kernel-default-base-5.3.18-150200.24.191.1.150200.9.97.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009861038",
+								"comment": "kernel-default-devel-5.3.18-150200.24.191.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009861026",
+								"comment": "kernel-devel-5.3.18-150200.24.191.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009861027",
+								"comment": "kernel-docs-5.3.18-150200.24.191.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009861028",
+								"comment": "kernel-macros-5.3.18-150200.24.191.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009861039",
+								"comment": "kernel-obs-build-5.3.18-150200.24.191.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009861030",
+								"comment": "kernel-preempt-5.3.18-150200.24.191.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009861031",
+								"comment": "kernel-preempt-devel-5.3.18-150200.24.191.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009861032",
+								"comment": "kernel-source-5.3.18-150200.24.191.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009861040",
+								"comment": "kernel-syms-5.3.18-150200.24.191.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009861041",
+								"comment": "reiserfs-kmp-default-5.3.18-150200.24.191.1 is installed"
+							}
+						]
+					}
+				],
+				"criterions": [
+					{
+						"test_ref": "oval:org.opensuse.security:tst:2009660213",
+						"comment": "SUSE Linux Enterprise Server 15 SP2-LTSS is installed"
+					}
+				]
+			},
+			{
+				"operator": "AND",
+				"criterias": [
+					{
+						"operator": "OR",
+						"criterions": [
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009861044",
+								"comment": "kernel-default-5.3.18-150200.24.191.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009861045",
+								"comment": "kernel-default-base-5.3.18-150200.24.191.1.150200.9.97.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009861046",
+								"comment": "kernel-default-devel-5.3.18-150200.24.191.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009861026",
+								"comment": "kernel-devel-5.3.18-150200.24.191.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009861027",
+								"comment": "kernel-docs-5.3.18-150200.24.191.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009861028",
+								"comment": "kernel-macros-5.3.18-150200.24.191.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009861047",
+								"comment": "kernel-obs-build-5.3.18-150200.24.191.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009861048",
+								"comment": "kernel-preempt-5.3.18-150200.24.191.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009861049",
+								"comment": "kernel-preempt-devel-5.3.18-150200.24.191.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009861032",
+								"comment": "kernel-source-5.3.18-150200.24.191.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009861050",
+								"comment": "kernel-syms-5.3.18-150200.24.191.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009861051",
+								"comment": "reiserfs-kmp-default-5.3.18-150200.24.191.1 is installed"
+							}
+						]
+					}
+				],
+				"criterions": [
+					{
+						"test_ref": "oval:org.opensuse.security:tst:2009659637",
+						"comment": "SUSE Linux Enterprise Server for SAP Applications 15 SP2 is installed"
+					}
+				]
+			}
+		]
+	}
+}

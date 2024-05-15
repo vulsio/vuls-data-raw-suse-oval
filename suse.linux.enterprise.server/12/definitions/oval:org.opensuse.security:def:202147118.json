@@ -1,0 +1,292 @@
+{
+	"id": "oval:org.opensuse.security:def:202147118",
+	"version": "1",
+	"class": "vulnerability",
+	"metadata": {
+		"title": "CVE-2021-47118",
+		"affected": {
+			"family": "unix",
+			"platform": [
+				"SUSE Linux Enterprise Live Patching 12 SP5",
+				"SUSE Linux Enterprise Real Time 12 SP5",
+				"SUSE Linux Enterprise Server 12 SP5",
+				"SUSE Linux Enterprise Server for SAP Applications 12 SP5",
+				"SUSE Linux Enterprise Workstation Extension 12 SP5"
+			]
+		},
+		"reference": [
+			{
+				"ref_id": "Mitre CVE-2021-47118",
+				"ref_url": "https://cve.mitre.org/cgi-bin/cvename.cgi?name=CVE-2021-47118",
+				"source": "CVE"
+			},
+			{
+				"ref_id": "SUSE CVE-2021-47118",
+				"ref_url": "https://www.suse.com/security/cve/CVE-2021-47118",
+				"source": "SUSE CVE"
+			},
+			{
+				"ref_id": "SUSE-SU-2024:1454-1",
+				"ref_url": "https://lists.suse.com/pipermail/sle-updates/2024-April/035109.html",
+				"source": "SUSE-SU"
+			},
+			{
+				"ref_id": "SUSE-SU-2024:1643-1",
+				"ref_url": "https://lists.suse.com/pipermail/sle-updates/2024-May/035264.html",
+				"source": "SUSE-SU"
+			},
+			{
+				"ref_id": "SUSE-SU-2024:1646-1",
+				"ref_url": "https://lists.suse.com/pipermail/sle-updates/2024-May/035261.html",
+				"source": "SUSE-SU"
+			},
+			{
+				"ref_id": "SUSE-SU-2024:1648-1",
+				"ref_url": "https://lists.suse.com/pipermail/sle-updates/2024-May/035259.html",
+				"source": "SUSE-SU"
+			}
+		],
+		"description": "\n    In the Linux kernel, the following vulnerability has been resolved:\n\npid: take a reference when initializing `cad_pid`\n\nDuring boot, kernel_init_freeable() initializes `cad_pid` to the init\ntask's struct pid.  Later on, we may change `cad_pid` via a sysctl, and\nwhen this happens proc_do_cad_pid() will increment the refcount on the\nnew pid via get_pid(), and will decrement the refcount on the old pid\nvia put_pid().  As we never called get_pid() when we initialized\n`cad_pid`, we decrement a reference we never incremented, can therefore\nfree the init task's struct pid early.  As there can be dangling\nreferences to the struct pid, we can later encounter a use-after-free\n(e.g.  when delivering signals).\n\nThis was spotted when fuzzing v5.13-rc3 with Syzkaller, but seems to\nhave been around since the conversion of `cad_pid` to struct pid in\ncommit 9ec52099e4b8 (\"[PATCH] replace cad_pid by a struct pid\") from the\npre-KASAN stone age of v2.6.19.\n\nFix this by getting a reference to the init task's struct pid when we\nassign it to `cad_pid`.\n\nFull KASAN splat below.\n\n   ==================================================================\n   BUG: KASAN: use-after-free in ns_of_pid include/linux/pid.h:153 [inline]\n   BUG: KASAN: use-after-free in task_active_pid_ns+0xc0/0xc8 kernel/pid.c:509\n   Read of size 4 at addr ffff23794dda0004 by task syz-executor.0/273\n\n   CPU: 1 PID: 273 Comm: syz-executor.0 Not tainted 5.12.0-00001-g9aef892b2d15 #1\n   Hardware name: linux,dummy-virt (DT)\n   Call trace:\n    ns_of_pid include/linux/pid.h:153 [inline]\n    task_active_pid_ns+0xc0/0xc8 kernel/pid.c:509\n    do_notify_parent+0x308/0xe60 kernel/signal.c:1950\n    exit_notify kernel/exit.c:682 [inline]\n    do_exit+0x2334/0x2bd0 kernel/exit.c:845\n    do_group_exit+0x108/0x2c8 kernel/exit.c:922\n    get_signal+0x4e4/0x2a88 kernel/signal.c:2781\n    do_signal arch/arm64/kernel/signal.c:882 [inline]\n    do_notify_resume+0x300/0x970 arch/arm64/kernel/signal.c:936\n    work_pending+0xc/0x2dc\n\n   Allocated by task 0:\n    slab_post_alloc_hook+0x50/0x5c0 mm/slab.h:516\n    slab_alloc_node mm/slub.c:2907 [inline]\n    slab_alloc mm/slub.c:2915 [inline]\n    kmem_cache_alloc+0x1f4/0x4c0 mm/slub.c:2920\n    alloc_pid+0xdc/0xc00 kernel/pid.c:180\n    copy_process+0x2794/0x5e18 kernel/fork.c:2129\n    kernel_clone+0x194/0x13c8 kernel/fork.c:2500\n    kernel_thread+0xd4/0x110 kernel/fork.c:2552\n    rest_init+0x44/0x4a0 init/main.c:687\n    arch_call_rest_init+0x1c/0x28\n    start_kernel+0x520/0x554 init/main.c:1064\n    0x0\n\n   Freed by task 270:\n    slab_free_hook mm/slub.c:1562 [inline]\n    slab_free_freelist_hook+0x98/0x260 mm/slub.c:1600\n    slab_free mm/slub.c:3161 [inline]\n    kmem_cache_free+0x224/0x8e0 mm/slub.c:3177\n    put_pid.part.4+0xe0/0x1a8 kernel/pid.c:114\n    put_pid+0x30/0x48 kernel/pid.c:109\n    proc_do_cad_pid+0x190/0x1b0 kernel/sysctl.c:1401\n    proc_sys_call_handler+0x338/0x4b0 fs/proc/proc_sysctl.c:591\n    proc_sys_write+0x34/0x48 fs/proc/proc_sysctl.c:617\n    call_write_iter include/linux/fs.h:1977 [inline]\n    new_sync_write+0x3ac/0x510 fs/read_write.c:518\n    vfs_write fs/read_write.c:605 [inline]\n    vfs_write+0x9c4/0x1018 fs/read_write.c:585\n    ksys_write+0x124/0x240 fs/read_write.c:658\n    __do_sys_write fs/read_write.c:670 [inline]\n    __se_sys_write fs/read_write.c:667 [inline]\n    __arm64_sys_write+0x78/0xb0 fs/read_write.c:667\n    __invoke_syscall arch/arm64/kernel/syscall.c:37 [inline]\n    invoke_syscall arch/arm64/kernel/syscall.c:49 [inline]\n    el0_svc_common.constprop.1+0x16c/0x388 arch/arm64/kernel/syscall.c:129\n    do_el0_svc+0xf8/0x150 arch/arm64/kernel/syscall.c:168\n    el0_svc+0x28/0x38 arch/arm64/kernel/entry-common.c:416\n    el0_sync_handler+0x134/0x180 arch/arm64/kernel/entry-common.c:432\n    el0_sync+0x154/0x180 arch/arm64/kernel/entry.S:701\n\n   The buggy address belongs to the object at ffff23794dda0000\n    which belongs to the cache pid of size 224\n   The buggy address is located 4 bytes inside of\n    224-byte region [ff\n---truncated---\n    ",
+		"advisory": {
+			"from": "security@suse.de",
+			"severity": "Moderate",
+			"cve": [
+				{
+					"text": "CVE-2021-47118 at SUSE",
+					"href": "https://www.suse.com/security/cve/CVE-2021-47118/",
+					"impact": "medium",
+					"cvss3": "5.5/CVSS:3.1/AV:L/AC:L/PR:L/UI:N/S:U/C:N/I:N/A:H"
+				},
+				{
+					"text": "CVE-2021-47118 at NVD",
+					"href": "https://nvd.nist.gov/vuln/detail/CVE-2021-47118"
+				}
+			],
+			"bugzilla": [
+				{
+					"text": "SUSE bug 1221605",
+					"href": "https://bugzilla.suse.com/1221605"
+				}
+			],
+			"issued": {
+				"date": "2024-05-15"
+			},
+			"updated": {
+				"date": "2024-05-15"
+			},
+			"affected_cpe_list": {
+				"cpe": [
+					"cpe:/o:suse:sle-live-patching:12:sp5",
+					"cpe:/o:suse:sle-we:12:sp5",
+					"cpe:/o:suse:sles:12:sp5",
+					"cpe:/o:suse:sles_sap:12:sp5",
+					"cpe:/o:suse:suse-linux-enterprise-rt:12:sp5"
+				]
+			}
+		}
+	},
+	"criteria": {
+		"operator": "OR",
+		"criterias": [
+			{
+				"operator": "AND",
+				"criterias": [
+					{
+						"operator": "OR",
+						"criterions": [
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009258033",
+								"comment": "SUSE Linux Enterprise Server 12 SP5 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009258806",
+								"comment": "SUSE Linux Enterprise Server for SAP Applications 12 SP5 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009258650",
+								"comment": "SUSE Linux Enterprise Workstation Extension 12 SP5 is installed"
+							}
+						]
+					}
+				],
+				"criterions": [
+					{
+						"test_ref": "oval:org.opensuse.security:tst:2009861004",
+						"comment": "kernel-default-extra-4.12.14-122.212.1 is installed"
+					}
+				]
+			},
+			{
+				"operator": "AND",
+				"criterias": [
+					{
+						"operator": "OR",
+						"criterions": [
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009860964",
+								"comment": "kernel-default-kgraft-4.12.14-122.212.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009860965",
+								"comment": "kernel-default-kgraft-devel-4.12.14-122.212.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009860966",
+								"comment": "kgraft-patch-4_12_14-122_212-default-1-8.11.1 is installed"
+							}
+						]
+					}
+				],
+				"criterions": [
+					{
+						"test_ref": "oval:org.opensuse.security:tst:2009273148",
+						"comment": "SUSE Linux Enterprise Live Patching 12 SP5 is installed"
+					}
+				]
+			},
+			{
+				"operator": "AND",
+				"criterias": [
+					{
+						"operator": "OR",
+						"criterions": [
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009860967",
+								"comment": "cluster-md-kmp-rt-4.12.14-10.182.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009860968",
+								"comment": "dlm-kmp-rt-4.12.14-10.182.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009860969",
+								"comment": "gfs2-kmp-rt-4.12.14-10.182.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009860970",
+								"comment": "kernel-devel-rt-4.12.14-10.182.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009860971",
+								"comment": "kernel-rt-4.12.14-10.182.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009860972",
+								"comment": "kernel-rt-base-4.12.14-10.182.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009860973",
+								"comment": "kernel-rt-devel-4.12.14-10.182.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009860974",
+								"comment": "kernel-rt_debug-4.12.14-10.182.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009860975",
+								"comment": "kernel-rt_debug-devel-4.12.14-10.182.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009860976",
+								"comment": "kernel-source-rt-4.12.14-10.182.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009860977",
+								"comment": "kernel-syms-rt-4.12.14-10.182.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009860978",
+								"comment": "ocfs2-kmp-rt-4.12.14-10.182.1 is installed"
+							}
+						]
+					}
+				],
+				"criterions": [
+					{
+						"test_ref": "oval:org.opensuse.security:tst:2009279486",
+						"comment": "SUSE Linux Enterprise Real Time 12 SP5 is installed"
+					}
+				]
+			},
+			{
+				"operator": "AND",
+				"criterias": [
+					{
+						"operator": "OR",
+						"criterions": [
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009258033",
+								"comment": "SUSE Linux Enterprise Server 12 SP5 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009258806",
+								"comment": "SUSE Linux Enterprise Server for SAP Applications 12 SP5 is installed"
+							}
+						]
+					},
+					{
+						"operator": "OR",
+						"criterions": [
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009860989",
+								"comment": "kernel-azure-4.12.14-16.182.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009860990",
+								"comment": "kernel-azure-base-4.12.14-16.182.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009860991",
+								"comment": "kernel-azure-devel-4.12.14-16.182.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009860995",
+								"comment": "kernel-default-4.12.14-122.212.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009860996",
+								"comment": "kernel-default-base-4.12.14-122.212.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009860997",
+								"comment": "kernel-default-devel-4.12.14-122.212.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009860998",
+								"comment": "kernel-default-man-4.12.14-122.212.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009860999",
+								"comment": "kernel-devel-4.12.14-122.212.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009860992",
+								"comment": "kernel-devel-azure-4.12.14-16.182.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009861000",
+								"comment": "kernel-macros-4.12.14-122.212.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009861001",
+								"comment": "kernel-source-4.12.14-122.212.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009860993",
+								"comment": "kernel-source-azure-4.12.14-16.182.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009861002",
+								"comment": "kernel-syms-4.12.14-122.212.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009860994",
+								"comment": "kernel-syms-azure-4.12.14-16.182.1 is installed"
+							}
+						]
+					}
+				]
+			}
+		]
+	}
+}

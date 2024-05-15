@@ -11,16 +11,20 @@
 				"SUSE Enterprise Storage 7.1",
 				"SUSE Linux Enterprise High Performance Computing 15 SP2",
 				"SUSE Linux Enterprise High Performance Computing 15 SP3",
+				"SUSE Linux Enterprise High Performance Computing 15 SP5",
 				"SUSE Linux Enterprise Module for Public Cloud 15 SP2",
 				"SUSE Linux Enterprise Module for Public Cloud 15 SP3",
+				"SUSE Linux Enterprise Module for Public Cloud 15 SP5",
 				"SUSE Linux Enterprise Server 15 SP1-LTSS",
 				"SUSE Linux Enterprise Server 15 SP2",
 				"SUSE Linux Enterprise Server 15 SP2-LTSS",
 				"SUSE Linux Enterprise Server 15 SP3",
 				"SUSE Linux Enterprise Server 15 SP3-LTSS",
+				"SUSE Linux Enterprise Server 15 SP5",
 				"SUSE Linux Enterprise Server 15-LTSS",
 				"SUSE Linux Enterprise Server for SAP Applications 15 SP2",
 				"SUSE Linux Enterprise Server for SAP Applications 15 SP3",
+				"SUSE Linux Enterprise Server for SAP Applications 15 SP5",
 				"SUSE Manager Proxy 4.1",
 				"SUSE Manager Proxy 4.2",
 				"SUSE Manager Retail Branch Server 4.1",
@@ -39,6 +43,11 @@
 				"ref_id": "SUSE CVE-2024-26897",
 				"ref_url": "https://www.suse.com/security/cve/CVE-2024-26897",
 				"source": "SUSE CVE"
+			},
+			{
+				"ref_id": "SUSE-SU-2024:1644-1",
+				"ref_url": "https://lists.suse.com/pipermail/sle-updates/2024-May/035263.html",
+				"source": "SUSE-SU"
 			}
 		],
 		"description": "\n    In the Linux kernel, the following vulnerability has been resolved:\n\nwifi: ath9k: delay all of ath9k_wmi_event_tasklet() until init is complete\n\nThe ath9k_wmi_event_tasklet() used in ath9k_htc assumes that all the data\nstructures have been fully initialised by the time it runs. However, because of\nthe order in which things are initialised, this is not guaranteed to be the\ncase, because the device is exposed to the USB subsystem before the ath9k driver\ninitialisation is completed.\n\nWe already committed a partial fix for this in commit:\n8b3046abc99e (\"ath9k_htc: fix NULL pointer dereference at ath9k_htc_tx_get_packet()\")\n\nHowever, that commit only aborted the WMI_TXSTATUS_EVENTID command in the event\ntasklet, pairing it with an \"initialisation complete\" bit in the TX struct. It\nseems syzbot managed to trigger the race for one of the other commands as well,\nso let's just move the existing synchronisation bit to cover the whole\ntasklet (setting it at the end of ath9k_htc_probe_device() instead of inside\nath9k_tx_init()).\n    ",
@@ -67,7 +76,7 @@
 				"date": "2024-04-24"
 			},
 			"updated": {
-				"date": "2024-04-26"
+				"date": "2024-05-15"
 			},
 			"affected_cpe_list": {
 				"cpe": [
@@ -75,16 +84,20 @@
 					"cpe:/o:suse:ses:7.1",
 					"cpe:/o:suse:sle-module-public-cloud:15:sp2",
 					"cpe:/o:suse:sle-module-public-cloud:15:sp3",
+					"cpe:/o:suse:sle-module-public-cloud:15:sp5",
 					"cpe:/o:suse:sle_hpc:15:sp2",
 					"cpe:/o:suse:sle_hpc:15:sp3",
+					"cpe:/o:suse:sle_hpc:15:sp5",
 					"cpe:/o:suse:sles-ltss:15",
 					"cpe:/o:suse:sles-ltss:15:sp1",
 					"cpe:/o:suse:sles-ltss:15:sp2",
 					"cpe:/o:suse:sles-ltss:15:sp3",
 					"cpe:/o:suse:sles:15:sp2",
 					"cpe:/o:suse:sles:15:sp3",
+					"cpe:/o:suse:sles:15:sp5",
 					"cpe:/o:suse:sles_sap:15:sp2",
 					"cpe:/o:suse:sles_sap:15:sp3",
+					"cpe:/o:suse:sles_sap:15:sp5",
 					"cpe:/o:suse:suse-manager-proxy:4.1",
 					"cpe:/o:suse:suse-manager-proxy:4.2",
 					"cpe:/o:suse:suse-manager-retail-branch-server:4.1",
@@ -283,6 +296,57 @@
 							{
 								"test_ref": "oval:org.opensuse.security:tst:2009333928",
 								"comment": "kernel-source is not affected"
+							}
+						]
+					}
+				]
+			},
+			{
+				"operator": "AND",
+				"criterias": [
+					{
+						"operator": "OR",
+						"criterions": [
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009759899",
+								"comment": "SUSE Linux Enterprise High Performance Computing 15 SP5 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009762868",
+								"comment": "SUSE Linux Enterprise Module for Public Cloud 15 SP5 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009759901",
+								"comment": "SUSE Linux Enterprise Server 15 SP5 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009759902",
+								"comment": "SUSE Linux Enterprise Server for SAP Applications 15 SP5 is installed"
+							}
+						]
+					},
+					{
+						"operator": "OR",
+						"criterions": [
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009860709",
+								"comment": "kernel-azure-5.14.21-150500.33.51.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009860710",
+								"comment": "kernel-azure-devel-5.14.21-150500.33.51.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009860715",
+								"comment": "kernel-devel-azure-5.14.21-150500.33.51.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009860716",
+								"comment": "kernel-source-azure-5.14.21-150500.33.51.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009860717",
+								"comment": "kernel-syms-azure-5.14.21-150500.33.51.1 is installed"
 							}
 						]
 					}

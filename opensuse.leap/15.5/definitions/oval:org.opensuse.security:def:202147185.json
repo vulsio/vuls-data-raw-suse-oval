@@ -30,6 +30,41 @@
 				"ref_id": "SUSE-SU-2024:1490-1",
 				"ref_url": "https://lists.suse.com/pipermail/sle-updates/2024-May/035140.html",
 				"source": "SUSE-SU"
+			},
+			{
+				"ref_id": "SUSE-SU-2024:1641-1",
+				"ref_url": "https://lists.suse.com/pipermail/sle-updates/2024-May/035266.html",
+				"source": "SUSE-SU"
+			},
+			{
+				"ref_id": "SUSE-SU-2024:1642-1",
+				"ref_url": "https://lists.suse.com/pipermail/sle-updates/2024-May/035265.html",
+				"source": "SUSE-SU"
+			},
+			{
+				"ref_id": "SUSE-SU-2024:1643-1",
+				"ref_url": "https://lists.suse.com/pipermail/sle-updates/2024-May/035264.html",
+				"source": "SUSE-SU"
+			},
+			{
+				"ref_id": "SUSE-SU-2024:1644-1",
+				"ref_url": "https://lists.suse.com/pipermail/sle-updates/2024-May/035263.html",
+				"source": "SUSE-SU"
+			},
+			{
+				"ref_id": "SUSE-SU-2024:1646-1",
+				"ref_url": "https://lists.suse.com/pipermail/sle-updates/2024-May/035261.html",
+				"source": "SUSE-SU"
+			},
+			{
+				"ref_id": "SUSE-SU-2024:1647-1",
+				"ref_url": "https://lists.suse.com/pipermail/sle-updates/2024-May/035260.html",
+				"source": "SUSE-SU"
+			},
+			{
+				"ref_id": "SUSE-SU-2024:1648-1",
+				"ref_url": "https://lists.suse.com/pipermail/sle-updates/2024-May/035259.html",
+				"source": "SUSE-SU"
 			}
 		],
 		"description": "\n    In the Linux kernel, the following vulnerability has been resolved:\n\ntty: tty_buffer: Fix the softlockup issue in flush_to_ldisc\n\nWhen running ltp testcase(ltp/testcases/kernel/pty/pty04.c) with arm64, there is a soft lockup,\nwhich look like this one:\n\n  Workqueue: events_unbound flush_to_ldisc\n  Call trace:\n   dump_backtrace+0x0/0x1ec\n   show_stack+0x24/0x30\n   dump_stack+0xd0/0x128\n   panic+0x15c/0x374\n   watchdog_timer_fn+0x2b8/0x304\n   __run_hrtimer+0x88/0x2c0\n   __hrtimer_run_queues+0xa4/0x120\n   hrtimer_interrupt+0xfc/0x270\n   arch_timer_handler_phys+0x40/0x50\n   handle_percpu_devid_irq+0x94/0x220\n   __handle_domain_irq+0x88/0xf0\n   gic_handle_irq+0x84/0xfc\n   el1_irq+0xc8/0x180\n   slip_unesc+0x80/0x214 [slip]\n   tty_ldisc_receive_buf+0x64/0x80\n   tty_port_default_receive_buf+0x50/0x90\n   flush_to_ldisc+0xbc/0x110\n   process_one_work+0x1d4/0x4b0\n   worker_thread+0x180/0x430\n   kthread+0x11c/0x120\n\nIn the testcase pty04, The first process call the write syscall to send\ndata to the pty master. At the same time, the workqueue will do the\nflush_to_ldisc to pop data in a loop until there is no more data left.\nWhen the sender and workqueue running in different core, the sender sends\ndata fastly in full time which will result in workqueue doing work in loop\nfor a long time and occuring softlockup in flush_to_ldisc with kernel\nconfigured without preempt. So I add need_resched check and cond_resched\nin the flush_to_ldisc loop to avoid it.\n    ",
@@ -58,7 +93,7 @@
 				"date": "2024-05-04"
 			},
 			"updated": {
-				"date": "2024-05-04"
+				"date": "2024-05-15"
 			},
 			"affected_cpe_list": {
 				"cpe": [
@@ -77,8 +112,8 @@
 						"operator": "AND",
 						"criterions": [
 							{
-								"test_ref": "oval:org.opensuse.security:tst:2009858782",
-								"comment": "cluster-md-kmp-azure-5.14.21-150500.33.48.1 is installed"
+								"test_ref": "oval:org.opensuse.security:tst:2009860706",
+								"comment": "cluster-md-kmp-azure-5.14.21-150500.33.51.1 is installed"
 							},
 							{
 								"test_ref": "oval:org.opensuse.security:tst:2009623277",
@@ -90,8 +125,8 @@
 						"operator": "AND",
 						"criterions": [
 							{
-								"test_ref": "oval:org.opensuse.security:tst:2009858783",
-								"comment": "dlm-kmp-azure-5.14.21-150500.33.48.1 is installed"
+								"test_ref": "oval:org.opensuse.security:tst:2009860707",
+								"comment": "dlm-kmp-azure-5.14.21-150500.33.51.1 is installed"
 							},
 							{
 								"test_ref": "oval:org.opensuse.security:tst:2009623279",
@@ -103,8 +138,8 @@
 						"operator": "AND",
 						"criterions": [
 							{
-								"test_ref": "oval:org.opensuse.security:tst:2009858784",
-								"comment": "gfs2-kmp-azure-5.14.21-150500.33.48.1 is installed"
+								"test_ref": "oval:org.opensuse.security:tst:2009860708",
+								"comment": "gfs2-kmp-azure-5.14.21-150500.33.51.1 is installed"
 							},
 							{
 								"test_ref": "oval:org.opensuse.security:tst:2009623281",
@@ -116,8 +151,8 @@
 						"operator": "AND",
 						"criterions": [
 							{
-								"test_ref": "oval:org.opensuse.security:tst:2009858785",
-								"comment": "kernel-azure-5.14.21-150500.33.48.1 is installed"
+								"test_ref": "oval:org.opensuse.security:tst:2009860709",
+								"comment": "kernel-azure-5.14.21-150500.33.51.1 is installed"
 							},
 							{
 								"test_ref": "oval:org.opensuse.security:tst:2009623283",
@@ -129,8 +164,8 @@
 						"operator": "AND",
 						"criterions": [
 							{
-								"test_ref": "oval:org.opensuse.security:tst:2009858786",
-								"comment": "kernel-azure-devel-5.14.21-150500.33.48.1 is installed"
+								"test_ref": "oval:org.opensuse.security:tst:2009860710",
+								"comment": "kernel-azure-devel-5.14.21-150500.33.51.1 is installed"
 							},
 							{
 								"test_ref": "oval:org.opensuse.security:tst:2009623285",
@@ -142,8 +177,8 @@
 						"operator": "AND",
 						"criterions": [
 							{
-								"test_ref": "oval:org.opensuse.security:tst:2009858787",
-								"comment": "kernel-azure-extra-5.14.21-150500.33.48.1 is installed"
+								"test_ref": "oval:org.opensuse.security:tst:2009860711",
+								"comment": "kernel-azure-extra-5.14.21-150500.33.51.1 is installed"
 							},
 							{
 								"test_ref": "oval:org.opensuse.security:tst:2009623286",
@@ -155,8 +190,8 @@
 						"operator": "AND",
 						"criterions": [
 							{
-								"test_ref": "oval:org.opensuse.security:tst:2009858788",
-								"comment": "kernel-azure-livepatch-devel-5.14.21-150500.33.48.1 is installed"
+								"test_ref": "oval:org.opensuse.security:tst:2009860712",
+								"comment": "kernel-azure-livepatch-devel-5.14.21-150500.33.51.1 is installed"
 							},
 							{
 								"test_ref": "oval:org.opensuse.security:tst:2009623287",
@@ -168,8 +203,8 @@
 						"operator": "AND",
 						"criterions": [
 							{
-								"test_ref": "oval:org.opensuse.security:tst:2009858789",
-								"comment": "kernel-azure-optional-5.14.21-150500.33.48.1 is installed"
+								"test_ref": "oval:org.opensuse.security:tst:2009860713",
+								"comment": "kernel-azure-optional-5.14.21-150500.33.51.1 is installed"
 							},
 							{
 								"test_ref": "oval:org.opensuse.security:tst:2009623427",
@@ -181,8 +216,8 @@
 						"operator": "AND",
 						"criterions": [
 							{
-								"test_ref": "oval:org.opensuse.security:tst:2009858790",
-								"comment": "kernel-azure-vdso-5.14.21-150500.33.48.1 is installed"
+								"test_ref": "oval:org.opensuse.security:tst:2009860714",
+								"comment": "kernel-azure-vdso-5.14.21-150500.33.51.1 is installed"
 							},
 							{
 								"test_ref": "oval:org.opensuse.security:tst:2009769740",
@@ -194,8 +229,8 @@
 						"operator": "AND",
 						"criterions": [
 							{
-								"test_ref": "oval:org.opensuse.security:tst:2009858791",
-								"comment": "kernel-devel-azure-5.14.21-150500.33.48.1 is installed"
+								"test_ref": "oval:org.opensuse.security:tst:2009860715",
+								"comment": "kernel-devel-azure-5.14.21-150500.33.51.1 is installed"
 							},
 							{
 								"test_ref": "oval:org.opensuse.security:tst:2009623293",
@@ -207,8 +242,8 @@
 						"operator": "AND",
 						"criterions": [
 							{
-								"test_ref": "oval:org.opensuse.security:tst:2009858792",
-								"comment": "kernel-source-azure-5.14.21-150500.33.48.1 is installed"
+								"test_ref": "oval:org.opensuse.security:tst:2009860716",
+								"comment": "kernel-source-azure-5.14.21-150500.33.51.1 is installed"
 							},
 							{
 								"test_ref": "oval:org.opensuse.security:tst:2009623300",
@@ -220,8 +255,8 @@
 						"operator": "AND",
 						"criterions": [
 							{
-								"test_ref": "oval:org.opensuse.security:tst:2009858793",
-								"comment": "kernel-syms-azure-5.14.21-150500.33.48.1 is installed"
+								"test_ref": "oval:org.opensuse.security:tst:2009860717",
+								"comment": "kernel-syms-azure-5.14.21-150500.33.51.1 is installed"
 							},
 							{
 								"test_ref": "oval:org.opensuse.security:tst:2009623301",
@@ -233,8 +268,8 @@
 						"operator": "AND",
 						"criterions": [
 							{
-								"test_ref": "oval:org.opensuse.security:tst:2009858794",
-								"comment": "kselftests-kmp-azure-5.14.21-150500.33.48.1 is installed"
+								"test_ref": "oval:org.opensuse.security:tst:2009860718",
+								"comment": "kselftests-kmp-azure-5.14.21-150500.33.51.1 is installed"
 							},
 							{
 								"test_ref": "oval:org.opensuse.security:tst:2009623305",
@@ -246,8 +281,8 @@
 						"operator": "AND",
 						"criterions": [
 							{
-								"test_ref": "oval:org.opensuse.security:tst:2009858795",
-								"comment": "ocfs2-kmp-azure-5.14.21-150500.33.48.1 is installed"
+								"test_ref": "oval:org.opensuse.security:tst:2009860719",
+								"comment": "ocfs2-kmp-azure-5.14.21-150500.33.51.1 is installed"
 							},
 							{
 								"test_ref": "oval:org.opensuse.security:tst:2009623306",
@@ -259,8 +294,8 @@
 						"operator": "AND",
 						"criterions": [
 							{
-								"test_ref": "oval:org.opensuse.security:tst:2009858796",
-								"comment": "reiserfs-kmp-azure-5.14.21-150500.33.48.1 is installed"
+								"test_ref": "oval:org.opensuse.security:tst:2009860720",
+								"comment": "reiserfs-kmp-azure-5.14.21-150500.33.51.1 is installed"
 							},
 							{
 								"test_ref": "oval:org.opensuse.security:tst:2009623308",
