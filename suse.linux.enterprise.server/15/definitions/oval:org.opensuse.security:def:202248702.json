@@ -7,13 +7,19 @@
 		"affected": {
 			"family": "unix",
 			"platform": [
+				"SUSE Linux Enterprise Desktop 15 SP5",
 				"SUSE Linux Enterprise High Performance Computing 15 SP5",
 				"SUSE Linux Enterprise Live Patching 15 SP3",
+				"SUSE Linux Enterprise Live Patching 15 SP5",
+				"SUSE Linux Enterprise Module for Basesystem 15 SP5",
+				"SUSE Linux Enterprise Module for Development Tools 15 SP5",
+				"SUSE Linux Enterprise Module for Legacy 15 SP5",
 				"SUSE Linux Enterprise Module for Public Cloud 15 SP5",
 				"SUSE Linux Enterprise Server 15 SP3-LTSS",
 				"SUSE Linux Enterprise Server 15 SP5",
 				"SUSE Linux Enterprise Server for SAP Applications 15 SP3",
-				"SUSE Linux Enterprise Server for SAP Applications 15 SP5"
+				"SUSE Linux Enterprise Server for SAP Applications 15 SP5",
+				"SUSE Linux Enterprise Workstation Extension 15 SP5"
 			]
 		},
 		"reference": [
@@ -46,6 +52,11 @@
 				"ref_id": "SUSE-SU-2024:1645-1",
 				"ref_url": "https://lists.suse.com/pipermail/sle-updates/2024-May/035262.html",
 				"source": "SUSE-SU"
+			},
+			{
+				"ref_id": "SUSE-SU-2024:1659-1",
+				"ref_url": "https://lists.suse.com/pipermail/sle-updates/2024-May/035281.html",
+				"source": "SUSE-SU"
 			}
 		],
 		"description": "\n    In the Linux kernel, the following vulnerability has been resolved:\n\nALSA: emu10k1: Fix out of bounds access in snd_emu10k1_pcm_channel_alloc()\n\nThe voice allocator sometimes begins allocating from near the end of the\narray and then wraps around, however snd_emu10k1_pcm_channel_alloc()\naccesses the newly allocated voices as if it never wrapped around.\n\nThis results in out of bounds access if the first voice has a high enough\nindex so that first_voice + requested_voice_count > NUM_G (64).\nThe more voices are requested, the more likely it is for this to occur.\n\nThis was initially discovered using PipeWire, however it can be reproduced\nby calling aplay multiple times with 16 channels:\naplay -r 48000 -D plughw:CARD=Live,DEV=3 -c 16 /dev/zero\n\nUBSAN: array-index-out-of-bounds in sound/pci/emu10k1/emupcm.c:127:40\nindex 65 is out of range for type 'snd_emu10k1_voice [64]'\nCPU: 1 PID: 31977 Comm: aplay Tainted: G        W IOE      6.0.0-rc2-emu10k1+ #7\nHardware name: ASUSTEK COMPUTER INC P5W DH Deluxe/P5W DH Deluxe, BIOS 3002    07/22/2010\nCall Trace:\n<TASK>\ndump_stack_lvl+0x49/0x63\ndump_stack+0x10/0x16\nubsan_epilogue+0x9/0x3f\n__ubsan_handle_out_of_bounds.cold+0x44/0x49\nsnd_emu10k1_playback_hw_params+0x3bc/0x420 [snd_emu10k1]\nsnd_pcm_hw_params+0x29f/0x600 [snd_pcm]\nsnd_pcm_common_ioctl+0x188/0x1410 [snd_pcm]\n? exit_to_user_mode_prepare+0x35/0x170\n? do_syscall_64+0x69/0x90\n? syscall_exit_to_user_mode+0x26/0x50\n? do_syscall_64+0x69/0x90\n? exit_to_user_mode_prepare+0x35/0x170\nsnd_pcm_ioctl+0x27/0x40 [snd_pcm]\n__x64_sys_ioctl+0x95/0xd0\ndo_syscall_64+0x5c/0x90\n? do_syscall_64+0x69/0x90\n? do_syscall_64+0x69/0x90\nentry_SYSCALL_64_after_hwframe+0x63/0xcd\n    ",
@@ -74,13 +85,19 @@
 				"date": "2024-05-15"
 			},
 			"updated": {
-				"date": "2024-05-15"
+				"date": "2024-05-16"
 			},
 			"affected_cpe_list": {
 				"cpe": [
+					"cpe:/o:suse:sle-module-basesystem:15:sp5",
+					"cpe:/o:suse:sle-module-development-tools:15:sp5",
+					"cpe:/o:suse:sle-module-legacy:15:sp5",
 					"cpe:/o:suse:sle-module-live-patching:15:sp3",
+					"cpe:/o:suse:sle-module-live-patching:15:sp5",
 					"cpe:/o:suse:sle-module-public-cloud:15:sp5",
+					"cpe:/o:suse:sle-we:15:sp5",
 					"cpe:/o:suse:sle_hpc:15:sp5",
+					"cpe:/o:suse:sled:15:sp5",
 					"cpe:/o:suse:sles-ltss:15:sp3",
 					"cpe:/o:suse:sles:15:sp5",
 					"cpe:/o:suse:sles_sap:15:sp3",
@@ -92,6 +109,70 @@
 	"criteria": {
 		"operator": "OR",
 		"criterias": [
+			{
+				"operator": "AND",
+				"criterias": [
+					{
+						"operator": "OR",
+						"criterions": [
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009759899",
+								"comment": "SUSE Linux Enterprise High Performance Computing 15 SP5 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009760608",
+								"comment": "SUSE Linux Enterprise Module for Legacy 15 SP5 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009759901",
+								"comment": "SUSE Linux Enterprise Server 15 SP5 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009759902",
+								"comment": "SUSE Linux Enterprise Server for SAP Applications 15 SP5 is installed"
+							}
+						]
+					}
+				],
+				"criterions": [
+					{
+						"test_ref": "oval:org.opensuse.security:tst:2009861188",
+						"comment": "reiserfs-kmp-default-5.14.21-150500.55.62.2 is installed"
+					}
+				]
+			},
+			{
+				"operator": "AND",
+				"criterias": [
+					{
+						"operator": "OR",
+						"criterions": [
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009759898",
+								"comment": "SUSE Linux Enterprise Desktop 15 SP5 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009759901",
+								"comment": "SUSE Linux Enterprise Server 15 SP5 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009759902",
+								"comment": "SUSE Linux Enterprise Server for SAP Applications 15 SP5 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009766857",
+								"comment": "SUSE Linux Enterprise Workstation Extension 15 SP5 is installed"
+							}
+						]
+					}
+				],
+				"criterions": [
+					{
+						"test_ref": "oval:org.opensuse.security:tst:2009861246",
+						"comment": "kernel-default-extra-5.14.21-150500.55.62.2 is installed"
+					}
+				]
+			},
 			{
 				"operator": "AND",
 				"criterias": [
@@ -308,6 +389,156 @@
 					{
 						"test_ref": "oval:org.opensuse.security:tst:2009669878",
 						"comment": "SUSE Linux Enterprise Server for SAP Applications 15 SP3 is installed"
+					}
+				]
+			},
+			{
+				"operator": "AND",
+				"criterias": [
+					{
+						"operator": "OR",
+						"criterions": [
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009759898",
+								"comment": "SUSE Linux Enterprise Desktop 15 SP5 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009759899",
+								"comment": "SUSE Linux Enterprise High Performance Computing 15 SP5 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009759900",
+								"comment": "SUSE Linux Enterprise Module for Basesystem 15 SP5 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009759901",
+								"comment": "SUSE Linux Enterprise Server 15 SP5 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009759902",
+								"comment": "SUSE Linux Enterprise Server for SAP Applications 15 SP5 is installed"
+							}
+						]
+					},
+					{
+						"operator": "OR",
+						"criterions": [
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009861151",
+								"comment": "kernel-64kb-5.14.21-150500.55.62.2 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009861152",
+								"comment": "kernel-64kb-devel-5.14.21-150500.55.62.2 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009861160",
+								"comment": "kernel-default-5.14.21-150500.55.62.2 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009861161",
+								"comment": "kernel-default-base-5.14.21-150500.55.62.2.150500.6.27.2 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009861163",
+								"comment": "kernel-default-devel-5.14.21-150500.55.62.2 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009861169",
+								"comment": "kernel-devel-5.14.21-150500.55.62.2 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009861176",
+								"comment": "kernel-macros-5.14.21-150500.55.62.2 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009861182",
+								"comment": "kernel-zfcpdump-5.14.21-150500.55.62.2 is installed"
+							}
+						]
+					}
+				]
+			},
+			{
+				"operator": "AND",
+				"criterias": [
+					{
+						"operator": "OR",
+						"criterions": [
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009759898",
+								"comment": "SUSE Linux Enterprise Desktop 15 SP5 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009759899",
+								"comment": "SUSE Linux Enterprise High Performance Computing 15 SP5 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009760583",
+								"comment": "SUSE Linux Enterprise Module for Development Tools 15 SP5 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009759901",
+								"comment": "SUSE Linux Enterprise Server 15 SP5 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009759902",
+								"comment": "SUSE Linux Enterprise Server for SAP Applications 15 SP5 is installed"
+							}
+						]
+					},
+					{
+						"operator": "OR",
+						"criterions": [
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009861170",
+								"comment": "kernel-docs-5.14.21-150500.55.62.2 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009861177",
+								"comment": "kernel-obs-build-5.14.21-150500.55.62.2 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009861179",
+								"comment": "kernel-source-5.14.21-150500.55.62.2 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009861181",
+								"comment": "kernel-syms-5.14.21-150500.55.62.1 is installed"
+							}
+						]
+					}
+				]
+			},
+			{
+				"operator": "AND",
+				"criterias": [
+					{
+						"operator": "OR",
+						"criterions": [
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009861242",
+								"comment": "kernel-default-livepatch-5.14.21-150500.55.62.2 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009861243",
+								"comment": "kernel-default-livepatch-devel-5.14.21-150500.55.62.2 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009861245",
+								"comment": "kernel-livepatch-5_14_21-150500_13_52-rt-1-150500.11.5.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009861244",
+								"comment": "kernel-livepatch-5_14_21-150500_55_62-default-1-150500.11.3.2 is installed"
+							}
+						]
+					}
+				],
+				"criterions": [
+					{
+						"test_ref": "oval:org.opensuse.security:tst:2009764853",
+						"comment": "SUSE Linux Enterprise Live Patching 15 SP5 is installed"
 					}
 				]
 			}

@@ -1,0 +1,777 @@
+{
+	"id": "oval:org.opensuse.security:def:202424576",
+	"version": "1",
+	"class": "vulnerability",
+	"metadata": {
+		"title": "CVE-2024-24576",
+		"affected": {
+			"family": "unix",
+			"platform": [
+				"SUSE Linux Enterprise Desktop 15 SP5",
+				"SUSE Linux Enterprise High Performance Computing 15 SP5",
+				"SUSE Linux Enterprise Module for Development Tools 15 SP5",
+				"SUSE Linux Enterprise Server 15 SP1-LTSS",
+				"SUSE Linux Enterprise Server 15 SP2-LTSS",
+				"SUSE Linux Enterprise Server 15 SP3-LTSS",
+				"SUSE Linux Enterprise Server 15 SP4-LTSS",
+				"SUSE Linux Enterprise Server 15 SP5",
+				"SUSE Linux Enterprise Server 15-LTSS",
+				"SUSE Linux Enterprise Server for SAP Applications 15 SP2",
+				"SUSE Linux Enterprise Server for SAP Applications 15 SP3",
+				"SUSE Linux Enterprise Server for SAP Applications 15 SP4",
+				"SUSE Linux Enterprise Server for SAP Applications 15 SP5"
+			]
+		},
+		"reference": [
+			{
+				"ref_id": "Mitre CVE-2024-24576",
+				"ref_url": "https://cve.mitre.org/cgi-bin/cvename.cgi?name=CVE-2024-24576",
+				"source": "CVE"
+			},
+			{
+				"ref_id": "SUSE CVE-2024-24576",
+				"ref_url": "https://www.suse.com/security/cve/CVE-2024-24576",
+				"source": "SUSE CVE"
+			}
+		],
+		"description": "\n    Rust is a programming language. The Rust Security Response WG was notified that the Rust standard library prior to version 1.77.2 did not properly escape arguments when invoking batch files (with the `bat` and `cmd` extensions) on Windows using the `Command`. An attacker able to control the arguments passed to the spawned process could execute arbitrary shell commands by bypassing the escaping. The severity of this vulnerability is critical for those who invoke batch files on Windows with untrusted arguments. No other platform or use is affected.\n\nThe `Command::arg` and `Command::args` APIs state in their documentation that the arguments will be passed to the spawned process as-is, regardless of the content of the arguments, and will not be evaluated by a shell. This means it should be safe to pass untrusted input as an argument.\n\nOn Windows, the implementation of this is more complex than other platforms, because the Windows API only provides a single string containing all the arguments to the spawned process, and it's up to the spawned process to split them. Most programs use the standard C run-time argv, which in practice results in a mostly consistent way arguments are splitted.\n\nOne exception though is `cmd.exe` (used among other things to execute batch files), which has its own argument splitting logic. That forces the standard library to implement custom escaping for arguments passed to batch files. Unfortunately it was reported that our escaping logic was not thorough enough, and it was possible to pass malicious arguments that would result in arbitrary shell execution.\n\nDue to the complexity of `cmd.exe`, we didn't identify a solution that would correctly escape arguments in all cases. To maintain our API guarantees, we improved the robustness of the escaping code, and changed the `Command` API to return an `InvalidInput` error when it cannot safely escape an argument. This error will be emitted when spawning the process.\n\nThe fix is included in Rust 1.77.2. Note that the new escaping logic for batch files errs on the conservative side, and could reject valid arguments. Those who implement the escaping themselves or only handle trusted inputs on Windows can also use the `CommandExt::raw_arg` method to bypass the standard library's escaping logic. \n    ",
+		"advisory": {
+			"from": "security@suse.de",
+			"severity": "Not set",
+			"cve": [
+				{
+					"text": "CVE-2024-24576 at SUSE",
+					"href": "https://www.suse.com/security/cve/CVE-2024-24576/"
+				},
+				{
+					"text": "CVE-2024-24576 at NVD",
+					"href": "https://nvd.nist.gov/vuln/detail/CVE-2024-24576"
+				}
+			],
+			"issued": {
+				"date": "2024-05-16"
+			},
+			"updated": {
+				"date": "2024-05-16"
+			},
+			"affected_cpe_list": {
+				"cpe": [
+					"cpe:/o:suse:sle-module-development-tools:15:sp5",
+					"cpe:/o:suse:sle_hpc:15:sp5",
+					"cpe:/o:suse:sled:15:sp5",
+					"cpe:/o:suse:sles-ltss:15",
+					"cpe:/o:suse:sles-ltss:15:sp1",
+					"cpe:/o:suse:sles-ltss:15:sp2",
+					"cpe:/o:suse:sles-ltss:15:sp3",
+					"cpe:/o:suse:sles-ltss:15:sp4",
+					"cpe:/o:suse:sles:15:sp5",
+					"cpe:/o:suse:sles_sap:15:sp2",
+					"cpe:/o:suse:sles_sap:15:sp3",
+					"cpe:/o:suse:sles_sap:15:sp4",
+					"cpe:/o:suse:sles_sap:15:sp5"
+				]
+			}
+		}
+	},
+	"criteria": {
+		"operator": "OR",
+		"criterias": [
+			{
+				"operator": "AND",
+				"criterias": [
+					{
+						"operator": "OR",
+						"criterions": [
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009340805",
+								"comment": "cargo is not affected"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009340806",
+								"comment": "clippy is not affected"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009340807",
+								"comment": "rls is not affected"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009340808",
+								"comment": "rust is not affected"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009340809",
+								"comment": "rust-analysis is not affected"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009340810",
+								"comment": "rust-gdb is not affected"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009340811",
+								"comment": "rust-src is not affected"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009340812",
+								"comment": "rust-std is not affected"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009340813",
+								"comment": "rust-std-static is not affected"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009340814",
+								"comment": "rustfmt is not affected"
+							}
+						]
+					}
+				],
+				"criterions": [
+					{
+						"test_ref": "oval:org.opensuse.security:tst:2009302033",
+						"comment": "SUSE Linux Enterprise Server 15-LTSS is installed"
+					}
+				]
+			},
+			{
+				"operator": "AND",
+				"criterias": [
+					{
+						"operator": "OR",
+						"criterions": [
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009341508",
+								"comment": "SUSE Linux Enterprise Server 15 SP1-LTSS is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009660213",
+								"comment": "SUSE Linux Enterprise Server 15 SP2-LTSS is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009659637",
+								"comment": "SUSE Linux Enterprise Server for SAP Applications 15 SP2 is installed"
+							}
+						]
+					},
+					{
+						"operator": "OR",
+						"criterions": [
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009340805",
+								"comment": "cargo is not affected"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009340806",
+								"comment": "clippy is not affected"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009340807",
+								"comment": "rls is not affected"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009340808",
+								"comment": "rust is not affected"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009340809",
+								"comment": "rust-analysis is not affected"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009340811",
+								"comment": "rust-src is not affected"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009340813",
+								"comment": "rust-std-static is not affected"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009340814",
+								"comment": "rustfmt is not affected"
+							}
+						]
+					}
+				]
+			},
+			{
+				"operator": "AND",
+				"criterias": [
+					{
+						"operator": "OR",
+						"criterions": [
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009729178",
+								"comment": "SUSE Linux Enterprise Server 15 SP3-LTSS is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009669878",
+								"comment": "SUSE Linux Enterprise Server for SAP Applications 15 SP3 is installed"
+							}
+						]
+					},
+					{
+						"operator": "OR",
+						"criterions": [
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009340805",
+								"comment": "cargo is not affected"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009340807",
+								"comment": "rls is not affected"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009340808",
+								"comment": "rust is not affected"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009340810",
+								"comment": "rust-gdb is not affected"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009661925",
+								"comment": "cargo1.43 is not affected"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009661926",
+								"comment": "cargo1.43-doc is not affected"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009661927",
+								"comment": "rls1.43 is not affected"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009661928",
+								"comment": "rust1.43 is not affected"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009661929",
+								"comment": "rust1.43-analysis is not affected"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009661930",
+								"comment": "rust1.43-doc is not affected"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009661931",
+								"comment": "rust1.43-gdb is not affected"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009661932",
+								"comment": "rust1.43-src is not affected"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009654612",
+								"comment": "cargo1.53 is not affected"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009654613",
+								"comment": "cargo1.53-doc is not affected"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009654614",
+								"comment": "rls1.53 is not affected"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009654615",
+								"comment": "rust1.53 is not affected"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009654616",
+								"comment": "rust1.53-analysis is not affected"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009654617",
+								"comment": "rust1.53-doc is not affected"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009654618",
+								"comment": "rust1.53-gdb is not affected"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009654619",
+								"comment": "rust1.53-src is not affected"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009661903",
+								"comment": "cargo1.54 is not affected"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009661904",
+								"comment": "cargo1.54-doc is not affected"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009661905",
+								"comment": "rls1.54 is not affected"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009661906",
+								"comment": "rust1.54 is not affected"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009661907",
+								"comment": "rust1.54-analysis is not affected"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009661908",
+								"comment": "rust1.54-doc is not affected"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009661909",
+								"comment": "rust1.54-gdb is not affected"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009661910",
+								"comment": "rust1.54-src is not affected"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009661911",
+								"comment": "cargo1.55 is not affected"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009661912",
+								"comment": "rust1.55 is not affected"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009661933",
+								"comment": "cargo1.56 is not affected"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009661934",
+								"comment": "rust1.56 is not affected"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009664356",
+								"comment": "cargo1.57 is not affected"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009664357",
+								"comment": "rust1.57 is not affected"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009674280",
+								"comment": "cargo1.58 is not affected"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009674281",
+								"comment": "rust1.58 is not affected"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009674282",
+								"comment": "cargo1.59 is not affected"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009674283",
+								"comment": "rust1.59 is not affected"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009704108",
+								"comment": "cargo1.60 is not affected"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009704109",
+								"comment": "rust1.60 is not affected"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009704110",
+								"comment": "cargo1.61 is not affected"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009704111",
+								"comment": "rust1.61 is not affected"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009705640",
+								"comment": "cargo1.62 is not affected"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009705641",
+								"comment": "rust1.62 is not affected"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009715809",
+								"comment": "cargo1.63 is not affected"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009715810",
+								"comment": "rust1.63 is not affected"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009861210",
+								"comment": "cargo1.64 is not affected"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009861211",
+								"comment": "rust1.64 is not affected"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009861212",
+								"comment": "cargo1.65 is not affected"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009861213",
+								"comment": "rust1.65 is not affected"
+							}
+						]
+					}
+				]
+			},
+			{
+				"operator": "AND",
+				"criterias": [
+					{
+						"operator": "OR",
+						"criterions": [
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009816749",
+								"comment": "SUSE Linux Enterprise Server 15 SP4-LTSS is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009669928",
+								"comment": "SUSE Linux Enterprise Server for SAP Applications 15 SP4 is installed"
+							}
+						]
+					},
+					{
+						"operator": "OR",
+						"criterions": [
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009340805",
+								"comment": "cargo is not affected"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009340808",
+								"comment": "rust is not affected"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009340809",
+								"comment": "rust-analysis is not affected"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009661925",
+								"comment": "cargo1.43 is not affected"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009661926",
+								"comment": "cargo1.43-doc is not affected"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009661927",
+								"comment": "rls1.43 is not affected"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009661928",
+								"comment": "rust1.43 is not affected"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009661929",
+								"comment": "rust1.43-analysis is not affected"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009661930",
+								"comment": "rust1.43-doc is not affected"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009661931",
+								"comment": "rust1.43-gdb is not affected"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009661932",
+								"comment": "rust1.43-src is not affected"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009674280",
+								"comment": "cargo1.58 is not affected"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009674281",
+								"comment": "rust1.58 is not affected"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009674282",
+								"comment": "cargo1.59 is not affected"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009674283",
+								"comment": "rust1.59 is not affected"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009704108",
+								"comment": "cargo1.60 is not affected"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009704109",
+								"comment": "rust1.60 is not affected"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009704110",
+								"comment": "cargo1.61 is not affected"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009704111",
+								"comment": "rust1.61 is not affected"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009705640",
+								"comment": "cargo1.62 is not affected"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009705641",
+								"comment": "rust1.62 is not affected"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009715809",
+								"comment": "cargo1.63 is not affected"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009715810",
+								"comment": "rust1.63 is not affected"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009861210",
+								"comment": "cargo1.64 is not affected"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009861211",
+								"comment": "rust1.64 is not affected"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009861212",
+								"comment": "cargo1.65 is not affected"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009861213",
+								"comment": "rust1.65 is not affected"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009861224",
+								"comment": "cargo1.66 is not affected"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009861225",
+								"comment": "rust1.66 is not affected"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009861226",
+								"comment": "cargo1.67 is not affected"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009861227",
+								"comment": "rust1.67 is not affected"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009861228",
+								"comment": "cargo1.68 is not affected"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009861229",
+								"comment": "rust1.68 is not affected"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009861230",
+								"comment": "cargo1.69 is not affected"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009861231",
+								"comment": "rust1.69 is not affected"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009861232",
+								"comment": "cargo1.70 is not affected"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009861233",
+								"comment": "rust1.70 is not affected"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009861234",
+								"comment": "cargo1.71 is not affected"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009861235",
+								"comment": "rust1.71 is not affected"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009861236",
+								"comment": "cargo1.72 is not affected"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009861237",
+								"comment": "rust1.72 is not affected"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009861238",
+								"comment": "cargo1.73 is not affected"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009861239",
+								"comment": "rust1.73 is not affected"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009861240",
+								"comment": "cargo1.74 is not affected"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009861241",
+								"comment": "rust1.74 is not affected"
+							}
+						]
+					}
+				]
+			},
+			{
+				"operator": "AND",
+				"criterias": [
+					{
+						"operator": "OR",
+						"criterions": [
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009759898",
+								"comment": "SUSE Linux Enterprise Desktop 15 SP5 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009759899",
+								"comment": "SUSE Linux Enterprise High Performance Computing 15 SP5 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009760583",
+								"comment": "SUSE Linux Enterprise Module for Development Tools 15 SP5 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009759901",
+								"comment": "SUSE Linux Enterprise Server 15 SP5 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009759902",
+								"comment": "SUSE Linux Enterprise Server for SAP Applications 15 SP5 is installed"
+							}
+						]
+					},
+					{
+						"operator": "OR",
+						"criterions": [
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009340805",
+								"comment": "cargo is not affected"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009340808",
+								"comment": "rust is not affected"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009661925",
+								"comment": "cargo1.43 is not affected"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009661926",
+								"comment": "cargo1.43-doc is not affected"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009661927",
+								"comment": "rls1.43 is not affected"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009661928",
+								"comment": "rust1.43 is not affected"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009661929",
+								"comment": "rust1.43-analysis is not affected"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009661930",
+								"comment": "rust1.43-doc is not affected"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009661931",
+								"comment": "rust1.43-gdb is not affected"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009661932",
+								"comment": "rust1.43-src is not affected"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009861228",
+								"comment": "cargo1.68 is not affected"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009861229",
+								"comment": "rust1.68 is not affected"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009861230",
+								"comment": "cargo1.69 is not affected"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009861231",
+								"comment": "rust1.69 is not affected"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009861232",
+								"comment": "cargo1.70 is not affected"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009861233",
+								"comment": "rust1.70 is not affected"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009861234",
+								"comment": "cargo1.71 is not affected"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009861235",
+								"comment": "rust1.71 is not affected"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009861236",
+								"comment": "cargo1.72 is not affected"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009861237",
+								"comment": "rust1.72 is not affected"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009861238",
+								"comment": "cargo1.73 is not affected"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009861239",
+								"comment": "rust1.73 is not affected"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009861240",
+								"comment": "cargo1.74 is not affected"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009861241",
+								"comment": "rust1.74 is not affected"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009861247",
+								"comment": "cargo1.75 is not affected"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009861248",
+								"comment": "rust1.75 is not affected"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009861249",
+								"comment": "cargo1.76 is not affected"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009861250",
+								"comment": "rust1.76 is not affected"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009861251",
+								"comment": "cargo1.77 is not affected"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009861252",
+								"comment": "rust1.77 is not affected"
+							}
+						]
+					}
+				]
+			}
+		]
+	}
+}
