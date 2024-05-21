@@ -1,0 +1,117 @@
+{
+	"id": "oval:org.opensuse.security:def:202435871",
+	"version": "1",
+	"class": "vulnerability",
+	"metadata": {
+		"title": "CVE-2024-35871",
+		"affected": {
+			"family": "unix",
+			"platform": [
+				"SUSE Linux Enterprise Server 15 SP1-LTSS",
+				"SUSE Linux Enterprise Server 15-LTSS"
+			]
+		},
+		"reference": [
+			{
+				"ref_id": "Mitre CVE-2024-35871",
+				"ref_url": "https://cve.mitre.org/cgi-bin/cvename.cgi?name=CVE-2024-35871",
+				"source": "CVE"
+			},
+			{
+				"ref_id": "SUSE CVE-2024-35871",
+				"ref_url": "https://www.suse.com/security/cve/CVE-2024-35871",
+				"source": "SUSE CVE"
+			}
+		],
+		"description": "\n    In the Linux kernel, the following vulnerability has been resolved:\n\nriscv: process: Fix kernel gp leakage\n\nchildregs represents the registers which are active for the new thread\nin user context. For a kernel thread, childregs->gp is never used since\nthe kernel gp is not touched by switch_to. For a user mode helper, the\ngp value can be observed in user space after execve or possibly by other\nmeans.\n\n[From the email thread]\n\nThe /* Kernel thread */ comment is somewhat inaccurate in that it is also used\nfor user_mode_helper threads, which exec a user process, e.g. /sbin/init or\nwhen /proc/sys/kernel/core_pattern is a pipe. Such threads do not have\nPF_KTHREAD set and are valid targets for ptrace etc. even before they exec.\n\nchildregs is the *user* context during syscall execution and it is observable\nfrom userspace in at least five ways:\n\n1. kernel_execve does not currently clear integer registers, so the starting\n   register state for PID 1 and other user processes started by the kernel has\n   sp = user stack, gp = kernel __global_pointer$, all other integer registers\n   zeroed by the memset in the patch comment.\n\n   This is a bug in its own right, but I'm unwilling to bet that it is the only\n   way to exploit the issue addressed by this patch.\n\n2. ptrace(PTRACE_GETREGSET): you can PTRACE_ATTACH to a user_mode_helper thread\n   before it execs, but ptrace requires SIGSTOP to be delivered which can only\n   happen at user/kernel boundaries.\n\n3. /proc/*/task/*/syscall: this is perfectly happy to read pt_regs for\n   user_mode_helpers before the exec completes, but gp is not one of the\n   registers it returns.\n\n4. PERF_SAMPLE_REGS_USER: LOCKDOWN_PERF normally prevents access to kernel\n   addresses via PERF_SAMPLE_REGS_INTR, but due to this bug kernel addresses\n   are also exposed via PERF_SAMPLE_REGS_USER which is permitted under\n   LOCKDOWN_PERF. I have not attempted to write exploit code.\n\n5. Much of the tracing infrastructure allows access to user registers. I have\n   not attempted to determine which forms of tracing allow access to user\n   registers without already allowing access to kernel registers.\n    ",
+		"advisory": {
+			"from": "security@suse.de",
+			"severity": "Moderate",
+			"cve": [
+				{
+					"text": "CVE-2024-35871 at SUSE",
+					"href": "https://www.suse.com/security/cve/CVE-2024-35871/",
+					"impact": "medium",
+					"cvss3": "5.5/CVSS:3.1/AV:L/AC:L/PR:L/UI:N/S:U/C:N/I:N/A:H"
+				},
+				{
+					"text": "CVE-2024-35871 at NVD",
+					"href": "https://nvd.nist.gov/vuln/detail/CVE-2024-35871"
+				}
+			],
+			"bugzilla": [
+				{
+					"text": "SUSE bug 1224528",
+					"href": "https://bugzilla.suse.com/1224528"
+				}
+			],
+			"issued": {
+				"date": "2024-05-21"
+			},
+			"updated": {
+				"date": "2024-05-21"
+			},
+			"affected_cpe_list": {
+				"cpe": [
+					"cpe:/o:suse:sles-ltss:15",
+					"cpe:/o:suse:sles-ltss:15:sp1"
+				]
+			}
+		}
+	},
+	"criteria": {
+		"operator": "AND",
+		"criterias": [
+			{
+				"operator": "OR",
+				"criterions": [
+					{
+						"test_ref": "oval:org.opensuse.security:tst:2009341508",
+						"comment": "SUSE Linux Enterprise Server 15 SP1-LTSS is installed"
+					},
+					{
+						"test_ref": "oval:org.opensuse.security:tst:2009302033",
+						"comment": "SUSE Linux Enterprise Server 15-LTSS is installed"
+					}
+				]
+			},
+			{
+				"operator": "OR",
+				"criterions": [
+					{
+						"test_ref": "oval:org.opensuse.security:tst:2009334017",
+						"comment": "kernel-default is not affected"
+					},
+					{
+						"test_ref": "oval:org.opensuse.security:tst:2009335425",
+						"comment": "kernel-default-base is not affected"
+					},
+					{
+						"test_ref": "oval:org.opensuse.security:tst:2009335423",
+						"comment": "kernel-default-devel is not affected"
+					},
+					{
+						"test_ref": "oval:org.opensuse.security:tst:2009335426",
+						"comment": "kernel-default-man is not affected"
+					},
+					{
+						"test_ref": "oval:org.opensuse.security:tst:2009338037",
+						"comment": "reiserfs-kmp-default is not affected"
+					},
+					{
+						"test_ref": "oval:org.opensuse.security:tst:2009334791",
+						"comment": "kernel-devel is not affected"
+					},
+					{
+						"test_ref": "oval:org.opensuse.security:tst:2009334792",
+						"comment": "kernel-macros is not affected"
+					},
+					{
+						"test_ref": "oval:org.opensuse.security:tst:2009333928",
+						"comment": "kernel-source is not affected"
+					}
+				]
+			}
+		]
+	}
+}

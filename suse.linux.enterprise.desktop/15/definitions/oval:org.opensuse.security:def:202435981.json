@@ -1,0 +1,169 @@
+{
+	"id": "oval:org.opensuse.security:def:202435981",
+	"version": "1",
+	"class": "vulnerability",
+	"metadata": {
+		"title": "CVE-2024-35981",
+		"affected": {
+			"family": "unix",
+			"platform": [
+				"SUSE Linux Enterprise Desktop 15 SP5",
+				"SUSE Linux Enterprise High Performance Computing 15 SP5",
+				"SUSE Linux Enterprise Module for Basesystem 15 SP5",
+				"SUSE Linux Enterprise Module for Development Tools 15 SP5",
+				"SUSE Linux Enterprise Server 15 SP5",
+				"SUSE Linux Enterprise Server for SAP Applications 15 SP5"
+			]
+		},
+		"reference": [
+			{
+				"ref_id": "Mitre CVE-2024-35981",
+				"ref_url": "https://cve.mitre.org/cgi-bin/cvename.cgi?name=CVE-2024-35981",
+				"source": "CVE"
+			},
+			{
+				"ref_id": "SUSE CVE-2024-35981",
+				"ref_url": "https://www.suse.com/security/cve/CVE-2024-35981",
+				"source": "SUSE CVE"
+			}
+		],
+		"description": "\n    In the Linux kernel, the following vulnerability has been resolved:\n\nvirtio_net: Do not send RSS key if it is not supported\n\nThere is a bug when setting the RSS options in virtio_net that can break\nthe whole machine, getting the kernel into an infinite loop.\n\nRunning the following command in any QEMU virtual machine with virtionet\nwill reproduce this problem:\n\n    # ethtool -X eth0  hfunc toeplitz\n\nThis is how the problem happens:\n\n1) ethtool_set_rxfh() calls virtnet_set_rxfh()\n\n2) virtnet_set_rxfh() calls virtnet_commit_rss_command()\n\n3) virtnet_commit_rss_command() populates 4 entries for the rss\nscatter-gather\n\n4) Since the command above does not have a key, then the last\nscatter-gatter entry will be zeroed, since rss_key_size == 0.\nsg_buf_size = vi->rss_key_size;\n\n5) This buffer is passed to qemu, but qemu is not happy with a buffer\nwith zero length, and do the following in virtqueue_map_desc() (QEMU\nfunction):\n\n  if (!sz) {\n      virtio_error(vdev, \"virtio: zero sized buffers are not allowed\");\n\n6) virtio_error() (also QEMU function) set the device as broken\n\n    vdev->broken = true;\n\n7) Qemu bails out, and do not repond this crazy kernel.\n\n8) The kernel is waiting for the response to come back (function\nvirtnet_send_command())\n\n9) The kernel is waiting doing the following :\n\n      while (!virtqueue_get_buf(vi->cvq, &tmp) &&\n\t     !virtqueue_is_broken(vi->cvq))\n\t      cpu_relax();\n\n10) None of the following functions above is true, thus, the kernel\nloops here forever. Keeping in mind that virtqueue_is_broken() does\nnot look at the qemu `vdev->broken`, so, it never realizes that the\nvitio is broken at QEMU side.\n\nFix it by not sending RSS commands if the feature is not available in\nthe device.\n    ",
+		"advisory": {
+			"from": "security@suse.de",
+			"severity": "Moderate",
+			"cve": [
+				{
+					"text": "CVE-2024-35981 at SUSE",
+					"href": "https://www.suse.com/security/cve/CVE-2024-35981/",
+					"impact": "medium",
+					"cvss3": "5.5/CVSS:3.1/AV:L/AC:L/PR:L/UI:N/S:U/C:N/I:N/A:H"
+				},
+				{
+					"text": "CVE-2024-35981 at NVD",
+					"href": "https://nvd.nist.gov/vuln/detail/CVE-2024-35981"
+				}
+			],
+			"bugzilla": [
+				{
+					"text": "SUSE bug 1224565",
+					"href": "https://bugzilla.suse.com/1224565"
+				}
+			],
+			"issued": {
+				"date": "2024-05-21"
+			},
+			"updated": {
+				"date": "2024-05-21"
+			},
+			"affected_cpe_list": {
+				"cpe": [
+					"cpe:/o:suse:sle-module-basesystem:15:sp5",
+					"cpe:/o:suse:sle-module-development-tools:15:sp5",
+					"cpe:/o:suse:sle_hpc:15:sp5",
+					"cpe:/o:suse:sled:15:sp5",
+					"cpe:/o:suse:sles:15:sp5",
+					"cpe:/o:suse:sles_sap:15:sp5"
+				]
+			}
+		}
+	},
+	"criteria": {
+		"operator": "OR",
+		"criterias": [
+			{
+				"operator": "AND",
+				"criterias": [
+					{
+						"operator": "OR",
+						"criterions": [
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009759898",
+								"comment": "SUSE Linux Enterprise Desktop 15 SP5 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009759899",
+								"comment": "SUSE Linux Enterprise High Performance Computing 15 SP5 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009760583",
+								"comment": "SUSE Linux Enterprise Module for Development Tools 15 SP5 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009759901",
+								"comment": "SUSE Linux Enterprise Server 15 SP5 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009759902",
+								"comment": "SUSE Linux Enterprise Server for SAP Applications 15 SP5 is installed"
+							}
+						]
+					},
+					{
+						"operator": "OR",
+						"criterions": [
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009334017",
+								"comment": "kernel-default is not affected"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009333928",
+								"comment": "kernel-source is not affected"
+							}
+						]
+					}
+				]
+			},
+			{
+				"operator": "AND",
+				"criterias": [
+					{
+						"operator": "OR",
+						"criterions": [
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009759898",
+								"comment": "SUSE Linux Enterprise Desktop 15 SP5 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009759899",
+								"comment": "SUSE Linux Enterprise High Performance Computing 15 SP5 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009759900",
+								"comment": "SUSE Linux Enterprise Module for Basesystem 15 SP5 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009759901",
+								"comment": "SUSE Linux Enterprise Server 15 SP5 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009759902",
+								"comment": "SUSE Linux Enterprise Server for SAP Applications 15 SP5 is installed"
+							}
+						]
+					},
+					{
+						"operator": "OR",
+						"criterions": [
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009334017",
+								"comment": "kernel-default is not affected"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009335423",
+								"comment": "kernel-default-devel is not affected"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009334791",
+								"comment": "kernel-devel is not affected"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009334792",
+								"comment": "kernel-macros is not affected"
+							}
+						]
+					}
+				]
+			}
+		]
+	}
+}
