@@ -7,15 +7,13 @@
 		"affected": {
 			"family": "unix",
 			"platform": [
-				"SUSE Linux Enterprise Live Patching 12 SP5",
 				"SUSE Linux Enterprise Real Time 12 SP5",
 				"SUSE Linux Enterprise Server 12 SP2-LTSS",
 				"SUSE Linux Enterprise Server 12 SP4-LTSS",
 				"SUSE Linux Enterprise Server 12 SP5",
 				"SUSE Linux Enterprise Server for SAP Applications 12 SP2",
 				"SUSE Linux Enterprise Server for SAP Applications 12 SP4",
-				"SUSE Linux Enterprise Server for SAP Applications 12 SP5",
-				"SUSE Linux Enterprise Workstation Extension 12 SP5"
+				"SUSE Linux Enterprise Server for SAP Applications 12 SP5"
 			]
 		},
 		"reference": [
@@ -58,6 +56,11 @@
 				"ref_id": "SUSE-SU-2024:1648-1",
 				"ref_url": "https://lists.suse.com/pipermail/sle-updates/2024-May/035259.html",
 				"source": "SUSE-SU"
+			},
+			{
+				"ref_id": "SUSE-SU-2024:1648-2",
+				"ref_url": "https://lists.suse.com/pipermail/sle-updates/2024-May/035319.html",
+				"source": "SUSE-SU"
 			}
 		],
 		"description": "\n    In the Linux kernel, the following vulnerability has been resolved:\n\nscsi: qla2xxx: Reserve extra IRQ vectors\n\nCommit a6dcfe08487e (\"scsi: qla2xxx: Limit interrupt vectors to number of\nCPUs\") lowers the number of allocated MSI-X vectors to the number of CPUs.\n\nThat breaks vector allocation assumptions in qla83xx_iospace_config(),\nqla24xx_enable_msix() and qla2x00_iospace_config(). Either of the functions\ncomputes maximum number of qpairs as:\n\n  ha->max_qpairs = ha->msix_count - 1 (MB interrupt) - 1 (default\n                   response queue) - 1 (ATIO, in dual or pure target mode)\n\nmax_qpairs is set to zero in case of two CPUs and initiator mode. The\nnumber is then used to allocate ha->queue_pair_map inside\nqla2x00_alloc_queues(). No allocation happens and ha->queue_pair_map is\nleft NULL but the driver thinks there are queue pairs available.\n\nqla2xxx_queuecommand() tries to find a qpair in the map and crashes:\n\n  if (ha->mqenable) {\n          uint32_t tag;\n          uint16_t hwq;\n          struct qla_qpair *qpair = NULL;\n\n          tag = blk_mq_unique_tag(cmd->request);\n          hwq = blk_mq_unique_tag_to_hwq(tag);\n          qpair = ha->queue_pair_map[hwq]; # <- HERE\n\n          if (qpair)\n                  return qla2xxx_mqueuecommand(host, cmd, qpair);\n  }\n\n  BUG: kernel NULL pointer dereference, address: 0000000000000000\n  #PF: supervisor read access in kernel mode\n  #PF: error_code(0x0000) - not-present page\n  PGD 0 P4D 0\n  Oops: 0000 [#1] SMP PTI\n  CPU: 0 PID: 72 Comm: kworker/u4:3 Tainted: G        W         5.10.0-rc1+ #25\n  Hardware name: QEMU Standard PC (Q35 + ICH9, 2009), BIOS 1.0.0-prebuilt.qemu-project.org 04/01/2014\n  Workqueue: scsi_wq_7 fc_scsi_scan_rport [scsi_transport_fc]\n  RIP: 0010:qla2xxx_queuecommand+0x16b/0x3f0 [qla2xxx]\n  Call Trace:\n   scsi_queue_rq+0x58c/0xa60\n   blk_mq_dispatch_rq_list+0x2b7/0x6f0\n   ? __sbitmap_get_word+0x2a/0x80\n   __blk_mq_sched_dispatch_requests+0xb8/0x170\n   blk_mq_sched_dispatch_requests+0x2b/0x50\n   __blk_mq_run_hw_queue+0x49/0xb0\n   __blk_mq_delay_run_hw_queue+0xfb/0x150\n   blk_mq_sched_insert_request+0xbe/0x110\n   blk_execute_rq+0x45/0x70\n   __scsi_execute+0x10e/0x250\n   scsi_probe_and_add_lun+0x228/0xda0\n   __scsi_scan_target+0xf4/0x620\n   ? __pm_runtime_resume+0x4f/0x70\n   scsi_scan_target+0x100/0x110\n   fc_scsi_scan_rport+0xa1/0xb0 [scsi_transport_fc]\n   process_one_work+0x1ea/0x3b0\n   worker_thread+0x28/0x3b0\n   ? process_one_work+0x3b0/0x3b0\n   kthread+0x112/0x130\n   ? kthread_park+0x80/0x80\n   ret_from_fork+0x22/0x30\n\nThe driver should allocate enough vectors to provide every CPU it's own HW\nqueue and still handle reserved (MB, RSP, ATIO) interrupts.\n\nThe change fixes the crash on dual core VM and prevents unbalanced QP\nallocation where nr_hw_queues is two less than the number of CPUs.\n    ",
@@ -86,12 +89,10 @@
 				"date": "2024-02-29"
 			},
 			"updated": {
-				"date": "2024-05-15"
+				"date": "2024-05-22"
 			},
 			"affected_cpe_list": {
 				"cpe": [
-					"cpe:/o:suse:sle-live-patching:12:sp5",
-					"cpe:/o:suse:sle-we:12:sp5",
 					"cpe:/o:suse:sles-ltss:12:sp2",
 					"cpe:/o:suse:sles-ltss:12:sp4",
 					"cpe:/o:suse:sles:12:sp5",
@@ -106,34 +107,6 @@
 	"criteria": {
 		"operator": "OR",
 		"criterias": [
-			{
-				"operator": "AND",
-				"criterias": [
-					{
-						"operator": "OR",
-						"criterions": [
-							{
-								"test_ref": "oval:org.opensuse.security:tst:2009258033",
-								"comment": "SUSE Linux Enterprise Server 12 SP5 is installed"
-							},
-							{
-								"test_ref": "oval:org.opensuse.security:tst:2009258806",
-								"comment": "SUSE Linux Enterprise Server for SAP Applications 12 SP5 is installed"
-							},
-							{
-								"test_ref": "oval:org.opensuse.security:tst:2009258650",
-								"comment": "SUSE Linux Enterprise Workstation Extension 12 SP5 is installed"
-							}
-						]
-					}
-				],
-				"criterions": [
-					{
-						"test_ref": "oval:org.opensuse.security:tst:2009861004",
-						"comment": "kernel-default-extra-4.12.14-122.212.1 is installed"
-					}
-				]
-			},
 			{
 				"operator": "AND",
 				"criterias": [
@@ -239,34 +212,6 @@
 						"operator": "OR",
 						"criterions": [
 							{
-								"test_ref": "oval:org.opensuse.security:tst:2009860964",
-								"comment": "kernel-default-kgraft-4.12.14-122.212.1 is installed"
-							},
-							{
-								"test_ref": "oval:org.opensuse.security:tst:2009860965",
-								"comment": "kernel-default-kgraft-devel-4.12.14-122.212.1 is installed"
-							},
-							{
-								"test_ref": "oval:org.opensuse.security:tst:2009860966",
-								"comment": "kgraft-patch-4_12_14-122_212-default-1-8.11.1 is installed"
-							}
-						]
-					}
-				],
-				"criterions": [
-					{
-						"test_ref": "oval:org.opensuse.security:tst:2009273148",
-						"comment": "SUSE Linux Enterprise Live Patching 12 SP5 is installed"
-					}
-				]
-			},
-			{
-				"operator": "AND",
-				"criterias": [
-					{
-						"operator": "OR",
-						"criterions": [
-							{
 								"test_ref": "oval:org.opensuse.security:tst:2009860967",
 								"comment": "cluster-md-kmp-rt-4.12.14-10.182.1 is installed"
 							},
@@ -331,15 +276,50 @@
 						"operator": "OR",
 						"criterions": [
 							{
-								"test_ref": "oval:org.opensuse.security:tst:2009258033",
-								"comment": "SUSE Linux Enterprise Server 12 SP5 is installed"
+								"test_ref": "oval:org.opensuse.security:tst:2009860989",
+								"comment": "kernel-azure-4.12.14-16.182.1 is installed"
 							},
 							{
-								"test_ref": "oval:org.opensuse.security:tst:2009258806",
-								"comment": "SUSE Linux Enterprise Server for SAP Applications 12 SP5 is installed"
+								"test_ref": "oval:org.opensuse.security:tst:2009860990",
+								"comment": "kernel-azure-base-4.12.14-16.182.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009860991",
+								"comment": "kernel-azure-devel-4.12.14-16.182.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009860992",
+								"comment": "kernel-devel-azure-4.12.14-16.182.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009860993",
+								"comment": "kernel-source-azure-4.12.14-16.182.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009860994",
+								"comment": "kernel-syms-azure-4.12.14-16.182.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009334017",
+								"comment": "kernel-default is not affected"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009333928",
+								"comment": "kernel-source is not affected"
 							}
 						]
-					},
+					}
+				],
+				"criterions": [
+					{
+						"test_ref": "oval:org.opensuse.security:tst:2009258806",
+						"comment": "SUSE Linux Enterprise Server for SAP Applications 12 SP5 is installed"
+					}
+				]
+			},
+			{
+				"operator": "AND",
+				"criterias": [
 					{
 						"operator": "OR",
 						"criterions": [
@@ -356,50 +336,24 @@
 								"comment": "kernel-azure-devel-4.12.14-16.182.1 is installed"
 							},
 							{
-								"test_ref": "oval:org.opensuse.security:tst:2009860995",
-								"comment": "kernel-default-4.12.14-122.212.1 is installed"
-							},
-							{
-								"test_ref": "oval:org.opensuse.security:tst:2009860996",
-								"comment": "kernel-default-base-4.12.14-122.212.1 is installed"
-							},
-							{
-								"test_ref": "oval:org.opensuse.security:tst:2009860997",
-								"comment": "kernel-default-devel-4.12.14-122.212.1 is installed"
-							},
-							{
-								"test_ref": "oval:org.opensuse.security:tst:2009860998",
-								"comment": "kernel-default-man-4.12.14-122.212.1 is installed"
-							},
-							{
-								"test_ref": "oval:org.opensuse.security:tst:2009860999",
-								"comment": "kernel-devel-4.12.14-122.212.1 is installed"
-							},
-							{
 								"test_ref": "oval:org.opensuse.security:tst:2009860992",
 								"comment": "kernel-devel-azure-4.12.14-16.182.1 is installed"
-							},
-							{
-								"test_ref": "oval:org.opensuse.security:tst:2009861000",
-								"comment": "kernel-macros-4.12.14-122.212.1 is installed"
-							},
-							{
-								"test_ref": "oval:org.opensuse.security:tst:2009861001",
-								"comment": "kernel-source-4.12.14-122.212.1 is installed"
 							},
 							{
 								"test_ref": "oval:org.opensuse.security:tst:2009860993",
 								"comment": "kernel-source-azure-4.12.14-16.182.1 is installed"
 							},
 							{
-								"test_ref": "oval:org.opensuse.security:tst:2009861002",
-								"comment": "kernel-syms-4.12.14-122.212.1 is installed"
-							},
-							{
 								"test_ref": "oval:org.opensuse.security:tst:2009860994",
 								"comment": "kernel-syms-azure-4.12.14-16.182.1 is installed"
 							}
 						]
+					}
+				],
+				"criterions": [
+					{
+						"test_ref": "oval:org.opensuse.security:tst:2009258033",
+						"comment": "SUSE Linux Enterprise Server 12 SP5 is installed"
 					}
 				]
 			}

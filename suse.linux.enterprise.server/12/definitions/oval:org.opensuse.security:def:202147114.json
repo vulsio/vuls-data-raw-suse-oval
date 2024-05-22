@@ -7,11 +7,9 @@
 		"affected": {
 			"family": "unix",
 			"platform": [
-				"SUSE Linux Enterprise Live Patching 12 SP5",
 				"SUSE Linux Enterprise Real Time 12 SP5",
 				"SUSE Linux Enterprise Server 12 SP5",
-				"SUSE Linux Enterprise Server for SAP Applications 12 SP5",
-				"SUSE Linux Enterprise Workstation Extension 12 SP5"
+				"SUSE Linux Enterprise Server for SAP Applications 12 SP5"
 			]
 		},
 		"reference": [
@@ -44,6 +42,11 @@
 				"ref_id": "SUSE-SU-2024:1648-1",
 				"ref_url": "https://lists.suse.com/pipermail/sle-updates/2024-May/035259.html",
 				"source": "SUSE-SU"
+			},
+			{
+				"ref_id": "SUSE-SU-2024:1648-2",
+				"ref_url": "https://lists.suse.com/pipermail/sle-updates/2024-May/035319.html",
+				"source": "SUSE-SU"
 			}
 		],
 		"description": "\n    In the Linux kernel, the following vulnerability has been resolved:\n\nocfs2: fix data corruption by fallocate\n\nWhen fallocate punches holes out of inode size, if original isize is in\nthe middle of last cluster, then the part from isize to the end of the\ncluster will be zeroed with buffer write, at that time isize is not yet\nupdated to match the new size, if writeback is kicked in, it will invoke\nocfs2_writepage()->block_write_full_page() where the pages out of inode\nsize will be dropped.  That will cause file corruption.  Fix this by\nzero out eof blocks when extending the inode size.\n\nRunning the following command with qemu-image 4.2.1 can get a corrupted\ncoverted image file easily.\n\n    qemu-img convert -p -t none -T none -f qcow2 $qcow_image \\\n             -O qcow2 -o compat=1.1 $qcow_image.conv\n\nThe usage of fallocate in qemu is like this, it first punches holes out\nof inode size, then extend the inode size.\n\n    fallocate(11, FALLOC_FL_KEEP_SIZE|FALLOC_FL_PUNCH_HOLE, 2276196352, 65536) = 0\n    fallocate(11, 0, 2276196352, 65536) = 0\n\nv1: https://www.spinics.net/lists/linux-fsdevel/msg193999.html\nv2: https://lore.kernel.org/linux-fsdevel/20210525093034.GB4112@quack2.suse.cz/T/\n    ",
@@ -72,12 +75,10 @@
 				"date": "2024-05-15"
 			},
 			"updated": {
-				"date": "2024-05-15"
+				"date": "2024-05-22"
 			},
 			"affected_cpe_list": {
 				"cpe": [
-					"cpe:/o:suse:sle-live-patching:12:sp5",
-					"cpe:/o:suse:sle-we:12:sp5",
 					"cpe:/o:suse:sles:12:sp5",
 					"cpe:/o:suse:sles_sap:12:sp5",
 					"cpe:/o:suse:suse-linux-enterprise-rt:12:sp5"
@@ -88,62 +89,6 @@
 	"criteria": {
 		"operator": "OR",
 		"criterias": [
-			{
-				"operator": "AND",
-				"criterias": [
-					{
-						"operator": "OR",
-						"criterions": [
-							{
-								"test_ref": "oval:org.opensuse.security:tst:2009258033",
-								"comment": "SUSE Linux Enterprise Server 12 SP5 is installed"
-							},
-							{
-								"test_ref": "oval:org.opensuse.security:tst:2009258806",
-								"comment": "SUSE Linux Enterprise Server for SAP Applications 12 SP5 is installed"
-							},
-							{
-								"test_ref": "oval:org.opensuse.security:tst:2009258650",
-								"comment": "SUSE Linux Enterprise Workstation Extension 12 SP5 is installed"
-							}
-						]
-					}
-				],
-				"criterions": [
-					{
-						"test_ref": "oval:org.opensuse.security:tst:2009861004",
-						"comment": "kernel-default-extra-4.12.14-122.212.1 is installed"
-					}
-				]
-			},
-			{
-				"operator": "AND",
-				"criterias": [
-					{
-						"operator": "OR",
-						"criterions": [
-							{
-								"test_ref": "oval:org.opensuse.security:tst:2009860964",
-								"comment": "kernel-default-kgraft-4.12.14-122.212.1 is installed"
-							},
-							{
-								"test_ref": "oval:org.opensuse.security:tst:2009860965",
-								"comment": "kernel-default-kgraft-devel-4.12.14-122.212.1 is installed"
-							},
-							{
-								"test_ref": "oval:org.opensuse.security:tst:2009860966",
-								"comment": "kgraft-patch-4_12_14-122_212-default-1-8.11.1 is installed"
-							}
-						]
-					}
-				],
-				"criterions": [
-					{
-						"test_ref": "oval:org.opensuse.security:tst:2009273148",
-						"comment": "SUSE Linux Enterprise Live Patching 12 SP5 is installed"
-					}
-				]
-			},
 			{
 				"operator": "AND",
 				"criterias": [
@@ -240,44 +185,12 @@
 								"comment": "kernel-azure-devel-4.12.14-16.182.1 is installed"
 							},
 							{
-								"test_ref": "oval:org.opensuse.security:tst:2009860995",
-								"comment": "kernel-default-4.12.14-122.212.1 is installed"
-							},
-							{
-								"test_ref": "oval:org.opensuse.security:tst:2009860996",
-								"comment": "kernel-default-base-4.12.14-122.212.1 is installed"
-							},
-							{
-								"test_ref": "oval:org.opensuse.security:tst:2009860997",
-								"comment": "kernel-default-devel-4.12.14-122.212.1 is installed"
-							},
-							{
-								"test_ref": "oval:org.opensuse.security:tst:2009860998",
-								"comment": "kernel-default-man-4.12.14-122.212.1 is installed"
-							},
-							{
-								"test_ref": "oval:org.opensuse.security:tst:2009860999",
-								"comment": "kernel-devel-4.12.14-122.212.1 is installed"
-							},
-							{
 								"test_ref": "oval:org.opensuse.security:tst:2009860992",
 								"comment": "kernel-devel-azure-4.12.14-16.182.1 is installed"
 							},
 							{
-								"test_ref": "oval:org.opensuse.security:tst:2009861000",
-								"comment": "kernel-macros-4.12.14-122.212.1 is installed"
-							},
-							{
-								"test_ref": "oval:org.opensuse.security:tst:2009861001",
-								"comment": "kernel-source-4.12.14-122.212.1 is installed"
-							},
-							{
 								"test_ref": "oval:org.opensuse.security:tst:2009860993",
 								"comment": "kernel-source-azure-4.12.14-16.182.1 is installed"
-							},
-							{
-								"test_ref": "oval:org.opensuse.security:tst:2009861002",
-								"comment": "kernel-syms-4.12.14-122.212.1 is installed"
 							},
 							{
 								"test_ref": "oval:org.opensuse.security:tst:2009860994",
