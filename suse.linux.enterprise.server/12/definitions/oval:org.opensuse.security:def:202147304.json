@@ -1,0 +1,259 @@
+{
+	"id": "oval:org.opensuse.security:def:202147304",
+	"version": "1",
+	"class": "vulnerability",
+	"metadata": {
+		"title": "CVE-2021-47304",
+		"affected": {
+			"family": "unix",
+			"platform": [
+				"SUSE Linux Enterprise Real Time 12 SP5",
+				"SUSE Linux Enterprise Server 12 SP4-LTSS",
+				"SUSE Linux Enterprise Server 12 SP5",
+				"SUSE Linux Enterprise Server for SAP Applications 12 SP4",
+				"SUSE Linux Enterprise Server for SAP Applications 12 SP5"
+			]
+		},
+		"reference": [
+			{
+				"ref_id": "Mitre CVE-2021-47304",
+				"ref_url": "https://cve.mitre.org/cgi-bin/cvename.cgi?name=CVE-2021-47304",
+				"source": "CVE"
+			},
+			{
+				"ref_id": "SUSE CVE-2021-47304",
+				"ref_url": "https://www.suse.com/security/cve/CVE-2021-47304",
+				"source": "SUSE CVE"
+			}
+		],
+		"description": "\n    In the Linux kernel, the following vulnerability has been resolved:\n\ntcp: fix tcp_init_transfer() to not reset icsk_ca_initialized\n\nThis commit fixes a bug (found by syzkaller) that could cause spurious\ndouble-initializations for congestion control modules, which could cause\nmemory leaks or other problems for congestion control modules (like CDG)\nthat allocate memory in their init functions.\n\nThe buggy scenario constructed by syzkaller was something like:\n\n(1) create a TCP socket\n(2) initiate a TFO connect via sendto()\n(3) while socket is in TCP_SYN_SENT, call setsockopt(TCP_CONGESTION),\n    which calls:\n       tcp_set_congestion_control() ->\n         tcp_reinit_congestion_control() ->\n           tcp_init_congestion_control()\n(4) receive ACK, connection is established, call tcp_init_transfer(),\n    set icsk_ca_initialized=0 (without first calling cc->release()),\n    call tcp_init_congestion_control() again.\n\nNote that in this sequence tcp_init_congestion_control() is called\ntwice without a cc->release() call in between. Thus, for CC modules\nthat allocate memory in their init() function, e.g, CDG, a memory leak\nmay occur. The syzkaller tool managed to find a reproducer that\ntriggered such a leak in CDG.\n\nThe bug was introduced when that commit 8919a9b31eb4 (\"tcp: Only init\ncongestion control if not initialized already\")\nintroduced icsk_ca_initialized and set icsk_ca_initialized to 0 in\ntcp_init_transfer(), missing the possibility for a sequence like the\none above, where a process could call setsockopt(TCP_CONGESTION) in\nstate TCP_SYN_SENT (i.e. after the connect() or TFO open sendmsg()),\nwhich would call tcp_init_congestion_control(). It did not intend to\nreset any initialization that the user had already explicitly made;\nit just missed the possibility of that particular sequence (which\nsyzkaller managed to find).\n    ",
+		"advisory": {
+			"from": "security@suse.de",
+			"severity": "Low",
+			"cve": [
+				{
+					"text": "CVE-2021-47304 at SUSE",
+					"href": "https://www.suse.com/security/cve/CVE-2021-47304/"
+				},
+				{
+					"text": "CVE-2021-47304 at NVD",
+					"href": "https://nvd.nist.gov/vuln/detail/CVE-2021-47304"
+				}
+			],
+			"bugzilla": [
+				{
+					"text": "SUSE bug 1224971",
+					"href": "https://bugzilla.suse.com/1224971"
+				}
+			],
+			"issued": {
+				"date": "2024-05-23"
+			},
+			"updated": {
+				"date": "2024-05-23"
+			},
+			"affected_cpe_list": {
+				"cpe": [
+					"cpe:/o:suse:sles-ltss:12:sp4",
+					"cpe:/o:suse:sles:12:sp5",
+					"cpe:/o:suse:sles_sap:12:sp4",
+					"cpe:/o:suse:sles_sap:12:sp5",
+					"cpe:/o:suse:suse-linux-enterprise-rt:12:sp5"
+				]
+			}
+		}
+	},
+	"criteria": {
+		"operator": "OR",
+		"criterias": [
+			{
+				"operator": "AND",
+				"criterias": [
+					{
+						"operator": "OR",
+						"criterions": [
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009334017",
+								"comment": "kernel-default is not affected"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009333928",
+								"comment": "kernel-source is not affected"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009340305",
+								"comment": "kernel-source-azure is not affected"
+							}
+						]
+					}
+				],
+				"criterions": [
+					{
+						"test_ref": "oval:org.opensuse.security:tst:2009258806",
+						"comment": "SUSE Linux Enterprise Server for SAP Applications 12 SP5 is installed"
+					}
+				]
+			},
+			{
+				"operator": "AND",
+				"criterias": [
+					{
+						"operator": "OR",
+						"criterions": [
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009334017",
+								"comment": "kernel-default is not affected"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009335425",
+								"comment": "kernel-default-base is not affected"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009335423",
+								"comment": "kernel-default-devel is not affected"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009334791",
+								"comment": "kernel-devel is not affected"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009334792",
+								"comment": "kernel-macros is not affected"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009333928",
+								"comment": "kernel-source is not affected"
+							}
+						]
+					}
+				],
+				"criterions": [
+					{
+						"test_ref": "oval:org.opensuse.security:tst:2009258804",
+						"comment": "SUSE Linux Enterprise Server for SAP Applications 12 SP4 is installed"
+					}
+				]
+			},
+			{
+				"operator": "AND",
+				"criterias": [
+					{
+						"operator": "OR",
+						"criterions": [
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009334017",
+								"comment": "kernel-default is not affected"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009335425",
+								"comment": "kernel-default-base is not affected"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009335423",
+								"comment": "kernel-default-devel is not affected"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009335426",
+								"comment": "kernel-default-man is not affected"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009334791",
+								"comment": "kernel-devel is not affected"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009334792",
+								"comment": "kernel-macros is not affected"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009333928",
+								"comment": "kernel-source is not affected"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009340306",
+								"comment": "kernel-devel-azure is not affected"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009340305",
+								"comment": "kernel-source-azure is not affected"
+							}
+						]
+					}
+				],
+				"criterions": [
+					{
+						"test_ref": "oval:org.opensuse.security:tst:2009258033",
+						"comment": "SUSE Linux Enterprise Server 12 SP5 is installed"
+					}
+				]
+			},
+			{
+				"operator": "AND",
+				"criterias": [
+					{
+						"operator": "OR",
+						"criterions": [
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009334017",
+								"comment": "kernel-default is not affected"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009335425",
+								"comment": "kernel-default-base is not affected"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009335423",
+								"comment": "kernel-default-devel is not affected"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009335426",
+								"comment": "kernel-default-man is not affected"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009334791",
+								"comment": "kernel-devel is not affected"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009334792",
+								"comment": "kernel-macros is not affected"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009333928",
+								"comment": "kernel-source is not affected"
+							}
+						]
+					}
+				],
+				"criterions": [
+					{
+						"test_ref": "oval:org.opensuse.security:tst:2009240280",
+						"comment": "SUSE Linux Enterprise Server 12 SP4-LTSS is installed"
+					}
+				]
+			},
+			{
+				"operator": "AND",
+				"criterias": [
+					{
+						"operator": "OR",
+						"criterions": [
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009728711",
+								"comment": "kernel-devel-rt is not affected"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009728712",
+								"comment": "kernel-source-rt is not affected"
+							}
+						]
+					}
+				],
+				"criterions": [
+					{
+						"test_ref": "oval:org.opensuse.security:tst:2009279486",
+						"comment": "SUSE Linux Enterprise Real Time 12 SP5 is installed"
+					}
+				]
+			}
+		]
+	}
+}

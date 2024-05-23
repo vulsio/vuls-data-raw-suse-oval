@@ -133,6 +133,36 @@
 				"ref_id": "SUSE-SU-2024:1740-1",
 				"ref_url": "https://lists.suse.com/pipermail/sle-security-updates/2024-May/018579.html",
 				"source": "SUSE-SU"
+			},
+			{
+				"ref_id": "SUSE-SU-2024:1748-1",
+				"ref_url": "https://lists.suse.com/pipermail/sle-updates/2024-May/035336.html",
+				"source": "SUSE-SU"
+			},
+			{
+				"ref_id": "SUSE-SU-2024:1749-1",
+				"ref_url": "https://lists.suse.com/pipermail/sle-updates/2024-May/035334.html",
+				"source": "SUSE-SU"
+			},
+			{
+				"ref_id": "SUSE-SU-2024:1750-1",
+				"ref_url": "https://lists.suse.com/pipermail/sle-updates/2024-May/035333.html",
+				"source": "SUSE-SU"
+			},
+			{
+				"ref_id": "SUSE-SU-2024:1753-1",
+				"ref_url": "https://lists.suse.com/pipermail/sle-security-updates/2024-May/018584.html",
+				"source": "SUSE-SU"
+			},
+			{
+				"ref_id": "SUSE-SU-2024:1757-1",
+				"ref_url": "https://lists.suse.com/pipermail/sle-updates/2024-May/035341.html",
+				"source": "SUSE-SU"
+			},
+			{
+				"ref_id": "SUSE-SU-2024:1759-1",
+				"ref_url": "https://lists.suse.com/pipermail/sle-security-updates/2024-May/018592.html",
+				"source": "SUSE-SU"
 			}
 		],
 		"description": "\n    In the Linux kernel, the following vulnerability has been resolved:\n\nIB/hfi1: Fix sdma.h tx->num_descs off-by-one error\n\nUnfortunately the commit `fd8958efe877` introduced another error\ncausing the `descs` array to overflow. This reults in further crashes\neasily reproducible by `sendmsg` system call.\n\n[ 1080.836473] general protection fault, probably for non-canonical address 0x400300015528b00a: 0000 [#1] PREEMPT SMP PTI\n[ 1080.869326] RIP: 0010:hfi1_ipoib_build_ib_tx_headers.constprop.0+0xe1/0x2b0 [hfi1]\n--\n[ 1080.974535] Call Trace:\n[ 1080.976990]  <TASK>\n[ 1081.021929]  hfi1_ipoib_send_dma_common+0x7a/0x2e0 [hfi1]\n[ 1081.027364]  hfi1_ipoib_send_dma_list+0x62/0x270 [hfi1]\n[ 1081.032633]  hfi1_ipoib_send+0x112/0x300 [hfi1]\n[ 1081.042001]  ipoib_start_xmit+0x2a9/0x2d0 [ib_ipoib]\n[ 1081.046978]  dev_hard_start_xmit+0xc4/0x210\n--\n[ 1081.148347]  __sys_sendmsg+0x59/0xa0\n\ncrash> ipoib_txreq 0xffff9cfeba229f00\nstruct ipoib_txreq {\n  txreq = {\n    list = {\n      next = 0xffff9cfeba229f00,\n      prev = 0xffff9cfeba229f00\n    },\n    descp = 0xffff9cfeba229f40,\n    coalesce_buf = 0x0,\n    wait = 0xffff9cfea4e69a48,\n    complete = 0xffffffffc0fe0760 <hfi1_ipoib_sdma_complete>,\n    packet_len = 0x46d,\n    tlen = 0x0,\n    num_desc = 0x0,\n    desc_limit = 0x6,\n    next_descq_idx = 0x45c,\n    coalesce_idx = 0x0,\n    flags = 0x0,\n    descs = {{\n        qw = {0x8024000120dffb00, 0x4}  # SDMA_DESC0_FIRST_DESC_FLAG (bit 63)\n      }, {\n        qw = {  0x3800014231b108, 0x4}\n      }, {\n        qw = { 0x310000e4ee0fcf0, 0x8}\n      }, {\n        qw = {  0x3000012e9f8000, 0x8}\n      }, {\n        qw = {  0x59000dfb9d0000, 0x8}\n      }, {\n        qw = {  0x78000e02e40000, 0x8}\n      }}\n  },\n  sdma_hdr =  0x400300015528b000,  <<< invalid pointer in the tx request structure\n  sdma_status = 0x0,                   SDMA_DESC0_LAST_DESC_FLAG (bit 62)\n  complete = 0x0,\n  priv = 0x0,\n  txq = 0xffff9cfea4e69880,\n  skb = 0xffff9d099809f400\n}\n\nIf an SDMA send consists of exactly 6 descriptors and requires dword\npadding (in the 7th descriptor), the sdma_txreq descriptor array is not\nproperly expanded and the packet will overflow into the container\nstructure. This results in a panic when the send completion runs. The\nexact panic varies depending on what elements of the container structure\nget corrupted. The fix is to use the correct expression in\n_pad_sdma_tx_descs() to test the need to expand the descriptor array.\n\nWith this patch the crashes are no longer reproducible and the machine is\nstable.\n    ",
@@ -165,7 +195,7 @@
 				"date": "2024-04-13"
 			},
 			"updated": {
-				"date": "2024-05-22"
+				"date": "2024-05-23"
 			},
 			"affected_cpe_list": {
 				"cpe": [
@@ -392,12 +422,77 @@
 										"operator": "AND",
 										"criterions": [
 											{
+												"test_ref": "oval:org.opensuse.security:tst:2009854329",
+												"comment": "kernel-default 5.14.21-150400.24.108.1 is installed"
+											},
+											{
+												"test_ref": "oval:org.opensuse.security:tst:2009861847",
+												"comment": "no kernel-livepatch-5_14_21-150400_24_108-default is greater or equal than 4-150400.9.8.1"
+											}
+										]
+									},
+									{
+										"operator": "AND",
+										"criterions": [
+											{
+												"test_ref": "oval:org.opensuse.security:tst:2009861848",
+												"comment": "kernel-default 5.14.21-150400.24.111.2 is installed"
+											},
+											{
+												"test_ref": "oval:org.opensuse.security:tst:2009861849",
+												"comment": "no kernel-livepatch-5_14_21-150400_24_111-default is greater or equal than 2-150400.9.6.1"
+											}
+										]
+									},
+									{
+										"operator": "AND",
+										"criterions": [
+											{
+												"test_ref": "oval:org.opensuse.security:tst:2009861850",
+												"comment": "kernel-default 5.14.21-150400.24.116.1 is installed"
+											},
+											{
+												"test_ref": "oval:org.opensuse.security:tst:2009861851",
+												"comment": "no kernel-livepatch-5_14_21-150400_24_116-default is greater or equal than 2-150400.9.8.1"
+											}
+										]
+									},
+									{
+										"operator": "AND",
+										"criterions": [
+											{
 												"test_ref": "oval:org.opensuse.security:tst:2009764673",
 												"comment": "kernel-default 5.14.21-150400.24.60.1 is installed"
 											},
 											{
 												"test_ref": "oval:org.opensuse.security:tst:2009861766",
 												"comment": "no kernel-livepatch-5_14_21-150400_24_60-default is greater or equal than 14-150400.2.1"
+											}
+										]
+									},
+									{
+										"operator": "AND",
+										"criterions": [
+											{
+												"test_ref": "oval:org.opensuse.security:tst:2009764743",
+												"comment": "kernel-default 5.14.21-150400.24.63.1 is installed"
+											},
+											{
+												"test_ref": "oval:org.opensuse.security:tst:2009861852",
+												"comment": "no kernel-livepatch-5_14_21-150400_24_63-default is greater or equal than 14-150400.2.1"
+											}
+										]
+									},
+									{
+										"operator": "AND",
+										"criterions": [
+											{
+												"test_ref": "oval:org.opensuse.security:tst:2009776036",
+												"comment": "kernel-default 5.14.21-150400.24.66.1 is installed"
+											},
+											{
+												"test_ref": "oval:org.opensuse.security:tst:2009861853",
+												"comment": "no kernel-livepatch-5_14_21-150400_24_66-default is greater or equal than 12-150400.2.1"
 											}
 										]
 									},
@@ -418,12 +513,51 @@
 										"operator": "AND",
 										"criterions": [
 											{
+												"test_ref": "oval:org.opensuse.security:tst:2009796012",
+												"comment": "kernel-default 5.14.21-150400.24.74.1 is installed"
+											},
+											{
+												"test_ref": "oval:org.opensuse.security:tst:2009861854",
+												"comment": "no kernel-livepatch-5_14_21-150400_24_74-default is greater or equal than 11-150400.2.1"
+											}
+										]
+									},
+									{
+										"operator": "AND",
+										"criterions": [
+											{
+												"test_ref": "oval:org.opensuse.security:tst:2009799692",
+												"comment": "kernel-default 5.14.21-150400.24.81.1 is installed"
+											},
+											{
+												"test_ref": "oval:org.opensuse.security:tst:2009861855",
+												"comment": "no kernel-livepatch-5_14_21-150400_24_81-default is greater or equal than 10-150400.2.1"
+											}
+										]
+									},
+									{
+										"operator": "AND",
+										"criterions": [
+											{
 												"test_ref": "oval:org.opensuse.security:tst:2009807720",
 												"comment": "kernel-default 5.14.21-150400.24.88.1 is installed"
 											},
 											{
 												"test_ref": "oval:org.opensuse.security:tst:2009861768",
 												"comment": "no kernel-livepatch-5_14_21-150400_24_88-default is greater or equal than 9-150400.2.1"
+											}
+										]
+									},
+									{
+										"operator": "AND",
+										"criterions": [
+											{
+												"test_ref": "oval:org.opensuse.security:tst:2009816464",
+												"comment": "kernel-default 5.14.21-150400.24.92.1 is installed"
+											},
+											{
+												"test_ref": "oval:org.opensuse.security:tst:2009861856",
+												"comment": "no kernel-livepatch-5_14_21-150400_24_92-default is greater or equal than 8-150400.2.1"
 											}
 										]
 									},
@@ -680,6 +814,18 @@
 								"comment": "kernel-livepatch-5_14_21-150400_24_103-default-5-150400.2.1 is installed"
 							},
 							{
+								"test_ref": "oval:org.opensuse.security:tst:2009861889",
+								"comment": "kernel-livepatch-5_14_21-150400_24_108-default-4-150400.9.8.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009861895",
+								"comment": "kernel-livepatch-5_14_21-150400_24_111-default-2-150400.9.6.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009861892",
+								"comment": "kernel-livepatch-5_14_21-150400_24_116-default-2-150400.9.8.1 is installed"
+							},
+							{
 								"test_ref": "oval:org.opensuse.security:tst:2009860865",
 								"comment": "kernel-livepatch-5_14_21-150400_24_119-default-1-150400.9.3.1 is installed"
 							},
@@ -688,12 +834,32 @@
 								"comment": "kernel-livepatch-5_14_21-150400_24_60-default-14-150400.2.1 is installed"
 							},
 							{
+								"test_ref": "oval:org.opensuse.security:tst:2009861888",
+								"comment": "kernel-livepatch-5_14_21-150400_24_63-default-14-150400.2.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009861885",
+								"comment": "kernel-livepatch-5_14_21-150400_24_66-default-12-150400.2.1 is installed"
+							},
+							{
 								"test_ref": "oval:org.opensuse.security:tst:2009861785",
 								"comment": "kernel-livepatch-5_14_21-150400_24_69-default-11-150400.2.1 is installed"
 							},
 							{
+								"test_ref": "oval:org.opensuse.security:tst:2009861886",
+								"comment": "kernel-livepatch-5_14_21-150400_24_74-default-11-150400.2.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009861887",
+								"comment": "kernel-livepatch-5_14_21-150400_24_81-default-10-150400.2.1 is installed"
+							},
+							{
 								"test_ref": "oval:org.opensuse.security:tst:2009861786",
 								"comment": "kernel-livepatch-5_14_21-150400_24_88-default-9-150400.2.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009861896",
+								"comment": "kernel-livepatch-5_14_21-150400_24_92-default-8-150400.2.1 is installed"
 							},
 							{
 								"test_ref": "oval:org.opensuse.security:tst:2009861788",
@@ -919,12 +1085,90 @@
 										"operator": "AND",
 										"criterions": [
 											{
+												"test_ref": "oval:org.opensuse.security:tst:2009796015",
+												"comment": "kernel-default 5.14.21-150500.55.12.1 is installed"
+											},
+											{
+												"test_ref": "oval:org.opensuse.security:tst:2009861858",
+												"comment": "no kernel-livepatch-5_14_21-150500_55_12-default is greater or equal than 11-150500.2.1"
+											}
+										]
+									},
+									{
+										"operator": "AND",
+										"criterions": [
+											{
+												"test_ref": "oval:org.opensuse.security:tst:2009799694",
+												"comment": "kernel-default 5.14.21-150500.55.19.1 is installed"
+											},
+											{
+												"test_ref": "oval:org.opensuse.security:tst:2009861859",
+												"comment": "no kernel-livepatch-5_14_21-150500_55_19-default is greater or equal than 10-150500.2.1"
+											}
+										]
+									},
+									{
+										"operator": "AND",
+										"criterions": [
+											{
+												"test_ref": "oval:org.opensuse.security:tst:2009807722",
+												"comment": "kernel-default 5.14.21-150500.55.28.1 is installed"
+											},
+											{
+												"test_ref": "oval:org.opensuse.security:tst:2009861860",
+												"comment": "no kernel-livepatch-5_14_21-150500_55_28-default is greater or equal than 9-150500.2.1"
+											}
+										]
+									},
+									{
+										"operator": "AND",
+										"criterions": [
+											{
+												"test_ref": "oval:org.opensuse.security:tst:2009816469",
+												"comment": "kernel-default 5.14.21-150500.55.31.1 is installed"
+											},
+											{
+												"test_ref": "oval:org.opensuse.security:tst:2009861861",
+												"comment": "no kernel-livepatch-5_14_21-150500_55_31-default is greater or equal than 8-150500.2.1"
+											}
+										]
+									},
+									{
+										"operator": "AND",
+										"criterions": [
+											{
+												"test_ref": "oval:org.opensuse.security:tst:2009845879",
+												"comment": "kernel-default 5.14.21-150500.55.36.1 is installed"
+											},
+											{
+												"test_ref": "oval:org.opensuse.security:tst:2009861862",
+												"comment": "no kernel-livepatch-5_14_21-150500_55_36-default is greater or equal than 7-150500.2.1"
+											}
+										]
+									},
+									{
+										"operator": "AND",
+										"criterions": [
+											{
 												"test_ref": "oval:org.opensuse.security:tst:2009845884",
 												"comment": "kernel-default 5.14.21-150500.55.39.1 is installed"
 											},
 											{
 												"test_ref": "oval:org.opensuse.security:tst:2009861634",
 												"comment": "no kernel-livepatch-5_14_21-150500_55_39-default is greater or equal than 7-150500.2.1"
+											}
+										]
+									},
+									{
+										"operator": "AND",
+										"criterions": [
+											{
+												"test_ref": "oval:org.opensuse.security:tst:2009849163",
+												"comment": "kernel-default 5.14.21-150500.55.44.1 is installed"
+											},
+											{
+												"test_ref": "oval:org.opensuse.security:tst:2009861863",
+												"comment": "no kernel-livepatch-5_14_21-150500_55_44-default is greater or equal than 6-150500.2.1"
 											}
 										]
 									},
@@ -1098,8 +1342,32 @@
 								"comment": "kernel-livepatch-5_14_21-150500_13_52-rt-1-150500.11.5.1 is installed"
 							},
 							{
+								"test_ref": "oval:org.opensuse.security:tst:2009861901",
+								"comment": "kernel-livepatch-5_14_21-150500_55_12-default-11-150500.2.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009861902",
+								"comment": "kernel-livepatch-5_14_21-150500_55_19-default-10-150500.2.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009861904",
+								"comment": "kernel-livepatch-5_14_21-150500_55_28-default-9-150500.2.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009861903",
+								"comment": "kernel-livepatch-5_14_21-150500_55_31-default-8-150500.2.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009861905",
+								"comment": "kernel-livepatch-5_14_21-150500_55_36-default-7-150500.2.1 is installed"
+							},
+							{
 								"test_ref": "oval:org.opensuse.security:tst:2009861680",
 								"comment": "kernel-livepatch-5_14_21-150500_55_39-default-7-150500.2.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009861906",
+								"comment": "kernel-livepatch-5_14_21-150500_55_44-default-6-150500.2.1 is installed"
 							},
 							{
 								"test_ref": "oval:org.opensuse.security:tst:2009861792",
