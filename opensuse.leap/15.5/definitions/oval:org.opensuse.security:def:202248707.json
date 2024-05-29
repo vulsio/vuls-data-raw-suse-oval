@@ -1,0 +1,92 @@
+{
+	"id": "oval:org.opensuse.security:def:202248707",
+	"version": "1",
+	"class": "vulnerability",
+	"metadata": {
+		"title": "CVE-2022-48707",
+		"affected": {
+			"family": "unix",
+			"platform": [
+				"openSUSE Leap 15.5"
+			]
+		},
+		"reference": [
+			{
+				"ref_id": "Mitre CVE-2022-48707",
+				"ref_url": "https://cve.mitre.org/cgi-bin/cvename.cgi?name=CVE-2022-48707",
+				"source": "CVE"
+			},
+			{
+				"ref_id": "SUSE CVE-2022-48707",
+				"ref_url": "https://www.suse.com/security/cve/CVE-2022-48707",
+				"source": "SUSE CVE"
+			}
+		],
+		"description": "\n    In the Linux kernel, the following vulnerability has been resolved:\n\ncxl/region: Fix null pointer dereference for resetting decoder\n\nNot all decoders have a reset callback.\n\nThe CXL specification allows a host bridge with a single root port to\nhave no explicit HDM decoders. Currently the region driver assumes there\nare none.  As such the CXL core creates a special pass through decoder\ninstance without a commit/reset callback.\n\nPrior to this patch, the ->reset() callback was called unconditionally when\ncalling cxl_region_decode_reset. Thus a configuration with 1 Host Bridge,\n1 Root Port, and one directly attached CXL type 3 device or multiple CXL\ntype 3 devices attached to downstream ports of a switch can cause a null\npointer dereference.\n\nBefore the fix, a kernel crash was observed when we destroy the region, and\na pass through decoder is reset.\n\nThe issue can be reproduced as below,\n    1) create a region with a CXL setup which includes a HB with a\n    single root port under which a memdev is attached directly.\n    2) destroy the region with cxl destroy-region regionX -f.\n    ",
+		"advisory": {
+			"from": "security@suse.de",
+			"severity": "Moderate",
+			"cve": [
+				{
+					"text": "CVE-2022-48707 at SUSE",
+					"href": "https://www.suse.com/security/cve/CVE-2022-48707/",
+					"impact": "medium",
+					"cvss3": "5.5/CVSS:3.1/AV:L/AC:L/PR:L/UI:N/S:U/C:N/I:N/A:H"
+				},
+				{
+					"text": "CVE-2022-48707 at NVD",
+					"href": "https://nvd.nist.gov/vuln/detail/CVE-2022-48707"
+				}
+			],
+			"bugzilla": [
+				{
+					"text": "SUSE bug 1225519",
+					"href": "https://bugzilla.suse.com/1225519"
+				}
+			],
+			"issued": {
+				"date": "2024-05-29"
+			},
+			"updated": {
+				"date": "2024-05-29"
+			},
+			"affected_cpe_list": {
+				"cpe": [
+					"cpe:/o:opensuse:leap:15.5"
+				]
+			}
+		}
+	},
+	"criteria": {
+		"operator": "AND",
+		"criterias": [
+			{
+				"operator": "OR",
+				"criterions": [
+					{
+						"test_ref": "oval:org.opensuse.security:tst:2009334017",
+						"comment": "kernel-default is not affected"
+					},
+					{
+						"test_ref": "oval:org.opensuse.security:tst:2009333928",
+						"comment": "kernel-source is not affected"
+					},
+					{
+						"test_ref": "oval:org.opensuse.security:tst:2009340305",
+						"comment": "kernel-source-azure is not affected"
+					},
+					{
+						"test_ref": "oval:org.opensuse.security:tst:2009728712",
+						"comment": "kernel-source-rt is not affected"
+					}
+				]
+			}
+		],
+		"criterions": [
+			{
+				"test_ref": "oval:org.opensuse.security:tst:2009752682",
+				"comment": "openSUSE Leap 15.5 is installed"
+			}
+		]
+	}
+}

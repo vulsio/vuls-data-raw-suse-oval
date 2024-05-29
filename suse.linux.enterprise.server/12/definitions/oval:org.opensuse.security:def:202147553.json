@@ -1,0 +1,261 @@
+{
+	"id": "oval:org.opensuse.security:def:202147553",
+	"version": "1",
+	"class": "vulnerability",
+	"metadata": {
+		"title": "CVE-2021-47553",
+		"affected": {
+			"family": "unix",
+			"platform": [
+				"SUSE Linux Enterprise Real Time 12 SP5",
+				"SUSE Linux Enterprise Server 12 SP4-LTSS",
+				"SUSE Linux Enterprise Server 12 SP5",
+				"SUSE Linux Enterprise Server for SAP Applications 12 SP4",
+				"SUSE Linux Enterprise Server for SAP Applications 12 SP5"
+			]
+		},
+		"reference": [
+			{
+				"ref_id": "Mitre CVE-2021-47553",
+				"ref_url": "https://cve.mitre.org/cgi-bin/cvename.cgi?name=CVE-2021-47553",
+				"source": "CVE"
+			},
+			{
+				"ref_id": "SUSE CVE-2021-47553",
+				"ref_url": "https://www.suse.com/security/cve/CVE-2021-47553",
+				"source": "SUSE CVE"
+			}
+		],
+		"description": "\n    In the Linux kernel, the following vulnerability has been resolved:\n\nsched/scs: Reset task stack state in bringup_cpu()\n\nTo hot unplug a CPU, the idle task on that CPU calls a few layers of C\ncode before finally leaving the kernel. When KASAN is in use, poisoned\nshadow is left around for each of the active stack frames, and when\nshadow call stacks are in use. When shadow call stacks (SCS) are in use\nthe task's saved SCS SP is left pointing at an arbitrary point within\nthe task's shadow call stack.\n\nWhen a CPU is offlined than onlined back into the kernel, this stale\nstate can adversely affect execution. Stale KASAN shadow can alias new\nstackframes and result in bogus KASAN warnings. A stale SCS SP is\neffectively a memory leak, and prevents a portion of the shadow call\nstack being used. Across a number of hotplug cycles the idle task's\nentire shadow call stack can become unusable.\n\nWe previously fixed the KASAN issue in commit:\n\n  e1b77c92981a5222 (\"sched/kasan: remove stale KASAN poison after hotplug\")\n\n... by removing any stale KASAN stack poison immediately prior to\nonlining a CPU.\n\nSubsequently in commit:\n\n  f1a0a376ca0c4ef1 (\"sched/core: Initialize the idle task with preemption disabled\")\n\n... the refactoring left the KASAN and SCS cleanup in one-time idle\nthread initialization code rather than something invoked prior to each\nCPU being onlined, breaking both as above.\n\nWe fixed SCS (but not KASAN) in commit:\n\n  63acd42c0d4942f7 (\"sched/scs: Reset the shadow stack when idle_task_exit\")\n\n... but as this runs in the context of the idle task being offlined it's\npotentially fragile.\n\nTo fix these consistently and more robustly, reset the SCS SP and KASAN\nshadow of a CPU's idle task immediately before we online that CPU in\nbringup_cpu(). This ensures the idle task always has a consistent state\nwhen it is running, and removes the need to so so when exiting an idle\ntask.\n\nWhenever any thread is created, dup_task_struct() will give the task a\nstack which is free of KASAN shadow, and initialize the task's SCS SP,\nso there's no need to specially initialize either for idle thread within\ninit_idle(), as this was only necessary to handle hotplug cycles.\n\nI've tested this on arm64 with:\n\n* gcc 11.1.0, defconfig +KASAN_INLINE, KASAN_STACK\n* clang 12.0.0, defconfig +KASAN_INLINE, KASAN_STACK, SHADOW_CALL_STACK\n\n... offlining and onlining CPUS with:\n\n| while true; do\n|   for C in /sys/devices/system/cpu/cpu*/online; do\n|     echo 0 > $C;\n|     echo 1 > $C;\n|   done\n| done\n    ",
+		"advisory": {
+			"from": "security@suse.de",
+			"severity": "Important",
+			"cve": [
+				{
+					"text": "CVE-2021-47553 at SUSE",
+					"href": "https://www.suse.com/security/cve/CVE-2021-47553/",
+					"impact": "high",
+					"cvss3": "7.8/CVSS:3.1/AV:L/AC:L/PR:L/UI:N/S:U/C:H/I:H/A:H"
+				},
+				{
+					"text": "CVE-2021-47553 at NVD",
+					"href": "https://nvd.nist.gov/vuln/detail/CVE-2021-47553"
+				}
+			],
+			"bugzilla": [
+				{
+					"text": "SUSE bug 1225464",
+					"href": "https://bugzilla.suse.com/1225464"
+				}
+			],
+			"issued": {
+				"date": "2024-05-29"
+			},
+			"updated": {
+				"date": "2024-05-29"
+			},
+			"affected_cpe_list": {
+				"cpe": [
+					"cpe:/o:suse:sles-ltss:12:sp4",
+					"cpe:/o:suse:sles:12:sp5",
+					"cpe:/o:suse:sles_sap:12:sp4",
+					"cpe:/o:suse:sles_sap:12:sp5",
+					"cpe:/o:suse:suse-linux-enterprise-rt:12:sp5"
+				]
+			}
+		}
+	},
+	"criteria": {
+		"operator": "OR",
+		"criterias": [
+			{
+				"operator": "AND",
+				"criterias": [
+					{
+						"operator": "OR",
+						"criterions": [
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009334017",
+								"comment": "kernel-default is not affected"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009333928",
+								"comment": "kernel-source is not affected"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009340305",
+								"comment": "kernel-source-azure is not affected"
+							}
+						]
+					}
+				],
+				"criterions": [
+					{
+						"test_ref": "oval:org.opensuse.security:tst:2009258806",
+						"comment": "SUSE Linux Enterprise Server for SAP Applications 12 SP5 is installed"
+					}
+				]
+			},
+			{
+				"operator": "AND",
+				"criterias": [
+					{
+						"operator": "OR",
+						"criterions": [
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009334017",
+								"comment": "kernel-default is not affected"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009335425",
+								"comment": "kernel-default-base is not affected"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009335423",
+								"comment": "kernel-default-devel is not affected"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009334791",
+								"comment": "kernel-devel is not affected"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009334792",
+								"comment": "kernel-macros is not affected"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009333928",
+								"comment": "kernel-source is not affected"
+							}
+						]
+					}
+				],
+				"criterions": [
+					{
+						"test_ref": "oval:org.opensuse.security:tst:2009258804",
+						"comment": "SUSE Linux Enterprise Server for SAP Applications 12 SP4 is installed"
+					}
+				]
+			},
+			{
+				"operator": "AND",
+				"criterias": [
+					{
+						"operator": "OR",
+						"criterions": [
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009334017",
+								"comment": "kernel-default is not affected"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009335425",
+								"comment": "kernel-default-base is not affected"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009335423",
+								"comment": "kernel-default-devel is not affected"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009335426",
+								"comment": "kernel-default-man is not affected"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009334791",
+								"comment": "kernel-devel is not affected"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009334792",
+								"comment": "kernel-macros is not affected"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009333928",
+								"comment": "kernel-source is not affected"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009340306",
+								"comment": "kernel-devel-azure is not affected"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009340305",
+								"comment": "kernel-source-azure is not affected"
+							}
+						]
+					}
+				],
+				"criterions": [
+					{
+						"test_ref": "oval:org.opensuse.security:tst:2009258033",
+						"comment": "SUSE Linux Enterprise Server 12 SP5 is installed"
+					}
+				]
+			},
+			{
+				"operator": "AND",
+				"criterias": [
+					{
+						"operator": "OR",
+						"criterions": [
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009334017",
+								"comment": "kernel-default is not affected"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009335425",
+								"comment": "kernel-default-base is not affected"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009335423",
+								"comment": "kernel-default-devel is not affected"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009335426",
+								"comment": "kernel-default-man is not affected"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009334791",
+								"comment": "kernel-devel is not affected"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009334792",
+								"comment": "kernel-macros is not affected"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009333928",
+								"comment": "kernel-source is not affected"
+							}
+						]
+					}
+				],
+				"criterions": [
+					{
+						"test_ref": "oval:org.opensuse.security:tst:2009240280",
+						"comment": "SUSE Linux Enterprise Server 12 SP4-LTSS is installed"
+					}
+				]
+			},
+			{
+				"operator": "AND",
+				"criterias": [
+					{
+						"operator": "OR",
+						"criterions": [
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009728711",
+								"comment": "kernel-devel-rt is not affected"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009728712",
+								"comment": "kernel-source-rt is not affected"
+							}
+						]
+					}
+				],
+				"criterions": [
+					{
+						"test_ref": "oval:org.opensuse.security:tst:2009279486",
+						"comment": "SUSE Linux Enterprise Real Time 12 SP5 is installed"
+					}
+				]
+			}
+		]
+	}
+}
