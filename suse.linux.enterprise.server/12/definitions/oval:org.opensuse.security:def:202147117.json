@@ -7,9 +7,11 @@
 		"affected": {
 			"family": "unix",
 			"platform": [
+				"SUSE Linux Enterprise Live Patching 12 SP5",
 				"SUSE Linux Enterprise Real Time 12 SP5",
 				"SUSE Linux Enterprise Server 12 SP5",
-				"SUSE Linux Enterprise Server for SAP Applications 12 SP5"
+				"SUSE Linux Enterprise Server for SAP Applications 12 SP5",
+				"SUSE Linux Enterprise Workstation Extension 12 SP5"
 			]
 		},
 		"reference": [
@@ -47,6 +49,11 @@
 				"ref_id": "SUSE-SU-2024:1648-2",
 				"ref_url": "https://lists.suse.com/pipermail/sle-updates/2024-May/035319.html",
 				"source": "SUSE-SU"
+			},
+			{
+				"ref_id": "SUSE-SU-2024:1870-1",
+				"ref_url": "https://lists.suse.com/pipermail/sle-updates/2024-May/035427.html",
+				"source": "SUSE-SU"
 			}
 		],
 		"description": "\n    In the Linux kernel, the following vulnerability has been resolved:\n\next4: fix bug on in ext4_es_cache_extent as ext4_split_extent_at failed\n\nWe got follow bug_on when run fsstress with injecting IO fault:\n[130747.323114] kernel BUG at fs/ext4/extents_status.c:762!\n[130747.323117] Internal error: Oops - BUG: 0 [#1] SMP\n......\n[130747.334329] Call trace:\n[130747.334553]  ext4_es_cache_extent+0x150/0x168 [ext4]\n[130747.334975]  ext4_cache_extents+0x64/0xe8 [ext4]\n[130747.335368]  ext4_find_extent+0x300/0x330 [ext4]\n[130747.335759]  ext4_ext_map_blocks+0x74/0x1178 [ext4]\n[130747.336179]  ext4_map_blocks+0x2f4/0x5f0 [ext4]\n[130747.336567]  ext4_mpage_readpages+0x4a8/0x7a8 [ext4]\n[130747.336995]  ext4_readpage+0x54/0x100 [ext4]\n[130747.337359]  generic_file_buffered_read+0x410/0xae8\n[130747.337767]  generic_file_read_iter+0x114/0x190\n[130747.338152]  ext4_file_read_iter+0x5c/0x140 [ext4]\n[130747.338556]  __vfs_read+0x11c/0x188\n[130747.338851]  vfs_read+0x94/0x150\n[130747.339110]  ksys_read+0x74/0xf0\n\nThis patch's modification is according to Jan Kara's suggestion in:\nhttps://patchwork.ozlabs.org/project/linux-ext4/patch/20210428085158.3728201-1-yebin10@huawei.com/\n\"I see. Now I understand your patch. Honestly, seeing how fragile is trying\nto fix extent tree after split has failed in the middle, I would probably\ngo even further and make sure we fix the tree properly in case of ENOSPC\nand EDQUOT (those are easily user triggerable).  Anything else indicates a\nHW problem or fs corruption so I'd rather leave the extent tree as is and\ndon't try to fix it (which also means we will not create overlapping\nextents).\"\n    ",
@@ -75,10 +82,12 @@
 				"date": "2024-05-15"
 			},
 			"updated": {
-				"date": "2024-05-22"
+				"date": "2024-05-31"
 			},
 			"affected_cpe_list": {
 				"cpe": [
+					"cpe:/o:suse:sle-live-patching:12:sp5",
+					"cpe:/o:suse:sle-we:12:sp5",
 					"cpe:/o:suse:sles:12:sp5",
 					"cpe:/o:suse:sles_sap:12:sp5",
 					"cpe:/o:suse:suse-linux-enterprise-rt:12:sp5"
@@ -89,6 +98,34 @@
 	"criteria": {
 		"operator": "OR",
 		"criterias": [
+			{
+				"operator": "AND",
+				"criterias": [
+					{
+						"operator": "OR",
+						"criterions": [
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009258033",
+								"comment": "SUSE Linux Enterprise Server 12 SP5 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009258806",
+								"comment": "SUSE Linux Enterprise Server for SAP Applications 12 SP5 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009258650",
+								"comment": "SUSE Linux Enterprise Workstation Extension 12 SP5 is installed"
+							}
+						]
+					}
+				],
+				"criterions": [
+					{
+						"test_ref": "oval:org.opensuse.security:tst:2009863342",
+						"comment": "kernel-default-extra-4.12.14-122.216.1 is installed"
+					}
+				]
+			},
 			{
 				"operator": "AND",
 				"criterias": [
@@ -185,18 +222,78 @@
 								"comment": "kernel-azure-devel-4.12.14-16.182.1 is installed"
 							},
 							{
+								"test_ref": "oval:org.opensuse.security:tst:2009863334",
+								"comment": "kernel-default-4.12.14-122.216.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009863335",
+								"comment": "kernel-default-base-4.12.14-122.216.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009863336",
+								"comment": "kernel-default-devel-4.12.14-122.216.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009863337",
+								"comment": "kernel-default-man-4.12.14-122.216.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009863338",
+								"comment": "kernel-devel-4.12.14-122.216.1 is installed"
+							},
+							{
 								"test_ref": "oval:org.opensuse.security:tst:2009860992",
 								"comment": "kernel-devel-azure-4.12.14-16.182.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009863339",
+								"comment": "kernel-macros-4.12.14-122.216.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009863340",
+								"comment": "kernel-source-4.12.14-122.216.1 is installed"
 							},
 							{
 								"test_ref": "oval:org.opensuse.security:tst:2009860993",
 								"comment": "kernel-source-azure-4.12.14-16.182.1 is installed"
 							},
 							{
+								"test_ref": "oval:org.opensuse.security:tst:2009863341",
+								"comment": "kernel-syms-4.12.14-122.216.1 is installed"
+							},
+							{
 								"test_ref": "oval:org.opensuse.security:tst:2009860994",
 								"comment": "kernel-syms-azure-4.12.14-16.182.1 is installed"
 							}
 						]
+					}
+				]
+			},
+			{
+				"operator": "AND",
+				"criterias": [
+					{
+						"operator": "OR",
+						"criterions": [
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009863326",
+								"comment": "kernel-default-kgraft-4.12.14-122.216.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009863327",
+								"comment": "kernel-default-kgraft-devel-4.12.14-122.216.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009863328",
+								"comment": "kgraft-patch-4_12_14-122_216-default-1-8.3.1 is installed"
+							}
+						]
+					}
+				],
+				"criterions": [
+					{
+						"test_ref": "oval:org.opensuse.security:tst:2009273148",
+						"comment": "SUSE Linux Enterprise Live Patching 12 SP5 is installed"
 					}
 				]
 			}
