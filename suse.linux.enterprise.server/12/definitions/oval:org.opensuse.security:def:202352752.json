@@ -1,9 +1,9 @@
 {
-	"id": "oval:org.opensuse.security:def:202147555",
+	"id": "oval:org.opensuse.security:def:202352752",
 	"version": "1",
 	"class": "vulnerability",
 	"metadata": {
-		"title": "CVE-2021-47555",
+		"title": "CVE-2023-52752",
 		"affected": {
 			"family": "unix",
 			"platform": [
@@ -16,40 +16,46 @@
 		},
 		"reference": [
 			{
-				"ref_id": "Mitre CVE-2021-47555",
-				"ref_url": "https://cve.mitre.org/cgi-bin/cvename.cgi?name=CVE-2021-47555",
+				"ref_id": "Mitre CVE-2023-52752",
+				"ref_url": "https://cve.mitre.org/cgi-bin/cvename.cgi?name=CVE-2023-52752",
 				"source": "CVE"
 			},
 			{
-				"ref_id": "SUSE CVE-2021-47555",
-				"ref_url": "https://www.suse.com/security/cve/CVE-2021-47555",
+				"ref_id": "SUSE CVE-2023-52752",
+				"ref_url": "https://www.suse.com/security/cve/CVE-2023-52752",
 				"source": "SUSE CVE"
 			}
 		],
-		"description": "\n    In the Linux kernel, the following vulnerability has been resolved:\n\nnet: vlan: fix underflow for the real_dev refcnt\n\nInject error before dev_hold(real_dev) in register_vlan_dev(),\nand execute the following testcase:\n\nip link add dev dummy1 type dummy\nip link add name dummy1.100 link dummy1 type vlan id 100\nip link del dev dummy1\n\nWhen the dummy netdevice is removed, we will get a WARNING as following:\n\n=======================================================================\nrefcount_t: decrement hit 0; leaking memory.\nWARNING: CPU: 2 PID: 0 at lib/refcount.c:31 refcount_warn_saturate+0xbf/0x1e0\n\nand an endless loop of:\n\n=======================================================================\nunregister_netdevice: waiting for dummy1 to become free. Usage count = -1073741824\n\nThat is because dev_put(real_dev) in vlan_dev_free() be called without\ndev_hold(real_dev) in register_vlan_dev(). It makes the refcnt of real_dev\nunderflow.\n\nMove the dev_hold(real_dev) to vlan_dev_init() which is the call-back of\nndo_init(). That makes dev_hold() and dev_put() for vlan's real_dev\nsymmetrical.\n    ",
+		"description": "\n    In the Linux kernel, the following vulnerability has been resolved:\n\nsmb: client: fix use-after-free bug in cifs_debug_data_proc_show()\n\nSkip SMB sessions that are being teared down\n(e.g. @ses->ses_status == SES_EXITING) in cifs_debug_data_proc_show()\nto avoid use-after-free in @ses.\n\nThis fixes the following GPF when reading from /proc/fs/cifs/DebugData\nwhile mounting and umounting\n\n  [ 816.251274] general protection fault, probably for non-canonical\n  address 0x6b6b6b6b6b6b6d81: 0000 [#1] PREEMPT SMP NOPTI\n  ...\n  [  816.260138] Call Trace:\n  [  816.260329]  <TASK>\n  [  816.260499]  ? die_addr+0x36/0x90\n  [  816.260762]  ? exc_general_protection+0x1b3/0x410\n  [  816.261126]  ? asm_exc_general_protection+0x26/0x30\n  [  816.261502]  ? cifs_debug_tcon+0xbd/0x240 [cifs]\n  [  816.261878]  ? cifs_debug_tcon+0xab/0x240 [cifs]\n  [  816.262249]  cifs_debug_data_proc_show+0x516/0xdb0 [cifs]\n  [  816.262689]  ? seq_read_iter+0x379/0x470\n  [  816.262995]  seq_read_iter+0x118/0x470\n  [  816.263291]  proc_reg_read_iter+0x53/0x90\n  [  816.263596]  ? srso_alias_return_thunk+0x5/0x7f\n  [  816.263945]  vfs_read+0x201/0x350\n  [  816.264211]  ksys_read+0x75/0x100\n  [  816.264472]  do_syscall_64+0x3f/0x90\n  [  816.264750]  entry_SYSCALL_64_after_hwframe+0x6e/0xd8\n  [  816.265135] RIP: 0033:0x7fd5e669d381\n    ",
 		"advisory": {
 			"from": "security@suse.de",
-			"severity": "Moderate",
+			"severity": "Important",
 			"cve": [
 				{
-					"text": "CVE-2021-47555 at SUSE",
-					"href": "https://www.suse.com/security/cve/CVE-2021-47555/",
-					"impact": "medium",
-					"cvss3": "4.4/CVSS:3.1/AV:L/AC:L/PR:L/UI:N/S:U/C:L/I:N/A:L"
+					"text": "CVE-2023-52752 at SUSE",
+					"href": "https://www.suse.com/security/cve/CVE-2023-52752/",
+					"impact": "high",
+					"cvss3": "7.8/CVSS:3.1/AV:L/AC:L/PR:L/UI:N/S:U/C:H/I:H/A:H"
 				},
 				{
-					"text": "CVE-2021-47555 at NVD",
-					"href": "https://nvd.nist.gov/vuln/detail/CVE-2021-47555"
+					"text": "CVE-2023-52752 at NVD",
+					"href": "https://nvd.nist.gov/vuln/detail/CVE-2023-52752",
+					"impact": "high",
+					"cvss3": "7.8/CVSS:3.1/AV:L/AC:L/PR:L/UI:N/S:U/C:H/I:H/A:H"
 				}
 			],
 			"bugzilla": [
 				{
-					"text": "SUSE bug 1225467",
-					"href": "https://bugzilla.suse.com/1225467"
+					"text": "SUSE bug 1225487",
+					"href": "https://bugzilla.suse.com/1225487"
+				},
+				{
+					"text": "SUSE bug 1225819",
+					"href": "https://bugzilla.suse.com/1225819"
 				}
 			],
 			"issued": {
-				"date": "2024-05-29"
+				"date": "2024-06-06"
 			},
 			"updated": {
 				"date": "2024-06-06"
