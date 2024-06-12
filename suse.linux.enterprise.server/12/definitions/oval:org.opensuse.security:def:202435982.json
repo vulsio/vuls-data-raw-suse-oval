@@ -1,0 +1,192 @@
+{
+	"id": "oval:org.opensuse.security:def:202435982",
+	"version": "1",
+	"class": "vulnerability",
+	"metadata": {
+		"title": "CVE-2024-35982",
+		"affected": {
+			"family": "unix",
+			"platform": [
+				"SUSE Linux Enterprise Real Time 12 SP5",
+				"SUSE Linux Enterprise Server 12 SP5",
+				"SUSE Linux Enterprise Server for SAP Applications 12 SP5"
+			]
+		},
+		"reference": [
+			{
+				"ref_id": "Mitre CVE-2024-35982",
+				"ref_url": "https://cve.mitre.org/cgi-bin/cvename.cgi?name=CVE-2024-35982",
+				"source": "CVE"
+			},
+			{
+				"ref_id": "SUSE CVE-2024-35982",
+				"ref_url": "https://www.suse.com/security/cve/CVE-2024-35982",
+				"source": "SUSE CVE"
+			},
+			{
+				"ref_id": "SUSE-SU-2024:1979-1",
+				"ref_url": "https://lists.suse.com/pipermail/sle-updates/2024-June/035536.html",
+				"source": "SUSE-SU"
+			},
+			{
+				"ref_id": "SUSE-SU-2024:1983-1",
+				"ref_url": "https://lists.suse.com/pipermail/sle-updates/2024-June/035554.html",
+				"source": "SUSE-SU"
+			}
+		],
+		"description": "\n    In the Linux kernel, the following vulnerability has been resolved:\n\nbatman-adv: Avoid infinite loop trying to resize local TT\n\nIf the MTU of one of an attached interface becomes too small to transmit\nthe local translation table then it must be resized to fit inside all\nfragments (when enabled) or a single packet.\n\nBut if the MTU becomes too low to transmit even the header + the VLAN\nspecific part then the resizing of the local TT will never succeed. This\ncan for example happen when the usable space is 110 bytes and 11 VLANs are\non top of batman-adv. In this case, at least 116 byte would be needed.\nThere will just be an endless spam of\n\n   batman_adv: batadv0: Forced to purge local tt entries to fit new maximum fragment MTU (110)\n\nin the log but the function will never finish. Problem here is that the\ntimeout will be halved all the time and will then stagnate at 0 and\ntherefore never be able to reduce the table even more.\n\nThere are other scenarios possible with a similar result. The number of\nBATADV_TT_CLIENT_NOPURGE entries in the local TT can for example be too\nhigh to fit inside a packet. Such a scenario can therefore happen also with\nonly a single VLAN + 7 non-purgable addresses - requiring at least 120\nbytes.\n\nWhile this should be handled proactively when:\n\n* interface with too low MTU is added\n* VLAN is added\n* non-purgeable local mac is added\n* MTU of an attached interface is reduced\n* fragmentation setting gets disabled (which most likely requires dropping\n  attached interfaces)\n\nnot all of these scenarios can be prevented because batman-adv is only\nconsuming events without the the possibility to prevent these actions\n(non-purgable MAC address added, MTU of an attached interface is reduced).\nIt is therefore necessary to also make sure that the code is able to handle\nalso the situations when there were already incompatible system\nconfiguration are present.\n    ",
+		"advisory": {
+			"from": "security@suse.de",
+			"severity": "Moderate",
+			"cve": [
+				{
+					"text": "CVE-2024-35982 at SUSE",
+					"href": "https://www.suse.com/security/cve/CVE-2024-35982/",
+					"impact": "medium",
+					"cvss3": "5.5/CVSS:3.1/AV:L/AC:L/PR:L/UI:N/S:U/C:N/I:N/A:H"
+				},
+				{
+					"text": "CVE-2024-35982 at NVD",
+					"href": "https://nvd.nist.gov/vuln/detail/CVE-2024-35982",
+					"impact": "medium",
+					"cvss3": "5.5/CVSS:3.1/AV:L/AC:L/PR:L/UI:N/S:U/C:N/I:N/A:H"
+				}
+			],
+			"bugzilla": [
+				{
+					"text": "SUSE bug 1224566",
+					"href": "https://bugzilla.suse.com/1224566"
+				}
+			],
+			"issued": {
+				"date": "2024-06-12"
+			},
+			"updated": {
+				"date": "2024-06-12"
+			},
+			"affected_cpe_list": {
+				"cpe": [
+					"cpe:/o:suse:sles:12:sp5",
+					"cpe:/o:suse:sles_sap:12:sp5",
+					"cpe:/o:suse:suse-linux-enterprise-rt:12:sp5"
+				]
+			}
+		}
+	},
+	"criteria": {
+		"operator": "OR",
+		"criterias": [
+			{
+				"operator": "AND",
+				"criterias": [
+					{
+						"operator": "OR",
+						"criterions": [
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009865494",
+								"comment": "cluster-md-kmp-rt-4.12.14-10.188.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009865495",
+								"comment": "dlm-kmp-rt-4.12.14-10.188.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009865496",
+								"comment": "gfs2-kmp-rt-4.12.14-10.188.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009865497",
+								"comment": "kernel-devel-rt-4.12.14-10.188.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009865498",
+								"comment": "kernel-rt-4.12.14-10.188.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009865499",
+								"comment": "kernel-rt-base-4.12.14-10.188.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009865500",
+								"comment": "kernel-rt-devel-4.12.14-10.188.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009865501",
+								"comment": "kernel-rt_debug-4.12.14-10.188.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009865502",
+								"comment": "kernel-rt_debug-devel-4.12.14-10.188.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009865503",
+								"comment": "kernel-source-rt-4.12.14-10.188.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009865504",
+								"comment": "kernel-syms-rt-4.12.14-10.188.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009865505",
+								"comment": "ocfs2-kmp-rt-4.12.14-10.188.1 is installed"
+							}
+						]
+					}
+				],
+				"criterions": [
+					{
+						"test_ref": "oval:org.opensuse.security:tst:2009279486",
+						"comment": "SUSE Linux Enterprise Real Time 12 SP5 is installed"
+					}
+				]
+			},
+			{
+				"operator": "AND",
+				"criterias": [
+					{
+						"operator": "OR",
+						"criterions": [
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009258033",
+								"comment": "SUSE Linux Enterprise Server 12 SP5 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009258806",
+								"comment": "SUSE Linux Enterprise Server for SAP Applications 12 SP5 is installed"
+							}
+						]
+					},
+					{
+						"operator": "OR",
+						"criterions": [
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009865517",
+								"comment": "kernel-azure-4.12.14-16.188.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009865518",
+								"comment": "kernel-azure-base-4.12.14-16.188.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009865519",
+								"comment": "kernel-azure-devel-4.12.14-16.188.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009865520",
+								"comment": "kernel-devel-azure-4.12.14-16.188.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009865521",
+								"comment": "kernel-source-azure-4.12.14-16.188.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009865522",
+								"comment": "kernel-syms-azure-4.12.14-16.188.1 is installed"
+							}
+						]
+					}
+				]
+			}
+		]
+	}
+}

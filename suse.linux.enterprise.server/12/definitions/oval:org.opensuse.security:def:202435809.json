@@ -1,0 +1,190 @@
+{
+	"id": "oval:org.opensuse.security:def:202435809",
+	"version": "1",
+	"class": "vulnerability",
+	"metadata": {
+		"title": "CVE-2024-35809",
+		"affected": {
+			"family": "unix",
+			"platform": [
+				"SUSE Linux Enterprise Real Time 12 SP5",
+				"SUSE Linux Enterprise Server 12 SP5",
+				"SUSE Linux Enterprise Server for SAP Applications 12 SP5"
+			]
+		},
+		"reference": [
+			{
+				"ref_id": "Mitre CVE-2024-35809",
+				"ref_url": "https://cve.mitre.org/cgi-bin/cvename.cgi?name=CVE-2024-35809",
+				"source": "CVE"
+			},
+			{
+				"ref_id": "SUSE CVE-2024-35809",
+				"ref_url": "https://www.suse.com/security/cve/CVE-2024-35809",
+				"source": "SUSE CVE"
+			},
+			{
+				"ref_id": "SUSE-SU-2024:1979-1",
+				"ref_url": "https://lists.suse.com/pipermail/sle-updates/2024-June/035536.html",
+				"source": "SUSE-SU"
+			},
+			{
+				"ref_id": "SUSE-SU-2024:1983-1",
+				"ref_url": "https://lists.suse.com/pipermail/sle-updates/2024-June/035554.html",
+				"source": "SUSE-SU"
+			}
+		],
+		"description": "\n    In the Linux kernel, the following vulnerability has been resolved:\n\nPCI/PM: Drain runtime-idle callbacks before driver removal\n\nA race condition between the .runtime_idle() callback and the .remove()\ncallback in the rtsx_pcr PCI driver leads to a kernel crash due to an\nunhandled page fault [1].\n\nThe problem is that rtsx_pci_runtime_idle() is not expected to be running\nafter pm_runtime_get_sync() has been called, but the latter doesn't really\nguarantee that.  It only guarantees that the suspend and resume callbacks\nwill not be running when it returns.\n\nHowever, if a .runtime_idle() callback is already running when\npm_runtime_get_sync() is called, the latter will notice that the runtime PM\nstatus of the device is RPM_ACTIVE and it will return right away without\nwaiting for the former to complete.  In fact, it cannot wait for\n.runtime_idle() to complete because it may be called from that callback (it\narguably does not make much sense to do that, but it is not strictly\nprohibited).\n\nThus in general, whoever is providing a .runtime_idle() callback needs\nto protect it from running in parallel with whatever code runs after\npm_runtime_get_sync().  [Note that .runtime_idle() will not start after\npm_runtime_get_sync() has returned, but it may continue running then if it\nhas started earlier.]\n\nOne way to address that race condition is to call pm_runtime_barrier()\nafter pm_runtime_get_sync() (not before it, because a nonzero value of the\nruntime PM usage counter is necessary to prevent runtime PM callbacks from\nbeing invoked) to wait for the .runtime_idle() callback to complete should\nit be running at that point.  A suitable place for doing that is in\npci_device_remove() which calls pm_runtime_get_sync() before removing the\ndriver, so it may as well call pm_runtime_barrier() subsequently, which\nwill prevent the race in question from occurring, not just in the rtsx_pcr\ndriver, but in any PCI drivers providing .runtime_idle() callbacks.\n    ",
+		"advisory": {
+			"from": "security@suse.de",
+			"severity": "Moderate",
+			"cve": [
+				{
+					"text": "CVE-2024-35809 at SUSE",
+					"href": "https://www.suse.com/security/cve/CVE-2024-35809/",
+					"impact": "medium",
+					"cvss3": "4.7/CVSS:3.1/AV:L/AC:H/PR:L/UI:N/S:U/C:N/I:N/A:H"
+				},
+				{
+					"text": "CVE-2024-35809 at NVD",
+					"href": "https://nvd.nist.gov/vuln/detail/CVE-2024-35809"
+				}
+			],
+			"bugzilla": [
+				{
+					"text": "SUSE bug 1224738",
+					"href": "https://bugzilla.suse.com/1224738"
+				}
+			],
+			"issued": {
+				"date": "2024-06-12"
+			},
+			"updated": {
+				"date": "2024-06-12"
+			},
+			"affected_cpe_list": {
+				"cpe": [
+					"cpe:/o:suse:sles:12:sp5",
+					"cpe:/o:suse:sles_sap:12:sp5",
+					"cpe:/o:suse:suse-linux-enterprise-rt:12:sp5"
+				]
+			}
+		}
+	},
+	"criteria": {
+		"operator": "OR",
+		"criterias": [
+			{
+				"operator": "AND",
+				"criterias": [
+					{
+						"operator": "OR",
+						"criterions": [
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009865494",
+								"comment": "cluster-md-kmp-rt-4.12.14-10.188.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009865495",
+								"comment": "dlm-kmp-rt-4.12.14-10.188.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009865496",
+								"comment": "gfs2-kmp-rt-4.12.14-10.188.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009865497",
+								"comment": "kernel-devel-rt-4.12.14-10.188.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009865498",
+								"comment": "kernel-rt-4.12.14-10.188.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009865499",
+								"comment": "kernel-rt-base-4.12.14-10.188.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009865500",
+								"comment": "kernel-rt-devel-4.12.14-10.188.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009865501",
+								"comment": "kernel-rt_debug-4.12.14-10.188.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009865502",
+								"comment": "kernel-rt_debug-devel-4.12.14-10.188.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009865503",
+								"comment": "kernel-source-rt-4.12.14-10.188.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009865504",
+								"comment": "kernel-syms-rt-4.12.14-10.188.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009865505",
+								"comment": "ocfs2-kmp-rt-4.12.14-10.188.1 is installed"
+							}
+						]
+					}
+				],
+				"criterions": [
+					{
+						"test_ref": "oval:org.opensuse.security:tst:2009279486",
+						"comment": "SUSE Linux Enterprise Real Time 12 SP5 is installed"
+					}
+				]
+			},
+			{
+				"operator": "AND",
+				"criterias": [
+					{
+						"operator": "OR",
+						"criterions": [
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009258033",
+								"comment": "SUSE Linux Enterprise Server 12 SP5 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009258806",
+								"comment": "SUSE Linux Enterprise Server for SAP Applications 12 SP5 is installed"
+							}
+						]
+					},
+					{
+						"operator": "OR",
+						"criterions": [
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009865517",
+								"comment": "kernel-azure-4.12.14-16.188.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009865518",
+								"comment": "kernel-azure-base-4.12.14-16.188.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009865519",
+								"comment": "kernel-azure-devel-4.12.14-16.188.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009865520",
+								"comment": "kernel-devel-azure-4.12.14-16.188.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009865521",
+								"comment": "kernel-source-azure-4.12.14-16.188.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009865522",
+								"comment": "kernel-syms-azure-4.12.14-16.188.1 is installed"
+							}
+						]
+					}
+				]
+			}
+		]
+	}
+}
