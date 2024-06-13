@@ -7,6 +7,7 @@
 		"affected": {
 			"family": "unix",
 			"platform": [
+				"SUSE Linux Enterprise Live Patching 15 SP5",
 				"SUSE Linux Enterprise Server 15 SP1-LTSS",
 				"SUSE Linux Enterprise Server 15 SP2-LTSS",
 				"SUSE Linux Enterprise Server 15 SP3-LTSS",
@@ -25,6 +26,16 @@
 				"ref_id": "SUSE CVE-2021-47429",
 				"ref_url": "https://www.suse.com/security/cve/CVE-2021-47429",
 				"source": "SUSE CVE"
+			},
+			{
+				"ref_id": "SUSE-SU-2024:2008-1",
+				"ref_url": "https://lists.suse.com/pipermail/sle-updates/2024-June/035569.html",
+				"source": "SUSE-SU"
+			},
+			{
+				"ref_id": "SUSE-SU-2024:2011-1",
+				"ref_url": "https://lists.suse.com/pipermail/sle-updates/2024-June/035575.html",
+				"source": "SUSE-SU"
 			}
 		],
 		"description": "\n    In the Linux kernel, the following vulnerability has been resolved:\n\npowerpc/64s: Fix unrecoverable MCE calling async handler from NMI\n\nThe machine check handler is not considered NMI on 64s. The early\nhandler is the true NMI handler, and then it schedules the\nmachine_check_exception handler to run when interrupts are enabled.\n\nThis works fine except the case of an unrecoverable MCE, where the true\nNMI is taken when MSR[RI] is clear, it can not recover, so it calls\nmachine_check_exception directly so something might be done about it.\n\nCalling an async handler from NMI context can result in irq state and\nother things getting corrupted. This can also trigger the BUG at\n  arch/powerpc/include/asm/interrupt.h:168\n  BUG_ON(!arch_irq_disabled_regs(regs) && !(regs->msr & MSR_EE));\n\nFix this by making an _async version of the handler which is called\nin the normal case, and a NMI version that is called for unrecoverable\ninterrupts.\n    ",
@@ -53,10 +64,11 @@
 				"date": "2024-05-28"
 			},
 			"updated": {
-				"date": "2024-05-28"
+				"date": "2024-06-13"
 			},
 			"affected_cpe_list": {
 				"cpe": [
+					"cpe:/o:suse:sle-module-live-patching:15:sp5",
 					"cpe:/o:suse:sles-ltss:15",
 					"cpe:/o:suse:sles-ltss:15:sp1",
 					"cpe:/o:suse:sles-ltss:15:sp2",
@@ -70,6 +82,19 @@
 	"criteria": {
 		"operator": "OR",
 		"criterias": [
+			{
+				"operator": "AND",
+				"criterions": [
+					{
+						"test_ref": "oval:org.opensuse.security:tst:2009764853",
+						"comment": "SUSE Linux Enterprise Live Patching 15 SP5 is installed"
+					},
+					{
+						"test_ref": "oval:org.opensuse.security:tst:2009865673",
+						"comment": "kernel-livepatch-5_14_21-150500_13_58-rt-1-150500.11.3.1 is installed"
+					}
+				]
+			},
 			{
 				"operator": "AND",
 				"criterias": [

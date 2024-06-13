@@ -11,6 +11,7 @@
 				"SUSE Linux Enterprise Desktop 15 SP6",
 				"SUSE Linux Enterprise High Performance Computing 15 SP5",
 				"SUSE Linux Enterprise High Performance Computing 15 SP6",
+				"SUSE Linux Enterprise Live Patching 15 SP5",
 				"SUSE Linux Enterprise Module for Basesystem 15 SP5",
 				"SUSE Linux Enterprise Module for Basesystem 15 SP6",
 				"SUSE Linux Enterprise Module for Development Tools 15 SP5",
@@ -41,6 +42,11 @@
 				"ref_id": "SUSE CVE-2024-26999",
 				"ref_url": "https://www.suse.com/security/cve/CVE-2024-26999",
 				"source": "SUSE CVE"
+			},
+			{
+				"ref_id": "SUSE-SU-2024:2008-1",
+				"ref_url": "https://lists.suse.com/pipermail/sle-updates/2024-June/035569.html",
+				"source": "SUSE-SU"
 			}
 		],
 		"description": "\n    In the Linux kernel, the following vulnerability has been resolved:\n\nserial/pmac_zilog: Remove flawed mitigation for rx irq flood\n\nThe mitigation was intended to stop the irq completely. That may be\nbetter than a hard lock-up but it turns out that you get a crash anyway\nif you're using pmac_zilog as a serial console:\n\nttyPZ0: pmz: rx irq flood !\nBUG: spinlock recursion on CPU#0, swapper/0\n\nThat's because the pr_err() call in pmz_receive_chars() results in\npmz_console_write() attempting to lock a spinlock already locked in\npmz_interrupt(). With CONFIG_DEBUG_SPINLOCK=y, this produces a fatal\nBUG splat. The spinlock in question is the one in struct uart_port.\n\nEven when it's not fatal, the serial port rx function ceases to work.\nAlso, the iteration limit doesn't play nicely with QEMU, as can be\nseen in the bug report linked below.\n\nA web search for other reports of the error message \"pmz: rx irq flood\"\ndidn't produce anything. So I don't think this code is needed any more.\nRemove it.\n    ",
@@ -69,7 +75,7 @@
 				"date": "2024-05-22"
 			},
 			"updated": {
-				"date": "2024-05-31"
+				"date": "2024-06-13"
 			},
 			"affected_cpe_list": {
 				"cpe": [
@@ -77,6 +83,7 @@
 					"cpe:/o:suse:sle-module-basesystem:15:sp6",
 					"cpe:/o:suse:sle-module-development-tools:15:sp5",
 					"cpe:/o:suse:sle-module-development-tools:15:sp6",
+					"cpe:/o:suse:sle-module-live-patching:15:sp5",
 					"cpe:/o:suse:sle-module-public-cloud:15:sp5",
 					"cpe:/o:suse:sle-module-public-cloud:15:sp6",
 					"cpe:/o:suse:sle_hpc:15:sp5",
@@ -98,6 +105,19 @@
 	"criteria": {
 		"operator": "OR",
 		"criterias": [
+			{
+				"operator": "AND",
+				"criterions": [
+					{
+						"test_ref": "oval:org.opensuse.security:tst:2009764853",
+						"comment": "SUSE Linux Enterprise Live Patching 15 SP5 is installed"
+					},
+					{
+						"test_ref": "oval:org.opensuse.security:tst:2009865673",
+						"comment": "kernel-livepatch-5_14_21-150500_13_58-rt-1-150500.11.3.1 is installed"
+					}
+				]
+			},
 			{
 				"operator": "AND",
 				"criterias": [

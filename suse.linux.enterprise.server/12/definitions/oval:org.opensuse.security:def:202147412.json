@@ -24,6 +24,16 @@
 				"ref_id": "SUSE CVE-2021-47412",
 				"ref_url": "https://www.suse.com/security/cve/CVE-2021-47412",
 				"source": "SUSE CVE"
+			},
+			{
+				"ref_id": "SUSE-SU-2024:2008-1",
+				"ref_url": "https://lists.suse.com/pipermail/sle-updates/2024-June/035569.html",
+				"source": "SUSE-SU"
+			},
+			{
+				"ref_id": "SUSE-SU-2024:2011-1",
+				"ref_url": "https://lists.suse.com/pipermail/sle-updates/2024-June/035575.html",
+				"source": "SUSE-SU"
 			}
 		],
 		"description": "\n    In the Linux kernel, the following vulnerability has been resolved:\n\nblock: don't call rq_qos_ops->done_bio if the bio isn't tracked\n\nrq_qos framework is only applied on request based driver, so:\n\n1) rq_qos_done_bio() needn't to be called for bio based driver\n\n2) rq_qos_done_bio() needn't to be called for bio which isn't tracked,\nsuch as bios ended from error handling code.\n\nEspecially in bio_endio():\n\n1) request queue is referred via bio->bi_bdev->bd_disk->queue, which\nmay be gone since request queue refcount may not be held in above two\ncases\n\n2) q->rq_qos may be freed in blk_cleanup_queue() when calling into\n__rq_qos_done_bio()\n\nFix the potential kernel panic by not calling rq_qos_ops->done_bio if\nthe bio isn't tracked. This way is safe because both ioc_rqos_done_bio()\nand blkcg_iolatency_done_bio() are nop if the bio isn't tracked.\n    ",
@@ -52,7 +62,7 @@
 				"date": "2024-05-28"
 			},
 			"updated": {
-				"date": "2024-05-28"
+				"date": "2024-06-13"
 			},
 			"affected_cpe_list": {
 				"cpe": [

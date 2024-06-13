@@ -7,6 +7,7 @@
 		"affected": {
 			"family": "unix",
 			"platform": [
+				"SUSE Linux Enterprise Live Patching 15 SP5",
 				"SUSE Linux Enterprise Server 15 SP1-LTSS",
 				"SUSE Linux Enterprise Server 15 SP2-LTSS",
 				"SUSE Linux Enterprise Server 15 SP3-LTSS",
@@ -25,6 +26,11 @@
 				"ref_id": "SUSE CVE-2024-36012",
 				"ref_url": "https://www.suse.com/security/cve/CVE-2024-36012",
 				"source": "SUSE CVE"
+			},
+			{
+				"ref_id": "SUSE-SU-2024:2008-1",
+				"ref_url": "https://lists.suse.com/pipermail/sle-updates/2024-June/035569.html",
+				"source": "SUSE-SU"
 			}
 		],
 		"description": "\n    In the Linux kernel, the following vulnerability has been resolved:\n\nBluetooth: msft: fix slab-use-after-free in msft_do_close()\n\nTying the msft->data lifetime to hdev by freeing it in\nhci_release_dev() to fix the following case:\n\n[use]\nmsft_do_close()\n  msft = hdev->msft_data;\n  if (!msft)                      ...(1) <- passed.\n    return;\n  mutex_lock(&msft->filter_lock); ...(4) <- used after freed.\n\n[free]\nmsft_unregister()\n  msft = hdev->msft_data;\n  hdev->msft_data = NULL;         ...(2)\n  kfree(msft);                    ...(3) <- msft is freed.\n\n==================================================================\nBUG: KASAN: slab-use-after-free in __mutex_lock_common\nkernel/locking/mutex.c:587 [inline]\nBUG: KASAN: slab-use-after-free in __mutex_lock+0x8f/0xc30\nkernel/locking/mutex.c:752\nRead of size 8 at addr ffff888106cbbca8 by task kworker/u5:2/309\n    ",
@@ -53,10 +59,11 @@
 				"date": "2024-05-29"
 			},
 			"updated": {
-				"date": "2024-05-29"
+				"date": "2024-06-13"
 			},
 			"affected_cpe_list": {
 				"cpe": [
+					"cpe:/o:suse:sle-module-live-patching:15:sp5",
 					"cpe:/o:suse:sles-ltss:15",
 					"cpe:/o:suse:sles-ltss:15:sp1",
 					"cpe:/o:suse:sles-ltss:15:sp2",
@@ -70,6 +77,19 @@
 	"criteria": {
 		"operator": "OR",
 		"criterias": [
+			{
+				"operator": "AND",
+				"criterions": [
+					{
+						"test_ref": "oval:org.opensuse.security:tst:2009764853",
+						"comment": "SUSE Linux Enterprise Live Patching 15 SP5 is installed"
+					},
+					{
+						"test_ref": "oval:org.opensuse.security:tst:2009865673",
+						"comment": "kernel-livepatch-5_14_21-150500_13_58-rt-1-150500.11.3.1 is installed"
+					}
+				]
+			},
 			{
 				"operator": "AND",
 				"criterias": [

@@ -8,6 +8,7 @@
 			"family": "unix",
 			"platform": [
 				"SUSE Linux Enterprise High Performance Computing 15 SP5",
+				"SUSE Linux Enterprise Live Patching 15 SP5",
 				"SUSE Linux Enterprise Module for Public Cloud 15 SP5",
 				"SUSE Linux Enterprise Server 15 SP5",
 				"SUSE Linux Enterprise Server for SAP Applications 15 SP5"
@@ -38,6 +39,11 @@
 				"ref_id": "SUSE-SU-2024:1983-1",
 				"ref_url": "https://lists.suse.com/pipermail/sle-updates/2024-June/035554.html",
 				"source": "SUSE-SU"
+			},
+			{
+				"ref_id": "SUSE-SU-2024:2008-1",
+				"ref_url": "https://lists.suse.com/pipermail/sle-updates/2024-June/035569.html",
+				"source": "SUSE-SU"
 			}
 		],
 		"description": "\n    In the Linux kernel, the following vulnerability has been resolved:\n\nUSB: usb-storage: Prevent divide-by-0 error in isd200_ata_command\n\nThe isd200 sub-driver in usb-storage uses the HEADS and SECTORS values\nin the ATA ID information to calculate cylinder and head values when\ncreating a CDB for READ or WRITE commands.  The calculation involves\ndivision and modulus operations, which will cause a crash if either of\nthese values is 0.  While this never happens with a genuine device, it\ncould happen with a flawed or subversive emulation, as reported by the\nsyzbot fuzzer.\n\nProtect against this possibility by refusing to bind to the device if\neither the ATA_ID_HEADS or ATA_ID_SECTORS value in the device's ID\ninformation is 0.  This requires isd200_Initialization() to return a\nnegative error code when initialization fails; currently it always\nreturns 0 (even when there is an error).\n    ",
@@ -66,10 +72,11 @@
 				"date": "2024-05-15"
 			},
 			"updated": {
-				"date": "2024-06-12"
+				"date": "2024-06-13"
 			},
 			"affected_cpe_list": {
 				"cpe": [
+					"cpe:/o:suse:sle-module-live-patching:15:sp5",
 					"cpe:/o:suse:sle-module-public-cloud:15:sp5",
 					"cpe:/o:suse:sle_hpc:15:sp5",
 					"cpe:/o:suse:sles:15:sp5",
@@ -79,51 +86,69 @@
 		}
 	},
 	"criteria": {
-		"operator": "AND",
+		"operator": "OR",
 		"criterias": [
 			{
-				"operator": "OR",
+				"operator": "AND",
 				"criterions": [
 					{
-						"test_ref": "oval:org.opensuse.security:tst:2009759899",
-						"comment": "SUSE Linux Enterprise High Performance Computing 15 SP5 is installed"
+						"test_ref": "oval:org.opensuse.security:tst:2009764853",
+						"comment": "SUSE Linux Enterprise Live Patching 15 SP5 is installed"
 					},
 					{
-						"test_ref": "oval:org.opensuse.security:tst:2009762868",
-						"comment": "SUSE Linux Enterprise Module for Public Cloud 15 SP5 is installed"
-					},
-					{
-						"test_ref": "oval:org.opensuse.security:tst:2009759901",
-						"comment": "SUSE Linux Enterprise Server 15 SP5 is installed"
-					},
-					{
-						"test_ref": "oval:org.opensuse.security:tst:2009759902",
-						"comment": "SUSE Linux Enterprise Server for SAP Applications 15 SP5 is installed"
+						"test_ref": "oval:org.opensuse.security:tst:2009865673",
+						"comment": "kernel-livepatch-5_14_21-150500_13_58-rt-1-150500.11.3.1 is installed"
 					}
 				]
 			},
 			{
-				"operator": "OR",
-				"criterions": [
+				"operator": "AND",
+				"criterias": [
 					{
-						"test_ref": "oval:org.opensuse.security:tst:2009860709",
-						"comment": "kernel-azure-5.14.21-150500.33.51.1 is installed"
+						"operator": "OR",
+						"criterions": [
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009759899",
+								"comment": "SUSE Linux Enterprise High Performance Computing 15 SP5 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009762868",
+								"comment": "SUSE Linux Enterprise Module for Public Cloud 15 SP5 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009759901",
+								"comment": "SUSE Linux Enterprise Server 15 SP5 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009759902",
+								"comment": "SUSE Linux Enterprise Server for SAP Applications 15 SP5 is installed"
+							}
+						]
 					},
 					{
-						"test_ref": "oval:org.opensuse.security:tst:2009860710",
-						"comment": "kernel-azure-devel-5.14.21-150500.33.51.1 is installed"
-					},
-					{
-						"test_ref": "oval:org.opensuse.security:tst:2009860715",
-						"comment": "kernel-devel-azure-5.14.21-150500.33.51.1 is installed"
-					},
-					{
-						"test_ref": "oval:org.opensuse.security:tst:2009860716",
-						"comment": "kernel-source-azure-5.14.21-150500.33.51.1 is installed"
-					},
-					{
-						"test_ref": "oval:org.opensuse.security:tst:2009860717",
-						"comment": "kernel-syms-azure-5.14.21-150500.33.51.1 is installed"
+						"operator": "OR",
+						"criterions": [
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009860709",
+								"comment": "kernel-azure-5.14.21-150500.33.51.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009860710",
+								"comment": "kernel-azure-devel-5.14.21-150500.33.51.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009860715",
+								"comment": "kernel-devel-azure-5.14.21-150500.33.51.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009860716",
+								"comment": "kernel-source-azure-5.14.21-150500.33.51.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009860717",
+								"comment": "kernel-syms-azure-5.14.21-150500.33.51.1 is installed"
+							}
+						]
 					}
 				]
 			}

@@ -7,6 +7,7 @@
 		"affected": {
 			"family": "unix",
 			"platform": [
+				"SUSE Linux Enterprise Live Patching 15 SP5",
 				"SUSE Linux Enterprise Server 15 SP1-LTSS",
 				"SUSE Linux Enterprise Server 15 SP2-LTSS",
 				"SUSE Linux Enterprise Server 15 SP3-LTSS",
@@ -25,6 +26,11 @@
 				"ref_id": "SUSE CVE-2021-47555",
 				"ref_url": "https://www.suse.com/security/cve/CVE-2021-47555",
 				"source": "SUSE CVE"
+			},
+			{
+				"ref_id": "SUSE-SU-2024:2008-1",
+				"ref_url": "https://lists.suse.com/pipermail/sle-updates/2024-June/035569.html",
+				"source": "SUSE-SU"
 			}
 		],
 		"description": "\n    In the Linux kernel, the following vulnerability has been resolved:\n\nnet: vlan: fix underflow for the real_dev refcnt\n\nInject error before dev_hold(real_dev) in register_vlan_dev(),\nand execute the following testcase:\n\nip link add dev dummy1 type dummy\nip link add name dummy1.100 link dummy1 type vlan id 100\nip link del dev dummy1\n\nWhen the dummy netdevice is removed, we will get a WARNING as following:\n\n=======================================================================\nrefcount_t: decrement hit 0; leaking memory.\nWARNING: CPU: 2 PID: 0 at lib/refcount.c:31 refcount_warn_saturate+0xbf/0x1e0\n\nand an endless loop of:\n\n=======================================================================\nunregister_netdevice: waiting for dummy1 to become free. Usage count = -1073741824\n\nThat is because dev_put(real_dev) in vlan_dev_free() be called without\ndev_hold(real_dev) in register_vlan_dev(). It makes the refcnt of real_dev\nunderflow.\n\nMove the dev_hold(real_dev) to vlan_dev_init() which is the call-back of\nndo_init(). That makes dev_hold() and dev_put() for vlan's real_dev\nsymmetrical.\n    ",
@@ -53,10 +59,11 @@
 				"date": "2024-05-29"
 			},
 			"updated": {
-				"date": "2024-06-06"
+				"date": "2024-06-13"
 			},
 			"affected_cpe_list": {
 				"cpe": [
+					"cpe:/o:suse:sle-module-live-patching:15:sp5",
 					"cpe:/o:suse:sles-ltss:15",
 					"cpe:/o:suse:sles-ltss:15:sp1",
 					"cpe:/o:suse:sles-ltss:15:sp2",
@@ -70,6 +77,19 @@
 	"criteria": {
 		"operator": "OR",
 		"criterias": [
+			{
+				"operator": "AND",
+				"criterions": [
+					{
+						"test_ref": "oval:org.opensuse.security:tst:2009764853",
+						"comment": "SUSE Linux Enterprise Live Patching 15 SP5 is installed"
+					},
+					{
+						"test_ref": "oval:org.opensuse.security:tst:2009865673",
+						"comment": "kernel-livepatch-5_14_21-150500_13_58-rt-1-150500.11.3.1 is installed"
+					}
+				]
+			},
 			{
 				"operator": "AND",
 				"criterias": [

@@ -14,6 +14,7 @@
 				"SUSE Linux Enterprise High Performance Computing 15 SP3",
 				"SUSE Linux Enterprise High Performance Computing 15 SP4",
 				"SUSE Linux Enterprise High Performance Computing 15 SP5",
+				"SUSE Linux Enterprise Live Patching 15 SP5",
 				"SUSE Linux Enterprise Module for Basesystem 15 SP5",
 				"SUSE Linux Enterprise Module for Development Tools 15 SP5",
 				"SUSE Linux Enterprise Module for Public Cloud 15 SP2",
@@ -54,6 +55,11 @@
 				"ref_id": "SUSE CVE-2024-26692",
 				"ref_url": "https://www.suse.com/security/cve/CVE-2024-26692",
 				"source": "SUSE CVE"
+			},
+			{
+				"ref_id": "SUSE-SU-2024:2008-1",
+				"ref_url": "https://lists.suse.com/pipermail/sle-updates/2024-June/035569.html",
+				"source": "SUSE-SU"
 			}
 		],
 		"description": "\n    In the Linux kernel, the following vulnerability has been resolved:\n\nsmb: Fix regression in writes when non-standard maximum write size negotiated\n\nThe conversion to netfs in the 6.3 kernel caused a regression when\nmaximum write size is set by the server to an unexpected value which is\nnot a multiple of 4096 (similarly if the user overrides the maximum\nwrite size by setting mount parm \"wsize\", but sets it to a value that\nis not a multiple of 4096).  When negotiated write size is not a\nmultiple of 4096 the netfs code can skip the end of the final\npage when doing large sequential writes, causing data corruption.\n\nThis section of code is being rewritten/removed due to a large\nnetfs change, but until that point (ie for the 6.3 kernel until now)\nwe can not support non-standard maximum write sizes.\n\nAdd a warning if a user specifies a wsize on mount that is not\na multiple of 4096 (and round down), also add a change where we\nround down the maximum write size if the server negotiates a value\nthat is not a multiple of 4096 (we also have to check to make sure that\nwe do not round it down to zero).\n    ",
@@ -82,7 +88,7 @@
 				"date": "2024-04-09"
 			},
 			"updated": {
-				"date": "2024-04-26"
+				"date": "2024-06-13"
 			},
 			"affected_cpe_list": {
 				"cpe": [
@@ -90,6 +96,7 @@
 					"cpe:/o:suse:ses:7.1",
 					"cpe:/o:suse:sle-module-basesystem:15:sp5",
 					"cpe:/o:suse:sle-module-development-tools:15:sp5",
+					"cpe:/o:suse:sle-module-live-patching:15:sp5",
 					"cpe:/o:suse:sle-module-public-cloud:15:sp2",
 					"cpe:/o:suse:sle-module-public-cloud:15:sp3",
 					"cpe:/o:suse:sle-module-public-cloud:15:sp4",
@@ -233,6 +240,19 @@
 					{
 						"test_ref": "oval:org.opensuse.security:tst:2009340305",
 						"comment": "kernel-source-azure is not affected"
+					}
+				]
+			},
+			{
+				"operator": "AND",
+				"criterions": [
+					{
+						"test_ref": "oval:org.opensuse.security:tst:2009764853",
+						"comment": "SUSE Linux Enterprise Live Patching 15 SP5 is installed"
+					},
+					{
+						"test_ref": "oval:org.opensuse.security:tst:2009865673",
+						"comment": "kernel-livepatch-5_14_21-150500_13_58-rt-1-150500.11.3.1 is installed"
 					}
 				]
 			},

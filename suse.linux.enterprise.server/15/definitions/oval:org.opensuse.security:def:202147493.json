@@ -7,6 +7,7 @@
 		"affected": {
 			"family": "unix",
 			"platform": [
+				"SUSE Linux Enterprise Live Patching 15 SP5",
 				"SUSE Linux Enterprise Server 15 SP1-LTSS",
 				"SUSE Linux Enterprise Server 15 SP2-LTSS",
 				"SUSE Linux Enterprise Server 15 SP3-LTSS",
@@ -25,6 +26,21 @@
 				"ref_id": "SUSE CVE-2021-47493",
 				"ref_url": "https://www.suse.com/security/cve/CVE-2021-47493",
 				"source": "SUSE CVE"
+			},
+			{
+				"ref_id": "SUSE-SU-2024:2008-1",
+				"ref_url": "https://lists.suse.com/pipermail/sle-updates/2024-June/035569.html",
+				"source": "SUSE-SU"
+			},
+			{
+				"ref_id": "SUSE-SU-2024:2010-1",
+				"ref_url": "https://lists.suse.com/pipermail/sle-updates/2024-June/035576.html",
+				"source": "SUSE-SU"
+			},
+			{
+				"ref_id": "SUSE-SU-2024:2011-1",
+				"ref_url": "https://lists.suse.com/pipermail/sle-updates/2024-June/035575.html",
+				"source": "SUSE-SU"
 			}
 		],
 		"description": "\n    In the Linux kernel, the following vulnerability has been resolved:\n\nocfs2: fix race between searching chunks and release journal_head from buffer_head\n\nEncountered a race between ocfs2_test_bg_bit_allocatable() and\njbd2_journal_put_journal_head() resulting in the below vmcore.\n\n  PID: 106879  TASK: ffff880244ba9c00  CPU: 2   COMMAND: \"loop3\"\n  Call trace:\n    panic\n    oops_end\n    no_context\n    __bad_area_nosemaphore\n    bad_area_nosemaphore\n    __do_page_fault\n    do_page_fault\n    page_fault\n      [exception RIP: ocfs2_block_group_find_clear_bits+316]\n    ocfs2_block_group_find_clear_bits [ocfs2]\n    ocfs2_cluster_group_search [ocfs2]\n    ocfs2_search_chain [ocfs2]\n    ocfs2_claim_suballoc_bits [ocfs2]\n    __ocfs2_claim_clusters [ocfs2]\n    ocfs2_claim_clusters [ocfs2]\n    ocfs2_local_alloc_slide_window [ocfs2]\n    ocfs2_reserve_local_alloc_bits [ocfs2]\n    ocfs2_reserve_clusters_with_limit [ocfs2]\n    ocfs2_reserve_clusters [ocfs2]\n    ocfs2_lock_refcount_allocators [ocfs2]\n    ocfs2_make_clusters_writable [ocfs2]\n    ocfs2_replace_cow [ocfs2]\n    ocfs2_refcount_cow [ocfs2]\n    ocfs2_file_write_iter [ocfs2]\n    lo_rw_aio\n    loop_queue_work\n    kthread_worker_fn\n    kthread\n    ret_from_fork\n\nWhen ocfs2_test_bg_bit_allocatable() called bh2jh(bg_bh), the\nbg_bh->b_private NULL as jbd2_journal_put_journal_head() raced and\nreleased the jounal head from the buffer head.  Needed to take bit lock\nfor the bit 'BH_JournalHead' to fix this race.\n    ",
@@ -53,10 +69,11 @@
 				"date": "2024-05-29"
 			},
 			"updated": {
-				"date": "2024-05-29"
+				"date": "2024-06-13"
 			},
 			"affected_cpe_list": {
 				"cpe": [
+					"cpe:/o:suse:sle-module-live-patching:15:sp5",
 					"cpe:/o:suse:sles-ltss:15",
 					"cpe:/o:suse:sles-ltss:15:sp1",
 					"cpe:/o:suse:sles-ltss:15:sp2",
@@ -70,6 +87,19 @@
 	"criteria": {
 		"operator": "OR",
 		"criterias": [
+			{
+				"operator": "AND",
+				"criterions": [
+					{
+						"test_ref": "oval:org.opensuse.security:tst:2009764853",
+						"comment": "SUSE Linux Enterprise Live Patching 15 SP5 is installed"
+					},
+					{
+						"test_ref": "oval:org.opensuse.security:tst:2009865673",
+						"comment": "kernel-livepatch-5_14_21-150500_13_58-rt-1-150500.11.3.1 is installed"
+					}
+				]
+			},
 			{
 				"operator": "AND",
 				"criterias": [

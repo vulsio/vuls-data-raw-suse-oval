@@ -7,6 +7,7 @@
 		"affected": {
 			"family": "unix",
 			"platform": [
+				"SUSE Linux Enterprise Live Patching 15 SP5",
 				"SUSE Linux Enterprise Server 15 SP1-LTSS",
 				"SUSE Linux Enterprise Server 15 SP2-LTSS",
 				"SUSE Linux Enterprise Server 15 SP3-LTSS",
@@ -25,6 +26,16 @@
 				"ref_id": "SUSE CVE-2021-47452",
 				"ref_url": "https://www.suse.com/security/cve/CVE-2021-47452",
 				"source": "SUSE CVE"
+			},
+			{
+				"ref_id": "SUSE-SU-2024:2008-1",
+				"ref_url": "https://lists.suse.com/pipermail/sle-updates/2024-June/035569.html",
+				"source": "SUSE-SU"
+			},
+			{
+				"ref_id": "SUSE-SU-2024:2011-1",
+				"ref_url": "https://lists.suse.com/pipermail/sle-updates/2024-June/035575.html",
+				"source": "SUSE-SU"
 			}
 		],
 		"description": "\n    In the Linux kernel, the following vulnerability has been resolved:\n\nnetfilter: nf_tables: skip netdev events generated on netns removal\n\nsyzbot reported following (harmless) WARN:\n\n WARNING: CPU: 1 PID: 2648 at net/netfilter/core.c:468\n  nft_netdev_unregister_hooks net/netfilter/nf_tables_api.c:230 [inline]\n  nf_tables_unregister_hook include/net/netfilter/nf_tables.h:1090 [inline]\n  __nft_release_basechain+0x138/0x640 net/netfilter/nf_tables_api.c:9524\n  nft_netdev_event net/netfilter/nft_chain_filter.c:351 [inline]\n  nf_tables_netdev_event+0x521/0x8a0 net/netfilter/nft_chain_filter.c:382\n\nreproducer:\nunshare -n bash -c 'ip link add br0 type bridge; nft add table netdev t ; \\\n nft add chain netdev t ingress \\{ type filter hook ingress device \"br0\" \\\n priority 0\\; policy drop\\; \\}'\n\nProblem is that when netns device exit hooks create the UNREGISTER\nevent, the .pre_exit hook for nf_tables core has already removed the\nbase hook.  Notifier attempts to do this again.\n\nThe need to do base hook unregister unconditionally was needed in the past,\nbecause notifier was last stage where reg->dev dereference was safe.\n\nNow that nf_tables does the hook removal in .pre_exit, this isn't\nneeded anymore.\n    ",
@@ -53,10 +64,11 @@
 				"date": "2024-05-25"
 			},
 			"updated": {
-				"date": "2024-05-25"
+				"date": "2024-06-13"
 			},
 			"affected_cpe_list": {
 				"cpe": [
+					"cpe:/o:suse:sle-module-live-patching:15:sp5",
 					"cpe:/o:suse:sles-ltss:15",
 					"cpe:/o:suse:sles-ltss:15:sp1",
 					"cpe:/o:suse:sles-ltss:15:sp2",
@@ -70,6 +82,19 @@
 	"criteria": {
 		"operator": "OR",
 		"criterias": [
+			{
+				"operator": "AND",
+				"criterions": [
+					{
+						"test_ref": "oval:org.opensuse.security:tst:2009764853",
+						"comment": "SUSE Linux Enterprise Live Patching 15 SP5 is installed"
+					},
+					{
+						"test_ref": "oval:org.opensuse.security:tst:2009865673",
+						"comment": "kernel-livepatch-5_14_21-150500_13_58-rt-1-150500.11.3.1 is installed"
+					}
+				]
+			},
 			{
 				"operator": "AND",
 				"criterias": [
