@@ -7,7 +7,11 @@
 		"affected": {
 			"family": "unix",
 			"platform": [
-				"SUSE Linux Enterprise Live Patching 15 SP5"
+				"SUSE Linux Enterprise High Performance Computing 15 SP5",
+				"SUSE Linux Enterprise Live Patching 15 SP5",
+				"SUSE Linux Enterprise Module for Public Cloud 15 SP5",
+				"SUSE Linux Enterprise Server 15 SP5",
+				"SUSE Linux Enterprise Server for SAP Applications 15 SP5"
 			]
 		},
 		"reference": [
@@ -45,6 +49,11 @@
 				"ref_id": "SUSE-SU-2024:2011-1",
 				"ref_url": "https://lists.suse.com/pipermail/sle-updates/2024-June/035575.html",
 				"source": "SUSE-SU"
+			},
+			{
+				"ref_id": "SUSE-SU-2024:2019-1",
+				"ref_url": "https://lists.suse.com/pipermail/sle-updates/2024-June/035578.html",
+				"source": "SUSE-SU"
 			}
 		],
 		"description": "\n    In the Linux kernel, the following vulnerability has been resolved:\n\nregmap: Fix possible double-free in regcache_rbtree_exit()\n\nIn regcache_rbtree_insert_to_block(), when 'present' realloc failed,\nthe 'blk' which is supposed to assign to 'rbnode->block' will be freed,\nso 'rbnode->block' points a freed memory, in the error handling path of\nregcache_rbtree_init(), 'rbnode->block' will be freed again in\nregcache_rbtree_exit(), KASAN will report double-free as follows:\n\nBUG: KASAN: double-free or invalid-free in kfree+0xce/0x390\nCall Trace:\n slab_free_freelist_hook+0x10d/0x240\n kfree+0xce/0x390\n regcache_rbtree_exit+0x15d/0x1a0\n regcache_rbtree_init+0x224/0x2c0\n regcache_init+0x88d/0x1310\n __regmap_init+0x3151/0x4a80\n __devm_regmap_init+0x7d/0x100\n madera_spi_probe+0x10f/0x333 [madera_spi]\n spi_probe+0x183/0x210\n really_probe+0x285/0xc30\n\nTo fix this, moving up the assignment of rbnode->block to immediately after\nthe reallocation has succeeded so that the data structure stays valid even\nif the second reallocation fails.\n    ",
@@ -77,25 +86,85 @@
 				"date": "2024-06-13"
 			},
 			"updated": {
-				"date": "2024-06-13"
+				"date": "2024-06-14"
 			},
 			"affected_cpe_list": {
 				"cpe": [
-					"cpe:/o:suse:sle-module-live-patching:15:sp5"
+					"cpe:/o:suse:sle-module-live-patching:15:sp5",
+					"cpe:/o:suse:sle-module-public-cloud:15:sp5",
+					"cpe:/o:suse:sle_hpc:15:sp5",
+					"cpe:/o:suse:sles:15:sp5",
+					"cpe:/o:suse:sles_sap:15:sp5"
 				]
 			}
 		}
 	},
 	"criteria": {
-		"operator": "AND",
-		"criterions": [
+		"operator": "OR",
+		"criterias": [
 			{
-				"test_ref": "oval:org.opensuse.security:tst:2009764853",
-				"comment": "SUSE Linux Enterprise Live Patching 15 SP5 is installed"
+				"operator": "AND",
+				"criterions": [
+					{
+						"test_ref": "oval:org.opensuse.security:tst:2009764853",
+						"comment": "SUSE Linux Enterprise Live Patching 15 SP5 is installed"
+					},
+					{
+						"test_ref": "oval:org.opensuse.security:tst:2009865673",
+						"comment": "kernel-livepatch-5_14_21-150500_13_58-rt-1-150500.11.3.1 is installed"
+					}
+				]
 			},
 			{
-				"test_ref": "oval:org.opensuse.security:tst:2009865673",
-				"comment": "kernel-livepatch-5_14_21-150500_13_58-rt-1-150500.11.3.1 is installed"
+				"operator": "AND",
+				"criterias": [
+					{
+						"operator": "OR",
+						"criterions": [
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009759899",
+								"comment": "SUSE Linux Enterprise High Performance Computing 15 SP5 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009762868",
+								"comment": "SUSE Linux Enterprise Module for Public Cloud 15 SP5 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009759901",
+								"comment": "SUSE Linux Enterprise Server 15 SP5 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009759902",
+								"comment": "SUSE Linux Enterprise Server for SAP Applications 15 SP5 is installed"
+							}
+						]
+					},
+					{
+						"operator": "OR",
+						"criterions": [
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009865728",
+								"comment": "kernel-azure-5.14.21-150500.33.57.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009865729",
+								"comment": "kernel-azure-devel-5.14.21-150500.33.57.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009865734",
+								"comment": "kernel-devel-azure-5.14.21-150500.33.57.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009865735",
+								"comment": "kernel-source-azure-5.14.21-150500.33.57.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009865736",
+								"comment": "kernel-syms-azure-5.14.21-150500.33.57.1 is installed"
+							}
+						]
+					}
+				]
 			}
 		]
 	}

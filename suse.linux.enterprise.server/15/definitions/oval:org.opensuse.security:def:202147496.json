@@ -7,8 +7,12 @@
 		"affected": {
 			"family": "unix",
 			"platform": [
+				"SUSE Linux Enterprise High Performance Computing 15 SP5",
 				"SUSE Linux Enterprise Live Patching 15 SP5",
-				"SUSE Linux Enterprise Server 15-LTSS"
+				"SUSE Linux Enterprise Module for Public Cloud 15 SP5",
+				"SUSE Linux Enterprise Server 15 SP5",
+				"SUSE Linux Enterprise Server 15-LTSS",
+				"SUSE Linux Enterprise Server for SAP Applications 15 SP5"
 			]
 		},
 		"reference": [
@@ -46,6 +50,11 @@
 				"ref_id": "SUSE-SU-2024:2011-1",
 				"ref_url": "https://lists.suse.com/pipermail/sle-updates/2024-June/035575.html",
 				"source": "SUSE-SU"
+			},
+			{
+				"ref_id": "SUSE-SU-2024:2019-1",
+				"ref_url": "https://lists.suse.com/pipermail/sle-updates/2024-June/035578.html",
+				"source": "SUSE-SU"
 			}
 		],
 		"description": "\n    In the Linux kernel, the following vulnerability has been resolved:\n\nnet/tls: Fix flipped sign in tls_err_abort() calls\n\nsk->sk_err appears to expect a positive value, a convention that ktls\ndoesn't always follow and that leads to memory corruption in other code.\nFor instance,\n\n    [kworker]\n    tls_encrypt_done(..., err=<negative error from crypto request>)\n      tls_err_abort(.., err)\n        sk->sk_err = err;\n\n    [task]\n    splice_from_pipe_feed\n      ...\n        tls_sw_do_sendpage\n          if (sk->sk_err) {\n            ret = -sk->sk_err;  // ret is positive\n\n    splice_from_pipe_feed (continued)\n      ret = actor(...)  // ret is still positive and interpreted as bytes\n                        // written, resulting in underflow of buf->len and\n                        // sd->len, leading to huge buf->offset and bogus\n                        // addresses computed in later calls to actor()\n\nFix all tls_err_abort() callers to pass a negative error code\nconsistently and centralize the error-prone sign flip there, throwing in\na warning to catch future misuse and uninlining the function so it\nreally does only warn once.\n    ",
@@ -74,12 +83,16 @@
 				"date": "2024-05-28"
 			},
 			"updated": {
-				"date": "2024-06-13"
+				"date": "2024-06-14"
 			},
 			"affected_cpe_list": {
 				"cpe": [
 					"cpe:/o:suse:sle-module-live-patching:15:sp5",
-					"cpe:/o:suse:sles-ltss:15"
+					"cpe:/o:suse:sle-module-public-cloud:15:sp5",
+					"cpe:/o:suse:sle_hpc:15:sp5",
+					"cpe:/o:suse:sles-ltss:15",
+					"cpe:/o:suse:sles:15:sp5",
+					"cpe:/o:suse:sles_sap:15:sp5"
 				]
 			}
 		}
@@ -145,6 +158,57 @@
 					{
 						"test_ref": "oval:org.opensuse.security:tst:2009302033",
 						"comment": "SUSE Linux Enterprise Server 15-LTSS is installed"
+					}
+				]
+			},
+			{
+				"operator": "AND",
+				"criterias": [
+					{
+						"operator": "OR",
+						"criterions": [
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009759899",
+								"comment": "SUSE Linux Enterprise High Performance Computing 15 SP5 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009762868",
+								"comment": "SUSE Linux Enterprise Module for Public Cloud 15 SP5 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009759901",
+								"comment": "SUSE Linux Enterprise Server 15 SP5 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009759902",
+								"comment": "SUSE Linux Enterprise Server for SAP Applications 15 SP5 is installed"
+							}
+						]
+					},
+					{
+						"operator": "OR",
+						"criterions": [
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009865728",
+								"comment": "kernel-azure-5.14.21-150500.33.57.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009865729",
+								"comment": "kernel-azure-devel-5.14.21-150500.33.57.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009865734",
+								"comment": "kernel-devel-azure-5.14.21-150500.33.57.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009865735",
+								"comment": "kernel-source-azure-5.14.21-150500.33.57.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009865736",
+								"comment": "kernel-syms-azure-5.14.21-150500.33.57.1 is installed"
+							}
+						]
 					}
 				]
 			}

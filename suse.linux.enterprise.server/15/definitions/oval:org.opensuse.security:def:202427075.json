@@ -7,7 +7,11 @@
 		"affected": {
 			"family": "unix",
 			"platform": [
-				"SUSE Linux Enterprise Live Patching 15 SP5"
+				"SUSE Linux Enterprise High Performance Computing 15 SP5",
+				"SUSE Linux Enterprise Live Patching 15 SP5",
+				"SUSE Linux Enterprise Module for Public Cloud 15 SP5",
+				"SUSE Linux Enterprise Server 15 SP5",
+				"SUSE Linux Enterprise Server for SAP Applications 15 SP5"
 			]
 		},
 		"reference": [
@@ -50,6 +54,11 @@
 				"ref_id": "SUSE-SU-2024:2008-1",
 				"ref_url": "https://lists.suse.com/pipermail/sle-updates/2024-June/035569.html",
 				"source": "SUSE-SU"
+			},
+			{
+				"ref_id": "SUSE-SU-2024:2019-1",
+				"ref_url": "https://lists.suse.com/pipermail/sle-updates/2024-June/035578.html",
+				"source": "SUSE-SU"
 			}
 		],
 		"description": "\n    In the Linux kernel, the following vulnerability has been resolved:\n\nmedia: dvb-frontends: avoid stack overflow warnings with clang\n\nA previous patch worked around a KASAN issue in stv0367, now a similar\nproblem showed up with clang:\n\ndrivers/media/dvb-frontends/stv0367.c:1222:12: error: stack frame size (3624) exceeds limit (2048) in 'stv0367ter_set_frontend' [-Werror,-Wframe-larger-than]\n 1214 | static int stv0367ter_set_frontend(struct dvb_frontend *fe)\n\nRework the stv0367_writereg() function to be simpler and mark both\nregister access functions as noinline_for_stack so the temporary\ni2c_msg structures do not get duplicated on the stack when KASAN_STACK\nis enabled.\n    ",
@@ -78,25 +87,85 @@
 				"date": "2024-06-13"
 			},
 			"updated": {
-				"date": "2024-06-13"
+				"date": "2024-06-14"
 			},
 			"affected_cpe_list": {
 				"cpe": [
-					"cpe:/o:suse:sle-module-live-patching:15:sp5"
+					"cpe:/o:suse:sle-module-live-patching:15:sp5",
+					"cpe:/o:suse:sle-module-public-cloud:15:sp5",
+					"cpe:/o:suse:sle_hpc:15:sp5",
+					"cpe:/o:suse:sles:15:sp5",
+					"cpe:/o:suse:sles_sap:15:sp5"
 				]
 			}
 		}
 	},
 	"criteria": {
-		"operator": "AND",
-		"criterions": [
+		"operator": "OR",
+		"criterias": [
 			{
-				"test_ref": "oval:org.opensuse.security:tst:2009764853",
-				"comment": "SUSE Linux Enterprise Live Patching 15 SP5 is installed"
+				"operator": "AND",
+				"criterions": [
+					{
+						"test_ref": "oval:org.opensuse.security:tst:2009764853",
+						"comment": "SUSE Linux Enterprise Live Patching 15 SP5 is installed"
+					},
+					{
+						"test_ref": "oval:org.opensuse.security:tst:2009865673",
+						"comment": "kernel-livepatch-5_14_21-150500_13_58-rt-1-150500.11.3.1 is installed"
+					}
+				]
 			},
 			{
-				"test_ref": "oval:org.opensuse.security:tst:2009865673",
-				"comment": "kernel-livepatch-5_14_21-150500_13_58-rt-1-150500.11.3.1 is installed"
+				"operator": "AND",
+				"criterias": [
+					{
+						"operator": "OR",
+						"criterions": [
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009759899",
+								"comment": "SUSE Linux Enterprise High Performance Computing 15 SP5 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009762868",
+								"comment": "SUSE Linux Enterprise Module for Public Cloud 15 SP5 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009759901",
+								"comment": "SUSE Linux Enterprise Server 15 SP5 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009759902",
+								"comment": "SUSE Linux Enterprise Server for SAP Applications 15 SP5 is installed"
+							}
+						]
+					},
+					{
+						"operator": "OR",
+						"criterions": [
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009865728",
+								"comment": "kernel-azure-5.14.21-150500.33.57.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009865729",
+								"comment": "kernel-azure-devel-5.14.21-150500.33.57.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009865734",
+								"comment": "kernel-devel-azure-5.14.21-150500.33.57.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009865735",
+								"comment": "kernel-source-azure-5.14.21-150500.33.57.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009865736",
+								"comment": "kernel-syms-azure-5.14.21-150500.33.57.1 is installed"
+							}
+						]
+					}
+				]
 			}
 		]
 	}

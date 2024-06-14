@@ -35,6 +35,11 @@
 				"ref_id": "SUSE-SU-2024:2008-1",
 				"ref_url": "https://lists.suse.com/pipermail/sle-updates/2024-June/035569.html",
 				"source": "SUSE-SU"
+			},
+			{
+				"ref_id": "SUSE-SU-2024:2019-1",
+				"ref_url": "https://lists.suse.com/pipermail/sle-updates/2024-June/035578.html",
+				"source": "SUSE-SU"
 			}
 		],
 		"description": "\n    In the Linux kernel, the following vulnerability has been resolved:\n\nusb: gadget: f_ncm: Fix UAF ncm object at re-bind after usb ep transport error\n\nWhen ncm function is working and then stop usb0 interface for link down,\neth_stop() is called. At this piont, accidentally if usb transport error\nshould happen in usb_ep_enable(), 'in_ep' and/or 'out_ep' may not be enabled.\n\nAfter that, ncm_disable() is called to disable for ncm unbind\nbut gether_disconnect() is never called since 'in_ep' is not enabled.\n\nAs the result, ncm object is released in ncm unbind\nbut 'dev->port_usb' associated to 'ncm->port' is not NULL.\n\nAnd when ncm bind again to recover netdev, ncm object is reallocated\nbut usb0 interface is already associated to previous released ncm object.\n\nTherefore, once usb0 interface is up and eth_start_xmit() is called,\nreleased ncm object is dereferrenced and it might cause use-after-free memory.\n\n[function unlink via configfs]\n  usb0: eth_stop dev->port_usb=ffffff9b179c3200\n  --> error happens in usb_ep_enable().\n  NCM: ncm_disable: ncm=ffffff9b179c3200\n  --> no gether_disconnect() since ncm->port.in_ep->enabled is false.\n  NCM: ncm_unbind: ncm unbind ncm=ffffff9b179c3200\n  NCM: ncm_free: ncm free ncm=ffffff9b179c3200   <-- released ncm\n\n[function link via configfs]\n  NCM: ncm_alloc: ncm alloc ncm=ffffff9ac4f8a000\n  NCM: ncm_bind: ncm bind ncm=ffffff9ac4f8a000\n  NCM: ncm_set_alt: ncm=ffffff9ac4f8a000 alt=0\n  usb0: eth_open dev->port_usb=ffffff9b179c3200  <-- previous released ncm\n  usb0: eth_start dev->port_usb=ffffff9b179c3200 <--\n  eth_start_xmit()\n  --> dev->wrap()\n  Unable to handle kernel paging request at virtual address dead00000000014f\n\nThis patch addresses the issue by checking if 'ncm->netdev' is not NULL at\nncm_disable() to call gether_disconnect() to deassociate 'dev->port_usb'.\nIt's more reasonable to check 'ncm->netdev' to call gether_connect/disconnect\nrather than check 'ncm->port.in_ep->enabled' since it might not be enabled\nbut the gether connection might be established.\n    ",
@@ -63,7 +68,7 @@
 				"date": "2024-06-13"
 			},
 			"updated": {
-				"date": "2024-06-13"
+				"date": "2024-06-14"
 			},
 			"affected_cpe_list": {
 				"cpe": [
@@ -82,12 +87,38 @@
 						"operator": "AND",
 						"criterions": [
 							{
+								"test_ref": "oval:org.opensuse.security:tst:2009865725",
+								"comment": "cluster-md-kmp-azure-5.14.21-150500.33.57.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009623277",
+								"comment": "cluster-md-kmp-azure is signed with openSUSE key"
+							}
+						]
+					},
+					{
+						"operator": "AND",
+						"criterions": [
+							{
 								"test_ref": "oval:org.opensuse.security:tst:2009865615",
 								"comment": "cluster-md-kmp-rt-5.14.21-150500.13.58.1 is installed"
 							},
 							{
 								"test_ref": "oval:org.opensuse.security:tst:2009342853",
 								"comment": "cluster-md-kmp-rt is signed with openSUSE key"
+							}
+						]
+					},
+					{
+						"operator": "AND",
+						"criterions": [
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009865726",
+								"comment": "dlm-kmp-azure-5.14.21-150500.33.57.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009623279",
+								"comment": "dlm-kmp-azure is signed with openSUSE key"
 							}
 						]
 					},
@@ -108,12 +139,116 @@
 						"operator": "AND",
 						"criterions": [
 							{
+								"test_ref": "oval:org.opensuse.security:tst:2009865727",
+								"comment": "gfs2-kmp-azure-5.14.21-150500.33.57.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009623281",
+								"comment": "gfs2-kmp-azure is signed with openSUSE key"
+							}
+						]
+					},
+					{
+						"operator": "AND",
+						"criterions": [
+							{
 								"test_ref": "oval:org.opensuse.security:tst:2009865617",
 								"comment": "gfs2-kmp-rt-5.14.21-150500.13.58.1 is installed"
 							},
 							{
 								"test_ref": "oval:org.opensuse.security:tst:2009342857",
 								"comment": "gfs2-kmp-rt is signed with openSUSE key"
+							}
+						]
+					},
+					{
+						"operator": "AND",
+						"criterions": [
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009865728",
+								"comment": "kernel-azure-5.14.21-150500.33.57.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009623283",
+								"comment": "kernel-azure is signed with openSUSE key"
+							}
+						]
+					},
+					{
+						"operator": "AND",
+						"criterions": [
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009865729",
+								"comment": "kernel-azure-devel-5.14.21-150500.33.57.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009623285",
+								"comment": "kernel-azure-devel is signed with openSUSE key"
+							}
+						]
+					},
+					{
+						"operator": "AND",
+						"criterions": [
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009865730",
+								"comment": "kernel-azure-extra-5.14.21-150500.33.57.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009623286",
+								"comment": "kernel-azure-extra is signed with openSUSE key"
+							}
+						]
+					},
+					{
+						"operator": "AND",
+						"criterions": [
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009865731",
+								"comment": "kernel-azure-livepatch-devel-5.14.21-150500.33.57.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009623287",
+								"comment": "kernel-azure-livepatch-devel is signed with openSUSE key"
+							}
+						]
+					},
+					{
+						"operator": "AND",
+						"criterions": [
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009865732",
+								"comment": "kernel-azure-optional-5.14.21-150500.33.57.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009623427",
+								"comment": "kernel-azure-optional is signed with openSUSE key"
+							}
+						]
+					},
+					{
+						"operator": "AND",
+						"criterions": [
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009865733",
+								"comment": "kernel-azure-vdso-5.14.21-150500.33.57.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009769740",
+								"comment": "kernel-azure-vdso is signed with openSUSE key"
+							}
+						]
+					},
+					{
+						"operator": "AND",
+						"criterions": [
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009865734",
+								"comment": "kernel-devel-azure-5.14.21-150500.33.57.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009623293",
+								"comment": "kernel-devel-azure is signed with openSUSE key"
 							}
 						]
 					},
@@ -277,12 +412,38 @@
 						"operator": "AND",
 						"criterions": [
 							{
+								"test_ref": "oval:org.opensuse.security:tst:2009865735",
+								"comment": "kernel-source-azure-5.14.21-150500.33.57.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009623300",
+								"comment": "kernel-source-azure is signed with openSUSE key"
+							}
+						]
+					},
+					{
+						"operator": "AND",
+						"criterions": [
+							{
 								"test_ref": "oval:org.opensuse.security:tst:2009865630",
 								"comment": "kernel-source-rt-5.14.21-150500.13.58.1 is installed"
 							},
 							{
 								"test_ref": "oval:org.opensuse.security:tst:2009342866",
 								"comment": "kernel-source-rt is signed with openSUSE key"
+							}
+						]
+					},
+					{
+						"operator": "AND",
+						"criterions": [
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009865736",
+								"comment": "kernel-syms-azure-5.14.21-150500.33.57.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009623301",
+								"comment": "kernel-syms-azure is signed with openSUSE key"
 							}
 						]
 					},
@@ -303,6 +464,19 @@
 						"operator": "AND",
 						"criterions": [
 							{
+								"test_ref": "oval:org.opensuse.security:tst:2009865737",
+								"comment": "kselftests-kmp-azure-5.14.21-150500.33.57.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009623305",
+								"comment": "kselftests-kmp-azure is signed with openSUSE key"
+							}
+						]
+					},
+					{
+						"operator": "AND",
+						"criterions": [
+							{
 								"test_ref": "oval:org.opensuse.security:tst:2009865632",
 								"comment": "kselftests-kmp-rt-5.14.21-150500.13.58.1 is installed"
 							},
@@ -316,12 +490,38 @@
 						"operator": "AND",
 						"criterions": [
 							{
+								"test_ref": "oval:org.opensuse.security:tst:2009865738",
+								"comment": "ocfs2-kmp-azure-5.14.21-150500.33.57.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009623306",
+								"comment": "ocfs2-kmp-azure is signed with openSUSE key"
+							}
+						]
+					},
+					{
+						"operator": "AND",
+						"criterions": [
+							{
 								"test_ref": "oval:org.opensuse.security:tst:2009865633",
 								"comment": "ocfs2-kmp-rt-5.14.21-150500.13.58.1 is installed"
 							},
 							{
 								"test_ref": "oval:org.opensuse.security:tst:2009342870",
 								"comment": "ocfs2-kmp-rt is signed with openSUSE key"
+							}
+						]
+					},
+					{
+						"operator": "AND",
+						"criterions": [
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009865739",
+								"comment": "reiserfs-kmp-azure-5.14.21-150500.33.57.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009623308",
+								"comment": "reiserfs-kmp-azure is signed with openSUSE key"
 							}
 						]
 					},

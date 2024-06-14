@@ -7,7 +7,11 @@
 		"affected": {
 			"family": "unix",
 			"platform": [
-				"SUSE Linux Enterprise Live Patching 15 SP5"
+				"SUSE Linux Enterprise High Performance Computing 15 SP5",
+				"SUSE Linux Enterprise Live Patching 15 SP5",
+				"SUSE Linux Enterprise Module for Public Cloud 15 SP5",
+				"SUSE Linux Enterprise Server 15 SP5",
+				"SUSE Linux Enterprise Server for SAP Applications 15 SP5"
 			]
 		},
 		"reference": [
@@ -45,6 +49,11 @@
 				"ref_id": "SUSE-SU-2024:2011-1",
 				"ref_url": "https://lists.suse.com/pipermail/sle-updates/2024-June/035575.html",
 				"source": "SUSE-SU"
+			},
+			{
+				"ref_id": "SUSE-SU-2024:2019-1",
+				"ref_url": "https://lists.suse.com/pipermail/sle-updates/2024-June/035578.html",
+				"source": "SUSE-SU"
 			}
 		],
 		"description": "\n    In the Linux kernel, the following vulnerability has been resolved:\n\nnfsd: fix use-after-free due to delegation race\n\nA delegation break could arrive as soon as we've called vfs_setlease.  A\ndelegation break runs a callback which immediately (in\nnfsd4_cb_recall_prepare) adds the delegation to del_recall_lru.  If we\nthen exit nfs4_set_delegation without hashing the delegation, it will be\nfreed as soon as the callback is done with it, without ever being\nremoved from del_recall_lru.\n\nSymptoms show up later as use-after-free or list corruption warnings,\nusually in the laundromat thread.\n\nI suspect aba2072f4523 \"nfsd: grant read delegations to clients holding\nwrites\" made this bug easier to hit, but I looked as far back as v3.0\nand it looks to me it already had the same problem.  So I'm not sure\nwhere the bug was introduced; it may have been there from the beginning.\n    ",
@@ -73,25 +82,85 @@
 				"date": "2024-06-13"
 			},
 			"updated": {
-				"date": "2024-06-13"
+				"date": "2024-06-14"
 			},
 			"affected_cpe_list": {
 				"cpe": [
-					"cpe:/o:suse:sle-module-live-patching:15:sp5"
+					"cpe:/o:suse:sle-module-live-patching:15:sp5",
+					"cpe:/o:suse:sle-module-public-cloud:15:sp5",
+					"cpe:/o:suse:sle_hpc:15:sp5",
+					"cpe:/o:suse:sles:15:sp5",
+					"cpe:/o:suse:sles_sap:15:sp5"
 				]
 			}
 		}
 	},
 	"criteria": {
-		"operator": "AND",
-		"criterions": [
+		"operator": "OR",
+		"criterias": [
 			{
-				"test_ref": "oval:org.opensuse.security:tst:2009764853",
-				"comment": "SUSE Linux Enterprise Live Patching 15 SP5 is installed"
+				"operator": "AND",
+				"criterions": [
+					{
+						"test_ref": "oval:org.opensuse.security:tst:2009764853",
+						"comment": "SUSE Linux Enterprise Live Patching 15 SP5 is installed"
+					},
+					{
+						"test_ref": "oval:org.opensuse.security:tst:2009865673",
+						"comment": "kernel-livepatch-5_14_21-150500_13_58-rt-1-150500.11.3.1 is installed"
+					}
+				]
 			},
 			{
-				"test_ref": "oval:org.opensuse.security:tst:2009865673",
-				"comment": "kernel-livepatch-5_14_21-150500_13_58-rt-1-150500.11.3.1 is installed"
+				"operator": "AND",
+				"criterias": [
+					{
+						"operator": "OR",
+						"criterions": [
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009759899",
+								"comment": "SUSE Linux Enterprise High Performance Computing 15 SP5 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009762868",
+								"comment": "SUSE Linux Enterprise Module for Public Cloud 15 SP5 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009759901",
+								"comment": "SUSE Linux Enterprise Server 15 SP5 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009759902",
+								"comment": "SUSE Linux Enterprise Server for SAP Applications 15 SP5 is installed"
+							}
+						]
+					},
+					{
+						"operator": "OR",
+						"criterions": [
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009865728",
+								"comment": "kernel-azure-5.14.21-150500.33.57.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009865729",
+								"comment": "kernel-azure-devel-5.14.21-150500.33.57.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009865734",
+								"comment": "kernel-devel-azure-5.14.21-150500.33.57.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009865735",
+								"comment": "kernel-source-azure-5.14.21-150500.33.57.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009865736",
+								"comment": "kernel-syms-azure-5.14.21-150500.33.57.1 is installed"
+							}
+						]
+					}
+				]
 			}
 		]
 	}

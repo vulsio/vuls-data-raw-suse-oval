@@ -7,7 +7,11 @@
 		"affected": {
 			"family": "unix",
 			"platform": [
-				"SUSE Linux Enterprise Live Patching 15 SP5"
+				"SUSE Linux Enterprise High Performance Computing 15 SP5",
+				"SUSE Linux Enterprise Live Patching 15 SP5",
+				"SUSE Linux Enterprise Module for Public Cloud 15 SP5",
+				"SUSE Linux Enterprise Server 15 SP5",
+				"SUSE Linux Enterprise Server for SAP Applications 15 SP5"
 			]
 		},
 		"reference": [
@@ -45,6 +49,11 @@
 				"ref_id": "SUSE-SU-2024:2011-1",
 				"ref_url": "https://lists.suse.com/pipermail/sle-updates/2024-June/035575.html",
 				"source": "SUSE-SU"
+			},
+			{
+				"ref_id": "SUSE-SU-2024:2019-1",
+				"ref_url": "https://lists.suse.com/pipermail/sle-updates/2024-June/035578.html",
+				"source": "SUSE-SU"
 			}
 		],
 		"description": "\n    In the Linux kernel, the following vulnerability has been resolved:\n\nnet/mlx4_en: Fix an use-after-free bug in mlx4_en_try_alloc_resources()\n\nIn mlx4_en_try_alloc_resources(), mlx4_en_copy_priv() is called and\ntmp->tx_cq will be freed on the error path of mlx4_en_copy_priv().\nAfter that mlx4_en_alloc_resources() is called and there is a dereference\nof &tmp->tx_cq[t][i] in mlx4_en_alloc_resources(), which could lead to\na use after free problem on failure of mlx4_en_copy_priv().\n\nFix this bug by adding a check of mlx4_en_copy_priv()\n\nThis bug was found by a static analyzer. The analysis employs\ndifferential checking to identify inconsistent security operations\n(e.g., checks or kfrees) between two code paths and confirms that the\ninconsistent operations are not recovered in the current function or\nthe callers, so they constitute bugs.\n\nNote that, as a bug found by static analysis, it can be a false\npositive or hard to trigger. Multiple researchers have cross-reviewed\nthe bug.\n\nBuilds with CONFIG_MLX4_EN=m show no new warnings,\nand our static analyzer no longer warns about this code.\n    ",
@@ -69,31 +78,95 @@
 				{
 					"text": "SUSE bug 1225453",
 					"href": "https://bugzilla.suse.com/1225453"
+				},
+				{
+					"text": "SUSE bug 1225454",
+					"href": "https://bugzilla.suse.com/1225454"
 				}
 			],
 			"issued": {
 				"date": "2024-06-13"
 			},
 			"updated": {
-				"date": "2024-06-13"
+				"date": "2024-06-14"
 			},
 			"affected_cpe_list": {
 				"cpe": [
-					"cpe:/o:suse:sle-module-live-patching:15:sp5"
+					"cpe:/o:suse:sle-module-live-patching:15:sp5",
+					"cpe:/o:suse:sle-module-public-cloud:15:sp5",
+					"cpe:/o:suse:sle_hpc:15:sp5",
+					"cpe:/o:suse:sles:15:sp5",
+					"cpe:/o:suse:sles_sap:15:sp5"
 				]
 			}
 		}
 	},
 	"criteria": {
-		"operator": "AND",
-		"criterions": [
+		"operator": "OR",
+		"criterias": [
 			{
-				"test_ref": "oval:org.opensuse.security:tst:2009764853",
-				"comment": "SUSE Linux Enterprise Live Patching 15 SP5 is installed"
+				"operator": "AND",
+				"criterions": [
+					{
+						"test_ref": "oval:org.opensuse.security:tst:2009764853",
+						"comment": "SUSE Linux Enterprise Live Patching 15 SP5 is installed"
+					},
+					{
+						"test_ref": "oval:org.opensuse.security:tst:2009865673",
+						"comment": "kernel-livepatch-5_14_21-150500_13_58-rt-1-150500.11.3.1 is installed"
+					}
+				]
 			},
 			{
-				"test_ref": "oval:org.opensuse.security:tst:2009865673",
-				"comment": "kernel-livepatch-5_14_21-150500_13_58-rt-1-150500.11.3.1 is installed"
+				"operator": "AND",
+				"criterias": [
+					{
+						"operator": "OR",
+						"criterions": [
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009759899",
+								"comment": "SUSE Linux Enterprise High Performance Computing 15 SP5 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009762868",
+								"comment": "SUSE Linux Enterprise Module for Public Cloud 15 SP5 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009759901",
+								"comment": "SUSE Linux Enterprise Server 15 SP5 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009759902",
+								"comment": "SUSE Linux Enterprise Server for SAP Applications 15 SP5 is installed"
+							}
+						]
+					},
+					{
+						"operator": "OR",
+						"criterions": [
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009865728",
+								"comment": "kernel-azure-5.14.21-150500.33.57.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009865729",
+								"comment": "kernel-azure-devel-5.14.21-150500.33.57.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009865734",
+								"comment": "kernel-devel-azure-5.14.21-150500.33.57.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009865735",
+								"comment": "kernel-source-azure-5.14.21-150500.33.57.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009865736",
+								"comment": "kernel-syms-azure-5.14.21-150500.33.57.1 is installed"
+							}
+						]
+					}
+				]
 			}
 		]
 	}

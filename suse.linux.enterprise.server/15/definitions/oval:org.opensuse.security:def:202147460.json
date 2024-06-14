@@ -7,8 +7,12 @@
 		"affected": {
 			"family": "unix",
 			"platform": [
+				"SUSE Linux Enterprise High Performance Computing 15 SP5",
 				"SUSE Linux Enterprise Live Patching 15 SP5",
-				"SUSE Linux Enterprise Server 15-LTSS"
+				"SUSE Linux Enterprise Module for Public Cloud 15 SP5",
+				"SUSE Linux Enterprise Server 15 SP5",
+				"SUSE Linux Enterprise Server 15-LTSS",
+				"SUSE Linux Enterprise Server for SAP Applications 15 SP5"
 			]
 		},
 		"reference": [
@@ -46,6 +50,11 @@
 				"ref_id": "SUSE-SU-2024:2011-1",
 				"ref_url": "https://lists.suse.com/pipermail/sle-updates/2024-June/035575.html",
 				"source": "SUSE-SU"
+			},
+			{
+				"ref_id": "SUSE-SU-2024:2019-1",
+				"ref_url": "https://lists.suse.com/pipermail/sle-updates/2024-June/035578.html",
+				"source": "SUSE-SU"
 			}
 		],
 		"description": "\n    In the Linux kernel, the following vulnerability has been resolved:\n\nocfs2: fix data corruption after conversion from inline format\n\nCommit 6dbf7bb55598 (\"fs: Don't invalidate page buffers in\nblock_write_full_page()\") uncovered a latent bug in ocfs2 conversion\nfrom inline inode format to a normal inode format.\n\nThe code in ocfs2_convert_inline_data_to_extents() attempts to zero out\nthe whole cluster allocated for file data by grabbing, zeroing, and\ndirtying all pages covering this cluster.  However these pages are\nbeyond i_size, thus writeback code generally ignores these dirty pages\nand no blocks were ever actually zeroed on the disk.\n\nThis oversight was fixed by commit 693c241a5f6a (\"ocfs2: No need to zero\npages past i_size.\") for standard ocfs2 write path, inline conversion\npath was apparently forgotten; the commit log also has a reasoning why\nthe zeroing actually is not needed.\n\nAfter commit 6dbf7bb55598, things became worse as writeback code stopped\ninvalidating buffers on pages beyond i_size and thus these pages end up\nwith clean PageDirty bit but with buffers attached to these pages being\nstill dirty.  So when a file is converted from inline format, then\nwriteback triggers, and then the file is grown so that these pages\nbecome valid, the invalid dirtiness state is preserved,\nmark_buffer_dirty() does nothing on these pages (buffers are already\ndirty) but page is never written back because it is clean.  So data\nwritten to these pages is lost once pages are reclaimed.\n\nSimple reproducer for the problem is:\n\n  xfs_io -f -c \"pwrite 0 2000\" -c \"pwrite 2000 2000\" -c \"fsync\" \\\n    -c \"pwrite 4000 2000\" ocfs2_file\n\nAfter unmounting and mounting the fs again, you can observe that end of\n'ocfs2_file' has lost its contents.\n\nFix the problem by not doing the pointless zeroing during conversion\nfrom inline format similarly as in the standard write path.\n\n[akpm@linux-foundation.org: fix whitespace, per Joseph]\n    ",
@@ -72,12 +81,16 @@
 				"date": "2024-05-25"
 			},
 			"updated": {
-				"date": "2024-06-13"
+				"date": "2024-06-14"
 			},
 			"affected_cpe_list": {
 				"cpe": [
 					"cpe:/o:suse:sle-module-live-patching:15:sp5",
-					"cpe:/o:suse:sles-ltss:15"
+					"cpe:/o:suse:sle-module-public-cloud:15:sp5",
+					"cpe:/o:suse:sle_hpc:15:sp5",
+					"cpe:/o:suse:sles-ltss:15",
+					"cpe:/o:suse:sles:15:sp5",
+					"cpe:/o:suse:sles_sap:15:sp5"
 				]
 			}
 		}
@@ -143,6 +156,57 @@
 					{
 						"test_ref": "oval:org.opensuse.security:tst:2009302033",
 						"comment": "SUSE Linux Enterprise Server 15-LTSS is installed"
+					}
+				]
+			},
+			{
+				"operator": "AND",
+				"criterias": [
+					{
+						"operator": "OR",
+						"criterions": [
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009759899",
+								"comment": "SUSE Linux Enterprise High Performance Computing 15 SP5 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009762868",
+								"comment": "SUSE Linux Enterprise Module for Public Cloud 15 SP5 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009759901",
+								"comment": "SUSE Linux Enterprise Server 15 SP5 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009759902",
+								"comment": "SUSE Linux Enterprise Server for SAP Applications 15 SP5 is installed"
+							}
+						]
+					},
+					{
+						"operator": "OR",
+						"criterions": [
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009865728",
+								"comment": "kernel-azure-5.14.21-150500.33.57.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009865729",
+								"comment": "kernel-azure-devel-5.14.21-150500.33.57.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009865734",
+								"comment": "kernel-devel-azure-5.14.21-150500.33.57.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009865735",
+								"comment": "kernel-source-azure-5.14.21-150500.33.57.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009865736",
+								"comment": "kernel-syms-azure-5.14.21-150500.33.57.1 is installed"
+							}
+						]
 					}
 				]
 			}
