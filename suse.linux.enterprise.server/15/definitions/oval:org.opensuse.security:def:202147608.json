@@ -1,0 +1,183 @@
+{
+	"id": "oval:org.opensuse.security:def:202147608",
+	"version": "1",
+	"class": "vulnerability",
+	"metadata": {
+		"title": "CVE-2021-47608",
+		"affected": {
+			"family": "unix",
+			"platform": [
+				"SUSE Linux Enterprise Server 15 SP1-LTSS",
+				"SUSE Linux Enterprise Server 15 SP2-LTSS",
+				"SUSE Linux Enterprise Server 15 SP3-LTSS",
+				"SUSE Linux Enterprise Server 15-LTSS",
+				"SUSE Linux Enterprise Server for SAP Applications 15 SP2",
+				"SUSE Linux Enterprise Server for SAP Applications 15 SP3"
+			]
+		},
+		"reference": [
+			{
+				"ref_id": "Mitre CVE-2021-47608",
+				"ref_url": "https://cve.mitre.org/cgi-bin/cvename.cgi?name=CVE-2021-47608",
+				"source": "CVE"
+			},
+			{
+				"ref_id": "SUSE CVE-2021-47608",
+				"ref_url": "https://www.suse.com/security/cve/CVE-2021-47608",
+				"source": "SUSE CVE"
+			}
+		],
+		"description": "\n    In the Linux kernel, the following vulnerability has been resolved:\n\nbpf: Fix kernel address leakage in atomic fetch\n\nThe change in commit 37086bfdc737 (\"bpf: Propagate stack bounds to registers\nin atomics w/ BPF_FETCH\") around check_mem_access() handling is buggy since\nthis would allow for unprivileged users to leak kernel pointers. For example,\nan atomic fetch/and with -1 on a stack destination which holds a spilled\npointer will migrate the spilled register type into a scalar, which can then\nbe exported out of the program (since scalar != pointer) by dumping it into\na map value.\n\nThe original implementation of XADD was preventing this situation by using\na double call to check_mem_access() one with BPF_READ and a subsequent one\nwith BPF_WRITE, in both cases passing -1 as a placeholder value instead of\nregister as per XADD semantics since it didn't contain a value fetch. The\nBPF_READ also included a check in check_stack_read_fixed_off() which rejects\nthe program if the stack slot is of __is_pointer_value() if dst_regno < 0.\nThe latter is to distinguish whether we're dealing with a regular stack spill/\nfill or some arithmetical operation which is disallowed on non-scalars, see\nalso 6e7e63cbb023 (\"bpf: Forbid XADD on spilled pointers for unprivileged\nusers\") for more context on check_mem_access() and its handling of placeholder\nvalue -1.\n\nOne minimally intrusive option to fix the leak is for the BPF_FETCH case to\ninitially check the BPF_READ case via check_mem_access() with -1 as register,\nfollowed by the actual load case with non-negative load_reg to propagate\nstack bounds to registers.\n    ",
+		"advisory": {
+			"from": "security@suse.de",
+			"severity": "Moderate",
+			"cve": [
+				{
+					"text": "CVE-2021-47608 at SUSE",
+					"href": "https://www.suse.com/security/cve/CVE-2021-47608/"
+				},
+				{
+					"text": "CVE-2021-47608 at NVD",
+					"href": "https://nvd.nist.gov/vuln/detail/CVE-2021-47608"
+				}
+			],
+			"bugzilla": [
+				{
+					"text": "SUSE bug 1226569",
+					"href": "https://bugzilla.suse.com/1226569"
+				}
+			],
+			"issued": {
+				"date": "2024-06-21"
+			},
+			"updated": {
+				"date": "2024-06-21"
+			},
+			"affected_cpe_list": {
+				"cpe": [
+					"cpe:/o:suse:sles-ltss:15",
+					"cpe:/o:suse:sles-ltss:15:sp1",
+					"cpe:/o:suse:sles-ltss:15:sp2",
+					"cpe:/o:suse:sles-ltss:15:sp3",
+					"cpe:/o:suse:sles_sap:15:sp2",
+					"cpe:/o:suse:sles_sap:15:sp3"
+				]
+			}
+		}
+	},
+	"criteria": {
+		"operator": "OR",
+		"criterias": [
+			{
+				"operator": "AND",
+				"criterias": [
+					{
+						"operator": "OR",
+						"criterions": [
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009660213",
+								"comment": "SUSE Linux Enterprise Server 15 SP2-LTSS is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009729178",
+								"comment": "SUSE Linux Enterprise Server 15 SP3-LTSS is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009659637",
+								"comment": "SUSE Linux Enterprise Server for SAP Applications 15 SP2 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009669878",
+								"comment": "SUSE Linux Enterprise Server for SAP Applications 15 SP3 is installed"
+							}
+						]
+					},
+					{
+						"operator": "OR",
+						"criterions": [
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009334017",
+								"comment": "kernel-default is not affected"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009335423",
+								"comment": "kernel-default-devel is not affected"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009338037",
+								"comment": "reiserfs-kmp-default is not affected"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009334791",
+								"comment": "kernel-devel is not affected"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009334792",
+								"comment": "kernel-macros is not affected"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009333928",
+								"comment": "kernel-source is not affected"
+							}
+						]
+					}
+				]
+			},
+			{
+				"operator": "AND",
+				"criterias": [
+					{
+						"operator": "OR",
+						"criterions": [
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009341508",
+								"comment": "SUSE Linux Enterprise Server 15 SP1-LTSS is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009302033",
+								"comment": "SUSE Linux Enterprise Server 15-LTSS is installed"
+							}
+						]
+					},
+					{
+						"operator": "OR",
+						"criterions": [
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009334017",
+								"comment": "kernel-default is not affected"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009335425",
+								"comment": "kernel-default-base is not affected"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009335423",
+								"comment": "kernel-default-devel is not affected"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009335426",
+								"comment": "kernel-default-man is not affected"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009338037",
+								"comment": "reiserfs-kmp-default is not affected"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009334791",
+								"comment": "kernel-devel is not affected"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009334792",
+								"comment": "kernel-macros is not affected"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009333928",
+								"comment": "kernel-source is not affected"
+							}
+						]
+					}
+				]
+			}
+		]
+	}
+}
