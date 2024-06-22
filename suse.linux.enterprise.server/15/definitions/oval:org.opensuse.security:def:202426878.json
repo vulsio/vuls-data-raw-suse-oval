@@ -9,13 +9,17 @@
 			"platform": [
 				"SUSE Linux Enterprise Desktop 15 SP5",
 				"SUSE Linux Enterprise High Performance Computing 15 SP5",
+				"SUSE Linux Enterprise High Performance Computing 15 SP6",
 				"SUSE Linux Enterprise Live Patching 15 SP5",
 				"SUSE Linux Enterprise Module for Basesystem 15 SP5",
 				"SUSE Linux Enterprise Module for Development Tools 15 SP5",
 				"SUSE Linux Enterprise Module for Legacy 15 SP5",
 				"SUSE Linux Enterprise Module for Public Cloud 15 SP5",
+				"SUSE Linux Enterprise Module for Public Cloud 15 SP6",
 				"SUSE Linux Enterprise Server 15 SP5",
+				"SUSE Linux Enterprise Server 15 SP6",
 				"SUSE Linux Enterprise Server for SAP Applications 15 SP5",
+				"SUSE Linux Enterprise Server for SAP Applications 15 SP6",
 				"SUSE Linux Enterprise Workstation Extension 15 SP5"
 			]
 		},
@@ -64,6 +68,11 @@
 				"ref_id": "SUSE-SU-2024:1870-1",
 				"ref_url": "https://lists.suse.com/pipermail/sle-updates/2024-May/035427.html",
 				"source": "SUSE-SU"
+			},
+			{
+				"ref_id": "SUSE-SU-2024:2135-1",
+				"ref_url": "https://lists.suse.com/pipermail/sle-updates/2024-June/035681.html",
+				"source": "SUSE-SU"
 			}
 		],
 		"description": "\n    In the Linux kernel, the following vulnerability has been resolved:\n\nquota: Fix potential NULL pointer dereference\n\nBelow race may cause NULL pointer dereference\n\nP1\t\t\t\t\tP2\ndquot_free_inode\t\t\tquota_off\n\t\t\t\t\t  drop_dquot_ref\n\t\t\t\t\t   remove_dquot_ref\n\t\t\t\t\t   dquots = i_dquot(inode)\n  dquots = i_dquot(inode)\n  srcu_read_lock\n  dquots[cnt]) != NULL (1)\n\t\t\t\t\t     dquots[type] = NULL (2)\n  spin_lock(&dquots[cnt]->dq_dqb_lock) (3)\n   ....\n\nIf dquot_free_inode(or other routines) checks inode's quota pointers (1)\nbefore quota_off sets it to NULL(2) and use it (3) after that, NULL pointer\ndereference will be triggered.\n\nSo let's fix it by using a temporary pointer to avoid this issue.\n    ",
@@ -92,7 +101,7 @@
 				"date": "2024-05-15"
 			},
 			"updated": {
-				"date": "2024-05-31"
+				"date": "2024-06-22"
 			},
 			"affected_cpe_list": {
 				"cpe": [
@@ -101,6 +110,7 @@
 					"cpe:/o:suse:sle-module-legacy:15:sp5",
 					"cpe:/o:suse:sle-module-live-patching:15:sp5",
 					"cpe:/o:suse:sle-module-public-cloud:15:sp5",
+					"cpe:/o:suse:sle-module-public-cloud:15:sp6",
 					"cpe:/o:suse:sle-we:15:sp5",
 					"cpe:/o:suse:sle_hpc:15:sp5",
 					"cpe:/o:suse:sled:15:sp5",
@@ -375,6 +385,57 @@
 					{
 						"test_ref": "oval:org.opensuse.security:tst:2009764853",
 						"comment": "SUSE Linux Enterprise Live Patching 15 SP5 is installed"
+					}
+				]
+			},
+			{
+				"operator": "AND",
+				"criterias": [
+					{
+						"operator": "OR",
+						"criterions": [
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009856172",
+								"comment": "SUSE Linux Enterprise High Performance Computing 15 SP6 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009856320",
+								"comment": "SUSE Linux Enterprise Module for Public Cloud 15 SP6 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009856174",
+								"comment": "SUSE Linux Enterprise Server 15 SP6 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009856175",
+								"comment": "SUSE Linux Enterprise Server for SAP Applications 15 SP6 is installed"
+							}
+						]
+					},
+					{
+						"operator": "OR",
+						"criterions": [
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009868541",
+								"comment": "kernel-azure-6.4.0-150600.8.5.4 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009868542",
+								"comment": "kernel-azure-devel-6.4.0-150600.8.5.4 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009868547",
+								"comment": "kernel-devel-azure-6.4.0-150600.8.5.4 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009868548",
+								"comment": "kernel-source-azure-6.4.0-150600.8.5.4 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009868549",
+								"comment": "kernel-syms-azure-6.4.0-150600.8.5.1 is installed"
+							}
+						]
 					}
 				]
 			}

@@ -1,0 +1,276 @@
+{
+	"id": "oval:org.opensuse.security:def:202426726",
+	"version": "1",
+	"class": "vulnerability",
+	"metadata": {
+		"title": "CVE-2024-26726",
+		"affected": {
+			"family": "unix",
+			"platform": [
+				"openSUSE Leap 15.6"
+			]
+		},
+		"reference": [
+			{
+				"ref_id": "Mitre CVE-2024-26726",
+				"ref_url": "https://cve.mitre.org/cgi-bin/cvename.cgi?name=CVE-2024-26726",
+				"source": "CVE"
+			},
+			{
+				"ref_id": "SUSE CVE-2024-26726",
+				"ref_url": "https://www.suse.com/security/cve/CVE-2024-26726",
+				"source": "SUSE CVE"
+			},
+			{
+				"ref_id": "SUSE-SU-2024:2135-1",
+				"ref_url": "https://lists.suse.com/pipermail/sle-updates/2024-June/035681.html",
+				"source": "SUSE-SU"
+			}
+		],
+		"description": "\n    In the Linux kernel, the following vulnerability has been resolved:\n\nbtrfs: don't drop extent_map for free space inode on write error\n\nWhile running the CI for an unrelated change I hit the following panic\nwith generic/648 on btrfs_holes_spacecache.\n\nassertion failed: block_start != EXTENT_MAP_HOLE, in fs/btrfs/extent_io.c:1385\n------------[ cut here ]------------\nkernel BUG at fs/btrfs/extent_io.c:1385!\ninvalid opcode: 0000 [#1] PREEMPT SMP NOPTI\nCPU: 1 PID: 2695096 Comm: fsstress Kdump: loaded Tainted: G        W          6.8.0-rc2+ #1\nRIP: 0010:__extent_writepage_io.constprop.0+0x4c1/0x5c0\nCall Trace:\n <TASK>\n extent_write_cache_pages+0x2ac/0x8f0\n extent_writepages+0x87/0x110\n do_writepages+0xd5/0x1f0\n filemap_fdatawrite_wbc+0x63/0x90\n __filemap_fdatawrite_range+0x5c/0x80\n btrfs_fdatawrite_range+0x1f/0x50\n btrfs_write_out_cache+0x507/0x560\n btrfs_write_dirty_block_groups+0x32a/0x420\n commit_cowonly_roots+0x21b/0x290\n btrfs_commit_transaction+0x813/0x1360\n btrfs_sync_file+0x51a/0x640\n __x64_sys_fdatasync+0x52/0x90\n do_syscall_64+0x9c/0x190\n entry_SYSCALL_64_after_hwframe+0x6e/0x76\n\nThis happens because we fail to write out the free space cache in one\ninstance, come back around and attempt to write it again.  However on\nthe second pass through we go to call btrfs_get_extent() on the inode to\nget the extent mapping.  Because this is a new block group, and with the\nfree space inode we always search the commit root to avoid deadlocking\nwith the tree, we find nothing and return a EXTENT_MAP_HOLE for the\nrequested range.\n\nThis happens because the first time we try to write the space cache out\nwe hit an error, and on an error we drop the extent mapping.  This is\nnormal for normal files, but the free space cache inode is special.  We\nalways expect the extent map to be correct.  Thus the second time\nthrough we end up with a bogus extent map.\n\nSince we're deprecating this feature, the most straightforward way to\nfix this is to simply skip dropping the extent map range for this failed\nrange.\n\nI shortened the test by using error injection to stress the area to make\nit easier to reproduce.  With this patch in place we no longer panic\nwith my error injection test.\n    ",
+		"advisory": {
+			"from": "security@suse.de",
+			"severity": "Moderate",
+			"cve": [
+				{
+					"text": "CVE-2024-26726 at SUSE",
+					"href": "https://www.suse.com/security/cve/CVE-2024-26726/",
+					"impact": "medium",
+					"cvss3": "5.5/CVSS:3.1/AV:L/AC:L/PR:L/UI:N/S:U/C:N/I:N/A:H"
+				},
+				{
+					"text": "CVE-2024-26726 at NVD",
+					"href": "https://nvd.nist.gov/vuln/detail/CVE-2024-26726"
+				}
+			],
+			"bugzilla": [
+				{
+					"text": "SUSE bug 1222532",
+					"href": "https://bugzilla.suse.com/1222532"
+				}
+			],
+			"issued": {
+				"date": "2024-06-22"
+			},
+			"updated": {
+				"date": "2024-06-22"
+			},
+			"affected_cpe_list": {
+				"cpe": [
+					"cpe:/o:opensuse:leap:15.6"
+				]
+			}
+		}
+	},
+	"criteria": {
+		"operator": "AND",
+		"criterias": [
+			{
+				"operator": "OR",
+				"criterias": [
+					{
+						"operator": "AND",
+						"criterions": [
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009868538",
+								"comment": "cluster-md-kmp-azure-6.4.0-150600.8.5.4 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009623277",
+								"comment": "cluster-md-kmp-azure is signed with openSUSE key"
+							}
+						]
+					},
+					{
+						"operator": "AND",
+						"criterions": [
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009868539",
+								"comment": "dlm-kmp-azure-6.4.0-150600.8.5.4 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009623279",
+								"comment": "dlm-kmp-azure is signed with openSUSE key"
+							}
+						]
+					},
+					{
+						"operator": "AND",
+						"criterions": [
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009868540",
+								"comment": "gfs2-kmp-azure-6.4.0-150600.8.5.4 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009623281",
+								"comment": "gfs2-kmp-azure is signed with openSUSE key"
+							}
+						]
+					},
+					{
+						"operator": "AND",
+						"criterions": [
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009868541",
+								"comment": "kernel-azure-6.4.0-150600.8.5.4 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009623283",
+								"comment": "kernel-azure is signed with openSUSE key"
+							}
+						]
+					},
+					{
+						"operator": "AND",
+						"criterions": [
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009868542",
+								"comment": "kernel-azure-devel-6.4.0-150600.8.5.4 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009623285",
+								"comment": "kernel-azure-devel is signed with openSUSE key"
+							}
+						]
+					},
+					{
+						"operator": "AND",
+						"criterions": [
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009868543",
+								"comment": "kernel-azure-extra-6.4.0-150600.8.5.4 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009623286",
+								"comment": "kernel-azure-extra is signed with openSUSE key"
+							}
+						]
+					},
+					{
+						"operator": "AND",
+						"criterions": [
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009868544",
+								"comment": "kernel-azure-livepatch-devel-6.4.0-150600.8.5.4 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009623287",
+								"comment": "kernel-azure-livepatch-devel is signed with openSUSE key"
+							}
+						]
+					},
+					{
+						"operator": "AND",
+						"criterions": [
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009868545",
+								"comment": "kernel-azure-optional-6.4.0-150600.8.5.4 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009623427",
+								"comment": "kernel-azure-optional is signed with openSUSE key"
+							}
+						]
+					},
+					{
+						"operator": "AND",
+						"criterions": [
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009868546",
+								"comment": "kernel-azure-vdso-6.4.0-150600.8.5.4 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009769740",
+								"comment": "kernel-azure-vdso is signed with openSUSE key"
+							}
+						]
+					},
+					{
+						"operator": "AND",
+						"criterions": [
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009868547",
+								"comment": "kernel-devel-azure-6.4.0-150600.8.5.4 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009623293",
+								"comment": "kernel-devel-azure is signed with openSUSE key"
+							}
+						]
+					},
+					{
+						"operator": "AND",
+						"criterions": [
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009868548",
+								"comment": "kernel-source-azure-6.4.0-150600.8.5.4 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009623300",
+								"comment": "kernel-source-azure is signed with openSUSE key"
+							}
+						]
+					},
+					{
+						"operator": "AND",
+						"criterions": [
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009868549",
+								"comment": "kernel-syms-azure-6.4.0-150600.8.5.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009623301",
+								"comment": "kernel-syms-azure is signed with openSUSE key"
+							}
+						]
+					},
+					{
+						"operator": "AND",
+						"criterions": [
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009868550",
+								"comment": "kselftests-kmp-azure-6.4.0-150600.8.5.4 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009623305",
+								"comment": "kselftests-kmp-azure is signed with openSUSE key"
+							}
+						]
+					},
+					{
+						"operator": "AND",
+						"criterions": [
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009868551",
+								"comment": "ocfs2-kmp-azure-6.4.0-150600.8.5.4 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009623306",
+								"comment": "ocfs2-kmp-azure is signed with openSUSE key"
+							}
+						]
+					},
+					{
+						"operator": "AND",
+						"criterions": [
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009868552",
+								"comment": "reiserfs-kmp-azure-6.4.0-150600.8.5.4 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009623308",
+								"comment": "reiserfs-kmp-azure is signed with openSUSE key"
+							}
+						]
+					}
+				]
+			}
+		],
+		"criterions": [
+			{
+				"test_ref": "oval:org.opensuse.security:tst:2009864054",
+				"comment": "openSUSE Leap 15.6 is installed"
+			}
+		]
+	}
+}

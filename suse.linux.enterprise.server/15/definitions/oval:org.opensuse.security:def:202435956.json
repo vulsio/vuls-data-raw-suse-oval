@@ -7,7 +7,11 @@
 		"affected": {
 			"family": "unix",
 			"platform": [
-				"SUSE Linux Enterprise Server 15-LTSS"
+				"SUSE Linux Enterprise High Performance Computing 15 SP6",
+				"SUSE Linux Enterprise Module for Public Cloud 15 SP6",
+				"SUSE Linux Enterprise Server 15 SP6",
+				"SUSE Linux Enterprise Server 15-LTSS",
+				"SUSE Linux Enterprise Server for SAP Applications 15 SP6"
 			]
 		},
 		"reference": [
@@ -20,6 +24,11 @@
 				"ref_id": "SUSE CVE-2024-35956",
 				"ref_url": "https://www.suse.com/security/cve/CVE-2024-35956",
 				"source": "SUSE CVE"
+			},
+			{
+				"ref_id": "SUSE-SU-2024:2135-1",
+				"ref_url": "https://lists.suse.com/pipermail/sle-updates/2024-June/035681.html",
+				"source": "SUSE-SU"
 			}
 		],
 		"description": "\n    In the Linux kernel, the following vulnerability has been resolved:\n\nbtrfs: qgroup: fix qgroup prealloc rsv leak in subvolume operations\n\nCreate subvolume, create snapshot and delete subvolume all use\nbtrfs_subvolume_reserve_metadata() to reserve metadata for the changes\ndone to the parent subvolume's fs tree, which cannot be mediated in the\nnormal way via start_transaction. When quota groups (squota or qgroups)\nare enabled, this reserves qgroup metadata of type PREALLOC. Once the\noperation is associated to a transaction, we convert PREALLOC to\nPERTRANS, which gets cleared in bulk at the end of the transaction.\n\nHowever, the error paths of these three operations were not implementing\nthis lifecycle correctly. They unconditionally converted the PREALLOC to\nPERTRANS in a generic cleanup step regardless of errors or whether the\noperation was fully associated to a transaction or not. This resulted in\nerror paths occasionally converting this rsv to PERTRANS without calling\nrecord_root_in_trans successfully, which meant that unless that root got\nrecorded in the transaction by some other thread, the end of the\ntransaction would not free that root's PERTRANS, leaking it. Ultimately,\nthis resulted in hitting a WARN in CONFIG_BTRFS_DEBUG builds at unmount\nfor the leaked reservation.\n\nThe fix is to ensure that every qgroup PREALLOC reservation observes the\nfollowing properties:\n\n1. any failure before record_root_in_trans is called successfully\n   results in freeing the PREALLOC reservation.\n2. after record_root_in_trans, we convert to PERTRANS, and now the\n   transaction owns freeing the reservation.\n\nThis patch enforces those properties on the three operations. Without\nit, generic/269 with squotas enabled at mkfs time would fail in ~5-10\nruns on my system. With this patch, it ran successfully 1000 times in a\nrow.\n    ",
@@ -48,60 +57,117 @@
 				"date": "2024-05-21"
 			},
 			"updated": {
-				"date": "2024-05-21"
+				"date": "2024-06-22"
 			},
 			"affected_cpe_list": {
 				"cpe": [
+					"cpe:/o:suse:sle-module-public-cloud:15:sp6",
 					"cpe:/o:suse:sles-ltss:15"
 				]
 			}
 		}
 	},
 	"criteria": {
-		"operator": "AND",
+		"operator": "OR",
 		"criterias": [
 			{
-				"operator": "OR",
+				"operator": "AND",
+				"criterias": [
+					{
+						"operator": "OR",
+						"criterions": [
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009334017",
+								"comment": "kernel-default is not affected"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009335425",
+								"comment": "kernel-default-base is not affected"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009335423",
+								"comment": "kernel-default-devel is not affected"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009335426",
+								"comment": "kernel-default-man is not affected"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009338037",
+								"comment": "reiserfs-kmp-default is not affected"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009334791",
+								"comment": "kernel-devel is not affected"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009334792",
+								"comment": "kernel-macros is not affected"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009333928",
+								"comment": "kernel-source is not affected"
+							}
+						]
+					}
+				],
 				"criterions": [
 					{
-						"test_ref": "oval:org.opensuse.security:tst:2009334017",
-						"comment": "kernel-default is not affected"
-					},
-					{
-						"test_ref": "oval:org.opensuse.security:tst:2009335425",
-						"comment": "kernel-default-base is not affected"
-					},
-					{
-						"test_ref": "oval:org.opensuse.security:tst:2009335423",
-						"comment": "kernel-default-devel is not affected"
-					},
-					{
-						"test_ref": "oval:org.opensuse.security:tst:2009335426",
-						"comment": "kernel-default-man is not affected"
-					},
-					{
-						"test_ref": "oval:org.opensuse.security:tst:2009338037",
-						"comment": "reiserfs-kmp-default is not affected"
-					},
-					{
-						"test_ref": "oval:org.opensuse.security:tst:2009334791",
-						"comment": "kernel-devel is not affected"
-					},
-					{
-						"test_ref": "oval:org.opensuse.security:tst:2009334792",
-						"comment": "kernel-macros is not affected"
-					},
-					{
-						"test_ref": "oval:org.opensuse.security:tst:2009333928",
-						"comment": "kernel-source is not affected"
+						"test_ref": "oval:org.opensuse.security:tst:2009302033",
+						"comment": "SUSE Linux Enterprise Server 15-LTSS is installed"
 					}
 				]
-			}
-		],
-		"criterions": [
+			},
 			{
-				"test_ref": "oval:org.opensuse.security:tst:2009302033",
-				"comment": "SUSE Linux Enterprise Server 15-LTSS is installed"
+				"operator": "AND",
+				"criterias": [
+					{
+						"operator": "OR",
+						"criterions": [
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009856172",
+								"comment": "SUSE Linux Enterprise High Performance Computing 15 SP6 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009856320",
+								"comment": "SUSE Linux Enterprise Module for Public Cloud 15 SP6 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009856174",
+								"comment": "SUSE Linux Enterprise Server 15 SP6 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009856175",
+								"comment": "SUSE Linux Enterprise Server for SAP Applications 15 SP6 is installed"
+							}
+						]
+					},
+					{
+						"operator": "OR",
+						"criterions": [
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009868541",
+								"comment": "kernel-azure-6.4.0-150600.8.5.4 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009868542",
+								"comment": "kernel-azure-devel-6.4.0-150600.8.5.4 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009868547",
+								"comment": "kernel-devel-azure-6.4.0-150600.8.5.4 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009868548",
+								"comment": "kernel-source-azure-6.4.0-150600.8.5.4 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009868549",
+								"comment": "kernel-syms-azure-6.4.0-150600.8.5.1 is installed"
+							}
+						]
+					}
+				]
 			}
 		]
 	}

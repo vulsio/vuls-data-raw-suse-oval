@@ -9,19 +9,23 @@
 			"platform": [
 				"SUSE Linux Enterprise Desktop 15 SP5",
 				"SUSE Linux Enterprise High Performance Computing 15 SP5",
+				"SUSE Linux Enterprise High Performance Computing 15 SP6",
 				"SUSE Linux Enterprise Module for Basesystem 15 SP5",
 				"SUSE Linux Enterprise Module for Development Tools 15 SP5",
 				"SUSE Linux Enterprise Module for Public Cloud 15 SP5",
+				"SUSE Linux Enterprise Module for Public Cloud 15 SP6",
 				"SUSE Linux Enterprise Server 15 SP1-LTSS",
 				"SUSE Linux Enterprise Server 15 SP2-LTSS",
 				"SUSE Linux Enterprise Server 15 SP3-LTSS",
 				"SUSE Linux Enterprise Server 15 SP4-LTSS",
 				"SUSE Linux Enterprise Server 15 SP5",
+				"SUSE Linux Enterprise Server 15 SP6",
 				"SUSE Linux Enterprise Server 15-LTSS",
 				"SUSE Linux Enterprise Server for SAP Applications 15 SP2",
 				"SUSE Linux Enterprise Server for SAP Applications 15 SP3",
 				"SUSE Linux Enterprise Server for SAP Applications 15 SP4",
-				"SUSE Linux Enterprise Server for SAP Applications 15 SP5"
+				"SUSE Linux Enterprise Server for SAP Applications 15 SP5",
+				"SUSE Linux Enterprise Server for SAP Applications 15 SP6"
 			]
 		},
 		"reference": [
@@ -34,6 +38,11 @@
 				"ref_id": "SUSE CVE-2024-27022",
 				"ref_url": "https://www.suse.com/security/cve/CVE-2024-27022",
 				"source": "SUSE CVE"
+			},
+			{
+				"ref_id": "SUSE-SU-2024:2135-1",
+				"ref_url": "https://lists.suse.com/pipermail/sle-updates/2024-June/035681.html",
+				"source": "SUSE-SU"
 			}
 		],
 		"description": "\n    In the Linux kernel, the following vulnerability has been resolved:\n\nfork: defer linking file vma until vma is fully initialized\n\nThorvald reported a WARNING [1]. And the root cause is below race:\n\n CPU 1\t\t\t\t\tCPU 2\n fork\t\t\t\t\thugetlbfs_fallocate\n  dup_mmap\t\t\t\t hugetlbfs_punch_hole\n   i_mmap_lock_write(mapping);\n   vma_interval_tree_insert_after -- Child vma is visible through i_mmap tree.\n   i_mmap_unlock_write(mapping);\n   hugetlb_dup_vma_private -- Clear vma_lock outside i_mmap_rwsem!\n\t\t\t\t\t i_mmap_lock_write(mapping);\n   \t\t\t\t\t hugetlb_vmdelete_list\n\t\t\t\t\t  vma_interval_tree_foreach\n\t\t\t\t\t   hugetlb_vma_trylock_write -- Vma_lock is cleared.\n   tmp->vm_ops->open -- Alloc new vma_lock outside i_mmap_rwsem!\n\t\t\t\t\t   hugetlb_vma_unlock_write -- Vma_lock is assigned!!!\n\t\t\t\t\t i_mmap_unlock_write(mapping);\n\nhugetlb_dup_vma_private() and hugetlb_vm_op_open() are called outside\ni_mmap_rwsem lock while vma lock can be used in the same time.  Fix this\nby deferring linking file vma until vma is fully initialized.  Those vmas\nshould be initialized first before they can be used.\n    ",
@@ -64,13 +73,14 @@
 				"date": "2024-05-03"
 			},
 			"updated": {
-				"date": "2024-05-25"
+				"date": "2024-06-22"
 			},
 			"affected_cpe_list": {
 				"cpe": [
 					"cpe:/o:suse:sle-module-basesystem:15:sp5",
 					"cpe:/o:suse:sle-module-development-tools:15:sp5",
 					"cpe:/o:suse:sle-module-public-cloud:15:sp5",
+					"cpe:/o:suse:sle-module-public-cloud:15:sp6",
 					"cpe:/o:suse:sle_hpc:15:sp5",
 					"cpe:/o:suse:sled:15:sp5",
 					"cpe:/o:suse:sles-ltss:15",
@@ -336,6 +346,57 @@
 							{
 								"test_ref": "oval:org.opensuse.security:tst:2009340305",
 								"comment": "kernel-source-azure is not affected"
+							}
+						]
+					}
+				]
+			},
+			{
+				"operator": "AND",
+				"criterias": [
+					{
+						"operator": "OR",
+						"criterions": [
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009856172",
+								"comment": "SUSE Linux Enterprise High Performance Computing 15 SP6 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009856320",
+								"comment": "SUSE Linux Enterprise Module for Public Cloud 15 SP6 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009856174",
+								"comment": "SUSE Linux Enterprise Server 15 SP6 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009856175",
+								"comment": "SUSE Linux Enterprise Server for SAP Applications 15 SP6 is installed"
+							}
+						]
+					},
+					{
+						"operator": "OR",
+						"criterions": [
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009868541",
+								"comment": "kernel-azure-6.4.0-150600.8.5.4 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009868542",
+								"comment": "kernel-azure-devel-6.4.0-150600.8.5.4 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009868547",
+								"comment": "kernel-devel-azure-6.4.0-150600.8.5.4 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009868548",
+								"comment": "kernel-source-azure-6.4.0-150600.8.5.4 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009868549",
+								"comment": "kernel-syms-azure-6.4.0-150600.8.5.1 is installed"
 							}
 						]
 					}

@@ -8,10 +8,14 @@
 			"family": "unix",
 			"platform": [
 				"SUSE Linux Enterprise High Performance Computing 15 SP5",
+				"SUSE Linux Enterprise High Performance Computing 15 SP6",
 				"SUSE Linux Enterprise Live Patching 15 SP5",
 				"SUSE Linux Enterprise Module for Public Cloud 15 SP5",
+				"SUSE Linux Enterprise Module for Public Cloud 15 SP6",
 				"SUSE Linux Enterprise Server 15 SP5",
-				"SUSE Linux Enterprise Server for SAP Applications 15 SP5"
+				"SUSE Linux Enterprise Server 15 SP6",
+				"SUSE Linux Enterprise Server for SAP Applications 15 SP5",
+				"SUSE Linux Enterprise Server for SAP Applications 15 SP6"
 			]
 		},
 		"reference": [
@@ -44,6 +48,11 @@
 				"ref_id": "SUSE-SU-2024:2019-1",
 				"ref_url": "https://lists.suse.com/pipermail/sle-updates/2024-June/035578.html",
 				"source": "SUSE-SU"
+			},
+			{
+				"ref_id": "SUSE-SU-2024:2135-1",
+				"ref_url": "https://lists.suse.com/pipermail/sle-updates/2024-June/035681.html",
+				"source": "SUSE-SU"
 			}
 		],
 		"description": "\n    In the Linux kernel, the following vulnerability has been resolved:\n\nbatman-adv: Avoid infinite loop trying to resize local TT\n\nIf the MTU of one of an attached interface becomes too small to transmit\nthe local translation table then it must be resized to fit inside all\nfragments (when enabled) or a single packet.\n\nBut if the MTU becomes too low to transmit even the header + the VLAN\nspecific part then the resizing of the local TT will never succeed. This\ncan for example happen when the usable space is 110 bytes and 11 VLANs are\non top of batman-adv. In this case, at least 116 byte would be needed.\nThere will just be an endless spam of\n\n   batman_adv: batadv0: Forced to purge local tt entries to fit new maximum fragment MTU (110)\n\nin the log but the function will never finish. Problem here is that the\ntimeout will be halved all the time and will then stagnate at 0 and\ntherefore never be able to reduce the table even more.\n\nThere are other scenarios possible with a similar result. The number of\nBATADV_TT_CLIENT_NOPURGE entries in the local TT can for example be too\nhigh to fit inside a packet. Such a scenario can therefore happen also with\nonly a single VLAN + 7 non-purgable addresses - requiring at least 120\nbytes.\n\nWhile this should be handled proactively when:\n\n* interface with too low MTU is added\n* VLAN is added\n* non-purgeable local mac is added\n* MTU of an attached interface is reduced\n* fragmentation setting gets disabled (which most likely requires dropping\n  attached interfaces)\n\nnot all of these scenarios can be prevented because batman-adv is only\nconsuming events without the the possibility to prevent these actions\n(non-purgable MAC address added, MTU of an attached interface is reduced).\nIt is therefore necessary to also make sure that the code is able to handle\nalso the situations when there were already incompatible system\nconfiguration are present.\n    ",
@@ -74,12 +83,13 @@
 				"date": "2024-06-13"
 			},
 			"updated": {
-				"date": "2024-06-14"
+				"date": "2024-06-22"
 			},
 			"affected_cpe_list": {
 				"cpe": [
 					"cpe:/o:suse:sle-module-live-patching:15:sp5",
 					"cpe:/o:suse:sle-module-public-cloud:15:sp5",
+					"cpe:/o:suse:sle-module-public-cloud:15:sp6",
 					"cpe:/o:suse:sle_hpc:15:sp5",
 					"cpe:/o:suse:sles:15:sp5",
 					"cpe:/o:suse:sles_sap:15:sp5"
@@ -149,6 +159,57 @@
 							{
 								"test_ref": "oval:org.opensuse.security:tst:2009865736",
 								"comment": "kernel-syms-azure-5.14.21-150500.33.57.1 is installed"
+							}
+						]
+					}
+				]
+			},
+			{
+				"operator": "AND",
+				"criterias": [
+					{
+						"operator": "OR",
+						"criterions": [
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009856172",
+								"comment": "SUSE Linux Enterprise High Performance Computing 15 SP6 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009856320",
+								"comment": "SUSE Linux Enterprise Module for Public Cloud 15 SP6 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009856174",
+								"comment": "SUSE Linux Enterprise Server 15 SP6 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009856175",
+								"comment": "SUSE Linux Enterprise Server for SAP Applications 15 SP6 is installed"
+							}
+						]
+					},
+					{
+						"operator": "OR",
+						"criterions": [
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009868541",
+								"comment": "kernel-azure-6.4.0-150600.8.5.4 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009868542",
+								"comment": "kernel-azure-devel-6.4.0-150600.8.5.4 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009868547",
+								"comment": "kernel-devel-azure-6.4.0-150600.8.5.4 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009868548",
+								"comment": "kernel-source-azure-6.4.0-150600.8.5.4 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009868549",
+								"comment": "kernel-syms-azure-6.4.0-150600.8.5.1 is installed"
 							}
 						]
 					}

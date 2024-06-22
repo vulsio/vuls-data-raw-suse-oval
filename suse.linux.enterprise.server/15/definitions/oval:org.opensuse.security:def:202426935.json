@@ -8,16 +8,20 @@
 			"family": "unix",
 			"platform": [
 				"SUSE Linux Enterprise High Performance Computing 15 SP5",
+				"SUSE Linux Enterprise High Performance Computing 15 SP6",
 				"SUSE Linux Enterprise Live Patching 15 SP5",
 				"SUSE Linux Enterprise Module for Public Cloud 15 SP5",
+				"SUSE Linux Enterprise Module for Public Cloud 15 SP6",
 				"SUSE Linux Enterprise Server 15 SP1-LTSS",
 				"SUSE Linux Enterprise Server 15 SP2-LTSS",
 				"SUSE Linux Enterprise Server 15 SP3-LTSS",
 				"SUSE Linux Enterprise Server 15 SP5",
+				"SUSE Linux Enterprise Server 15 SP6",
 				"SUSE Linux Enterprise Server 15-LTSS",
 				"SUSE Linux Enterprise Server for SAP Applications 15 SP2",
 				"SUSE Linux Enterprise Server for SAP Applications 15 SP3",
-				"SUSE Linux Enterprise Server for SAP Applications 15 SP5"
+				"SUSE Linux Enterprise Server for SAP Applications 15 SP5",
+				"SUSE Linux Enterprise Server for SAP Applications 15 SP6"
 			]
 		},
 		"reference": [
@@ -30,6 +34,11 @@
 				"ref_id": "SUSE CVE-2024-26935",
 				"ref_url": "https://www.suse.com/security/cve/CVE-2024-26935",
 				"source": "SUSE CVE"
+			},
+			{
+				"ref_id": "SUSE-SU-2024:2135-1",
+				"ref_url": "https://lists.suse.com/pipermail/sle-updates/2024-June/035681.html",
+				"source": "SUSE-SU"
 			}
 		],
 		"description": "\n    In the Linux kernel, the following vulnerability has been resolved:\n\nscsi: core: Fix unremoved procfs host directory regression\n\nCommit fc663711b944 (\"scsi: core: Remove the /proc/scsi/${proc_name}\ndirectory earlier\") fixed a bug related to modules loading/unloading, by\nadding a call to scsi_proc_hostdir_rm() on scsi_remove_host(). But that led\nto a potential duplicate call to the hostdir_rm() routine, since it's also\ncalled from scsi_host_dev_release(). That triggered a regression report,\nwhich was then fixed by commit be03df3d4bfe (\"scsi: core: Fix a procfs host\ndirectory removal regression\"). The fix just dropped the hostdir_rm() call\nfrom dev_release().\n\nBut it happens that this proc directory is created on scsi_host_alloc(),\nand that function \"pairs\" with scsi_host_dev_release(), while\nscsi_remove_host() pairs with scsi_add_host(). In other words, it seems the\nreason for removing the proc directory on dev_release() was meant to cover\ncases in which a SCSI host structure was allocated, but the call to\nscsi_add_host() didn't happen. And that pattern happens to exist in some\nerror paths, for example.\n\nSyzkaller causes that by using USB raw gadget device, error'ing on\nusb-storage driver, at usb_stor_probe2(). By checking that path, we can see\nthat the BadDevice label leads to a scsi_host_put() after a SCSI host\nallocation, but there's no call to scsi_add_host() in such path. That leads\nto messages like this in dmesg (and a leak of the SCSI host proc\nstructure):\n\nusb-storage 4-1:87.51: USB Mass Storage device detected\nproc_dir_entry 'scsi/usb-storage' already registered\nWARNING: CPU: 1 PID: 3519 at fs/proc/generic.c:377 proc_register+0x347/0x4e0 fs/proc/generic.c:376\n\nThe proper fix seems to still call scsi_proc_hostdir_rm() on dev_release(),\nbut guard that with the state check for SHOST_CREATED; there is even a\ncomment in scsi_host_dev_release() detailing that: such conditional is\nmeant for cases where the SCSI host was allocated but there was no calls to\n{add,remove}_host(), like the usb-storage case.\n\nThis is what we propose here and with that, the error path of usb-storage\ndoes not trigger the warning anymore.\n    ",
@@ -58,12 +67,13 @@
 				"date": "2024-05-03"
 			},
 			"updated": {
-				"date": "2024-06-14"
+				"date": "2024-06-22"
 			},
 			"affected_cpe_list": {
 				"cpe": [
 					"cpe:/o:suse:sle-module-live-patching:15:sp5",
 					"cpe:/o:suse:sle-module-public-cloud:15:sp5",
+					"cpe:/o:suse:sle-module-public-cloud:15:sp6",
 					"cpe:/o:suse:sle_hpc:15:sp5",
 					"cpe:/o:suse:sles-ltss:15",
 					"cpe:/o:suse:sles-ltss:15:sp1",
@@ -249,6 +259,57 @@
 							{
 								"test_ref": "oval:org.opensuse.security:tst:2009865736",
 								"comment": "kernel-syms-azure-5.14.21-150500.33.57.1 is installed"
+							}
+						]
+					}
+				]
+			},
+			{
+				"operator": "AND",
+				"criterias": [
+					{
+						"operator": "OR",
+						"criterions": [
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009856172",
+								"comment": "SUSE Linux Enterprise High Performance Computing 15 SP6 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009856320",
+								"comment": "SUSE Linux Enterprise Module for Public Cloud 15 SP6 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009856174",
+								"comment": "SUSE Linux Enterprise Server 15 SP6 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009856175",
+								"comment": "SUSE Linux Enterprise Server for SAP Applications 15 SP6 is installed"
+							}
+						]
+					},
+					{
+						"operator": "OR",
+						"criterions": [
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009868541",
+								"comment": "kernel-azure-6.4.0-150600.8.5.4 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009868542",
+								"comment": "kernel-azure-devel-6.4.0-150600.8.5.4 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009868547",
+								"comment": "kernel-devel-azure-6.4.0-150600.8.5.4 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009868548",
+								"comment": "kernel-source-azure-6.4.0-150600.8.5.4 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009868549",
+								"comment": "kernel-syms-azure-6.4.0-150600.8.5.1 is installed"
 							}
 						]
 					}

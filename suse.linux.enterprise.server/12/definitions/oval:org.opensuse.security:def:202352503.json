@@ -36,6 +36,11 @@
 				"ref_id": "SUSE-SU-2024:1659-1",
 				"ref_url": "https://lists.suse.com/pipermail/sle-updates/2024-May/035281.html",
 				"source": "SUSE-SU"
+			},
+			{
+				"ref_id": "SUSE-SU-2024:2135-1",
+				"ref_url": "https://lists.suse.com/pipermail/sle-updates/2024-June/035681.html",
+				"source": "SUSE-SU"
 			}
 		],
 		"description": "\n    In the Linux kernel, the following vulnerability has been resolved:\n\ntee: amdtee: fix use-after-free vulnerability in amdtee_close_session\n\nThere is a potential race condition in amdtee_close_session that may\ncause use-after-free in amdtee_open_session. For instance, if a session\nhas refcount == 1, and one thread tries to free this session via:\n\n    kref_put(&sess->refcount, destroy_session);\n\nthe reference count will get decremented, and the next step would be to\ncall destroy_session(). However, if in another thread,\namdtee_open_session() is called before destroy_session() has completed\nexecution, alloc_session() may return 'sess' that will be freed up\nlater in destroy_session() leading to use-after-free in\namdtee_open_session.\n\nTo fix this issue, treat decrement of sess->refcount and removal of\n'sess' from session list in destroy_session() as a critical section, so\nthat it is executed atomically.\n    ",
@@ -64,7 +69,7 @@
 				"date": "2024-03-07"
 			},
 			"updated": {
-				"date": "2024-05-16"
+				"date": "2024-06-22"
 			},
 			"affected_cpe_list": {
 				"cpe": [

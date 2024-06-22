@@ -1,0 +1,286 @@
+{
+	"id": "oval:org.opensuse.security:def:202435973",
+	"version": "1",
+	"class": "vulnerability",
+	"metadata": {
+		"title": "CVE-2024-35973",
+		"affected": {
+			"family": "unix",
+			"platform": [
+				"openSUSE Leap 15.6"
+			]
+		},
+		"reference": [
+			{
+				"ref_id": "Mitre CVE-2024-35973",
+				"ref_url": "https://cve.mitre.org/cgi-bin/cvename.cgi?name=CVE-2024-35973",
+				"source": "CVE"
+			},
+			{
+				"ref_id": "SUSE CVE-2024-35973",
+				"ref_url": "https://www.suse.com/security/cve/CVE-2024-35973",
+				"source": "SUSE CVE"
+			},
+			{
+				"ref_id": "SUSE-SU-2024:2008-1",
+				"ref_url": "https://lists.suse.com/pipermail/sle-updates/2024-June/035569.html",
+				"source": "SUSE-SU"
+			},
+			{
+				"ref_id": "SUSE-SU-2024:2019-1",
+				"ref_url": "https://lists.suse.com/pipermail/sle-updates/2024-June/035578.html",
+				"source": "SUSE-SU"
+			},
+			{
+				"ref_id": "SUSE-SU-2024:2135-1",
+				"ref_url": "https://lists.suse.com/pipermail/sle-updates/2024-June/035681.html",
+				"source": "SUSE-SU"
+			}
+		],
+		"description": "\n    In the Linux kernel, the following vulnerability has been resolved:\n\ngeneve: fix header validation in geneve[6]_xmit_skb\n\nsyzbot is able to trigger an uninit-value in geneve_xmit() [1]\n\nProblem : While most ip tunnel helpers (like ip_tunnel_get_dsfield())\nuses skb_protocol(skb, true), pskb_inet_may_pull() is only using\nskb->protocol.\n\nIf anything else than ETH_P_IPV6 or ETH_P_IP is found in skb->protocol,\npskb_inet_may_pull() does nothing at all.\n\nIf a vlan tag was provided by the caller (af_packet in the syzbot case),\nthe network header might not point to the correct location, and skb\nlinear part could be smaller than expected.\n\nAdd skb_vlan_inet_prepare() to perform a complete mac validation.\n\nUse this in geneve for the moment, I suspect we need to adopt this\nmore broadly.\n\nv4 - Jakub reported v3 broke l2_tos_ttl_inherit.sh selftest\n   - Only call __vlan_get_protocol() for vlan types.\n\nv2,v3 - Addressed Sabrina comments on v1 and v2\n\n[1]\n\nBUG: KMSAN: uninit-value in geneve_xmit_skb drivers/net/geneve.c:910 [inline]\n BUG: KMSAN: uninit-value in geneve_xmit+0x302d/0x5420 drivers/net/geneve.c:1030\n  geneve_xmit_skb drivers/net/geneve.c:910 [inline]\n  geneve_xmit+0x302d/0x5420 drivers/net/geneve.c:1030\n  __netdev_start_xmit include/linux/netdevice.h:4903 [inline]\n  netdev_start_xmit include/linux/netdevice.h:4917 [inline]\n  xmit_one net/core/dev.c:3531 [inline]\n  dev_hard_start_xmit+0x247/0xa20 net/core/dev.c:3547\n  __dev_queue_xmit+0x348d/0x52c0 net/core/dev.c:4335\n  dev_queue_xmit include/linux/netdevice.h:3091 [inline]\n  packet_xmit+0x9c/0x6c0 net/packet/af_packet.c:276\n  packet_snd net/packet/af_packet.c:3081 [inline]\n  packet_sendmsg+0x8bb0/0x9ef0 net/packet/af_packet.c:3113\n  sock_sendmsg_nosec net/socket.c:730 [inline]\n  __sock_sendmsg+0x30f/0x380 net/socket.c:745\n  __sys_sendto+0x685/0x830 net/socket.c:2191\n  __do_sys_sendto net/socket.c:2203 [inline]\n  __se_sys_sendto net/socket.c:2199 [inline]\n  __x64_sys_sendto+0x125/0x1d0 net/socket.c:2199\n do_syscall_64+0xd5/0x1f0\n entry_SYSCALL_64_after_hwframe+0x6d/0x75\n\nUninit was created at:\n  slab_post_alloc_hook mm/slub.c:3804 [inline]\n  slab_alloc_node mm/slub.c:3845 [inline]\n  kmem_cache_alloc_node+0x613/0xc50 mm/slub.c:3888\n  kmalloc_reserve+0x13d/0x4a0 net/core/skbuff.c:577\n  __alloc_skb+0x35b/0x7a0 net/core/skbuff.c:668\n  alloc_skb include/linux/skbuff.h:1318 [inline]\n  alloc_skb_with_frags+0xc8/0xbf0 net/core/skbuff.c:6504\n  sock_alloc_send_pskb+0xa81/0xbf0 net/core/sock.c:2795\n  packet_alloc_skb net/packet/af_packet.c:2930 [inline]\n  packet_snd net/packet/af_packet.c:3024 [inline]\n  packet_sendmsg+0x722d/0x9ef0 net/packet/af_packet.c:3113\n  sock_sendmsg_nosec net/socket.c:730 [inline]\n  __sock_sendmsg+0x30f/0x380 net/socket.c:745\n  __sys_sendto+0x685/0x830 net/socket.c:2191\n  __do_sys_sendto net/socket.c:2203 [inline]\n  __se_sys_sendto net/socket.c:2199 [inline]\n  __x64_sys_sendto+0x125/0x1d0 net/socket.c:2199\n do_syscall_64+0xd5/0x1f0\n entry_SYSCALL_64_after_hwframe+0x6d/0x75\n\nCPU: 0 PID: 5033 Comm: syz-executor346 Not tainted 6.9.0-rc1-syzkaller-00005-g928a87efa423 #0\nHardware name: Google Google Compute Engine/Google Compute Engine, BIOS Google 02/29/2024\n    ",
+		"advisory": {
+			"from": "security@suse.de",
+			"severity": "Moderate",
+			"cve": [
+				{
+					"text": "CVE-2024-35973 at SUSE",
+					"href": "https://www.suse.com/security/cve/CVE-2024-35973/",
+					"impact": "medium",
+					"cvss3": "5.5/CVSS:3.1/AV:L/AC:L/PR:L/UI:N/S:U/C:N/I:N/A:H"
+				},
+				{
+					"text": "CVE-2024-35973 at NVD",
+					"href": "https://nvd.nist.gov/vuln/detail/CVE-2024-35973"
+				}
+			],
+			"bugzilla": [
+				{
+					"text": "SUSE bug 1224586",
+					"href": "https://bugzilla.suse.com/1224586"
+				}
+			],
+			"issued": {
+				"date": "2024-06-22"
+			},
+			"updated": {
+				"date": "2024-06-22"
+			},
+			"affected_cpe_list": {
+				"cpe": [
+					"cpe:/o:opensuse:leap:15.6"
+				]
+			}
+		}
+	},
+	"criteria": {
+		"operator": "AND",
+		"criterias": [
+			{
+				"operator": "OR",
+				"criterias": [
+					{
+						"operator": "AND",
+						"criterions": [
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009868538",
+								"comment": "cluster-md-kmp-azure-6.4.0-150600.8.5.4 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009623277",
+								"comment": "cluster-md-kmp-azure is signed with openSUSE key"
+							}
+						]
+					},
+					{
+						"operator": "AND",
+						"criterions": [
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009868539",
+								"comment": "dlm-kmp-azure-6.4.0-150600.8.5.4 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009623279",
+								"comment": "dlm-kmp-azure is signed with openSUSE key"
+							}
+						]
+					},
+					{
+						"operator": "AND",
+						"criterions": [
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009868540",
+								"comment": "gfs2-kmp-azure-6.4.0-150600.8.5.4 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009623281",
+								"comment": "gfs2-kmp-azure is signed with openSUSE key"
+							}
+						]
+					},
+					{
+						"operator": "AND",
+						"criterions": [
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009868541",
+								"comment": "kernel-azure-6.4.0-150600.8.5.4 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009623283",
+								"comment": "kernel-azure is signed with openSUSE key"
+							}
+						]
+					},
+					{
+						"operator": "AND",
+						"criterions": [
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009868542",
+								"comment": "kernel-azure-devel-6.4.0-150600.8.5.4 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009623285",
+								"comment": "kernel-azure-devel is signed with openSUSE key"
+							}
+						]
+					},
+					{
+						"operator": "AND",
+						"criterions": [
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009868543",
+								"comment": "kernel-azure-extra-6.4.0-150600.8.5.4 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009623286",
+								"comment": "kernel-azure-extra is signed with openSUSE key"
+							}
+						]
+					},
+					{
+						"operator": "AND",
+						"criterions": [
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009868544",
+								"comment": "kernel-azure-livepatch-devel-6.4.0-150600.8.5.4 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009623287",
+								"comment": "kernel-azure-livepatch-devel is signed with openSUSE key"
+							}
+						]
+					},
+					{
+						"operator": "AND",
+						"criterions": [
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009868545",
+								"comment": "kernel-azure-optional-6.4.0-150600.8.5.4 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009623427",
+								"comment": "kernel-azure-optional is signed with openSUSE key"
+							}
+						]
+					},
+					{
+						"operator": "AND",
+						"criterions": [
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009868546",
+								"comment": "kernel-azure-vdso-6.4.0-150600.8.5.4 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009769740",
+								"comment": "kernel-azure-vdso is signed with openSUSE key"
+							}
+						]
+					},
+					{
+						"operator": "AND",
+						"criterions": [
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009868547",
+								"comment": "kernel-devel-azure-6.4.0-150600.8.5.4 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009623293",
+								"comment": "kernel-devel-azure is signed with openSUSE key"
+							}
+						]
+					},
+					{
+						"operator": "AND",
+						"criterions": [
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009868548",
+								"comment": "kernel-source-azure-6.4.0-150600.8.5.4 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009623300",
+								"comment": "kernel-source-azure is signed with openSUSE key"
+							}
+						]
+					},
+					{
+						"operator": "AND",
+						"criterions": [
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009868549",
+								"comment": "kernel-syms-azure-6.4.0-150600.8.5.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009623301",
+								"comment": "kernel-syms-azure is signed with openSUSE key"
+							}
+						]
+					},
+					{
+						"operator": "AND",
+						"criterions": [
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009868550",
+								"comment": "kselftests-kmp-azure-6.4.0-150600.8.5.4 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009623305",
+								"comment": "kselftests-kmp-azure is signed with openSUSE key"
+							}
+						]
+					},
+					{
+						"operator": "AND",
+						"criterions": [
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009868551",
+								"comment": "ocfs2-kmp-azure-6.4.0-150600.8.5.4 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009623306",
+								"comment": "ocfs2-kmp-azure is signed with openSUSE key"
+							}
+						]
+					},
+					{
+						"operator": "AND",
+						"criterions": [
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009868552",
+								"comment": "reiserfs-kmp-azure-6.4.0-150600.8.5.4 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009623308",
+								"comment": "reiserfs-kmp-azure is signed with openSUSE key"
+							}
+						]
+					}
+				]
+			}
+		],
+		"criterions": [
+			{
+				"test_ref": "oval:org.opensuse.security:tst:2009864054",
+				"comment": "openSUSE Leap 15.6 is installed"
+			}
+		]
+	}
+}

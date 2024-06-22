@@ -14,12 +14,14 @@
 				"SUSE Linux Enterprise High Performance Computing 15 SP3",
 				"SUSE Linux Enterprise High Performance Computing 15 SP4",
 				"SUSE Linux Enterprise High Performance Computing 15 SP5",
+				"SUSE Linux Enterprise High Performance Computing 15 SP6",
 				"SUSE Linux Enterprise Module for Basesystem 15 SP5",
 				"SUSE Linux Enterprise Module for Development Tools 15 SP5",
 				"SUSE Linux Enterprise Module for Public Cloud 15 SP2",
 				"SUSE Linux Enterprise Module for Public Cloud 15 SP3",
 				"SUSE Linux Enterprise Module for Public Cloud 15 SP4",
 				"SUSE Linux Enterprise Module for Public Cloud 15 SP5",
+				"SUSE Linux Enterprise Module for Public Cloud 15 SP6",
 				"SUSE Linux Enterprise Server 15 SP1-LTSS",
 				"SUSE Linux Enterprise Server 15 SP2",
 				"SUSE Linux Enterprise Server 15 SP2-LTSS",
@@ -28,11 +30,13 @@
 				"SUSE Linux Enterprise Server 15 SP4",
 				"SUSE Linux Enterprise Server 15 SP4-LTSS",
 				"SUSE Linux Enterprise Server 15 SP5",
+				"SUSE Linux Enterprise Server 15 SP6",
 				"SUSE Linux Enterprise Server 15-LTSS",
 				"SUSE Linux Enterprise Server for SAP Applications 15 SP2",
 				"SUSE Linux Enterprise Server for SAP Applications 15 SP3",
 				"SUSE Linux Enterprise Server for SAP Applications 15 SP4",
 				"SUSE Linux Enterprise Server for SAP Applications 15 SP5",
+				"SUSE Linux Enterprise Server for SAP Applications 15 SP6",
 				"SUSE Manager Proxy 4.1",
 				"SUSE Manager Proxy 4.2",
 				"SUSE Manager Proxy 4.3",
@@ -54,6 +58,11 @@
 				"ref_id": "SUSE CVE-2024-26731",
 				"ref_url": "https://www.suse.com/security/cve/CVE-2024-26731",
 				"source": "SUSE CVE"
+			},
+			{
+				"ref_id": "SUSE-SU-2024:2135-1",
+				"ref_url": "https://lists.suse.com/pipermail/sle-updates/2024-June/035681.html",
+				"source": "SUSE-SU"
 			}
 		],
 		"description": "\n    In the Linux kernel, the following vulnerability has been resolved:\n\nbpf, sockmap: Fix NULL pointer dereference in sk_psock_verdict_data_ready()\n\nsyzbot reported the following NULL pointer dereference issue [1]:\n\n  BUG: kernel NULL pointer dereference, address: 0000000000000000\n  [...]\n  RIP: 0010:0x0\n  [...]\n  Call Trace:\n   <TASK>\n   sk_psock_verdict_data_ready+0x232/0x340 net/core/skmsg.c:1230\n   unix_stream_sendmsg+0x9b4/0x1230 net/unix/af_unix.c:2293\n   sock_sendmsg_nosec net/socket.c:730 [inline]\n   __sock_sendmsg+0x221/0x270 net/socket.c:745\n   ____sys_sendmsg+0x525/0x7d0 net/socket.c:2584\n   ___sys_sendmsg net/socket.c:2638 [inline]\n   __sys_sendmsg+0x2b0/0x3a0 net/socket.c:2667\n   do_syscall_64+0xf9/0x240\n   entry_SYSCALL_64_after_hwframe+0x6f/0x77\n\nIf sk_psock_verdict_data_ready() and sk_psock_stop_verdict() are called\nconcurrently, psock->saved_data_ready can be NULL, causing the above issue.\n\nThis patch fixes this issue by calling the appropriate data ready function\nusing the sk_psock_data_ready() helper and protecting it from concurrency\nwith sk->sk_callback_lock.\n    ",
@@ -82,7 +91,7 @@
 				"date": "2024-04-06"
 			},
 			"updated": {
-				"date": "2024-04-26"
+				"date": "2024-06-22"
 			},
 			"affected_cpe_list": {
 				"cpe": [
@@ -94,6 +103,7 @@
 					"cpe:/o:suse:sle-module-public-cloud:15:sp3",
 					"cpe:/o:suse:sle-module-public-cloud:15:sp4",
 					"cpe:/o:suse:sle-module-public-cloud:15:sp5",
+					"cpe:/o:suse:sle-module-public-cloud:15:sp6",
 					"cpe:/o:suse:sle_hpc:15:sp2",
 					"cpe:/o:suse:sle_hpc:15:sp3",
 					"cpe:/o:suse:sle_hpc:15:sp4",
@@ -482,6 +492,57 @@
 							{
 								"test_ref": "oval:org.opensuse.security:tst:2009340305",
 								"comment": "kernel-source-azure is not affected"
+							}
+						]
+					}
+				]
+			},
+			{
+				"operator": "AND",
+				"criterias": [
+					{
+						"operator": "OR",
+						"criterions": [
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009856172",
+								"comment": "SUSE Linux Enterprise High Performance Computing 15 SP6 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009856320",
+								"comment": "SUSE Linux Enterprise Module for Public Cloud 15 SP6 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009856174",
+								"comment": "SUSE Linux Enterprise Server 15 SP6 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009856175",
+								"comment": "SUSE Linux Enterprise Server for SAP Applications 15 SP6 is installed"
+							}
+						]
+					},
+					{
+						"operator": "OR",
+						"criterions": [
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009868541",
+								"comment": "kernel-azure-6.4.0-150600.8.5.4 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009868542",
+								"comment": "kernel-azure-devel-6.4.0-150600.8.5.4 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009868547",
+								"comment": "kernel-devel-azure-6.4.0-150600.8.5.4 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009868548",
+								"comment": "kernel-source-azure-6.4.0-150600.8.5.4 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009868549",
+								"comment": "kernel-syms-azure-6.4.0-150600.8.5.1 is installed"
 							}
 						]
 					}

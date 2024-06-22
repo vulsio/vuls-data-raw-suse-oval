@@ -13,6 +13,7 @@
 				"SUSE Linux Enterprise High Performance Computing 15 SP2",
 				"SUSE Linux Enterprise High Performance Computing 15 SP3",
 				"SUSE Linux Enterprise High Performance Computing 15 SP5",
+				"SUSE Linux Enterprise High Performance Computing 15 SP6",
 				"SUSE Linux Enterprise Live Patching 15 SP5",
 				"SUSE Linux Enterprise Module for Basesystem 15 SP5",
 				"SUSE Linux Enterprise Module for Development Tools 15 SP5",
@@ -20,16 +21,19 @@
 				"SUSE Linux Enterprise Module for Public Cloud 15 SP2",
 				"SUSE Linux Enterprise Module for Public Cloud 15 SP3",
 				"SUSE Linux Enterprise Module for Public Cloud 15 SP5",
+				"SUSE Linux Enterprise Module for Public Cloud 15 SP6",
 				"SUSE Linux Enterprise Server 15 SP1-LTSS",
 				"SUSE Linux Enterprise Server 15 SP2",
 				"SUSE Linux Enterprise Server 15 SP2-LTSS",
 				"SUSE Linux Enterprise Server 15 SP3",
 				"SUSE Linux Enterprise Server 15 SP3-LTSS",
 				"SUSE Linux Enterprise Server 15 SP5",
+				"SUSE Linux Enterprise Server 15 SP6",
 				"SUSE Linux Enterprise Server 15-LTSS",
 				"SUSE Linux Enterprise Server for SAP Applications 15 SP2",
 				"SUSE Linux Enterprise Server for SAP Applications 15 SP3",
 				"SUSE Linux Enterprise Server for SAP Applications 15 SP5",
+				"SUSE Linux Enterprise Server for SAP Applications 15 SP6",
 				"SUSE Linux Enterprise Workstation Extension 15 SP5",
 				"SUSE Manager Proxy 4.1",
 				"SUSE Manager Proxy 4.2",
@@ -59,6 +63,11 @@
 				"ref_id": "SUSE-SU-2024:1659-1",
 				"ref_url": "https://lists.suse.com/pipermail/sle-updates/2024-May/035281.html",
 				"source": "SUSE-SU"
+			},
+			{
+				"ref_id": "SUSE-SU-2024:2135-1",
+				"ref_url": "https://lists.suse.com/pipermail/sle-updates/2024-June/035681.html",
+				"source": "SUSE-SU"
 			}
 		],
 		"description": "\n    In the Linux kernel, the following vulnerability has been resolved:\n\nBoth cadence-quadspi ->runtime_suspend() and ->runtime_resume()\nimplementations start with:\n\n\tstruct cqspi_st *cqspi = dev_get_drvdata(dev);\n\tstruct spi_controller *host = dev_get_drvdata(dev);\n\nThis obviously cannot be correct, unless \"struct cqspi_st\" is the\nfirst member of \" struct spi_controller\", or the other way around, but\nit is not the case. \"struct spi_controller\" is allocated by\ndevm_spi_alloc_host(), which allocates an extra amount of memory for\nprivate data, used to store \"struct cqspi_st\".\n\nThe ->probe() function of the cadence-quadspi driver then sets the\ndevice drvdata to store the address of the \"struct cqspi_st\"\nstructure. Therefore:\n\n\tstruct cqspi_st *cqspi = dev_get_drvdata(dev);\n\nis correct, but:\n\n\tstruct spi_controller *host = dev_get_drvdata(dev);\n\nis not, as it makes \"host\" point not to a \"struct spi_controller\" but\nto the same \"struct cqspi_st\" structure as above.\n\nThis obviously leads to bad things (memory corruption, kernel crashes)\ndirectly during ->probe(), as ->probe() enables the device using PM\nruntime, leading the ->runtime_resume() hook being called, which in\nturns calls spi_controller_resume() with the wrong pointer.\n\nThis has at least been reported [0] to cause a kernel crash, but the\nexact behavior will depend on the memory contents.\n\n[0] https://lore.kernel.org/all/20240226121803.5a7r5wkpbbowcxgx@dhruva/\n\nThis issue potentially affects all platforms that are currently using\nthe cadence-quadspi driver.\n    ",
@@ -87,7 +96,7 @@
 				"date": "2024-04-16"
 			},
 			"updated": {
-				"date": "2024-06-21"
+				"date": "2024-06-22"
 			},
 			"affected_cpe_list": {
 				"cpe": [
@@ -100,6 +109,7 @@
 					"cpe:/o:suse:sle-module-public-cloud:15:sp2",
 					"cpe:/o:suse:sle-module-public-cloud:15:sp3",
 					"cpe:/o:suse:sle-module-public-cloud:15:sp5",
+					"cpe:/o:suse:sle-module-public-cloud:15:sp6",
 					"cpe:/o:suse:sle-we:15:sp5",
 					"cpe:/o:suse:sle_hpc:15:sp2",
 					"cpe:/o:suse:sle_hpc:15:sp3",
@@ -580,6 +590,57 @@
 					{
 						"test_ref": "oval:org.opensuse.security:tst:2009764853",
 						"comment": "SUSE Linux Enterprise Live Patching 15 SP5 is installed"
+					}
+				]
+			},
+			{
+				"operator": "AND",
+				"criterias": [
+					{
+						"operator": "OR",
+						"criterions": [
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009856172",
+								"comment": "SUSE Linux Enterprise High Performance Computing 15 SP6 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009856320",
+								"comment": "SUSE Linux Enterprise Module for Public Cloud 15 SP6 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009856174",
+								"comment": "SUSE Linux Enterprise Server 15 SP6 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009856175",
+								"comment": "SUSE Linux Enterprise Server for SAP Applications 15 SP6 is installed"
+							}
+						]
+					},
+					{
+						"operator": "OR",
+						"criterions": [
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009868541",
+								"comment": "kernel-azure-6.4.0-150600.8.5.4 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009868542",
+								"comment": "kernel-azure-devel-6.4.0-150600.8.5.4 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009868547",
+								"comment": "kernel-devel-azure-6.4.0-150600.8.5.4 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009868548",
+								"comment": "kernel-source-azure-6.4.0-150600.8.5.4 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009868549",
+								"comment": "kernel-syms-azure-6.4.0-150600.8.5.1 is installed"
+							}
+						]
 					}
 				]
 			}
