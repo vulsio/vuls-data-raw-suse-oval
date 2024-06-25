@@ -7,11 +7,13 @@
 		"affected": {
 			"family": "unix",
 			"platform": [
+				"SUSE Linux Enterprise Live Patching 12 SP5",
 				"SUSE Linux Enterprise Real Time 12 SP5",
 				"SUSE Linux Enterprise Server 12 SP4-LTSS",
 				"SUSE Linux Enterprise Server 12 SP5",
 				"SUSE Linux Enterprise Server for SAP Applications 12 SP4",
-				"SUSE Linux Enterprise Server for SAP Applications 12 SP5"
+				"SUSE Linux Enterprise Server for SAP Applications 12 SP5",
+				"SUSE Linux Enterprise Workstation Extension 12 SP5"
 			]
 		},
 		"reference": [
@@ -49,6 +51,11 @@
 				"ref_id": "SUSE-SU-2024:2135-1",
 				"ref_url": "https://lists.suse.com/pipermail/sle-updates/2024-June/035681.html",
 				"source": "SUSE-SU"
+			},
+			{
+				"ref_id": "SUSE-SU-2024:2184-1",
+				"ref_url": "https://lists.suse.com/pipermail/sle-updates/2024-June/035716.html",
+				"source": "SUSE-SU"
 			}
 		],
 		"description": "\n    In the Linux kernel, the following vulnerability has been resolved:\n\nkprobes: Fix possible use-after-free issue on kprobe registration\n\nWhen unloading a module, its state is changing MODULE_STATE_LIVE ->\n MODULE_STATE_GOING -> MODULE_STATE_UNFORMED. Each change will take\na time. `is_module_text_address()` and `__module_text_address()`\nworks with MODULE_STATE_LIVE and MODULE_STATE_GOING.\nIf we use `is_module_text_address()` and `__module_text_address()`\nseparately, there is a chance that the first one is succeeded but the\nnext one is failed because module->state becomes MODULE_STATE_UNFORMED\nbetween those operations.\n\nIn `check_kprobe_address_safe()`, if the second `__module_text_address()`\nis failed, that is ignored because it expected a kernel_text address.\nBut it may have failed simply because module->state has been changed\nto MODULE_STATE_UNFORMED. In this case, arm_kprobe() will try to modify\nnon-exist module text address (use-after-free).\n\nTo fix this problem, we should not use separated `is_module_text_address()`\nand `__module_text_address()`, but use only `__module_text_address()`\nonce and do `try_module_get(module)` which is only available with\nMODULE_STATE_LIVE.\n    ",
@@ -77,10 +84,12 @@
 				"date": "2024-05-21"
 			},
 			"updated": {
-				"date": "2024-06-22"
+				"date": "2024-06-25"
 			},
 			"affected_cpe_list": {
 				"cpe": [
+					"cpe:/o:suse:sle-live-patching:12:sp5",
+					"cpe:/o:suse:sle-we:12:sp5",
 					"cpe:/o:suse:sles-ltss:12:sp4",
 					"cpe:/o:suse:sles:12:sp5",
 					"cpe:/o:suse:sles_sap:12:sp4",
@@ -93,6 +102,34 @@
 	"criteria": {
 		"operator": "OR",
 		"criterias": [
+			{
+				"operator": "AND",
+				"criterias": [
+					{
+						"operator": "OR",
+						"criterions": [
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009258033",
+								"comment": "SUSE Linux Enterprise Server 12 SP5 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009258806",
+								"comment": "SUSE Linux Enterprise Server for SAP Applications 12 SP5 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009258650",
+								"comment": "SUSE Linux Enterprise Workstation Extension 12 SP5 is installed"
+							}
+						]
+					}
+				],
+				"criterions": [
+					{
+						"test_ref": "oval:org.opensuse.security:tst:2009868871",
+						"comment": "kernel-default-extra-4.12.14-122.219.1 is installed"
+					}
+				]
+			},
 			{
 				"operator": "AND",
 				"criterias": [
@@ -273,18 +310,78 @@
 								"comment": "kernel-azure-devel-4.12.14-16.188.1 is installed"
 							},
 							{
+								"test_ref": "oval:org.opensuse.security:tst:2009868863",
+								"comment": "kernel-default-4.12.14-122.219.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009868864",
+								"comment": "kernel-default-base-4.12.14-122.219.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009868865",
+								"comment": "kernel-default-devel-4.12.14-122.219.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009868866",
+								"comment": "kernel-default-man-4.12.14-122.219.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009868867",
+								"comment": "kernel-devel-4.12.14-122.219.1 is installed"
+							},
+							{
 								"test_ref": "oval:org.opensuse.security:tst:2009865520",
 								"comment": "kernel-devel-azure-4.12.14-16.188.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009868868",
+								"comment": "kernel-macros-4.12.14-122.219.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009868869",
+								"comment": "kernel-source-4.12.14-122.219.1 is installed"
 							},
 							{
 								"test_ref": "oval:org.opensuse.security:tst:2009865521",
 								"comment": "kernel-source-azure-4.12.14-16.188.1 is installed"
 							},
 							{
+								"test_ref": "oval:org.opensuse.security:tst:2009868870",
+								"comment": "kernel-syms-4.12.14-122.219.1 is installed"
+							},
+							{
 								"test_ref": "oval:org.opensuse.security:tst:2009865522",
 								"comment": "kernel-syms-azure-4.12.14-16.188.1 is installed"
 							}
 						]
+					}
+				]
+			},
+			{
+				"operator": "AND",
+				"criterias": [
+					{
+						"operator": "OR",
+						"criterions": [
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009868858",
+								"comment": "kernel-default-kgraft-4.12.14-122.219.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009868859",
+								"comment": "kernel-default-kgraft-devel-4.12.14-122.219.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009868860",
+								"comment": "kgraft-patch-4_12_14-122_219-default-1-8.3.1 is installed"
+							}
+						]
+					}
+				],
+				"criterions": [
+					{
+						"test_ref": "oval:org.opensuse.security:tst:2009273148",
+						"comment": "SUSE Linux Enterprise Live Patching 12 SP5 is installed"
 					}
 				]
 			}

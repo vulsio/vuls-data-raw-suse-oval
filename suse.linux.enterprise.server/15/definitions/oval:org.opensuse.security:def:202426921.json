@@ -9,11 +9,14 @@
 			"platform": [
 				"SUSE Linux Enterprise High Performance Computing 15 SP5",
 				"SUSE Linux Enterprise High Performance Computing 15 SP6",
+				"SUSE Linux Enterprise Live Patching 15 SP3",
 				"SUSE Linux Enterprise Live Patching 15 SP5",
 				"SUSE Linux Enterprise Module for Public Cloud 15 SP5",
 				"SUSE Linux Enterprise Module for Public Cloud 15 SP6",
+				"SUSE Linux Enterprise Server 15 SP3-LTSS",
 				"SUSE Linux Enterprise Server 15 SP5",
 				"SUSE Linux Enterprise Server 15 SP6",
+				"SUSE Linux Enterprise Server for SAP Applications 15 SP3",
 				"SUSE Linux Enterprise Server for SAP Applications 15 SP5",
 				"SUSE Linux Enterprise Server for SAP Applications 15 SP6"
 			]
@@ -63,6 +66,16 @@
 				"ref_id": "SUSE-SU-2024:2135-1",
 				"ref_url": "https://lists.suse.com/pipermail/sle-updates/2024-June/035681.html",
 				"source": "SUSE-SU"
+			},
+			{
+				"ref_id": "SUSE-SU-2024:2184-1",
+				"ref_url": "https://lists.suse.com/pipermail/sle-updates/2024-June/035716.html",
+				"source": "SUSE-SU"
+			},
+			{
+				"ref_id": "SUSE-SU-2024:2185-1",
+				"ref_url": "https://lists.suse.com/pipermail/sle-updates/2024-June/035718.html",
+				"source": "SUSE-SU"
 			}
 		],
 		"description": "\n    In the Linux kernel, the following vulnerability has been resolved:\n\ninet: inet_defrag: prevent sk release while still in use\n\nip_local_out() and other functions can pass skb->sk as function argument.\n\nIf the skb is a fragment and reassembly happens before such function call\nreturns, the sk must not be released.\n\nThis affects skb fragments reassembled via netfilter or similar\nmodules, e.g. openvswitch or ct_act.c, when run as part of tx pipeline.\n\nEric Dumazet made an initial analysis of this bug.  Quoting Eric:\n  Calling ip_defrag() in output path is also implying skb_orphan(),\n  which is buggy because output path relies on sk not disappearing.\n\n  A relevant old patch about the issue was :\n  8282f27449bf (\"inet: frag: Always orphan skbs inside ip_defrag()\")\n\n  [..]\n\n  net/ipv4/ip_output.c depends on skb->sk being set, and probably to an\n  inet socket, not an arbitrary one.\n\n  If we orphan the packet in ipvlan, then downstream things like FQ\n  packet scheduler will not work properly.\n\n  We need to change ip_defrag() to only use skb_orphan() when really\n  needed, ie whenever frag_list is going to be used.\n\nEric suggested to stash sk in fragment queue and made an initial patch.\nHowever there is a problem with this:\n\nIf skb is refragmented again right after, ip_do_fragment() will copy\nhead->sk to the new fragments, and sets up destructor to sock_wfree.\nIOW, we have no choice but to fix up sk_wmem accouting to reflect the\nfully reassembled skb, else wmem will underflow.\n\nThis change moves the orphan down into the core, to last possible moment.\nAs ip_defrag_offset is aliased with sk_buff->sk member, we must move the\noffset into the FRAG_CB, else skb->sk gets clobbered.\n\nThis allows to delay the orphaning long enough to learn if the skb has\nto be queued or if the skb is completing the reasm queue.\n\nIn the former case, things work as before, skb is orphaned.  This is\nsafe because skb gets queued/stolen and won't continue past reasm engine.\n\nIn the latter case, we will steal the skb->sk reference, reattach it to\nthe head skb, and fix up wmem accouting when inet_frag inflates truesize.\n    ",
@@ -95,15 +108,18 @@
 				"date": "2024-06-13"
 			},
 			"updated": {
-				"date": "2024-06-22"
+				"date": "2024-06-25"
 			},
 			"affected_cpe_list": {
 				"cpe": [
+					"cpe:/o:suse:sle-module-live-patching:15:sp3",
 					"cpe:/o:suse:sle-module-live-patching:15:sp5",
 					"cpe:/o:suse:sle-module-public-cloud:15:sp5",
 					"cpe:/o:suse:sle-module-public-cloud:15:sp6",
 					"cpe:/o:suse:sle_hpc:15:sp5",
+					"cpe:/o:suse:sles-ltss:15:sp3",
 					"cpe:/o:suse:sles:15:sp5",
+					"cpe:/o:suse:sles_sap:15:sp3",
 					"cpe:/o:suse:sles_sap:15:sp5"
 				]
 			}
@@ -224,6 +240,174 @@
 								"comment": "kernel-syms-azure-6.4.0-150600.8.5.1 is installed"
 							}
 						]
+					}
+				]
+			},
+			{
+				"operator": "AND",
+				"criterias": [
+					{
+						"operator": "OR",
+						"criterions": [
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009868812",
+								"comment": "kernel-default-livepatch-5.3.18-150300.59.164.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009868813",
+								"comment": "kernel-default-livepatch-devel-5.3.18-150300.59.164.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009868814",
+								"comment": "kernel-livepatch-5_3_18-150300_59_164-default-1-150300.7.3.1 is installed"
+							}
+						]
+					}
+				],
+				"criterions": [
+					{
+						"test_ref": "oval:org.opensuse.security:tst:2009478738",
+						"comment": "SUSE Linux Enterprise Live Patching 15 SP3 is installed"
+					}
+				]
+			},
+			{
+				"operator": "AND",
+				"criterias": [
+					{
+						"operator": "OR",
+						"criterions": [
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009868819",
+								"comment": "kernel-64kb-5.3.18-150300.59.164.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009868820",
+								"comment": "kernel-64kb-devel-5.3.18-150300.59.164.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009868833",
+								"comment": "kernel-default-5.3.18-150300.59.164.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009868834",
+								"comment": "kernel-default-base-5.3.18-150300.59.164.1.150300.18.96.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009868835",
+								"comment": "kernel-default-devel-5.3.18-150300.59.164.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009868824",
+								"comment": "kernel-devel-5.3.18-150300.59.164.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009868825",
+								"comment": "kernel-docs-5.3.18-150300.59.164.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009868826",
+								"comment": "kernel-macros-5.3.18-150300.59.164.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009868836",
+								"comment": "kernel-obs-build-5.3.18-150300.59.164.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009868828",
+								"comment": "kernel-preempt-5.3.18-150300.59.164.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009868829",
+								"comment": "kernel-preempt-devel-5.3.18-150300.59.164.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009868830",
+								"comment": "kernel-source-5.3.18-150300.59.164.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009868837",
+								"comment": "kernel-syms-5.3.18-150300.59.164.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009868838",
+								"comment": "kernel-zfcpdump-5.3.18-150300.59.164.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009868839",
+								"comment": "reiserfs-kmp-default-5.3.18-150300.59.164.1 is installed"
+							}
+						]
+					}
+				],
+				"criterions": [
+					{
+						"test_ref": "oval:org.opensuse.security:tst:2009729178",
+						"comment": "SUSE Linux Enterprise Server 15 SP3-LTSS is installed"
+					}
+				]
+			},
+			{
+				"operator": "AND",
+				"criterias": [
+					{
+						"operator": "OR",
+						"criterions": [
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009868840",
+								"comment": "kernel-default-5.3.18-150300.59.164.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009868841",
+								"comment": "kernel-default-base-5.3.18-150300.59.164.1.150300.18.96.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009868842",
+								"comment": "kernel-default-devel-5.3.18-150300.59.164.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009868824",
+								"comment": "kernel-devel-5.3.18-150300.59.164.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009868825",
+								"comment": "kernel-docs-5.3.18-150300.59.164.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009868826",
+								"comment": "kernel-macros-5.3.18-150300.59.164.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009868843",
+								"comment": "kernel-obs-build-5.3.18-150300.59.164.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009868844",
+								"comment": "kernel-preempt-5.3.18-150300.59.164.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009868845",
+								"comment": "kernel-preempt-devel-5.3.18-150300.59.164.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009868830",
+								"comment": "kernel-source-5.3.18-150300.59.164.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009868846",
+								"comment": "kernel-syms-5.3.18-150300.59.164.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009868847",
+								"comment": "reiserfs-kmp-default-5.3.18-150300.59.164.1 is installed"
+							}
+						]
+					}
+				],
+				"criterions": [
+					{
+						"test_ref": "oval:org.opensuse.security:tst:2009669878",
+						"comment": "SUSE Linux Enterprise Server for SAP Applications 15 SP3 is installed"
 					}
 				]
 			}
