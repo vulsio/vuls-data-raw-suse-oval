@@ -1,0 +1,208 @@
+{
+	"id": "oval:org.opensuse.security:def:202426880",
+	"version": "1",
+	"class": "vulnerability",
+	"metadata": {
+		"title": "CVE-2024-26880",
+		"affected": {
+			"family": "unix",
+			"platform": [
+				"SUSE Linux Enterprise Desktop 15 SP5",
+				"SUSE Linux Enterprise High Performance Computing 15 SP5",
+				"SUSE Linux Enterprise Module for Basesystem 15 SP5",
+				"SUSE Linux Enterprise Module for Development Tools 15 SP5",
+				"SUSE Linux Enterprise Server 15 SP5",
+				"SUSE Linux Enterprise Server for SAP Applications 15 SP5"
+			]
+		},
+		"reference": [
+			{
+				"ref_id": "Mitre CVE-2024-26880",
+				"ref_url": "https://cve.mitre.org/cgi-bin/cvename.cgi?name=CVE-2024-26880",
+				"source": "CVE"
+			},
+			{
+				"ref_id": "SUSE CVE-2024-26880",
+				"ref_url": "https://www.suse.com/security/cve/CVE-2024-26880",
+				"source": "SUSE CVE"
+			},
+			{
+				"ref_id": "SUSE-SU-2024:2008-1",
+				"ref_url": "https://lists.suse.com/pipermail/sle-updates/2024-June/035569.html",
+				"source": "SUSE-SU"
+			},
+			{
+				"ref_id": "SUSE-SU-2024:2019-1",
+				"ref_url": "https://lists.suse.com/pipermail/sle-updates/2024-June/035578.html",
+				"source": "SUSE-SU"
+			},
+			{
+				"ref_id": "SUSE-SU-2024:2190-1",
+				"ref_url": "https://lists.suse.com/pipermail/sle-updates/2024-June/035732.html",
+				"source": "SUSE-SU"
+			}
+		],
+		"description": "\n    In the Linux kernel, the following vulnerability has been resolved:\n\ndm: call the resume method on internal suspend\n\nThere is this reported crash when experimenting with the lvm2 testsuite.\nThe list corruption is caused by the fact that the postsuspend and resume\nmethods were not paired correctly; there were two consecutive calls to the\norigin_postsuspend function. The second call attempts to remove the\n\"hash_list\" entry from a list, while it was already removed by the first\ncall.\n\nFix __dm_internal_resume so that it calls the preresume and resume\nmethods of the table's targets.\n\nIf a preresume method of some target fails, we are in a tricky situation.\nWe can't return an error because dm_internal_resume isn't supposed to\nreturn errors. We can't return success, because then the \"resume\" and\n\"postsuspend\" methods would not be paired correctly. So, we set the\nDMF_SUSPENDED flag and we fake normal suspend - it may confuse userspace\ntools, but it won't cause a kernel crash.\n\n------------[ cut here ]------------\nkernel BUG at lib/list_debug.c:56!\ninvalid opcode: 0000 [#1] PREEMPT SMP\nCPU: 1 PID: 8343 Comm: dmsetup Not tainted 6.8.0-rc6 #4\nHardware name: QEMU Standard PC (i440FX + PIIX, 1996), BIOS 1.14.0-2 04/01/2014\nRIP: 0010:__list_del_entry_valid_or_report+0x77/0xc0\n<snip>\nRSP: 0018:ffff8881b831bcc0 EFLAGS: 00010282\nRAX: 000000000000004e RBX: ffff888143b6eb80 RCX: 0000000000000000\nRDX: 0000000000000001 RSI: ffffffff819053d0 RDI: 00000000ffffffff\nRBP: ffff8881b83a3400 R08: 00000000fffeffff R09: 0000000000000058\nR10: 0000000000000000 R11: ffffffff81a24080 R12: 0000000000000001\nR13: ffff88814538e000 R14: ffff888143bc6dc0 R15: ffffffffa02e4bb0\nFS:  00000000f7c0f780(0000) GS:ffff8893f0a40000(0000) knlGS:0000000000000000\nCS:  0010 DS: 002b ES: 002b CR0: 0000000080050033\nCR2: 0000000057fb5000 CR3: 0000000143474000 CR4: 00000000000006b0\nCall Trace:\n <TASK>\n ? die+0x2d/0x80\n ? do_trap+0xeb/0xf0\n ? __list_del_entry_valid_or_report+0x77/0xc0\n ? do_error_trap+0x60/0x80\n ? __list_del_entry_valid_or_report+0x77/0xc0\n ? exc_invalid_op+0x49/0x60\n ? __list_del_entry_valid_or_report+0x77/0xc0\n ? asm_exc_invalid_op+0x16/0x20\n ? table_deps+0x1b0/0x1b0 [dm_mod]\n ? __list_del_entry_valid_or_report+0x77/0xc0\n origin_postsuspend+0x1a/0x50 [dm_snapshot]\n dm_table_postsuspend_targets+0x34/0x50 [dm_mod]\n dm_suspend+0xd8/0xf0 [dm_mod]\n dev_suspend+0x1f2/0x2f0 [dm_mod]\n ? table_deps+0x1b0/0x1b0 [dm_mod]\n ctl_ioctl+0x300/0x5f0 [dm_mod]\n dm_compat_ctl_ioctl+0x7/0x10 [dm_mod]\n __x64_compat_sys_ioctl+0x104/0x170\n do_syscall_64+0x184/0x1b0\n entry_SYSCALL_64_after_hwframe+0x46/0x4e\nRIP: 0033:0xf7e6aead\n<snip>\n---[ end trace 0000000000000000 ]---\n    ",
+		"advisory": {
+			"from": "security@suse.de",
+			"severity": "Low",
+			"cve": [
+				{
+					"text": "CVE-2024-26880 at SUSE",
+					"href": "https://www.suse.com/security/cve/CVE-2024-26880/",
+					"impact": "low",
+					"cvss3": "3.3/CVSS:3.1/AV:L/AC:L/PR:L/UI:N/S:U/C:N/I:N/A:L"
+				},
+				{
+					"text": "CVE-2024-26880 at NVD",
+					"href": "https://nvd.nist.gov/vuln/detail/CVE-2024-26880"
+				}
+			],
+			"bugzilla": [
+				{
+					"text": "SUSE bug 1223188",
+					"href": "https://bugzilla.suse.com/1223188"
+				}
+			],
+			"issued": {
+				"date": "2024-06-26"
+			},
+			"updated": {
+				"date": "2024-06-26"
+			},
+			"affected_cpe_list": {
+				"cpe": [
+					"cpe:/o:suse:sle-module-basesystem:15:sp5",
+					"cpe:/o:suse:sle-module-development-tools:15:sp5",
+					"cpe:/o:suse:sle_hpc:15:sp5",
+					"cpe:/o:suse:sled:15:sp5",
+					"cpe:/o:suse:sles:15:sp5",
+					"cpe:/o:suse:sles_sap:15:sp5"
+				]
+			}
+		}
+	},
+	"criteria": {
+		"operator": "OR",
+		"criterias": [
+			{
+				"operator": "AND",
+				"criterias": [
+					{
+						"operator": "OR",
+						"criterions": [
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009759898",
+								"comment": "SUSE Linux Enterprise Desktop 15 SP5 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009759899",
+								"comment": "SUSE Linux Enterprise High Performance Computing 15 SP5 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009759900",
+								"comment": "SUSE Linux Enterprise Module for Basesystem 15 SP5 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009759901",
+								"comment": "SUSE Linux Enterprise Server 15 SP5 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009759902",
+								"comment": "SUSE Linux Enterprise Server for SAP Applications 15 SP5 is installed"
+							}
+						]
+					},
+					{
+						"operator": "OR",
+						"criterions": [
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009869014",
+								"comment": "kernel-64kb-5.14.21-150500.55.68.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009869015",
+								"comment": "kernel-64kb-devel-5.14.21-150500.55.68.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009869023",
+								"comment": "kernel-default-5.14.21-150500.55.68.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009869024",
+								"comment": "kernel-default-base-5.14.21-150500.55.68.1.150500.6.31.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009869026",
+								"comment": "kernel-default-devel-5.14.21-150500.55.68.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009869032",
+								"comment": "kernel-devel-5.14.21-150500.55.68.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009869039",
+								"comment": "kernel-macros-5.14.21-150500.55.68.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009869045",
+								"comment": "kernel-zfcpdump-5.14.21-150500.55.68.1 is installed"
+							}
+						]
+					}
+				]
+			},
+			{
+				"operator": "AND",
+				"criterias": [
+					{
+						"operator": "OR",
+						"criterions": [
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009759898",
+								"comment": "SUSE Linux Enterprise Desktop 15 SP5 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009759899",
+								"comment": "SUSE Linux Enterprise High Performance Computing 15 SP5 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009760583",
+								"comment": "SUSE Linux Enterprise Module for Development Tools 15 SP5 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009759901",
+								"comment": "SUSE Linux Enterprise Server 15 SP5 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009759902",
+								"comment": "SUSE Linux Enterprise Server for SAP Applications 15 SP5 is installed"
+							}
+						]
+					},
+					{
+						"operator": "OR",
+						"criterions": [
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009869033",
+								"comment": "kernel-docs-5.14.21-150500.55.68.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009869040",
+								"comment": "kernel-obs-build-5.14.21-150500.55.68.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009869042",
+								"comment": "kernel-source-5.14.21-150500.55.68.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009869044",
+								"comment": "kernel-syms-5.14.21-150500.55.68.1 is installed"
+							}
+						]
+					}
+				]
+			}
+		]
+	}
+}

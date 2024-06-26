@@ -345,6 +345,26 @@
 				"ref_id": "SUSE-SU-2024:2163-1",
 				"ref_url": "https://lists.suse.com/pipermail/sle-security-updates/2024-June/018784.html",
 				"source": "SUSE-SU"
+			},
+			{
+				"ref_id": "SUSE-SU-2024:2191-1",
+				"ref_url": "https://lists.suse.com/pipermail/sle-security-updates/2024-June/018812.html",
+				"source": "SUSE-SU"
+			},
+			{
+				"ref_id": "SUSE-SU-2024:2207-1",
+				"ref_url": "https://lists.suse.com/pipermail/sle-updates/2024-June/035737.html",
+				"source": "SUSE-SU"
+			},
+			{
+				"ref_id": "SUSE-SU-2024:2208-1",
+				"ref_url": "https://lists.suse.com/pipermail/sle-updates/2024-June/035736.html",
+				"source": "SUSE-SU"
+			},
+			{
+				"ref_id": "SUSE-SU-2024:2209-1",
+				"ref_url": "https://lists.suse.com/pipermail/sle-updates/2024-June/035735.html",
+				"source": "SUSE-SU"
 			}
 		],
 		"description": "\n    In the Linux kernel, the following vulnerability has been resolved:\n\nipvlan: Fix out-of-bound bugs caused by unset skb->mac_header\n\nIf an AF_PACKET socket is used to send packets through ipvlan and the\ndefault xmit function of the AF_PACKET socket is changed from\ndev_queue_xmit() to packet_direct_xmit() via setsockopt() with the option\nname of PACKET_QDISC_BYPASS, the skb->mac_header may not be reset and\nremains as the initial value of 65535, this may trigger slab-out-of-bounds\nbugs as following:\n\n=================================================================\nUG: KASAN: slab-out-of-bounds in ipvlan_xmit_mode_l2+0xdb/0x330 [ipvlan]\nPU: 2 PID: 1768 Comm: raw_send Kdump: loaded Not tainted 6.0.0-rc4+ #6\nardware name: QEMU Standard PC (i440FX + PIIX, 1996), BIOS 1.14.0-1.fc33\nall Trace:\nprint_address_description.constprop.0+0x1d/0x160\nprint_report.cold+0x4f/0x112\nkasan_report+0xa3/0x130\nipvlan_xmit_mode_l2+0xdb/0x330 [ipvlan]\nipvlan_start_xmit+0x29/0xa0 [ipvlan]\n__dev_direct_xmit+0x2e2/0x380\npacket_direct_xmit+0x22/0x60\npacket_snd+0x7c9/0xc40\nsock_sendmsg+0x9a/0xa0\n__sys_sendto+0x18a/0x230\n__x64_sys_sendto+0x74/0x90\ndo_syscall_64+0x3b/0x90\nentry_SYSCALL_64_after_hwframe+0x63/0xcd\n\nThe root cause is:\n  1. packet_snd() only reset skb->mac_header when sock->type is SOCK_RAW\n     and skb->protocol is not specified as in packet_parse_headers()\n\n  2. packet_direct_xmit() doesn't reset skb->mac_header as dev_queue_xmit()\n\nIn this case, skb->mac_header is 65535 when ipvlan_xmit_mode_l2() is\ncalled. So when ipvlan_xmit_mode_l2() gets mac header with eth_hdr() which\nuse \"skb->head + skb->mac_header\", out-of-bound access occurs.\n\nThis patch replaces eth_hdr() with skb_eth_hdr() in ipvlan_xmit_mode_l2()\nand reset mac header in multicast to solve this out-of-bound bug.\n    ",
@@ -377,7 +397,7 @@
 				"date": "2024-05-16"
 			},
 			"updated": {
-				"date": "2024-06-22"
+				"date": "2024-06-26"
 			},
 			"affected_cpe_list": {
 				"cpe": [
@@ -683,8 +703,8 @@
 												"comment": "kernel-default 5.14.21-150500.55.49.1 is installed"
 											},
 											{
-												"test_ref": "oval:org.opensuse.security:tst:2009861772",
-												"comment": "no kernel-livepatch-5_14_21-150500_55_49-default is greater or equal than 4-150500.11.8.1"
+												"test_ref": "oval:org.opensuse.security:tst:2009868928",
+												"comment": "no kernel-livepatch-5_14_21-150500_55_49-default is greater or equal than 5-150500.11.8.1"
 											}
 										]
 									},
@@ -696,8 +716,8 @@
 												"comment": "kernel-default 5.14.21-150500.55.52.1 is installed"
 											},
 											{
-												"test_ref": "oval:org.opensuse.security:tst:2009861774",
-												"comment": "no kernel-livepatch-5_14_21-150500_55_52-default is greater or equal than 2-150500.11.6.1"
+												"test_ref": "oval:org.opensuse.security:tst:2009868929",
+												"comment": "no kernel-livepatch-5_14_21-150500_55_52-default is greater or equal than 3-150500.11.6.1"
 											}
 										]
 									},
@@ -709,8 +729,8 @@
 												"comment": "kernel-default 5.14.21-150500.55.59.1 is installed"
 											},
 											{
-												"test_ref": "oval:org.opensuse.security:tst:2009861865",
-												"comment": "no kernel-livepatch-5_14_21-150500_55_59-default is greater or equal than 2-150500.11.10.1"
+												"test_ref": "oval:org.opensuse.security:tst:2009868930",
+												"comment": "no kernel-livepatch-5_14_21-150500_55_59-default is greater or equal than 3-150500.11.10.1"
 											}
 										]
 									},

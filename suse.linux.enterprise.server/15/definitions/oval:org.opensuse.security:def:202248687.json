@@ -11,6 +11,7 @@
 				"SUSE Linux Enterprise High Performance Computing 15 SP5",
 				"SUSE Linux Enterprise Live Patching 15 SP2",
 				"SUSE Linux Enterprise Live Patching 15 SP3",
+				"SUSE Linux Enterprise Live Patching 15 SP4",
 				"SUSE Linux Enterprise Live Patching 15 SP5",
 				"SUSE Linux Enterprise Module for Basesystem 15 SP5",
 				"SUSE Linux Enterprise Module for Development Tools 15 SP5",
@@ -18,9 +19,12 @@
 				"SUSE Linux Enterprise Module for Public Cloud 15 SP5",
 				"SUSE Linux Enterprise Server 15 SP2-LTSS",
 				"SUSE Linux Enterprise Server 15 SP3-LTSS",
+				"SUSE Linux Enterprise Server 15 SP4-LTSS",
+				"SUSE Linux Enterprise Server 15 SP4-TERADATA",
 				"SUSE Linux Enterprise Server 15 SP5",
 				"SUSE Linux Enterprise Server for SAP Applications 15 SP2",
 				"SUSE Linux Enterprise Server for SAP Applications 15 SP3",
+				"SUSE Linux Enterprise Server for SAP Applications 15 SP4",
 				"SUSE Linux Enterprise Server for SAP Applications 15 SP5",
 				"SUSE Linux Enterprise Workstation Extension 15 SP5"
 			]
@@ -95,6 +99,16 @@
 				"ref_id": "SUSE-SU-2024:2091-1",
 				"ref_url": "https://lists.suse.com/pipermail/sle-updates/2024-June/035660.html",
 				"source": "SUSE-SU"
+			},
+			{
+				"ref_id": "SUSE-SU-2024:2189-1",
+				"ref_url": "https://lists.suse.com/pipermail/sle-updates/2024-June/035721.html",
+				"source": "SUSE-SU"
+			},
+			{
+				"ref_id": "SUSE-SU-2024:2216-1",
+				"ref_url": "https://lists.suse.com/pipermail/sle-security-updates/2024-June/018821.html",
+				"source": "SUSE-SU"
 			}
 		],
 		"description": "\n    In the Linux kernel, the following vulnerability has been resolved:\n\nipv6: sr: fix out-of-bounds read when setting HMAC data.\n\nThe SRv6 layer allows defining HMAC data that can later be used to sign IPv6\nSegment Routing Headers. This configuration is realised via netlink through\nfour attributes: SEG6_ATTR_HMACKEYID, SEG6_ATTR_SECRET, SEG6_ATTR_SECRETLEN and\nSEG6_ATTR_ALGID. Because the SECRETLEN attribute is decoupled from the actual\nlength of the SECRET attribute, it is possible to provide invalid combinations\n(e.g., secret = \"\", secretlen = 64). This case is not checked in the code and\nwith an appropriately crafted netlink message, an out-of-bounds read of up\nto 64 bytes (max secret length) can occur past the skb end pointer and into\nskb_shared_info:\n\nBreakpoint 1, seg6_genl_sethmac (skb=<optimized out>, info=<optimized out>) at net/ipv6/seg6.c:208\n208\t\tmemcpy(hinfo->secret, secret, slen);\n(gdb) bt\n #0  seg6_genl_sethmac (skb=<optimized out>, info=<optimized out>) at net/ipv6/seg6.c:208\n #1  0xffffffff81e012e9 in genl_family_rcv_msg_doit (skb=skb@entry=0xffff88800b1f9f00, nlh=nlh@entry=0xffff88800b1b7600,\n    extack=extack@entry=0xffffc90000ba7af0, ops=ops@entry=0xffffc90000ba7a80, hdrlen=4, net=0xffffffff84237580 <init_net>, family=<optimized out>,\n    family=<optimized out>) at net/netlink/genetlink.c:731\n #2  0xffffffff81e01435 in genl_family_rcv_msg (extack=0xffffc90000ba7af0, nlh=0xffff88800b1b7600, skb=0xffff88800b1f9f00,\n    family=0xffffffff82fef6c0 <seg6_genl_family>) at net/netlink/genetlink.c:775\n #3  genl_rcv_msg (skb=0xffff88800b1f9f00, nlh=0xffff88800b1b7600, extack=0xffffc90000ba7af0) at net/netlink/genetlink.c:792\n #4  0xffffffff81dfffc3 in netlink_rcv_skb (skb=skb@entry=0xffff88800b1f9f00, cb=cb@entry=0xffffffff81e01350 <genl_rcv_msg>)\n    at net/netlink/af_netlink.c:2501\n #5  0xffffffff81e00919 in genl_rcv (skb=0xffff88800b1f9f00) at net/netlink/genetlink.c:803\n #6  0xffffffff81dff6ae in netlink_unicast_kernel (ssk=0xffff888010eec800, skb=0xffff88800b1f9f00, sk=0xffff888004aed000)\n    at net/netlink/af_netlink.c:1319\n #7  netlink_unicast (ssk=ssk@entry=0xffff888010eec800, skb=skb@entry=0xffff88800b1f9f00, portid=portid@entry=0, nonblock=<optimized out>)\n    at net/netlink/af_netlink.c:1345\n #8  0xffffffff81dff9a4 in netlink_sendmsg (sock=<optimized out>, msg=0xffffc90000ba7e48, len=<optimized out>) at net/netlink/af_netlink.c:1921\n...\n(gdb) p/x ((struct sk_buff *)0xffff88800b1f9f00)->head + ((struct sk_buff *)0xffff88800b1f9f00)->end\n$1 = 0xffff88800b1b76c0\n(gdb) p/x secret\n$2 = 0xffff88800b1b76c0\n(gdb) p slen\n$3 = 64 '@'\n\nThe OOB data can then be read back from userspace by dumping HMAC state. This\ncommit fixes this by ensuring SECRETLEN cannot exceed the actual length of\nSECRET.\n    ",
@@ -129,7 +143,7 @@
 				"date": "2024-05-15"
 			},
 			"updated": {
-				"date": "2024-06-20"
+				"date": "2024-06-26"
 			},
 			"affected_cpe_list": {
 				"cpe": [
@@ -138,6 +152,7 @@
 					"cpe:/o:suse:sle-module-legacy:15:sp5",
 					"cpe:/o:suse:sle-module-live-patching:15:sp2",
 					"cpe:/o:suse:sle-module-live-patching:15:sp3",
+					"cpe:/o:suse:sle-module-live-patching:15:sp4",
 					"cpe:/o:suse:sle-module-live-patching:15:sp5",
 					"cpe:/o:suse:sle-module-public-cloud:15:sp5",
 					"cpe:/o:suse:sle-we:15:sp5",
@@ -145,9 +160,11 @@
 					"cpe:/o:suse:sled:15:sp5",
 					"cpe:/o:suse:sles-ltss:15:sp2",
 					"cpe:/o:suse:sles-ltss:15:sp3",
+					"cpe:/o:suse:sles-ltss:15:sp4",
 					"cpe:/o:suse:sles:15:sp5",
 					"cpe:/o:suse:sles_sap:15:sp2",
 					"cpe:/o:suse:sles_sap:15:sp3",
+					"cpe:/o:suse:sles_sap:15:sp4",
 					"cpe:/o:suse:sles_sap:15:sp5"
 				]
 			}
@@ -641,6 +658,19 @@
 												"comment": "no kernel-livepatch-5_14_21-150500_11-rt is greater or equal than 14-150500.6.1"
 											}
 										]
+									},
+									{
+										"operator": "AND",
+										"criterions": [
+											{
+												"test_ref": "oval:org.opensuse.security:tst:2009776034",
+												"comment": "kernel-default 5.14.21-150500.53.2 is installed"
+											},
+											{
+												"test_ref": "oval:org.opensuse.security:tst:2009868931",
+												"comment": "no kernel-livepatch-5_14_21-150500_53-default is greater or equal than 13-150500.9.1"
+											}
+										]
 									}
 								],
 								"criterions": [
@@ -758,6 +788,10 @@
 								"comment": "kernel-livepatch-5_14_21-150500_13_52-rt-1-150500.11.5.1 is installed"
 							},
 							{
+								"test_ref": "oval:org.opensuse.security:tst:2009869677",
+								"comment": "kernel-livepatch-5_14_21-150500_53-default-13-150500.9.1 is installed"
+							},
+							{
 								"test_ref": "oval:org.opensuse.security:tst:2009861244",
 								"comment": "kernel-livepatch-5_14_21-150500_55_62-default-1-150500.11.3.2 is installed"
 							}
@@ -768,6 +802,158 @@
 					{
 						"test_ref": "oval:org.opensuse.security:tst:2009764853",
 						"comment": "SUSE Linux Enterprise Live Patching 15 SP5 is installed"
+					}
+				]
+			},
+			{
+				"operator": "AND",
+				"criterias": [
+					{
+						"operator": "OR",
+						"criterions": [
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009869521",
+								"comment": "kernel-default-livepatch-5.14.21-150400.24.122.2 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009869522",
+								"comment": "kernel-default-livepatch-devel-5.14.21-150400.24.122.2 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009869523",
+								"comment": "kernel-livepatch-5_14_21-150400_24_122-default-1-150400.9.3.2 is installed"
+							}
+						]
+					}
+				],
+				"criterions": [
+					{
+						"test_ref": "oval:org.opensuse.security:tst:2009698985",
+						"comment": "SUSE Linux Enterprise Live Patching 15 SP4 is installed"
+					}
+				]
+			},
+			{
+				"operator": "AND",
+				"criterias": [
+					{
+						"operator": "OR",
+						"criterions": [
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009869530",
+								"comment": "kernel-64kb-5.14.21-150400.24.122.2 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009869531",
+								"comment": "kernel-64kb-devel-5.14.21-150400.24.122.2 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009869623",
+								"comment": "kernel-default-5.14.21-150400.24.122.2 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009869624",
+								"comment": "kernel-default-base-5.14.21-150400.24.122.2.150400.24.58.2 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009869625",
+								"comment": "kernel-default-devel-5.14.21-150400.24.122.2 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009869535",
+								"comment": "kernel-devel-5.14.21-150400.24.122.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009869536",
+								"comment": "kernel-docs-5.14.21-150400.24.122.2 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009869537",
+								"comment": "kernel-macros-5.14.21-150400.24.122.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009869626",
+								"comment": "kernel-obs-build-5.14.21-150400.24.122.2 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009869539",
+								"comment": "kernel-source-5.14.21-150400.24.122.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009869627",
+								"comment": "kernel-syms-5.14.21-150400.24.122.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009869628",
+								"comment": "kernel-zfcpdump-5.14.21-150400.24.122.2 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009869629",
+								"comment": "reiserfs-kmp-default-5.14.21-150400.24.122.2 is installed"
+							}
+						]
+					}
+				],
+				"criterions": [
+					{
+						"test_ref": "oval:org.opensuse.security:tst:2009816749",
+						"comment": "SUSE Linux Enterprise Server 15 SP4-LTSS is installed"
+					}
+				]
+			},
+			{
+				"operator": "AND",
+				"criterias": [
+					{
+						"operator": "OR",
+						"criterions": [
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009869633",
+								"comment": "kernel-default-5.14.21-150400.24.122.2 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009869634",
+								"comment": "kernel-default-base-5.14.21-150400.24.122.2.150400.24.58.2 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009869635",
+								"comment": "kernel-default-devel-5.14.21-150400.24.122.2 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009869535",
+								"comment": "kernel-devel-5.14.21-150400.24.122.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009869536",
+								"comment": "kernel-docs-5.14.21-150400.24.122.2 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009869537",
+								"comment": "kernel-macros-5.14.21-150400.24.122.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009869636",
+								"comment": "kernel-obs-build-5.14.21-150400.24.122.2 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009869539",
+								"comment": "kernel-source-5.14.21-150400.24.122.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009869637",
+								"comment": "kernel-syms-5.14.21-150400.24.122.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009869638",
+								"comment": "reiserfs-kmp-default-5.14.21-150400.24.122.2 is installed"
+							}
+						]
+					}
+				],
+				"criterions": [
+					{
+						"test_ref": "oval:org.opensuse.security:tst:2009669928",
+						"comment": "SUSE Linux Enterprise Server for SAP Applications 15 SP4 is installed"
 					}
 				]
 			}

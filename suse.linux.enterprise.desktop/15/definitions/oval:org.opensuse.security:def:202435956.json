@@ -1,0 +1,194 @@
+{
+	"id": "oval:org.opensuse.security:def:202435956",
+	"version": "1",
+	"class": "vulnerability",
+	"metadata": {
+		"title": "CVE-2024-35956",
+		"affected": {
+			"family": "unix",
+			"platform": [
+				"SUSE Linux Enterprise Desktop 15 SP6",
+				"SUSE Linux Enterprise High Performance Computing 15 SP6",
+				"SUSE Linux Enterprise Module for Basesystem 15 SP6",
+				"SUSE Linux Enterprise Module for Development Tools 15 SP6",
+				"SUSE Linux Enterprise Server 15 SP6",
+				"SUSE Linux Enterprise Server for SAP Applications 15 SP6"
+			]
+		},
+		"reference": [
+			{
+				"ref_id": "Mitre CVE-2024-35956",
+				"ref_url": "https://cve.mitre.org/cgi-bin/cvename.cgi?name=CVE-2024-35956",
+				"source": "CVE"
+			},
+			{
+				"ref_id": "SUSE CVE-2024-35956",
+				"ref_url": "https://www.suse.com/security/cve/CVE-2024-35956",
+				"source": "SUSE CVE"
+			},
+			{
+				"ref_id": "SUSE-SU-2024:2135-1",
+				"ref_url": "https://lists.suse.com/pipermail/sle-updates/2024-June/035681.html",
+				"source": "SUSE-SU"
+			}
+		],
+		"description": "\n    In the Linux kernel, the following vulnerability has been resolved:\n\nbtrfs: qgroup: fix qgroup prealloc rsv leak in subvolume operations\n\nCreate subvolume, create snapshot and delete subvolume all use\nbtrfs_subvolume_reserve_metadata() to reserve metadata for the changes\ndone to the parent subvolume's fs tree, which cannot be mediated in the\nnormal way via start_transaction. When quota groups (squota or qgroups)\nare enabled, this reserves qgroup metadata of type PREALLOC. Once the\noperation is associated to a transaction, we convert PREALLOC to\nPERTRANS, which gets cleared in bulk at the end of the transaction.\n\nHowever, the error paths of these three operations were not implementing\nthis lifecycle correctly. They unconditionally converted the PREALLOC to\nPERTRANS in a generic cleanup step regardless of errors or whether the\noperation was fully associated to a transaction or not. This resulted in\nerror paths occasionally converting this rsv to PERTRANS without calling\nrecord_root_in_trans successfully, which meant that unless that root got\nrecorded in the transaction by some other thread, the end of the\ntransaction would not free that root's PERTRANS, leaking it. Ultimately,\nthis resulted in hitting a WARN in CONFIG_BTRFS_DEBUG builds at unmount\nfor the leaked reservation.\n\nThe fix is to ensure that every qgroup PREALLOC reservation observes the\nfollowing properties:\n\n1. any failure before record_root_in_trans is called successfully\n   results in freeing the PREALLOC reservation.\n2. after record_root_in_trans, we convert to PERTRANS, and now the\n   transaction owns freeing the reservation.\n\nThis patch enforces those properties on the three operations. Without\nit, generic/269 with squotas enabled at mkfs time would fail in ~5-10\nruns on my system. With this patch, it ran successfully 1000 times in a\nrow.\n    ",
+		"advisory": {
+			"from": "security@suse.de",
+			"severity": "Moderate",
+			"cve": [
+				{
+					"text": "CVE-2024-35956 at SUSE",
+					"href": "https://www.suse.com/security/cve/CVE-2024-35956/",
+					"impact": "medium",
+					"cvss3": "5.5/CVSS:3.1/AV:L/AC:L/PR:L/UI:N/S:U/C:N/I:N/A:H"
+				},
+				{
+					"text": "CVE-2024-35956 at NVD",
+					"href": "https://nvd.nist.gov/vuln/detail/CVE-2024-35956"
+				}
+			],
+			"bugzilla": [
+				{
+					"text": "SUSE bug 1224674",
+					"href": "https://bugzilla.suse.com/1224674"
+				}
+			],
+			"issued": {
+				"date": "2024-06-26"
+			},
+			"updated": {
+				"date": "2024-06-26"
+			},
+			"affected_cpe_list": {
+				"cpe": [
+					"cpe:/o:suse:sle-module-basesystem:15:sp6",
+					"cpe:/o:suse:sle-module-development-tools:15:sp6"
+				]
+			}
+		}
+	},
+	"criteria": {
+		"operator": "OR",
+		"criterias": [
+			{
+				"operator": "AND",
+				"criterias": [
+					{
+						"operator": "OR",
+						"criterions": [
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009856171",
+								"comment": "SUSE Linux Enterprise Desktop 15 SP6 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009856172",
+								"comment": "SUSE Linux Enterprise High Performance Computing 15 SP6 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009856173",
+								"comment": "SUSE Linux Enterprise Module for Basesystem 15 SP6 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009856174",
+								"comment": "SUSE Linux Enterprise Server 15 SP6 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009856175",
+								"comment": "SUSE Linux Enterprise Server for SAP Applications 15 SP6 is installed"
+							}
+						]
+					},
+					{
+						"operator": "OR",
+						"criterions": [
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009869452",
+								"comment": "kernel-64kb-6.4.0-150600.23.7.3 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009869453",
+								"comment": "kernel-64kb-devel-6.4.0-150600.23.7.3 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009869461",
+								"comment": "kernel-default-6.4.0-150600.23.7.3 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009869462",
+								"comment": "kernel-default-base-6.4.0-150600.23.7.3.150600.12.2.7 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009869464",
+								"comment": "kernel-default-devel-6.4.0-150600.23.7.3 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009869470",
+								"comment": "kernel-devel-6.4.0-150600.23.7.2 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009869477",
+								"comment": "kernel-macros-6.4.0-150600.23.7.2 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009869483",
+								"comment": "kernel-zfcpdump-6.4.0-150600.23.7.3 is installed"
+							}
+						]
+					}
+				]
+			},
+			{
+				"operator": "AND",
+				"criterias": [
+					{
+						"operator": "OR",
+						"criterions": [
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009856171",
+								"comment": "SUSE Linux Enterprise Desktop 15 SP6 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009856172",
+								"comment": "SUSE Linux Enterprise High Performance Computing 15 SP6 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009856253",
+								"comment": "SUSE Linux Enterprise Module for Development Tools 15 SP6 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009856174",
+								"comment": "SUSE Linux Enterprise Server 15 SP6 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009856175",
+								"comment": "SUSE Linux Enterprise Server for SAP Applications 15 SP6 is installed"
+							}
+						]
+					},
+					{
+						"operator": "OR",
+						"criterions": [
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009869471",
+								"comment": "kernel-docs-6.4.0-150600.23.7.4 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009869478",
+								"comment": "kernel-obs-build-6.4.0-150600.23.7.3 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009869480",
+								"comment": "kernel-source-6.4.0-150600.23.7.2 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009869482",
+								"comment": "kernel-syms-6.4.0-150600.23.7.1 is installed"
+							}
+						]
+					}
+				]
+			}
+		]
+	}
+}
