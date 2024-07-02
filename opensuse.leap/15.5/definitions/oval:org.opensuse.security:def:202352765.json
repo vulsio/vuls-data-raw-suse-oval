@@ -25,11 +25,13 @@
 		"description": "\n    In the Linux kernel, the following vulnerability has been resolved:\n\nmfd: qcom-spmi-pmic: Fix revid implementation\n\nThe Qualcomm SPMI PMIC revid implementation is broken in multiple ways.\n\nFirst, it assumes that just because the sibling base device has been\nregistered that means that it is also bound to a driver, which may not\nbe the case (e.g. due to probe deferral or asynchronous probe). This\ncould trigger a NULL-pointer dereference when attempting to access the\ndriver data of the unbound device.\n\nSecond, it accesses driver data of a sibling device directly and without\nany locking, which means that the driver data may be freed while it is\nbeing accessed (e.g. on driver unbind).\n\nThird, it leaks a struct device reference to the sibling device which is\nlooked up using the spmi_device_from_of() every time a function (child)\ndevice is calling the revid function (e.g. on probe).\n\nFix this mess by reimplementing the revid lookup so that it is done only\nat probe of the PMIC device; the base device fetches the revid info from\nthe hardware, while any secondary SPMI device fetches the information\nfrom the base device and caches it so that it can be accessed safely\nfrom its children. If the base device has not been probed yet then probe\nof a secondary device is deferred.\n    ",
 		"advisory": {
 			"from": "security@suse.de",
-			"severity": "Low",
+			"severity": "Moderate",
 			"cve": [
 				{
 					"text": "CVE-2023-52765 at SUSE",
-					"href": "https://www.suse.com/security/cve/CVE-2023-52765/"
+					"href": "https://www.suse.com/security/cve/CVE-2023-52765/",
+					"impact": "medium",
+					"cvss3": "4.7/CVSS:3.1/AV:L/AC:H/PR:L/UI:N/S:U/C:N/I:N/A:H"
 				},
 				{
 					"text": "CVE-2023-52765 at NVD",
@@ -46,7 +48,7 @@
 				"date": "2024-05-23"
 			},
 			"updated": {
-				"date": "2024-05-23"
+				"date": "2024-07-02"
 			},
 			"affected_cpe_list": {
 				"cpe": [
