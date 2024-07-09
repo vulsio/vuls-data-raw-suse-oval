@@ -1,0 +1,158 @@
+{
+	"id": "oval:org.opensuse.security:def:202439486",
+	"version": "1",
+	"class": "vulnerability",
+	"metadata": {
+		"title": "CVE-2024-39486",
+		"affected": {
+			"family": "unix",
+			"platform": [
+				"openSUSE Leap 15.5"
+			]
+		},
+		"reference": [
+			{
+				"ref_id": "Mitre CVE-2024-39486",
+				"ref_url": "https://cve.mitre.org/cgi-bin/cvename.cgi?name=CVE-2024-39486",
+				"source": "CVE"
+			},
+			{
+				"ref_id": "SUSE CVE-2024-39486",
+				"ref_url": "https://www.suse.com/security/cve/CVE-2024-39486",
+				"source": "SUSE CVE"
+			}
+		],
+		"description": "\n    In the Linux kernel, the following vulnerability has been resolved:\n\ndrm/drm_file: Fix pid refcounting race\n\n\nfilp->pid is supposed to be a refcounted pointer; however, before this\npatch, drm_file_update_pid() only increments the refcount of a struct\npid after storing a pointer to it in filp->pid and dropping the\ndev->filelist_mutex, making the following race possible:\n\nprocess A               process B\n=========               =========\n                        begin drm_file_update_pid\n                        mutex_lock(&dev->filelist_mutex)\n                        rcu_replace_pointer(filp->pid, <pid B>, 1)\n                        mutex_unlock(&dev->filelist_mutex)\nbegin drm_file_update_pid\nmutex_lock(&dev->filelist_mutex)\nrcu_replace_pointer(filp->pid, <pid A>, 1)\nmutex_unlock(&dev->filelist_mutex)\nget_pid(<pid A>)\nsynchronize_rcu()\nput_pid(<pid B>)   *** pid B reaches refcount 0 and is freed here ***\n                        get_pid(<pid B>)   *** UAF ***\n                        synchronize_rcu()\n                        put_pid(<pid A>)\n\nAs far as I know, this race can only occur with CONFIG_PREEMPT_RCU=y\nbecause it requires RCU to detect a quiescent state in code that is not\nexplicitly calling into the scheduler.\n\nThis race leads to use-after-free of a \"struct pid\".\nIt is probably somewhat hard to hit because process A has to pass\nthrough a synchronize_rcu() operation while process B is between\nmutex_unlock() and get_pid().\n\nFix it by ensuring that by the time a pointer to the current task's pid\nis stored in the file, an extra reference to the pid has been taken.\n\nThis fix also removes the condition for synchronize_rcu(); I think\nthat optimization is unnecessary complexity, since in that case we\nwould usually have bailed out on the lockless check above.\n    ",
+		"advisory": {
+			"from": "security@suse.de",
+			"severity": "Moderate",
+			"cve": [
+				{
+					"text": "CVE-2024-39486 at SUSE",
+					"href": "https://www.suse.com/security/cve/CVE-2024-39486/"
+				},
+				{
+					"text": "CVE-2024-39486 at NVD",
+					"href": "https://nvd.nist.gov/vuln/detail/CVE-2024-39486"
+				}
+			],
+			"bugzilla": [
+				{
+					"text": "SUSE bug 1227492",
+					"href": "https://bugzilla.suse.com/1227492"
+				}
+			],
+			"issued": {
+				"date": "2024-07-09"
+			},
+			"updated": {
+				"date": "2024-07-09"
+			},
+			"affected_cpe_list": {
+				"cpe": [
+					"cpe:/o:opensuse:leap:15.5"
+				]
+			}
+		}
+	},
+	"criteria": {
+		"operator": "AND",
+		"criterias": [
+			{
+				"operator": "OR",
+				"criterions": [
+					{
+						"test_ref": "oval:org.opensuse.security:tst:2009729794",
+						"comment": "cluster-md-kmp-default is not affected"
+					},
+					{
+						"test_ref": "oval:org.opensuse.security:tst:2009729795",
+						"comment": "dlm-kmp-default is not affected"
+					},
+					{
+						"test_ref": "oval:org.opensuse.security:tst:2009729796",
+						"comment": "gfs2-kmp-default is not affected"
+					},
+					{
+						"test_ref": "oval:org.opensuse.security:tst:2009334017",
+						"comment": "kernel-default is not affected"
+					},
+					{
+						"test_ref": "oval:org.opensuse.security:tst:2009335423",
+						"comment": "kernel-default-devel is not affected"
+					},
+					{
+						"test_ref": "oval:org.opensuse.security:tst:2009335424",
+						"comment": "kernel-default-extra is not affected"
+					},
+					{
+						"test_ref": "oval:org.opensuse.security:tst:2009728675",
+						"comment": "kernel-default-livepatch is not affected"
+					},
+					{
+						"test_ref": "oval:org.opensuse.security:tst:2009728676",
+						"comment": "kernel-default-livepatch-devel is not affected"
+					},
+					{
+						"test_ref": "oval:org.opensuse.security:tst:2009870467",
+						"comment": "kernel-default-optional is not affected"
+					},
+					{
+						"test_ref": "oval:org.opensuse.security:tst:2009870468",
+						"comment": "kernel-default-vdso is not affected"
+					},
+					{
+						"test_ref": "oval:org.opensuse.security:tst:2009870469",
+						"comment": "kselftests-kmp-default is not affected"
+					},
+					{
+						"test_ref": "oval:org.opensuse.security:tst:2009729797",
+						"comment": "ocfs2-kmp-default is not affected"
+					},
+					{
+						"test_ref": "oval:org.opensuse.security:tst:2009338037",
+						"comment": "reiserfs-kmp-default is not affected"
+					},
+					{
+						"test_ref": "oval:org.opensuse.security:tst:2009334791",
+						"comment": "kernel-devel is not affected"
+					},
+					{
+						"test_ref": "oval:org.opensuse.security:tst:2009334792",
+						"comment": "kernel-macros is not affected"
+					},
+					{
+						"test_ref": "oval:org.opensuse.security:tst:2009333928",
+						"comment": "kernel-source is not affected"
+					},
+					{
+						"test_ref": "oval:org.opensuse.security:tst:2009870470",
+						"comment": "kernel-source-vanilla is not affected"
+					},
+					{
+						"test_ref": "oval:org.opensuse.security:tst:2009340306",
+						"comment": "kernel-devel-azure is not affected"
+					},
+					{
+						"test_ref": "oval:org.opensuse.security:tst:2009340305",
+						"comment": "kernel-source-azure is not affected"
+					},
+					{
+						"test_ref": "oval:org.opensuse.security:tst:2009728711",
+						"comment": "kernel-devel-rt is not affected"
+					},
+					{
+						"test_ref": "oval:org.opensuse.security:tst:2009728712",
+						"comment": "kernel-source-rt is not affected"
+					}
+				]
+			}
+		],
+		"criterions": [
+			{
+				"test_ref": "oval:org.opensuse.security:tst:2009752682",
+				"comment": "openSUSE Leap 15.5 is installed"
+			}
+		]
+	}
+}
