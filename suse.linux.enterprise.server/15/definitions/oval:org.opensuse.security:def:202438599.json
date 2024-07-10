@@ -1,0 +1,126 @@
+{
+	"id": "oval:org.opensuse.security:def:202438599",
+	"version": "1",
+	"class": "vulnerability",
+	"metadata": {
+		"title": "CVE-2024-38599",
+		"affected": {
+			"family": "unix",
+			"platform": [
+				"SUSE Linux Enterprise High Performance Computing 15 SP5",
+				"SUSE Linux Enterprise Module for Public Cloud 15 SP5",
+				"SUSE Linux Enterprise Server 15 SP5",
+				"SUSE Linux Enterprise Server for SAP Applications 15 SP5"
+			]
+		},
+		"reference": [
+			{
+				"ref_id": "Mitre CVE-2024-38599",
+				"ref_url": "https://cve.mitre.org/cgi-bin/cvename.cgi?name=CVE-2024-38599",
+				"source": "CVE"
+			},
+			{
+				"ref_id": "SUSE CVE-2024-38599",
+				"ref_url": "https://www.suse.com/security/cve/CVE-2024-38599",
+				"source": "SUSE CVE"
+			},
+			{
+				"ref_id": "SUSE-SU-2024:2372-1",
+				"ref_url": "https://lists.suse.com/pipermail/sle-updates/2024-July/035868.html",
+				"source": "SUSE-SU"
+			}
+		],
+		"description": "\n    In the Linux kernel, the following vulnerability has been resolved:\n\njffs2: prevent xattr node from overflowing the eraseblock\n\nAdd a check to make sure that the requested xattr node size is no larger\nthan the eraseblock minus the cleanmarker.\n\nUnlike the usual inode nodes, the xattr nodes aren't split into parts\nand spread across multiple eraseblocks, which means that a xattr node\nmust not occupy more than one eraseblock. If the requested xattr value is\ntoo large, the xattr node can spill onto the next eraseblock, overwriting\nthe nodes and causing errors such as:\n\njffs2: argh. node added in wrong place at 0x0000b050(2)\njffs2: nextblock 0x0000a000, expected at 0000b00c\njffs2: error: (823) do_verify_xattr_datum: node CRC failed at 0x01e050,\nread=0xfc892c93, calc=0x000000\njffs2: notice: (823) jffs2_get_inode_nodes: Node header CRC failed\nat 0x01e00c. {848f,2fc4,0fef511f,59a3d171}\njffs2: Node at 0x0000000c with length 0x00001044 would run over the\nend of the erase block\njffs2: Perhaps the file system was created with the wrong erase size?\njffs2: jffs2_scan_eraseblock(): Magic bitmask 0x1985 not found\nat 0x00000010: 0x1044 instead\n\nThis breaks the filesystem and can lead to KASAN crashes such as:\n\nBUG: KASAN: slab-out-of-bounds in jffs2_sum_add_kvec+0x125e/0x15d0\nRead of size 4 at addr ffff88802c31e914 by task repro/830\nCPU: 0 PID: 830 Comm: repro Not tainted 6.9.0-rc3+ #1\nHardware name: QEMU Standard PC (i440FX + PIIX, 1996),\nBIOS Arch Linux 1.16.3-1-1 04/01/2014\nCall Trace:\n <TASK>\n dump_stack_lvl+0xc6/0x120\n print_report+0xc4/0x620\n ? __virt_addr_valid+0x308/0x5b0\n kasan_report+0xc1/0xf0\n ? jffs2_sum_add_kvec+0x125e/0x15d0\n ? jffs2_sum_add_kvec+0x125e/0x15d0\n jffs2_sum_add_kvec+0x125e/0x15d0\n jffs2_flash_direct_writev+0xa8/0xd0\n jffs2_flash_writev+0x9c9/0xef0\n ? __x64_sys_setxattr+0xc4/0x160\n ? do_syscall_64+0x69/0x140\n ? entry_SYSCALL_64_after_hwframe+0x76/0x7e\n [...]\n\nFound by Linux Verification Center (linuxtesting.org) with Syzkaller.\n    ",
+		"advisory": {
+			"from": "security@suse.de",
+			"severity": "Important",
+			"cve": [
+				{
+					"text": "CVE-2024-38599 at SUSE",
+					"href": "https://www.suse.com/security/cve/CVE-2024-38599/",
+					"impact": "high",
+					"cvss3": "7.1/CVSS:3.1/AV:L/AC:L/PR:L/UI:N/S:U/C:N/I:H/A:H"
+				},
+				{
+					"text": "CVE-2024-38599 at NVD",
+					"href": "https://nvd.nist.gov/vuln/detail/CVE-2024-38599"
+				}
+			],
+			"bugzilla": [
+				{
+					"text": "SUSE bug 1226848",
+					"href": "https://bugzilla.suse.com/1226848"
+				},
+				{
+					"text": "SUSE bug 1227283",
+					"href": "https://bugzilla.suse.com/1227283"
+				}
+			],
+			"issued": {
+				"date": "2024-07-10"
+			},
+			"updated": {
+				"date": "2024-07-10"
+			},
+			"affected_cpe_list": {
+				"cpe": [
+					"cpe:/o:suse:sle-module-public-cloud:15:sp5",
+					"cpe:/o:suse:sle_hpc:15:sp5",
+					"cpe:/o:suse:sles:15:sp5",
+					"cpe:/o:suse:sles_sap:15:sp5"
+				]
+			}
+		}
+	},
+	"criteria": {
+		"operator": "AND",
+		"criterias": [
+			{
+				"operator": "OR",
+				"criterions": [
+					{
+						"test_ref": "oval:org.opensuse.security:tst:2009759899",
+						"comment": "SUSE Linux Enterprise High Performance Computing 15 SP5 is installed"
+					},
+					{
+						"test_ref": "oval:org.opensuse.security:tst:2009762868",
+						"comment": "SUSE Linux Enterprise Module for Public Cloud 15 SP5 is installed"
+					},
+					{
+						"test_ref": "oval:org.opensuse.security:tst:2009759901",
+						"comment": "SUSE Linux Enterprise Server 15 SP5 is installed"
+					},
+					{
+						"test_ref": "oval:org.opensuse.security:tst:2009759902",
+						"comment": "SUSE Linux Enterprise Server for SAP Applications 15 SP5 is installed"
+					}
+				]
+			},
+			{
+				"operator": "OR",
+				"criterions": [
+					{
+						"test_ref": "oval:org.opensuse.security:tst:2009871894",
+						"comment": "kernel-azure-5.14.21-150500.33.60.1 is installed"
+					},
+					{
+						"test_ref": "oval:org.opensuse.security:tst:2009871895",
+						"comment": "kernel-azure-devel-5.14.21-150500.33.60.1 is installed"
+					},
+					{
+						"test_ref": "oval:org.opensuse.security:tst:2009871900",
+						"comment": "kernel-devel-azure-5.14.21-150500.33.60.1 is installed"
+					},
+					{
+						"test_ref": "oval:org.opensuse.security:tst:2009871901",
+						"comment": "kernel-source-azure-5.14.21-150500.33.60.1 is installed"
+					},
+					{
+						"test_ref": "oval:org.opensuse.security:tst:2009871902",
+						"comment": "kernel-syms-azure-5.14.21-150500.33.60.1 is installed"
+					}
+				]
+			}
+		]
+	}
+}

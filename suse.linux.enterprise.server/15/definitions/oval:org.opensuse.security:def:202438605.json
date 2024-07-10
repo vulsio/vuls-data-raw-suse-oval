@@ -7,12 +7,16 @@
 		"affected": {
 			"family": "unix",
 			"platform": [
+				"SUSE Linux Enterprise High Performance Computing 15 SP5",
+				"SUSE Linux Enterprise Module for Public Cloud 15 SP5",
 				"SUSE Linux Enterprise Server 15 SP1-LTSS",
 				"SUSE Linux Enterprise Server 15 SP2-LTSS",
 				"SUSE Linux Enterprise Server 15 SP3-LTSS",
+				"SUSE Linux Enterprise Server 15 SP5",
 				"SUSE Linux Enterprise Server 15-LTSS",
 				"SUSE Linux Enterprise Server for SAP Applications 15 SP2",
-				"SUSE Linux Enterprise Server for SAP Applications 15 SP3"
+				"SUSE Linux Enterprise Server for SAP Applications 15 SP3",
+				"SUSE Linux Enterprise Server for SAP Applications 15 SP5"
 			]
 		},
 		"reference": [
@@ -25,6 +29,11 @@
 				"ref_id": "SUSE CVE-2024-38605",
 				"ref_url": "https://www.suse.com/security/cve/CVE-2024-38605",
 				"source": "SUSE CVE"
+			},
+			{
+				"ref_id": "SUSE-SU-2024:2372-1",
+				"ref_url": "https://lists.suse.com/pipermail/sle-updates/2024-July/035868.html",
+				"source": "SUSE-SU"
 			}
 		],
 		"description": "\n    In the Linux kernel, the following vulnerability has been resolved:\n\nALSA: core: Fix NULL module pointer assignment at card init\n\nThe commit 81033c6b584b (\"ALSA: core: Warn on empty module\")\nintroduced a WARN_ON() for a NULL module pointer passed at snd_card\nobject creation, and it also wraps the code around it with '#ifdef\nMODULE'.  This works in most cases, but the devils are always in\ndetails.  \"MODULE\" is defined when the target code (i.e. the sound\ncore) is built as a module; but this doesn't mean that the caller is\nalso built-in or not.  Namely, when only the sound core is built-in\n(CONFIG_SND=y) while the driver is a module (CONFIG_SND_USB_AUDIO=m),\nthe passed module pointer is ignored even if it's non-NULL, and\ncard->module remains as NULL.  This would result in the missing module\nreference up/down at the device open/close, leading to a race with the\ncode execution after the module removal.\n\nFor addressing the bug, move the assignment of card->module again out\nof ifdef.  The WARN_ON() is still wrapped with ifdef because the\nmodule can be really NULL when all sound drivers are built-in.\n\nNote that we keep 'ifdef MODULE' for WARN_ON(), otherwise it would\nlead to a false-positive NULL module check.  Admittedly it won't catch\nperfectly, i.e. no check is performed when CONFIG_SND=y.  But, it's no\nreal problem as it's only for debugging, and the condition is pretty\nrare.\n    ",
@@ -53,16 +62,20 @@
 				"date": "2024-06-22"
 			},
 			"updated": {
-				"date": "2024-06-22"
+				"date": "2024-07-10"
 			},
 			"affected_cpe_list": {
 				"cpe": [
+					"cpe:/o:suse:sle-module-public-cloud:15:sp5",
+					"cpe:/o:suse:sle_hpc:15:sp5",
 					"cpe:/o:suse:sles-ltss:15",
 					"cpe:/o:suse:sles-ltss:15:sp1",
 					"cpe:/o:suse:sles-ltss:15:sp2",
 					"cpe:/o:suse:sles-ltss:15:sp3",
+					"cpe:/o:suse:sles:15:sp5",
 					"cpe:/o:suse:sles_sap:15:sp2",
-					"cpe:/o:suse:sles_sap:15:sp3"
+					"cpe:/o:suse:sles_sap:15:sp3",
+					"cpe:/o:suse:sles_sap:15:sp5"
 				]
 			}
 		}
@@ -175,6 +188,57 @@
 							{
 								"test_ref": "oval:org.opensuse.security:tst:2009333928",
 								"comment": "kernel-source is not affected"
+							}
+						]
+					}
+				]
+			},
+			{
+				"operator": "AND",
+				"criterias": [
+					{
+						"operator": "OR",
+						"criterions": [
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009759899",
+								"comment": "SUSE Linux Enterprise High Performance Computing 15 SP5 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009762868",
+								"comment": "SUSE Linux Enterprise Module for Public Cloud 15 SP5 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009759901",
+								"comment": "SUSE Linux Enterprise Server 15 SP5 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009759902",
+								"comment": "SUSE Linux Enterprise Server for SAP Applications 15 SP5 is installed"
+							}
+						]
+					},
+					{
+						"operator": "OR",
+						"criterions": [
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009871894",
+								"comment": "kernel-azure-5.14.21-150500.33.60.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009871895",
+								"comment": "kernel-azure-devel-5.14.21-150500.33.60.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009871900",
+								"comment": "kernel-devel-azure-5.14.21-150500.33.60.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009871901",
+								"comment": "kernel-source-azure-5.14.21-150500.33.60.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009871902",
+								"comment": "kernel-syms-azure-5.14.21-150500.33.60.1 is installed"
 							}
 						]
 					}

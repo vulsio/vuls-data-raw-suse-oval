@@ -1,0 +1,122 @@
+{
+	"id": "oval:org.opensuse.security:def:202248744",
+	"version": "1",
+	"class": "vulnerability",
+	"metadata": {
+		"title": "CVE-2022-48744",
+		"affected": {
+			"family": "unix",
+			"platform": [
+				"SUSE Linux Enterprise High Performance Computing 15 SP5",
+				"SUSE Linux Enterprise Module for Public Cloud 15 SP5",
+				"SUSE Linux Enterprise Server 15 SP5",
+				"SUSE Linux Enterprise Server for SAP Applications 15 SP5"
+			]
+		},
+		"reference": [
+			{
+				"ref_id": "Mitre CVE-2022-48744",
+				"ref_url": "https://cve.mitre.org/cgi-bin/cvename.cgi?name=CVE-2022-48744",
+				"source": "CVE"
+			},
+			{
+				"ref_id": "SUSE CVE-2022-48744",
+				"ref_url": "https://www.suse.com/security/cve/CVE-2022-48744",
+				"source": "SUSE CVE"
+			},
+			{
+				"ref_id": "SUSE-SU-2024:2372-1",
+				"ref_url": "https://lists.suse.com/pipermail/sle-updates/2024-July/035868.html",
+				"source": "SUSE-SU"
+			}
+		],
+		"description": "\n    In the Linux kernel, the following vulnerability has been resolved:\n\nnet/mlx5e: Avoid field-overflowing memcpy()\n\nIn preparation for FORTIFY_SOURCE performing compile-time and run-time\nfield bounds checking for memcpy(), memmove(), and memset(), avoid\nintentionally writing across neighboring fields.\n\nUse flexible arrays instead of zero-element arrays (which look like they\nare always overflowing) and split the cross-field memcpy() into two halves\nthat can be appropriately bounds-checked by the compiler.\n\nWe were doing:\n\n\t#define ETH_HLEN  14\n\t#define VLAN_HLEN  4\n\t...\n\t#define MLX5E_XDP_MIN_INLINE (ETH_HLEN + VLAN_HLEN)\n\t...\n        struct mlx5e_tx_wqe      *wqe  = mlx5_wq_cyc_get_wqe(wq, pi);\n\t...\n        struct mlx5_wqe_eth_seg  *eseg = &wqe->eth;\n        struct mlx5_wqe_data_seg *dseg = wqe->data;\n\t...\n\tmemcpy(eseg->inline_hdr.start, xdptxd->data, MLX5E_XDP_MIN_INLINE);\n\ntarget is wqe->eth.inline_hdr.start (which the compiler sees as being\n2 bytes in size), but copying 18, intending to write across start\n(really vlan_tci, 2 bytes). The remaining 16 bytes get written into\nwqe->data[0], covering byte_count (4 bytes), lkey (4 bytes), and addr\n(8 bytes).\n\nstruct mlx5e_tx_wqe {\n        struct mlx5_wqe_ctrl_seg   ctrl;                 /*     0    16 */\n        struct mlx5_wqe_eth_seg    eth;                  /*    16    16 */\n        struct mlx5_wqe_data_seg   data[];               /*    32     0 */\n\n        /* size: 32, cachelines: 1, members: 3 */\n        /* last cacheline: 32 bytes */\n};\n\nstruct mlx5_wqe_eth_seg {\n        u8                         swp_outer_l4_offset;  /*     0     1 */\n        u8                         swp_outer_l3_offset;  /*     1     1 */\n        u8                         swp_inner_l4_offset;  /*     2     1 */\n        u8                         swp_inner_l3_offset;  /*     3     1 */\n        u8                         cs_flags;             /*     4     1 */\n        u8                         swp_flags;            /*     5     1 */\n        __be16                     mss;                  /*     6     2 */\n        __be32                     flow_table_metadata;  /*     8     4 */\n        union {\n                struct {\n                        __be16     sz;                   /*    12     2 */\n                        u8         start[2];             /*    14     2 */\n                } inline_hdr;                            /*    12     4 */\n                struct {\n                        __be16     type;                 /*    12     2 */\n                        __be16     vlan_tci;             /*    14     2 */\n                } insert;                                /*    12     4 */\n                __be32             trailer;              /*    12     4 */\n        };                                               /*    12     4 */\n\n        /* size: 16, cachelines: 1, members: 9 */\n        /* last cacheline: 16 bytes */\n};\n\nstruct mlx5_wqe_data_seg {\n        __be32                     byte_count;           /*     0     4 */\n        __be32                     lkey;                 /*     4     4 */\n        __be64                     addr;                 /*     8     8 */\n\n        /* size: 16, cachelines: 1, members: 3 */\n        /* last cacheline: 16 bytes */\n};\n\nSo, split the memcpy() so the compiler can reason about the buffer\nsizes.\n\n\"pahole\" shows no size nor member offset changes to struct mlx5e_tx_wqe\nnor struct mlx5e_umr_wqe. \"objdump -d\" shows no meaningful object\ncode changes (i.e. only source line number induced differences and\noptimizations).\n    ",
+		"advisory": {
+			"from": "security@suse.de",
+			"severity": "Moderate",
+			"cve": [
+				{
+					"text": "CVE-2022-48744 at SUSE",
+					"href": "https://www.suse.com/security/cve/CVE-2022-48744/",
+					"impact": "medium",
+					"cvss3": "5.5/CVSS:3.1/AV:L/AC:L/PR:L/UI:N/S:U/C:N/I:N/A:H"
+				},
+				{
+					"text": "CVE-2022-48744 at NVD",
+					"href": "https://nvd.nist.gov/vuln/detail/CVE-2022-48744"
+				}
+			],
+			"bugzilla": [
+				{
+					"text": "SUSE bug 1226696",
+					"href": "https://bugzilla.suse.com/1226696"
+				}
+			],
+			"issued": {
+				"date": "2024-07-10"
+			},
+			"updated": {
+				"date": "2024-07-10"
+			},
+			"affected_cpe_list": {
+				"cpe": [
+					"cpe:/o:suse:sle-module-public-cloud:15:sp5",
+					"cpe:/o:suse:sle_hpc:15:sp5",
+					"cpe:/o:suse:sles:15:sp5",
+					"cpe:/o:suse:sles_sap:15:sp5"
+				]
+			}
+		}
+	},
+	"criteria": {
+		"operator": "AND",
+		"criterias": [
+			{
+				"operator": "OR",
+				"criterions": [
+					{
+						"test_ref": "oval:org.opensuse.security:tst:2009759899",
+						"comment": "SUSE Linux Enterprise High Performance Computing 15 SP5 is installed"
+					},
+					{
+						"test_ref": "oval:org.opensuse.security:tst:2009762868",
+						"comment": "SUSE Linux Enterprise Module for Public Cloud 15 SP5 is installed"
+					},
+					{
+						"test_ref": "oval:org.opensuse.security:tst:2009759901",
+						"comment": "SUSE Linux Enterprise Server 15 SP5 is installed"
+					},
+					{
+						"test_ref": "oval:org.opensuse.security:tst:2009759902",
+						"comment": "SUSE Linux Enterprise Server for SAP Applications 15 SP5 is installed"
+					}
+				]
+			},
+			{
+				"operator": "OR",
+				"criterions": [
+					{
+						"test_ref": "oval:org.opensuse.security:tst:2009871894",
+						"comment": "kernel-azure-5.14.21-150500.33.60.1 is installed"
+					},
+					{
+						"test_ref": "oval:org.opensuse.security:tst:2009871895",
+						"comment": "kernel-azure-devel-5.14.21-150500.33.60.1 is installed"
+					},
+					{
+						"test_ref": "oval:org.opensuse.security:tst:2009871900",
+						"comment": "kernel-devel-azure-5.14.21-150500.33.60.1 is installed"
+					},
+					{
+						"test_ref": "oval:org.opensuse.security:tst:2009871901",
+						"comment": "kernel-source-azure-5.14.21-150500.33.60.1 is installed"
+					},
+					{
+						"test_ref": "oval:org.opensuse.security:tst:2009871902",
+						"comment": "kernel-syms-azure-5.14.21-150500.33.60.1 is installed"
+					}
+				]
+			}
+		]
+	}
+}
