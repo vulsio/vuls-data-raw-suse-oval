@@ -44,6 +44,11 @@
 				"ref_id": "SUSE-SU-2024:2360-1",
 				"ref_url": "https://lists.suse.com/pipermail/sle-updates/2024-July/035874.html",
 				"source": "SUSE-SU"
+			},
+			{
+				"ref_id": "SUSE-SU-2024:2381-1",
+				"ref_url": "https://lists.suse.com/pipermail/sle-updates/2024-July/035895.html",
+				"source": "SUSE-SU"
 			}
 		],
 		"description": "\n    In the Linux kernel, the following vulnerability has been resolved:\n\nsmb: client: fix potential deadlock when releasing mids\n\nAll release_mid() callers seem to hold a reference of @mid so there is\nno need to call kref_put(&mid->refcount, __release_mid) under\n@server->mid_lock spinlock.  If they don't, then an use-after-free bug\nwould have occurred anyways.\n\nBy getting rid of such spinlock also fixes a potential deadlock as\nshown below\n\nCPU 0                                CPU 1\n------------------------------------------------------------------\ncifs_demultiplex_thread()            cifs_debug_data_proc_show()\n release_mid()\n  spin_lock(&server->mid_lock);\n                                     spin_lock(&cifs_tcp_ses_lock)\n\t\t\t\t      spin_lock(&server->mid_lock)\n  __release_mid()\n   smb2_find_smb_tcon()\n    spin_lock(&cifs_tcp_ses_lock) *deadlock*\n    ",
@@ -72,7 +77,7 @@
 				"date": "2024-05-30"
 			},
 			"updated": {
-				"date": "2024-07-10"
+				"date": "2024-07-11"
 			},
 			"affected_cpe_list": {
 				"cpe": [
@@ -169,30 +174,6 @@
 					{
 						"test_ref": "oval:org.opensuse.security:tst:2009240280",
 						"comment": "SUSE Linux Enterprise Server 12 SP4-LTSS is installed"
-					}
-				]
-			},
-			{
-				"operator": "AND",
-				"criterias": [
-					{
-						"operator": "OR",
-						"criterions": [
-							{
-								"test_ref": "oval:org.opensuse.security:tst:2009728711",
-								"comment": "kernel-devel-rt is not affected"
-							},
-							{
-								"test_ref": "oval:org.opensuse.security:tst:2009728712",
-								"comment": "kernel-source-rt is not affected"
-							}
-						]
-					}
-				],
-				"criterions": [
-					{
-						"test_ref": "oval:org.opensuse.security:tst:2009279486",
-						"comment": "SUSE Linux Enterprise Real Time 12 SP5 is installed"
 					}
 				]
 			},
@@ -309,6 +290,70 @@
 					{
 						"test_ref": "oval:org.opensuse.security:tst:2009258033",
 						"comment": "SUSE Linux Enterprise Server 12 SP5 is installed"
+					}
+				]
+			},
+			{
+				"operator": "AND",
+				"criterias": [
+					{
+						"operator": "OR",
+						"criterions": [
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009872379",
+								"comment": "cluster-md-kmp-rt-4.12.14-10.191.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009872380",
+								"comment": "dlm-kmp-rt-4.12.14-10.191.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009872381",
+								"comment": "gfs2-kmp-rt-4.12.14-10.191.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009872382",
+								"comment": "kernel-devel-rt-4.12.14-10.191.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009872383",
+								"comment": "kernel-rt-4.12.14-10.191.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009872384",
+								"comment": "kernel-rt-base-4.12.14-10.191.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009872385",
+								"comment": "kernel-rt-devel-4.12.14-10.191.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009872386",
+								"comment": "kernel-rt_debug-4.12.14-10.191.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009872387",
+								"comment": "kernel-rt_debug-devel-4.12.14-10.191.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009872388",
+								"comment": "kernel-source-rt-4.12.14-10.191.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009872389",
+								"comment": "kernel-syms-rt-4.12.14-10.191.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009872390",
+								"comment": "ocfs2-kmp-rt-4.12.14-10.191.1 is installed"
+							}
+						]
+					}
+				],
+				"criterions": [
+					{
+						"test_ref": "oval:org.opensuse.security:tst:2009279486",
+						"comment": "SUSE Linux Enterprise Real Time 12 SP5 is installed"
 					}
 				]
 			}

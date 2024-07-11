@@ -10,6 +10,7 @@
 				"SUSE Linux Enterprise Desktop 15 SP6",
 				"SUSE Linux Enterprise High Performance Computing 15 SP5",
 				"SUSE Linux Enterprise High Performance Computing 15 SP6",
+				"SUSE Linux Enterprise Live Patching 15 SP5",
 				"SUSE Linux Enterprise Live Patching 15 SP6",
 				"SUSE Linux Enterprise Module for Basesystem 15 SP6",
 				"SUSE Linux Enterprise Module for Development Tools 15 SP6",
@@ -49,6 +50,16 @@
 				"ref_id": "SUSE-SU-2024:2372-1",
 				"ref_url": "https://lists.suse.com/pipermail/sle-updates/2024-July/035868.html",
 				"source": "SUSE-SU"
+			},
+			{
+				"ref_id": "SUSE-SU-2024:2381-1",
+				"ref_url": "https://lists.suse.com/pipermail/sle-updates/2024-July/035895.html",
+				"source": "SUSE-SU"
+			},
+			{
+				"ref_id": "SUSE-SU-2024:2394-1",
+				"ref_url": "https://lists.suse.com/pipermail/sle-updates/2024-July/035907.html",
+				"source": "SUSE-SU"
 			}
 		],
 		"description": "\n    In the Linux kernel, the following vulnerability has been resolved:\n\nbtrfs: qgroup: fix qgroup prealloc rsv leak in subvolume operations\n\nCreate subvolume, create snapshot and delete subvolume all use\nbtrfs_subvolume_reserve_metadata() to reserve metadata for the changes\ndone to the parent subvolume's fs tree, which cannot be mediated in the\nnormal way via start_transaction. When quota groups (squota or qgroups)\nare enabled, this reserves qgroup metadata of type PREALLOC. Once the\noperation is associated to a transaction, we convert PREALLOC to\nPERTRANS, which gets cleared in bulk at the end of the transaction.\n\nHowever, the error paths of these three operations were not implementing\nthis lifecycle correctly. They unconditionally converted the PREALLOC to\nPERTRANS in a generic cleanup step regardless of errors or whether the\noperation was fully associated to a transaction or not. This resulted in\nerror paths occasionally converting this rsv to PERTRANS without calling\nrecord_root_in_trans successfully, which meant that unless that root got\nrecorded in the transaction by some other thread, the end of the\ntransaction would not free that root's PERTRANS, leaking it. Ultimately,\nthis resulted in hitting a WARN in CONFIG_BTRFS_DEBUG builds at unmount\nfor the leaked reservation.\n\nThe fix is to ensure that every qgroup PREALLOC reservation observes the\nfollowing properties:\n\n1. any failure before record_root_in_trans is called successfully\n   results in freeing the PREALLOC reservation.\n2. after record_root_in_trans, we convert to PERTRANS, and now the\n   transaction owns freeing the reservation.\n\nThis patch enforces those properties on the three operations. Without\nit, generic/269 with squotas enabled at mkfs time would fail in ~5-10\nruns on my system. With this patch, it ran successfully 1000 times in a\nrow.\n    ",
@@ -77,13 +88,14 @@
 				"date": "2024-05-21"
 			},
 			"updated": {
-				"date": "2024-07-10"
+				"date": "2024-07-11"
 			},
 			"affected_cpe_list": {
 				"cpe": [
 					"cpe:/o:suse:sle-module-basesystem:15:sp6",
 					"cpe:/o:suse:sle-module-development-tools:15:sp6",
 					"cpe:/o:suse:sle-module-legacy:15:sp6",
+					"cpe:/o:suse:sle-module-live-patching:15:sp5",
 					"cpe:/o:suse:sle-module-live-patching:15:sp6",
 					"cpe:/o:suse:sle-module-public-cloud:15:sp5",
 					"cpe:/o:suse:sle-module-public-cloud:15:sp6",
@@ -160,6 +172,19 @@
 					{
 						"test_ref": "oval:org.opensuse.security:tst:2009869861",
 						"comment": "kernel-default-extra-6.4.0-150600.23.7.3 is installed"
+					}
+				]
+			},
+			{
+				"operator": "AND",
+				"criterions": [
+					{
+						"test_ref": "oval:org.opensuse.security:tst:2009764853",
+						"comment": "SUSE Linux Enterprise Live Patching 15 SP5 is installed"
+					},
+					{
+						"test_ref": "oval:org.opensuse.security:tst:2009872378",
+						"comment": "kernel-livepatch-5_14_21-150500_13_61-rt-1-150500.11.3.1 is installed"
 					}
 				]
 			},

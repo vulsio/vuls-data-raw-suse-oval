@@ -7,6 +7,7 @@
 		"affected": {
 			"family": "unix",
 			"platform": [
+				"SUSE Linux Enterprise Real Time 12 SP5",
 				"SUSE Linux Enterprise Server 12 SP5",
 				"SUSE Linux Enterprise Server for SAP Applications 12 SP5"
 			]
@@ -41,6 +42,11 @@
 				"ref_id": "SUSE-SU-2024:2360-1",
 				"ref_url": "https://lists.suse.com/pipermail/sle-updates/2024-July/035874.html",
 				"source": "SUSE-SU"
+			},
+			{
+				"ref_id": "SUSE-SU-2024:2381-1",
+				"ref_url": "https://lists.suse.com/pipermail/sle-updates/2024-July/035895.html",
+				"source": "SUSE-SU"
 			}
 		],
 		"description": "\n    In the Linux kernel, the following vulnerability has been resolved:\n\nusb: fix various gadget panics on 10gbps cabling\n\nusb_assign_descriptors() is called with 5 parameters,\nthe last 4 of which are the usb_descriptor_header for:\n  full-speed (USB1.1 - 12Mbps [including USB1.0 low-speed @ 1.5Mbps),\n  high-speed (USB2.0 - 480Mbps),\n  super-speed (USB3.0 - 5Gbps),\n  super-speed-plus (USB3.1 - 10Gbps).\n\nThe differences between full/high/super-speed descriptors are usually\nsubstantial (due to changes in the maximum usb block size from 64 to 512\nto 1024 bytes and other differences in the specs), while the difference\nbetween 5 and 10Gbps descriptors may be as little as nothing\n(in many cases the same tuning is simply good enough).\n\nHowever if a gadget driver calls usb_assign_descriptors() with\na NULL descriptor for super-speed-plus and is then used on a max 10gbps\nconfiguration, the kernel will crash with a null pointer dereference,\nwhen a 10gbps capable device port + cable + host port combination shows up.\n(This wouldn't happen if the gadget max-speed was set to 5gbps, but\nit of course defaults to the maximum, and there's no real reason to\nartificially limit it)\n\nThe fix is to simply use the 5gbps descriptor as the 10gbps descriptor,\nif a 10gbps descriptor wasn't provided.\n\nObviously this won't fix the problem if the 5gbps descriptor is also\nNULL, but such cases can't be so trivially solved (and any such gadgets\nare unlikely to be used with USB3 ports any way).\n    ",
@@ -69,58 +75,128 @@
 				"date": "2024-07-10"
 			},
 			"updated": {
-				"date": "2024-07-10"
+				"date": "2024-07-11"
 			},
 			"affected_cpe_list": {
 				"cpe": [
 					"cpe:/o:suse:sles:12:sp5",
-					"cpe:/o:suse:sles_sap:12:sp5"
+					"cpe:/o:suse:sles_sap:12:sp5",
+					"cpe:/o:suse:suse-linux-enterprise-rt:12:sp5"
 				]
 			}
 		}
 	},
 	"criteria": {
-		"operator": "AND",
+		"operator": "OR",
 		"criterias": [
 			{
-				"operator": "OR",
-				"criterions": [
+				"operator": "AND",
+				"criterias": [
 					{
-						"test_ref": "oval:org.opensuse.security:tst:2009258033",
-						"comment": "SUSE Linux Enterprise Server 12 SP5 is installed"
+						"operator": "OR",
+						"criterions": [
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009258033",
+								"comment": "SUSE Linux Enterprise Server 12 SP5 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009258806",
+								"comment": "SUSE Linux Enterprise Server for SAP Applications 12 SP5 is installed"
+							}
+						]
 					},
 					{
-						"test_ref": "oval:org.opensuse.security:tst:2009258806",
-						"comment": "SUSE Linux Enterprise Server for SAP Applications 12 SP5 is installed"
+						"operator": "OR",
+						"criterions": [
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009872048",
+								"comment": "kernel-azure-4.12.14-16.191.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009872049",
+								"comment": "kernel-azure-base-4.12.14-16.191.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009872050",
+								"comment": "kernel-azure-devel-4.12.14-16.191.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009872051",
+								"comment": "kernel-devel-azure-4.12.14-16.191.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009872052",
+								"comment": "kernel-source-azure-4.12.14-16.191.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009872053",
+								"comment": "kernel-syms-azure-4.12.14-16.191.1 is installed"
+							}
+						]
 					}
 				]
 			},
 			{
-				"operator": "OR",
+				"operator": "AND",
+				"criterias": [
+					{
+						"operator": "OR",
+						"criterions": [
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009872379",
+								"comment": "cluster-md-kmp-rt-4.12.14-10.191.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009872380",
+								"comment": "dlm-kmp-rt-4.12.14-10.191.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009872381",
+								"comment": "gfs2-kmp-rt-4.12.14-10.191.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009872382",
+								"comment": "kernel-devel-rt-4.12.14-10.191.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009872383",
+								"comment": "kernel-rt-4.12.14-10.191.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009872384",
+								"comment": "kernel-rt-base-4.12.14-10.191.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009872385",
+								"comment": "kernel-rt-devel-4.12.14-10.191.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009872386",
+								"comment": "kernel-rt_debug-4.12.14-10.191.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009872387",
+								"comment": "kernel-rt_debug-devel-4.12.14-10.191.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009872388",
+								"comment": "kernel-source-rt-4.12.14-10.191.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009872389",
+								"comment": "kernel-syms-rt-4.12.14-10.191.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009872390",
+								"comment": "ocfs2-kmp-rt-4.12.14-10.191.1 is installed"
+							}
+						]
+					}
+				],
 				"criterions": [
 					{
-						"test_ref": "oval:org.opensuse.security:tst:2009872048",
-						"comment": "kernel-azure-4.12.14-16.191.1 is installed"
-					},
-					{
-						"test_ref": "oval:org.opensuse.security:tst:2009872049",
-						"comment": "kernel-azure-base-4.12.14-16.191.1 is installed"
-					},
-					{
-						"test_ref": "oval:org.opensuse.security:tst:2009872050",
-						"comment": "kernel-azure-devel-4.12.14-16.191.1 is installed"
-					},
-					{
-						"test_ref": "oval:org.opensuse.security:tst:2009872051",
-						"comment": "kernel-devel-azure-4.12.14-16.191.1 is installed"
-					},
-					{
-						"test_ref": "oval:org.opensuse.security:tst:2009872052",
-						"comment": "kernel-source-azure-4.12.14-16.191.1 is installed"
-					},
-					{
-						"test_ref": "oval:org.opensuse.security:tst:2009872053",
-						"comment": "kernel-syms-azure-4.12.14-16.191.1 is installed"
+						"test_ref": "oval:org.opensuse.security:tst:2009279486",
+						"comment": "SUSE Linux Enterprise Real Time 12 SP5 is installed"
 					}
 				]
 			}

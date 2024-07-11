@@ -7,6 +7,7 @@
 		"affected": {
 			"family": "unix",
 			"platform": [
+				"SUSE Linux Enterprise Real Time 12 SP5",
 				"SUSE Linux Enterprise Server 12 SP5",
 				"SUSE Linux Enterprise Server for SAP Applications 12 SP5"
 			]
@@ -36,6 +37,21 @@
 				"ref_id": "SUSE-SU-2024:2372-1",
 				"ref_url": "https://lists.suse.com/pipermail/sle-updates/2024-July/035868.html",
 				"source": "SUSE-SU"
+			},
+			{
+				"ref_id": "SUSE-SU-2024:2381-1",
+				"ref_url": "https://lists.suse.com/pipermail/sle-updates/2024-July/035895.html",
+				"source": "SUSE-SU"
+			},
+			{
+				"ref_id": "SUSE-SU-2024:2384-1",
+				"ref_url": "https://lists.suse.com/pipermail/sle-updates/2024-July/035906.html",
+				"source": "SUSE-SU"
+			},
+			{
+				"ref_id": "SUSE-SU-2024:2394-1",
+				"ref_url": "https://lists.suse.com/pipermail/sle-updates/2024-July/035907.html",
+				"source": "SUSE-SU"
 			}
 		],
 		"description": "\n    In the Linux kernel, the following vulnerability has been resolved:\n\nPCI: pciehp: Fix infinite loop in IRQ handler upon power fault\n\nThe Power Fault Detected bit in the Slot Status register differs from\nall other hotplug events in that it is sticky:  It can only be cleared\nafter turning off slot power.  Per PCIe r5.0, sec. 6.7.1.8:\n\n  If a power controller detects a main power fault on the hot-plug slot,\n  it must automatically set its internal main power fault latch [...].\n  The main power fault latch is cleared when software turns off power to\n  the hot-plug slot.\n\nThe stickiness used to cause interrupt storms and infinite loops which\nwere fixed in 2009 by commits 5651c48cfafe (\"PCI pciehp: fix power fault\ninterrupt storm problem\") and 99f0169c17f3 (\"PCI: pciehp: enable\nsoftware notification on empty slots\").\n\nUnfortunately in 2020 the infinite loop issue was inadvertently\nreintroduced by commit 8edf5332c393 (\"PCI: pciehp: Fix MSI interrupt\nrace\"):  The hardirq handler pciehp_isr() clears the PFD bit until\npciehp's power_fault_detected flag is set.  That happens in the IRQ\nthread pciehp_ist(), which never learns of the event because the hardirq\nhandler is stuck in an infinite loop.  Fix by setting the\npower_fault_detected flag already in the hardirq handler.\n    ",
@@ -64,58 +80,128 @@
 				"date": "2024-07-10"
 			},
 			"updated": {
-				"date": "2024-07-10"
+				"date": "2024-07-11"
 			},
 			"affected_cpe_list": {
 				"cpe": [
 					"cpe:/o:suse:sles:12:sp5",
-					"cpe:/o:suse:sles_sap:12:sp5"
+					"cpe:/o:suse:sles_sap:12:sp5",
+					"cpe:/o:suse:suse-linux-enterprise-rt:12:sp5"
 				]
 			}
 		}
 	},
 	"criteria": {
-		"operator": "AND",
+		"operator": "OR",
 		"criterias": [
 			{
-				"operator": "OR",
-				"criterions": [
+				"operator": "AND",
+				"criterias": [
 					{
-						"test_ref": "oval:org.opensuse.security:tst:2009258033",
-						"comment": "SUSE Linux Enterprise Server 12 SP5 is installed"
+						"operator": "OR",
+						"criterions": [
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009258033",
+								"comment": "SUSE Linux Enterprise Server 12 SP5 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009258806",
+								"comment": "SUSE Linux Enterprise Server for SAP Applications 12 SP5 is installed"
+							}
+						]
 					},
 					{
-						"test_ref": "oval:org.opensuse.security:tst:2009258806",
-						"comment": "SUSE Linux Enterprise Server for SAP Applications 12 SP5 is installed"
+						"operator": "OR",
+						"criterions": [
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009872048",
+								"comment": "kernel-azure-4.12.14-16.191.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009872049",
+								"comment": "kernel-azure-base-4.12.14-16.191.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009872050",
+								"comment": "kernel-azure-devel-4.12.14-16.191.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009872051",
+								"comment": "kernel-devel-azure-4.12.14-16.191.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009872052",
+								"comment": "kernel-source-azure-4.12.14-16.191.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009872053",
+								"comment": "kernel-syms-azure-4.12.14-16.191.1 is installed"
+							}
+						]
 					}
 				]
 			},
 			{
-				"operator": "OR",
+				"operator": "AND",
+				"criterias": [
+					{
+						"operator": "OR",
+						"criterions": [
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009872379",
+								"comment": "cluster-md-kmp-rt-4.12.14-10.191.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009872380",
+								"comment": "dlm-kmp-rt-4.12.14-10.191.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009872381",
+								"comment": "gfs2-kmp-rt-4.12.14-10.191.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009872382",
+								"comment": "kernel-devel-rt-4.12.14-10.191.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009872383",
+								"comment": "kernel-rt-4.12.14-10.191.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009872384",
+								"comment": "kernel-rt-base-4.12.14-10.191.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009872385",
+								"comment": "kernel-rt-devel-4.12.14-10.191.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009872386",
+								"comment": "kernel-rt_debug-4.12.14-10.191.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009872387",
+								"comment": "kernel-rt_debug-devel-4.12.14-10.191.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009872388",
+								"comment": "kernel-source-rt-4.12.14-10.191.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009872389",
+								"comment": "kernel-syms-rt-4.12.14-10.191.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009872390",
+								"comment": "ocfs2-kmp-rt-4.12.14-10.191.1 is installed"
+							}
+						]
+					}
+				],
 				"criterions": [
 					{
-						"test_ref": "oval:org.opensuse.security:tst:2009872048",
-						"comment": "kernel-azure-4.12.14-16.191.1 is installed"
-					},
-					{
-						"test_ref": "oval:org.opensuse.security:tst:2009872049",
-						"comment": "kernel-azure-base-4.12.14-16.191.1 is installed"
-					},
-					{
-						"test_ref": "oval:org.opensuse.security:tst:2009872050",
-						"comment": "kernel-azure-devel-4.12.14-16.191.1 is installed"
-					},
-					{
-						"test_ref": "oval:org.opensuse.security:tst:2009872051",
-						"comment": "kernel-devel-azure-4.12.14-16.191.1 is installed"
-					},
-					{
-						"test_ref": "oval:org.opensuse.security:tst:2009872052",
-						"comment": "kernel-source-azure-4.12.14-16.191.1 is installed"
-					},
-					{
-						"test_ref": "oval:org.opensuse.security:tst:2009872053",
-						"comment": "kernel-syms-azure-4.12.14-16.191.1 is installed"
+						"test_ref": "oval:org.opensuse.security:tst:2009279486",
+						"comment": "SUSE Linux Enterprise Real Time 12 SP5 is installed"
 					}
 				]
 			}
