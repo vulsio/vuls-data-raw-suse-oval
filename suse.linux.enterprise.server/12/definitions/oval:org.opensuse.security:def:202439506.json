@@ -1,0 +1,151 @@
+{
+	"id": "oval:org.opensuse.security:def:202439506",
+	"version": "1",
+	"class": "vulnerability",
+	"metadata": {
+		"title": "CVE-2024-39506",
+		"affected": {
+			"family": "unix",
+			"platform": [
+				"SUSE Linux Enterprise Server 12 SP4-LTSS",
+				"SUSE Linux Enterprise Server for SAP Applications 12 SP4"
+			]
+		},
+		"reference": [
+			{
+				"ref_id": "Mitre CVE-2024-39506",
+				"ref_url": "https://cve.mitre.org/cgi-bin/cvename.cgi?name=CVE-2024-39506",
+				"source": "CVE"
+			},
+			{
+				"ref_id": "SUSE CVE-2024-39506",
+				"ref_url": "https://www.suse.com/security/cve/CVE-2024-39506",
+				"source": "SUSE CVE"
+			}
+		],
+		"description": "\n    In the Linux kernel, the following vulnerability has been resolved:\n\nliquidio: Adjust a NULL pointer handling path in lio_vf_rep_copy_packet\n\nIn lio_vf_rep_copy_packet() pg_info->page is compared to a NULL value,\nbut then it is unconditionally passed to skb_add_rx_frag() which looks\nstrange and could lead to null pointer dereference.\n\nlio_vf_rep_copy_packet() call trace looks like:\n\tocteon_droq_process_packets\n\t octeon_droq_fast_process_packets\n\t  octeon_droq_dispatch_pkt\n\t   octeon_create_recv_info\n\t    ...search in the dispatch_list...\n\t     ->disp_fn(rdisp->rinfo, ...)\n\t      lio_vf_rep_pkt_recv(struct octeon_recv_info *recv_info, ...)\nIn this path there is no code which sets pg_info->page to NULL.\nSo this check looks unneeded and doesn't solve potential problem.\nBut I guess the author had reason to add a check and I have no such card\nand can't do real test.\nIn addition, the code in the function liquidio_push_packet() in\nliquidio/lio_core.c does exactly the same.\n\nBased on this, I consider the most acceptable compromise solution to\nadjust this issue by moving skb_add_rx_frag() into conditional scope.\n\nFound by Linux Verification Center (linuxtesting.org) with SVACE.\n    ",
+		"advisory": {
+			"from": "security@suse.de",
+			"severity": "Moderate",
+			"cve": [
+				{
+					"text": "CVE-2024-39506 at SUSE",
+					"href": "https://www.suse.com/security/cve/CVE-2024-39506/",
+					"impact": "medium",
+					"cvss3": "5.5/CVSS:3.1/AV:L/AC:L/PR:L/UI:N/S:U/C:N/I:N/A:H"
+				},
+				{
+					"text": "CVE-2024-39506 at NVD",
+					"href": "https://nvd.nist.gov/vuln/detail/CVE-2024-39506"
+				}
+			],
+			"bugzilla": [
+				{
+					"text": "SUSE bug 1227729",
+					"href": "https://bugzilla.suse.com/1227729"
+				}
+			],
+			"issued": {
+				"date": "2024-07-13"
+			},
+			"updated": {
+				"date": "2024-07-13"
+			},
+			"affected_cpe_list": {
+				"cpe": [
+					"cpe:/o:suse:sles-ltss:12:sp4",
+					"cpe:/o:suse:sles_sap:12:sp4"
+				]
+			}
+		}
+	},
+	"criteria": {
+		"operator": "OR",
+		"criterias": [
+			{
+				"operator": "AND",
+				"criterias": [
+					{
+						"operator": "OR",
+						"criterions": [
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009334017",
+								"comment": "kernel-default is not affected"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009335425",
+								"comment": "kernel-default-base is not affected"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009335423",
+								"comment": "kernel-default-devel is not affected"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009334791",
+								"comment": "kernel-devel is not affected"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009334792",
+								"comment": "kernel-macros is not affected"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009333928",
+								"comment": "kernel-source is not affected"
+							}
+						]
+					}
+				],
+				"criterions": [
+					{
+						"test_ref": "oval:org.opensuse.security:tst:2009258804",
+						"comment": "SUSE Linux Enterprise Server for SAP Applications 12 SP4 is installed"
+					}
+				]
+			},
+			{
+				"operator": "AND",
+				"criterias": [
+					{
+						"operator": "OR",
+						"criterions": [
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009334017",
+								"comment": "kernel-default is not affected"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009335425",
+								"comment": "kernel-default-base is not affected"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009335423",
+								"comment": "kernel-default-devel is not affected"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009335426",
+								"comment": "kernel-default-man is not affected"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009334791",
+								"comment": "kernel-devel is not affected"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009334792",
+								"comment": "kernel-macros is not affected"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009333928",
+								"comment": "kernel-source is not affected"
+							}
+						]
+					}
+				],
+				"criterions": [
+					{
+						"test_ref": "oval:org.opensuse.security:tst:2009240280",
+						"comment": "SUSE Linux Enterprise Server 12 SP4-LTSS is installed"
+					}
+				]
+			}
+		]
+	}
+}

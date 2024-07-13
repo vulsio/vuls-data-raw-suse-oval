@@ -12,6 +12,7 @@
 				"SUSE Linux Enterprise High Performance Computing 15 SP6",
 				"SUSE Linux Enterprise Live Patching 15 SP2",
 				"SUSE Linux Enterprise Live Patching 15 SP3",
+				"SUSE Linux Enterprise Live Patching 15 SP4",
 				"SUSE Linux Enterprise Live Patching 15 SP5",
 				"SUSE Linux Enterprise Live Patching 15 SP6",
 				"SUSE Linux Enterprise Module for Basesystem 15 SP6",
@@ -165,6 +166,46 @@
 				"ref_id": "SUSE-SU-2024:2411-1",
 				"ref_url": "https://lists.suse.com/pipermail/sle-security-updates/2024-July/018925.html",
 				"source": "SUSE-SU"
+			},
+			{
+				"ref_id": "SUSE-SU-2024:2437-1",
+				"ref_url": "https://lists.suse.com/pipermail/sle-updates/2024-July/035946.html",
+				"source": "SUSE-SU"
+			},
+			{
+				"ref_id": "SUSE-SU-2024:2446-1",
+				"ref_url": "https://lists.suse.com/pipermail/sle-updates/2024-July/035945.html",
+				"source": "SUSE-SU"
+			},
+			{
+				"ref_id": "SUSE-SU-2024:2447-1",
+				"ref_url": "https://lists.suse.com/pipermail/sle-updates/2024-July/035944.html",
+				"source": "SUSE-SU"
+			},
+			{
+				"ref_id": "SUSE-SU-2024:2448-1",
+				"ref_url": "https://lists.suse.com/pipermail/sle-updates/2024-July/035943.html",
+				"source": "SUSE-SU"
+			},
+			{
+				"ref_id": "SUSE-SU-2024:2449-1",
+				"ref_url": "https://lists.suse.com/pipermail/sle-security-updates/2024-July/018944.html",
+				"source": "SUSE-SU"
+			},
+			{
+				"ref_id": "SUSE-SU-2024:2472-1",
+				"ref_url": "https://lists.suse.com/pipermail/sle-security-updates/2024-July/018943.html",
+				"source": "SUSE-SU"
+			},
+			{
+				"ref_id": "SUSE-SU-2024:2473-1",
+				"ref_url": "https://lists.suse.com/pipermail/sle-security-updates/2024-July/018942.html",
+				"source": "SUSE-SU"
+			},
+			{
+				"ref_id": "SUSE-SU-2024:2474-1",
+				"ref_url": "https://lists.suse.com/pipermail/sle-security-updates/2024-July/018941.html",
+				"source": "SUSE-SU"
 			}
 		],
 		"description": "\n    In the Linux kernel, the following vulnerability has been resolved:\n\naf_unix: Fix garbage collector racing against connect()\n\nGarbage collector does not take into account the risk of embryo getting\nenqueued during the garbage collection. If such embryo has a peer that\ncarries SCM_RIGHTS, two consecutive passes of scan_children() may see a\ndifferent set of children. Leading to an incorrectly elevated inflight\ncount, and then a dangling pointer within the gc_inflight_list.\n\nsockets are AF_UNIX/SOCK_STREAM\nS is an unconnected socket\nL is a listening in-flight socket bound to addr, not in fdtable\nV's fd will be passed via sendmsg(), gets inflight count bumped\n\nconnect(S, addr)\tsendmsg(S, [V]); close(V)\t__unix_gc()\n----------------\t-------------------------\t-----------\n\nNS = unix_create1()\nskb1 = sock_wmalloc(NS)\nL = unix_find_other(addr)\nunix_state_lock(L)\nunix_peer(S) = NS\n\t\t\t// V count=1 inflight=0\n\n \t\t\tNS = unix_peer(S)\n \t\t\tskb2 = sock_alloc()\n\t\t\tskb_queue_tail(NS, skb2[V])\n\n\t\t\t// V became in-flight\n\t\t\t// V count=2 inflight=1\n\n\t\t\tclose(V)\n\n\t\t\t// V count=1 inflight=1\n\t\t\t// GC candidate condition met\n\n\t\t\t\t\t\tfor u in gc_inflight_list:\n\t\t\t\t\t\t  if (total_refs == inflight_refs)\n\t\t\t\t\t\t    add u to gc_candidates\n\n\t\t\t\t\t\t// gc_candidates={L, V}\n\n\t\t\t\t\t\tfor u in gc_candidates:\n\t\t\t\t\t\t  scan_children(u, dec_inflight)\n\n\t\t\t\t\t\t// embryo (skb1) was not\n\t\t\t\t\t\t// reachable from L yet, so V's\n\t\t\t\t\t\t// inflight remains unchanged\n__skb_queue_tail(L, skb1)\nunix_state_unlock(L)\n\t\t\t\t\t\tfor u in gc_candidates:\n\t\t\t\t\t\t  if (u.inflight)\n\t\t\t\t\t\t    scan_children(u, inc_inflight_move_tail)\n\n\t\t\t\t\t\t// V count=1 inflight=2 (!)\n\nIf there is a GC-candidate listening socket, lock/unlock its state. This\nmakes GC wait until the end of any ongoing connect() to that socket. After\nflipping the lock, a possibly SCM-laden embryo is already enqueued. And if\nthere is another embryo coming, it can not possibly carry SCM_RIGHTS. At\nthis point, unix_inflight() can not happen because unix_gc_lock is already\ntaken. Inflight graph remains unaffected.\n    ",
@@ -197,7 +238,7 @@
 				"date": "2024-06-22"
 			},
 			"updated": {
-				"date": "2024-07-12"
+				"date": "2024-07-13"
 			},
 			"affected_cpe_list": {
 				"cpe": [
@@ -206,6 +247,7 @@
 					"cpe:/o:suse:sle-module-legacy:15:sp6",
 					"cpe:/o:suse:sle-module-live-patching:15:sp2",
 					"cpe:/o:suse:sle-module-live-patching:15:sp3",
+					"cpe:/o:suse:sle-module-live-patching:15:sp4",
 					"cpe:/o:suse:sle-module-live-patching:15:sp5",
 					"cpe:/o:suse:sle-module-live-patching:15:sp6",
 					"cpe:/o:suse:sle-module-public-cloud:15:sp5",
@@ -1009,6 +1051,30 @@
 							{
 								"test_ref": "oval:org.opensuse.security:tst:2009872378",
 								"comment": "kernel-livepatch-5_14_21-150500_13_61-rt-1-150500.11.3.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009873054",
+								"comment": "kernel-livepatch-5_14_21-150500_55_36-default-9-150500.2.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009873055",
+								"comment": "kernel-livepatch-5_14_21-150500_55_39-default-9-150500.2.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009873056",
+								"comment": "kernel-livepatch-5_14_21-150500_55_49-default-6-150500.11.8.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009873057",
+								"comment": "kernel-livepatch-5_14_21-150500_55_52-default-4-150500.11.6.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009873058",
+								"comment": "kernel-livepatch-5_14_21-150500_55_59-default-4-150500.11.10.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009873061",
+								"comment": "kernel-livepatch-5_14_21-150500_55_62-default-2-150500.11.6.1 is installed"
 							}
 						]
 					}
@@ -1360,6 +1426,74 @@
 					{
 						"test_ref": "oval:org.opensuse.security:tst:2009660213",
 						"comment": "SUSE Linux Enterprise Server 15 SP2-LTSS is installed"
+					}
+				]
+			},
+			{
+				"operator": "AND",
+				"criterias": [
+					{
+						"operator": "OR",
+						"criterions": [
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009873037",
+								"comment": "kernel-livepatch-5_14_21-150400_24_100-default-9-150400.2.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009873038",
+								"comment": "kernel-livepatch-5_14_21-150400_24_103-default-7-150400.2.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009873039",
+								"comment": "kernel-livepatch-5_14_21-150400_24_108-default-6-150400.9.8.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009873040",
+								"comment": "kernel-livepatch-5_14_21-150400_24_111-default-4-150400.9.6.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009873041",
+								"comment": "kernel-livepatch-5_14_21-150400_24_116-default-4-150400.9.8.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009873042",
+								"comment": "kernel-livepatch-5_14_21-150400_24_119-default-3-150400.9.6.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009873030",
+								"comment": "kernel-livepatch-5_14_21-150400_24_66-default-14-150400.2.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009873031",
+								"comment": "kernel-livepatch-5_14_21-150400_24_69-default-13-150400.2.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009873032",
+								"comment": "kernel-livepatch-5_14_21-150400_24_74-default-13-150400.2.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009873033",
+								"comment": "kernel-livepatch-5_14_21-150400_24_81-default-12-150400.2.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009873034",
+								"comment": "kernel-livepatch-5_14_21-150400_24_88-default-11-150400.2.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009873035",
+								"comment": "kernel-livepatch-5_14_21-150400_24_92-default-10-150400.2.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009873036",
+								"comment": "kernel-livepatch-5_14_21-150400_24_97-default-9-150400.2.1 is installed"
+							}
+						]
+					}
+				],
+				"criterions": [
+					{
+						"test_ref": "oval:org.opensuse.security:tst:2009698985",
+						"comment": "SUSE Linux Enterprise Live Patching 15 SP4 is installed"
 					}
 				]
 			}
