@@ -1,0 +1,160 @@
+{
+	"id": "oval:org.opensuse.security:def:202439495",
+	"version": "1",
+	"class": "vulnerability",
+	"metadata": {
+		"title": "CVE-2024-39495",
+		"affected": {
+			"family": "unix",
+			"platform": [
+				"openSUSE Leap 15.6"
+			]
+		},
+		"reference": [
+			{
+				"ref_id": "Mitre CVE-2024-39495",
+				"ref_url": "https://cve.mitre.org/cgi-bin/cvename.cgi?name=CVE-2024-39495",
+				"source": "CVE"
+			},
+			{
+				"ref_id": "SUSE CVE-2024-39495",
+				"ref_url": "https://www.suse.com/security/cve/CVE-2024-39495",
+				"source": "SUSE CVE"
+			}
+		],
+		"description": "\n    In the Linux kernel, the following vulnerability has been resolved:\n\ngreybus: Fix use-after-free bug in gb_interface_release due to race condition.\n\nIn gb_interface_create, &intf->mode_switch_completion is bound with\ngb_interface_mode_switch_work. Then it will be started by\ngb_interface_request_mode_switch. Here is the relevant code.\nif (!queue_work(system_long_wq, &intf->mode_switch_work)) {\n\t...\n}\n\nIf we call gb_interface_release to make cleanup, there may be an\nunfinished work. This function will call kfree to free the object\n\"intf\". However, if gb_interface_mode_switch_work is scheduled to\nrun after kfree, it may cause use-after-free error as\ngb_interface_mode_switch_work will use the object \"intf\".\nThe possible execution flow that may lead to the issue is as follows:\n\nCPU0                            CPU1\n\n                            |   gb_interface_create\n                            |   gb_interface_request_mode_switch\ngb_interface_release        |\nkfree(intf) (free)          |\n                            |   gb_interface_mode_switch_work\n                            |   mutex_lock(&intf->mutex) (use)\n\nFix it by canceling the work before kfree.\n    ",
+		"advisory": {
+			"from": "security@suse.de",
+			"severity": "Moderate",
+			"cve": [
+				{
+					"text": "CVE-2024-39495 at SUSE",
+					"href": "https://www.suse.com/security/cve/CVE-2024-39495/",
+					"impact": "medium",
+					"cvss3": "5.8/CVSS:3.1/AV:L/AC:H/PR:L/UI:N/S:U/C:L/I:L/A:H"
+				},
+				{
+					"text": "CVE-2024-39495 at NVD",
+					"href": "https://nvd.nist.gov/vuln/detail/CVE-2024-39495"
+				}
+			],
+			"bugzilla": [
+				{
+					"text": "SUSE bug 1227717",
+					"href": "https://bugzilla.suse.com/1227717"
+				}
+			],
+			"issued": {
+				"date": "2024-07-22"
+			},
+			"updated": {
+				"date": "2024-07-22"
+			},
+			"affected_cpe_list": {
+				"cpe": [
+					"cpe:/o:opensuse:leap:15.6"
+				]
+			}
+		}
+	},
+	"criteria": {
+		"operator": "AND",
+		"criterias": [
+			{
+				"operator": "OR",
+				"criterions": [
+					{
+						"test_ref": "oval:org.opensuse.security:tst:2009729794",
+						"comment": "cluster-md-kmp-default is not affected"
+					},
+					{
+						"test_ref": "oval:org.opensuse.security:tst:2009729795",
+						"comment": "dlm-kmp-default is not affected"
+					},
+					{
+						"test_ref": "oval:org.opensuse.security:tst:2009729796",
+						"comment": "gfs2-kmp-default is not affected"
+					},
+					{
+						"test_ref": "oval:org.opensuse.security:tst:2009334017",
+						"comment": "kernel-default is not affected"
+					},
+					{
+						"test_ref": "oval:org.opensuse.security:tst:2009335423",
+						"comment": "kernel-default-devel is not affected"
+					},
+					{
+						"test_ref": "oval:org.opensuse.security:tst:2009335424",
+						"comment": "kernel-default-extra is not affected"
+					},
+					{
+						"test_ref": "oval:org.opensuse.security:tst:2009728675",
+						"comment": "kernel-default-livepatch is not affected"
+					},
+					{
+						"test_ref": "oval:org.opensuse.security:tst:2009728676",
+						"comment": "kernel-default-livepatch-devel is not affected"
+					},
+					{
+						"test_ref": "oval:org.opensuse.security:tst:2009870467",
+						"comment": "kernel-default-optional is not affected"
+					},
+					{
+						"test_ref": "oval:org.opensuse.security:tst:2009870468",
+						"comment": "kernel-default-vdso is not affected"
+					},
+					{
+						"test_ref": "oval:org.opensuse.security:tst:2009870469",
+						"comment": "kselftests-kmp-default is not affected"
+					},
+					{
+						"test_ref": "oval:org.opensuse.security:tst:2009729797",
+						"comment": "ocfs2-kmp-default is not affected"
+					},
+					{
+						"test_ref": "oval:org.opensuse.security:tst:2009338037",
+						"comment": "reiserfs-kmp-default is not affected"
+					},
+					{
+						"test_ref": "oval:org.opensuse.security:tst:2009334791",
+						"comment": "kernel-devel is not affected"
+					},
+					{
+						"test_ref": "oval:org.opensuse.security:tst:2009334792",
+						"comment": "kernel-macros is not affected"
+					},
+					{
+						"test_ref": "oval:org.opensuse.security:tst:2009333928",
+						"comment": "kernel-source is not affected"
+					},
+					{
+						"test_ref": "oval:org.opensuse.security:tst:2009870470",
+						"comment": "kernel-source-vanilla is not affected"
+					},
+					{
+						"test_ref": "oval:org.opensuse.security:tst:2009340306",
+						"comment": "kernel-devel-azure is not affected"
+					},
+					{
+						"test_ref": "oval:org.opensuse.security:tst:2009340305",
+						"comment": "kernel-source-azure is not affected"
+					},
+					{
+						"test_ref": "oval:org.opensuse.security:tst:2009728711",
+						"comment": "kernel-devel-rt is not affected"
+					},
+					{
+						"test_ref": "oval:org.opensuse.security:tst:2009728712",
+						"comment": "kernel-source-rt is not affected"
+					}
+				]
+			}
+		],
+		"criterions": [
+			{
+				"test_ref": "oval:org.opensuse.security:tst:2009864054",
+				"comment": "openSUSE Leap 15.6 is installed"
+			}
+		]
+	}
+}
