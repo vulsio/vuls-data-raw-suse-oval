@@ -1,0 +1,204 @@
+{
+	"id": "oval:org.opensuse.security:def:202438616",
+	"version": "1",
+	"class": "vulnerability",
+	"metadata": {
+		"title": "CVE-2024-38616",
+		"affected": {
+			"family": "unix",
+			"platform": [
+				"SUSE Linux Enterprise Desktop 15 SP6",
+				"SUSE Linux Enterprise High Performance Computing 15 SP6",
+				"SUSE Linux Enterprise Module for Basesystem 15 SP6",
+				"SUSE Linux Enterprise Module for Development Tools 15 SP6",
+				"SUSE Linux Enterprise Server 15 SP6",
+				"SUSE Linux Enterprise Server for SAP Applications 15 SP6"
+			]
+		},
+		"reference": [
+			{
+				"ref_id": "Mitre CVE-2024-38616",
+				"ref_url": "https://cve.mitre.org/cgi-bin/cvename.cgi?name=CVE-2024-38616",
+				"source": "CVE"
+			},
+			{
+				"ref_id": "SUSE CVE-2024-38616",
+				"ref_url": "https://www.suse.com/security/cve/CVE-2024-38616",
+				"source": "SUSE CVE"
+			},
+			{
+				"ref_id": "SUSE-SU-2024:2372-1",
+				"ref_url": "https://lists.suse.com/pipermail/sle-updates/2024-July/035868.html",
+				"source": "SUSE-SU"
+			},
+			{
+				"ref_id": "SUSE-SU-2024:2394-1",
+				"ref_url": "https://lists.suse.com/pipermail/sle-updates/2024-July/035907.html",
+				"source": "SUSE-SU"
+			},
+			{
+				"ref_id": "SUSE-SU-2024:2571-1",
+				"ref_url": "https://lists.suse.com/pipermail/sle-updates/2024-July/036103.html",
+				"source": "SUSE-SU"
+			}
+		],
+		"description": "\n    In the Linux kernel, the following vulnerability has been resolved:\n\nwifi: carl9170: re-fix fortified-memset warning\n\nThe carl9170_tx_release() function sometimes triggers a fortified-memset\nwarning in my randconfig builds:\n\nIn file included from include/linux/string.h:254,\n                 from drivers/net/wireless/ath/carl9170/tx.c:40:\nIn function 'fortify_memset_chk',\n    inlined from 'carl9170_tx_release' at drivers/net/wireless/ath/carl9170/tx.c:283:2,\n    inlined from 'kref_put' at include/linux/kref.h:65:3,\n    inlined from 'carl9170_tx_put_skb' at drivers/net/wireless/ath/carl9170/tx.c:342:9:\ninclude/linux/fortify-string.h:493:25: error: call to '__write_overflow_field' declared with attribute warning: detected write beyond size of field (1st parameter); maybe use struct_group()? [-Werror=attribute-warning]\n  493 |                         __write_overflow_field(p_size_field, size);\n\nKees previously tried to avoid this by using memset_after(), but it seems\nthis does not fully address the problem. I noticed that the memset_after()\nhere is done on a different part of the union (status) than the original\ncast was from (rate_driver_data), which may confuse the compiler.\n\nUnfortunately, the memset_after() trick does not work on driver_rates[]\nbecause that is part of an anonymous struct, and I could not get\nstruct_group() to do this either. Using two separate memset() calls\non the two members does address the warning though.\n    ",
+		"advisory": {
+			"from": "security@suse.de",
+			"severity": "Moderate",
+			"cve": [
+				{
+					"text": "CVE-2024-38616 at SUSE",
+					"href": "https://www.suse.com/security/cve/CVE-2024-38616/",
+					"impact": "medium",
+					"cvss3": "5.5/CVSS:3.1/AV:L/AC:L/PR:L/UI:N/S:U/C:N/I:N/A:H"
+				},
+				{
+					"text": "CVE-2024-38616 at NVD",
+					"href": "https://nvd.nist.gov/vuln/detail/CVE-2024-38616"
+				}
+			],
+			"bugzilla": [
+				{
+					"text": "SUSE bug 1226852",
+					"href": "https://bugzilla.suse.com/1226852"
+				}
+			],
+			"issued": {
+				"date": "2024-07-23"
+			},
+			"updated": {
+				"date": "2024-07-23"
+			},
+			"affected_cpe_list": {
+				"cpe": [
+					"cpe:/o:suse:sle-module-basesystem:15:sp6",
+					"cpe:/o:suse:sle-module-development-tools:15:sp6"
+				]
+			}
+		}
+	},
+	"criteria": {
+		"operator": "OR",
+		"criterias": [
+			{
+				"operator": "AND",
+				"criterias": [
+					{
+						"operator": "OR",
+						"criterions": [
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009856171",
+								"comment": "SUSE Linux Enterprise Desktop 15 SP6 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009856172",
+								"comment": "SUSE Linux Enterprise High Performance Computing 15 SP6 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009856173",
+								"comment": "SUSE Linux Enterprise Module for Basesystem 15 SP6 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009856174",
+								"comment": "SUSE Linux Enterprise Server 15 SP6 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009856175",
+								"comment": "SUSE Linux Enterprise Server for SAP Applications 15 SP6 is installed"
+							}
+						]
+					},
+					{
+						"operator": "OR",
+						"criterions": [
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009875113",
+								"comment": "kernel-64kb-6.4.0-150600.23.14.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009875114",
+								"comment": "kernel-64kb-devel-6.4.0-150600.23.14.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009875122",
+								"comment": "kernel-default-6.4.0-150600.23.14.2 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009875123",
+								"comment": "kernel-default-base-6.4.0-150600.23.14.2.150600.12.4.3 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009875125",
+								"comment": "kernel-default-devel-6.4.0-150600.23.14.2 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009875131",
+								"comment": "kernel-devel-6.4.0-150600.23.14.2 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009875138",
+								"comment": "kernel-macros-6.4.0-150600.23.14.2 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009875144",
+								"comment": "kernel-zfcpdump-6.4.0-150600.23.14.2 is installed"
+							}
+						]
+					}
+				]
+			},
+			{
+				"operator": "AND",
+				"criterias": [
+					{
+						"operator": "OR",
+						"criterions": [
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009856171",
+								"comment": "SUSE Linux Enterprise Desktop 15 SP6 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009856172",
+								"comment": "SUSE Linux Enterprise High Performance Computing 15 SP6 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009856253",
+								"comment": "SUSE Linux Enterprise Module for Development Tools 15 SP6 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009856174",
+								"comment": "SUSE Linux Enterprise Server 15 SP6 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009856175",
+								"comment": "SUSE Linux Enterprise Server for SAP Applications 15 SP6 is installed"
+							}
+						]
+					},
+					{
+						"operator": "OR",
+						"criterions": [
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009875132",
+								"comment": "kernel-docs-6.4.0-150600.23.14.2 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009875139",
+								"comment": "kernel-obs-build-6.4.0-150600.23.14.2 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009875141",
+								"comment": "kernel-source-6.4.0-150600.23.14.2 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009875143",
+								"comment": "kernel-syms-6.4.0-150600.23.14.2 is installed"
+							}
+						]
+					}
+				]
+			}
+		]
+	}
+}

@@ -8,11 +8,17 @@
 			"family": "unix",
 			"platform": [
 				"SUSE Linux Enterprise Desktop 15 SP5",
+				"SUSE Linux Enterprise Desktop 15 SP6",
 				"SUSE Linux Enterprise High Performance Computing 15 SP5",
+				"SUSE Linux Enterprise High Performance Computing 15 SP6",
 				"SUSE Linux Enterprise Module for Basesystem 15 SP5",
+				"SUSE Linux Enterprise Module for Basesystem 15 SP6",
 				"SUSE Linux Enterprise Module for Development Tools 15 SP5",
+				"SUSE Linux Enterprise Module for Development Tools 15 SP6",
 				"SUSE Linux Enterprise Server 15 SP5",
-				"SUSE Linux Enterprise Server for SAP Applications 15 SP5"
+				"SUSE Linux Enterprise Server 15 SP6",
+				"SUSE Linux Enterprise Server for SAP Applications 15 SP5",
+				"SUSE Linux Enterprise Server for SAP Applications 15 SP6"
 			]
 		},
 		"reference": [
@@ -25,6 +31,11 @@
 				"ref_id": "SUSE CVE-2023-52765",
 				"ref_url": "https://www.suse.com/security/cve/CVE-2023-52765",
 				"source": "SUSE CVE"
+			},
+			{
+				"ref_id": "SUSE-SU-2024:2571-1",
+				"ref_url": "https://lists.suse.com/pipermail/sle-updates/2024-July/036103.html",
+				"source": "SUSE-SU"
 			}
 		],
 		"description": "\n    In the Linux kernel, the following vulnerability has been resolved:\n\nmfd: qcom-spmi-pmic: Fix revid implementation\n\nThe Qualcomm SPMI PMIC revid implementation is broken in multiple ways.\n\nFirst, it assumes that just because the sibling base device has been\nregistered that means that it is also bound to a driver, which may not\nbe the case (e.g. due to probe deferral or asynchronous probe). This\ncould trigger a NULL-pointer dereference when attempting to access the\ndriver data of the unbound device.\n\nSecond, it accesses driver data of a sibling device directly and without\nany locking, which means that the driver data may be freed while it is\nbeing accessed (e.g. on driver unbind).\n\nThird, it leaks a struct device reference to the sibling device which is\nlooked up using the spmi_device_from_of() every time a function (child)\ndevice is calling the revid function (e.g. on probe).\n\nFix this mess by reimplementing the revid lookup so that it is done only\nat probe of the PMIC device; the base device fetches the revid info from\nthe hardware, while any secondary SPMI device fetches the information\nfrom the base device and caches it so that it can be accessed safely\nfrom its children. If the base device has not been probed yet then probe\nof a secondary device is deferred.\n    ",
@@ -53,12 +64,14 @@
 				"date": "2024-05-23"
 			},
 			"updated": {
-				"date": "2024-07-02"
+				"date": "2024-07-23"
 			},
 			"affected_cpe_list": {
 				"cpe": [
 					"cpe:/o:suse:sle-module-basesystem:15:sp5",
+					"cpe:/o:suse:sle-module-basesystem:15:sp6",
 					"cpe:/o:suse:sle-module-development-tools:15:sp5",
+					"cpe:/o:suse:sle-module-development-tools:15:sp6",
 					"cpe:/o:suse:sle_hpc:15:sp5",
 					"cpe:/o:suse:sled:15:sp5",
 					"cpe:/o:suse:sles:15:sp5",
@@ -159,6 +172,124 @@
 							{
 								"test_ref": "oval:org.opensuse.security:tst:2009334792",
 								"comment": "kernel-macros is not affected"
+							}
+						]
+					}
+				]
+			},
+			{
+				"operator": "AND",
+				"criterias": [
+					{
+						"operator": "OR",
+						"criterions": [
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009856171",
+								"comment": "SUSE Linux Enterprise Desktop 15 SP6 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009856172",
+								"comment": "SUSE Linux Enterprise High Performance Computing 15 SP6 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009856173",
+								"comment": "SUSE Linux Enterprise Module for Basesystem 15 SP6 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009856174",
+								"comment": "SUSE Linux Enterprise Server 15 SP6 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009856175",
+								"comment": "SUSE Linux Enterprise Server for SAP Applications 15 SP6 is installed"
+							}
+						]
+					},
+					{
+						"operator": "OR",
+						"criterions": [
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009875113",
+								"comment": "kernel-64kb-6.4.0-150600.23.14.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009875114",
+								"comment": "kernel-64kb-devel-6.4.0-150600.23.14.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009875122",
+								"comment": "kernel-default-6.4.0-150600.23.14.2 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009875123",
+								"comment": "kernel-default-base-6.4.0-150600.23.14.2.150600.12.4.3 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009875125",
+								"comment": "kernel-default-devel-6.4.0-150600.23.14.2 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009875131",
+								"comment": "kernel-devel-6.4.0-150600.23.14.2 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009875138",
+								"comment": "kernel-macros-6.4.0-150600.23.14.2 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009875144",
+								"comment": "kernel-zfcpdump-6.4.0-150600.23.14.2 is installed"
+							}
+						]
+					}
+				]
+			},
+			{
+				"operator": "AND",
+				"criterias": [
+					{
+						"operator": "OR",
+						"criterions": [
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009856171",
+								"comment": "SUSE Linux Enterprise Desktop 15 SP6 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009856172",
+								"comment": "SUSE Linux Enterprise High Performance Computing 15 SP6 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009856253",
+								"comment": "SUSE Linux Enterprise Module for Development Tools 15 SP6 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009856174",
+								"comment": "SUSE Linux Enterprise Server 15 SP6 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009856175",
+								"comment": "SUSE Linux Enterprise Server for SAP Applications 15 SP6 is installed"
+							}
+						]
+					},
+					{
+						"operator": "OR",
+						"criterions": [
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009875132",
+								"comment": "kernel-docs-6.4.0-150600.23.14.2 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009875139",
+								"comment": "kernel-obs-build-6.4.0-150600.23.14.2 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009875141",
+								"comment": "kernel-source-6.4.0-150600.23.14.2 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009875143",
+								"comment": "kernel-syms-6.4.0-150600.23.14.2 is installed"
 							}
 						]
 					}
