@@ -1,0 +1,160 @@
+{
+	"id": "oval:org.opensuse.security:def:202442071",
+	"version": "1",
+	"class": "vulnerability",
+	"metadata": {
+		"title": "CVE-2024-42071",
+		"affected": {
+			"family": "unix",
+			"platform": [
+				"openSUSE Leap 15.6"
+			]
+		},
+		"reference": [
+			{
+				"ref_id": "Mitre CVE-2024-42071",
+				"ref_url": "https://cve.mitre.org/cgi-bin/cvename.cgi?name=CVE-2024-42071",
+				"source": "CVE"
+			},
+			{
+				"ref_id": "SUSE CVE-2024-42071",
+				"ref_url": "https://www.suse.com/security/cve/CVE-2024-42071",
+				"source": "SUSE CVE"
+			}
+		],
+		"description": "\n    In the Linux kernel, the following vulnerability has been resolved:\n\nionic: use dev_consume_skb_any outside of napi\n\nIf we're not in a NAPI softirq context, we need to be careful\nabout how we call napi_consume_skb(), specifically we need to\ncall it with budget==0 to signal to it that we're not in a\nsafe context.\n\nThis was found while running some configuration stress testing\nof traffic and a change queue config loop running, and this\ncurious note popped out:\n\n[ 4371.402645] BUG: using smp_processor_id() in preemptible [00000000] code: ethtool/20545\n[ 4371.402897] caller is napi_skb_cache_put+0x16/0x80\n[ 4371.403120] CPU: 25 PID: 20545 Comm: ethtool Kdump: loaded Tainted: G           OE      6.10.0-rc3-netnext+ #8\n[ 4371.403302] Hardware name: HPE ProLiant DL360 Gen10/ProLiant DL360 Gen10, BIOS U32 01/23/2021\n[ 4371.403460] Call Trace:\n[ 4371.403613]  <TASK>\n[ 4371.403758]  dump_stack_lvl+0x4f/0x70\n[ 4371.403904]  check_preemption_disabled+0xc1/0xe0\n[ 4371.404051]  napi_skb_cache_put+0x16/0x80\n[ 4371.404199]  ionic_tx_clean+0x18a/0x240 [ionic]\n[ 4371.404354]  ionic_tx_cq_service+0xc4/0x200 [ionic]\n[ 4371.404505]  ionic_tx_flush+0x15/0x70 [ionic]\n[ 4371.404653]  ? ionic_lif_qcq_deinit.isra.23+0x5b/0x70 [ionic]\n[ 4371.404805]  ionic_txrx_deinit+0x71/0x190 [ionic]\n[ 4371.404956]  ionic_reconfigure_queues+0x5f5/0xff0 [ionic]\n[ 4371.405111]  ionic_set_ringparam+0x2e8/0x3e0 [ionic]\n[ 4371.405265]  ethnl_set_rings+0x1f1/0x300\n[ 4371.405418]  ethnl_default_set_doit+0xbb/0x160\n[ 4371.405571]  genl_family_rcv_msg_doit+0xff/0x130\n\t[...]\n\nI found that ionic_tx_clean() calls napi_consume_skb() which calls\nnapi_skb_cache_put(), but before that last call is the note\n    /* Zero budget indicate non-NAPI context called us, like netpoll */\nand\n    DEBUG_NET_WARN_ON_ONCE(!in_softirq());\n\nThose are pretty big hints that we're doing it wrong.  We can pass a\ncontext hint down through the calls to let ionic_tx_clean() know what\nwe're doing so it can call napi_consume_skb() correctly.\n    ",
+		"advisory": {
+			"from": "security@suse.de",
+			"severity": "Moderate",
+			"cve": [
+				{
+					"text": "CVE-2024-42071 at SUSE",
+					"href": "https://www.suse.com/security/cve/CVE-2024-42071/"
+				},
+				{
+					"text": "CVE-2024-42071 at NVD",
+					"href": "https://nvd.nist.gov/vuln/detail/CVE-2024-42071",
+					"impact": "medium",
+					"cvss3": "5.5/CVSS:3.1/AV:L/AC:L/PR:L/UI:N/S:U/C:N/I:N/A:H"
+				}
+			],
+			"bugzilla": [
+				{
+					"text": "SUSE bug 1228517",
+					"href": "https://bugzilla.suse.com/1228517"
+				}
+			],
+			"issued": {
+				"date": "2024-08-06"
+			},
+			"updated": {
+				"date": "2024-08-06"
+			},
+			"affected_cpe_list": {
+				"cpe": [
+					"cpe:/o:opensuse:leap:15.6"
+				]
+			}
+		}
+	},
+	"criteria": {
+		"operator": "AND",
+		"criterias": [
+			{
+				"operator": "OR",
+				"criterions": [
+					{
+						"test_ref": "oval:org.opensuse.security:tst:2009729794",
+						"comment": "cluster-md-kmp-default is not affected"
+					},
+					{
+						"test_ref": "oval:org.opensuse.security:tst:2009729795",
+						"comment": "dlm-kmp-default is not affected"
+					},
+					{
+						"test_ref": "oval:org.opensuse.security:tst:2009729796",
+						"comment": "gfs2-kmp-default is not affected"
+					},
+					{
+						"test_ref": "oval:org.opensuse.security:tst:2009334017",
+						"comment": "kernel-default is not affected"
+					},
+					{
+						"test_ref": "oval:org.opensuse.security:tst:2009335423",
+						"comment": "kernel-default-devel is not affected"
+					},
+					{
+						"test_ref": "oval:org.opensuse.security:tst:2009335424",
+						"comment": "kernel-default-extra is not affected"
+					},
+					{
+						"test_ref": "oval:org.opensuse.security:tst:2009728675",
+						"comment": "kernel-default-livepatch is not affected"
+					},
+					{
+						"test_ref": "oval:org.opensuse.security:tst:2009728676",
+						"comment": "kernel-default-livepatch-devel is not affected"
+					},
+					{
+						"test_ref": "oval:org.opensuse.security:tst:2009870467",
+						"comment": "kernel-default-optional is not affected"
+					},
+					{
+						"test_ref": "oval:org.opensuse.security:tst:2009870468",
+						"comment": "kernel-default-vdso is not affected"
+					},
+					{
+						"test_ref": "oval:org.opensuse.security:tst:2009870469",
+						"comment": "kselftests-kmp-default is not affected"
+					},
+					{
+						"test_ref": "oval:org.opensuse.security:tst:2009729797",
+						"comment": "ocfs2-kmp-default is not affected"
+					},
+					{
+						"test_ref": "oval:org.opensuse.security:tst:2009338037",
+						"comment": "reiserfs-kmp-default is not affected"
+					},
+					{
+						"test_ref": "oval:org.opensuse.security:tst:2009334791",
+						"comment": "kernel-devel is not affected"
+					},
+					{
+						"test_ref": "oval:org.opensuse.security:tst:2009334792",
+						"comment": "kernel-macros is not affected"
+					},
+					{
+						"test_ref": "oval:org.opensuse.security:tst:2009333928",
+						"comment": "kernel-source is not affected"
+					},
+					{
+						"test_ref": "oval:org.opensuse.security:tst:2009870470",
+						"comment": "kernel-source-vanilla is not affected"
+					},
+					{
+						"test_ref": "oval:org.opensuse.security:tst:2009340306",
+						"comment": "kernel-devel-azure is not affected"
+					},
+					{
+						"test_ref": "oval:org.opensuse.security:tst:2009340305",
+						"comment": "kernel-source-azure is not affected"
+					},
+					{
+						"test_ref": "oval:org.opensuse.security:tst:2009728711",
+						"comment": "kernel-devel-rt is not affected"
+					},
+					{
+						"test_ref": "oval:org.opensuse.security:tst:2009728712",
+						"comment": "kernel-source-rt is not affected"
+					}
+				]
+			}
+		],
+		"criterions": [
+			{
+				"test_ref": "oval:org.opensuse.security:tst:2009864054",
+				"comment": "openSUSE Leap 15.6 is installed"
+			}
+		]
+	}
+}

@@ -1,0 +1,261 @@
+{
+	"id": "oval:org.opensuse.security:def:202442136",
+	"version": "1",
+	"class": "vulnerability",
+	"metadata": {
+		"title": "CVE-2024-42136",
+		"affected": {
+			"family": "unix",
+			"platform": [
+				"SUSE Linux Enterprise Real Time 12 SP5",
+				"SUSE Linux Enterprise Server 12 SP4-LTSS",
+				"SUSE Linux Enterprise Server 12 SP5",
+				"SUSE Linux Enterprise Server for SAP Applications 12 SP4",
+				"SUSE Linux Enterprise Server for SAP Applications 12 SP5"
+			]
+		},
+		"reference": [
+			{
+				"ref_id": "Mitre CVE-2024-42136",
+				"ref_url": "https://cve.mitre.org/cgi-bin/cvename.cgi?name=CVE-2024-42136",
+				"source": "CVE"
+			},
+			{
+				"ref_id": "SUSE CVE-2024-42136",
+				"ref_url": "https://www.suse.com/security/cve/CVE-2024-42136",
+				"source": "SUSE CVE"
+			}
+		],
+		"description": "\n    In the Linux kernel, the following vulnerability has been resolved:\n\ncdrom: rearrange last_media_change check to avoid unintentional overflow\n\nWhen running syzkaller with the newly reintroduced signed integer wrap\nsanitizer we encounter this splat:\n\n[  366.015950] UBSAN: signed-integer-overflow in ../drivers/cdrom/cdrom.c:2361:33\n[  366.021089] -9223372036854775808 - 346321 cannot be represented in type '__s64' (aka 'long long')\n[  366.025894] program syz-executor.4 is using a deprecated SCSI ioctl, please convert it to SG_IO\n[  366.027502] CPU: 5 PID: 28472 Comm: syz-executor.7 Not tainted 6.8.0-rc2-00035-gb3ef86b5a957 #1\n[  366.027512] Hardware name: QEMU Standard PC (i440FX + PIIX, 1996), BIOS 1.16.3-debian-1.16.3-2 04/01/2014\n[  366.027518] Call Trace:\n[  366.027523]  <TASK>\n[  366.027533]  dump_stack_lvl+0x93/0xd0\n[  366.027899]  handle_overflow+0x171/0x1b0\n[  366.038787] ata1.00: invalid multi_count 32 ignored\n[  366.043924]  cdrom_ioctl+0x2c3f/0x2d10\n[  366.063932]  ? __pm_runtime_resume+0xe6/0x130\n[  366.071923]  sr_block_ioctl+0x15d/0x1d0\n[  366.074624]  ? __pfx_sr_block_ioctl+0x10/0x10\n[  366.077642]  blkdev_ioctl+0x419/0x500\n[  366.080231]  ? __pfx_blkdev_ioctl+0x10/0x10\n...\n\nHistorically, the signed integer overflow sanitizer did not work in the\nkernel due to its interaction with `-fwrapv` but this has since been\nchanged [1] in the newest version of Clang. It was re-enabled in the\nkernel with Commit 557f8c582a9ba8ab (\"ubsan: Reintroduce signed overflow\nsanitizer\").\n\nLet's rearrange the check to not perform any arithmetic, thus not\ntripping the sanitizer.\n    ",
+		"advisory": {
+			"from": "security@suse.de",
+			"severity": "Low",
+			"cve": [
+				{
+					"text": "CVE-2024-42136 at SUSE",
+					"href": "https://www.suse.com/security/cve/CVE-2024-42136/",
+					"impact": "low",
+					"cvss3": "3.6/CVSS:3.1/AV:L/AC:H/PR:L/UI:N/S:U/C:N/I:L/A:L"
+				},
+				{
+					"text": "CVE-2024-42136 at NVD",
+					"href": "https://nvd.nist.gov/vuln/detail/CVE-2024-42136"
+				}
+			],
+			"bugzilla": [
+				{
+					"text": "SUSE bug 1228758",
+					"href": "https://bugzilla.suse.com/1228758"
+				}
+			],
+			"issued": {
+				"date": "2024-08-06"
+			},
+			"updated": {
+				"date": "2024-08-06"
+			},
+			"affected_cpe_list": {
+				"cpe": [
+					"cpe:/o:suse:sles-ltss:12:sp4",
+					"cpe:/o:suse:sles:12:sp5",
+					"cpe:/o:suse:sles_sap:12:sp4",
+					"cpe:/o:suse:sles_sap:12:sp5",
+					"cpe:/o:suse:suse-linux-enterprise-rt:12:sp5"
+				]
+			}
+		}
+	},
+	"criteria": {
+		"operator": "OR",
+		"criterias": [
+			{
+				"operator": "AND",
+				"criterias": [
+					{
+						"operator": "OR",
+						"criterions": [
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009334017",
+								"comment": "kernel-default is not affected"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009333928",
+								"comment": "kernel-source is not affected"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009340305",
+								"comment": "kernel-source-azure is not affected"
+							}
+						]
+					}
+				],
+				"criterions": [
+					{
+						"test_ref": "oval:org.opensuse.security:tst:2009258806",
+						"comment": "SUSE Linux Enterprise Server for SAP Applications 12 SP5 is installed"
+					}
+				]
+			},
+			{
+				"operator": "AND",
+				"criterias": [
+					{
+						"operator": "OR",
+						"criterions": [
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009334017",
+								"comment": "kernel-default is not affected"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009335425",
+								"comment": "kernel-default-base is not affected"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009335423",
+								"comment": "kernel-default-devel is not affected"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009334791",
+								"comment": "kernel-devel is not affected"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009334792",
+								"comment": "kernel-macros is not affected"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009333928",
+								"comment": "kernel-source is not affected"
+							}
+						]
+					}
+				],
+				"criterions": [
+					{
+						"test_ref": "oval:org.opensuse.security:tst:2009258804",
+						"comment": "SUSE Linux Enterprise Server for SAP Applications 12 SP4 is installed"
+					}
+				]
+			},
+			{
+				"operator": "AND",
+				"criterias": [
+					{
+						"operator": "OR",
+						"criterions": [
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009334017",
+								"comment": "kernel-default is not affected"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009335425",
+								"comment": "kernel-default-base is not affected"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009335423",
+								"comment": "kernel-default-devel is not affected"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009335426",
+								"comment": "kernel-default-man is not affected"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009334791",
+								"comment": "kernel-devel is not affected"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009334792",
+								"comment": "kernel-macros is not affected"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009333928",
+								"comment": "kernel-source is not affected"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009340306",
+								"comment": "kernel-devel-azure is not affected"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009340305",
+								"comment": "kernel-source-azure is not affected"
+							}
+						]
+					}
+				],
+				"criterions": [
+					{
+						"test_ref": "oval:org.opensuse.security:tst:2009258033",
+						"comment": "SUSE Linux Enterprise Server 12 SP5 is installed"
+					}
+				]
+			},
+			{
+				"operator": "AND",
+				"criterias": [
+					{
+						"operator": "OR",
+						"criterions": [
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009334017",
+								"comment": "kernel-default is not affected"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009335425",
+								"comment": "kernel-default-base is not affected"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009335423",
+								"comment": "kernel-default-devel is not affected"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009335426",
+								"comment": "kernel-default-man is not affected"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009334791",
+								"comment": "kernel-devel is not affected"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009334792",
+								"comment": "kernel-macros is not affected"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009333928",
+								"comment": "kernel-source is not affected"
+							}
+						]
+					}
+				],
+				"criterions": [
+					{
+						"test_ref": "oval:org.opensuse.security:tst:2009240280",
+						"comment": "SUSE Linux Enterprise Server 12 SP4-LTSS is installed"
+					}
+				]
+			},
+			{
+				"operator": "AND",
+				"criterias": [
+					{
+						"operator": "OR",
+						"criterions": [
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009728711",
+								"comment": "kernel-devel-rt is not affected"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009728712",
+								"comment": "kernel-source-rt is not affected"
+							}
+						]
+					}
+				],
+				"criterions": [
+					{
+						"test_ref": "oval:org.opensuse.security:tst:2009279486",
+						"comment": "SUSE Linux Enterprise Real Time 12 SP5 is installed"
+					}
+				]
+			}
+		]
+	}
+}

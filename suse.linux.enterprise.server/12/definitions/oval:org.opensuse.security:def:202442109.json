@@ -1,0 +1,261 @@
+{
+	"id": "oval:org.opensuse.security:def:202442109",
+	"version": "1",
+	"class": "vulnerability",
+	"metadata": {
+		"title": "CVE-2024-42109",
+		"affected": {
+			"family": "unix",
+			"platform": [
+				"SUSE Linux Enterprise Real Time 12 SP5",
+				"SUSE Linux Enterprise Server 12 SP4-LTSS",
+				"SUSE Linux Enterprise Server 12 SP5",
+				"SUSE Linux Enterprise Server for SAP Applications 12 SP4",
+				"SUSE Linux Enterprise Server for SAP Applications 12 SP5"
+			]
+		},
+		"reference": [
+			{
+				"ref_id": "Mitre CVE-2024-42109",
+				"ref_url": "https://cve.mitre.org/cgi-bin/cvename.cgi?name=CVE-2024-42109",
+				"source": "CVE"
+			},
+			{
+				"ref_id": "SUSE CVE-2024-42109",
+				"ref_url": "https://www.suse.com/security/cve/CVE-2024-42109",
+				"source": "SUSE CVE"
+			}
+		],
+		"description": "\n    In the Linux kernel, the following vulnerability has been resolved:\n\nnetfilter: nf_tables: unconditionally flush pending work before notifier\n\nsyzbot reports:\n\nKASAN: slab-uaf in nft_ctx_update include/net/netfilter/nf_tables.h:1831\nKASAN: slab-uaf in nft_commit_release net/netfilter/nf_tables_api.c:9530\nKASAN: slab-uaf int nf_tables_trans_destroy_work+0x152b/0x1750 net/netfilter/nf_tables_api.c:9597\nRead of size 2 at addr ffff88802b0051c4 by task kworker/1:1/45\n[..]\nWorkqueue: events nf_tables_trans_destroy_work\nCall Trace:\n nft_ctx_update include/net/netfilter/nf_tables.h:1831 [inline]\n nft_commit_release net/netfilter/nf_tables_api.c:9530 [inline]\n nf_tables_trans_destroy_work+0x152b/0x1750 net/netfilter/nf_tables_api.c:9597\n\nProblem is that the notifier does a conditional flush, but its possible\nthat the table-to-be-removed is still referenced by transactions being\nprocessed by the worker, so we need to flush unconditionally.\n\nWe could make the flush_work depend on whether we found a table to delete\nin nf-next to avoid the flush for most cases.\n\nAFAICS this problem is only exposed in nf-next, with\ncommit e169285f8c56 (\"netfilter: nf_tables: do not store nft_ctx in transaction objects\"),\nwith this commit applied there is an unconditional fetch of\ntable->family which is whats triggering the above splat.\n    ",
+		"advisory": {
+			"from": "security@suse.de",
+			"severity": "Moderate",
+			"cve": [
+				{
+					"text": "CVE-2024-42109 at SUSE",
+					"href": "https://www.suse.com/security/cve/CVE-2024-42109/",
+					"impact": "medium",
+					"cvss3": "5.5/CVSS:3.1/AV:L/AC:L/PR:L/UI:N/S:U/C:N/I:N/A:H"
+				},
+				{
+					"text": "CVE-2024-42109 at NVD",
+					"href": "https://nvd.nist.gov/vuln/detail/CVE-2024-42109"
+				}
+			],
+			"bugzilla": [
+				{
+					"text": "SUSE bug 1228505",
+					"href": "https://bugzilla.suse.com/1228505"
+				}
+			],
+			"issued": {
+				"date": "2024-08-06"
+			},
+			"updated": {
+				"date": "2024-08-06"
+			},
+			"affected_cpe_list": {
+				"cpe": [
+					"cpe:/o:suse:sles-ltss:12:sp4",
+					"cpe:/o:suse:sles:12:sp5",
+					"cpe:/o:suse:sles_sap:12:sp4",
+					"cpe:/o:suse:sles_sap:12:sp5",
+					"cpe:/o:suse:suse-linux-enterprise-rt:12:sp5"
+				]
+			}
+		}
+	},
+	"criteria": {
+		"operator": "OR",
+		"criterias": [
+			{
+				"operator": "AND",
+				"criterias": [
+					{
+						"operator": "OR",
+						"criterions": [
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009334017",
+								"comment": "kernel-default is not affected"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009333928",
+								"comment": "kernel-source is not affected"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009340305",
+								"comment": "kernel-source-azure is not affected"
+							}
+						]
+					}
+				],
+				"criterions": [
+					{
+						"test_ref": "oval:org.opensuse.security:tst:2009258806",
+						"comment": "SUSE Linux Enterprise Server for SAP Applications 12 SP5 is installed"
+					}
+				]
+			},
+			{
+				"operator": "AND",
+				"criterias": [
+					{
+						"operator": "OR",
+						"criterions": [
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009334017",
+								"comment": "kernel-default is not affected"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009335425",
+								"comment": "kernel-default-base is not affected"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009335423",
+								"comment": "kernel-default-devel is not affected"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009334791",
+								"comment": "kernel-devel is not affected"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009334792",
+								"comment": "kernel-macros is not affected"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009333928",
+								"comment": "kernel-source is not affected"
+							}
+						]
+					}
+				],
+				"criterions": [
+					{
+						"test_ref": "oval:org.opensuse.security:tst:2009258804",
+						"comment": "SUSE Linux Enterprise Server for SAP Applications 12 SP4 is installed"
+					}
+				]
+			},
+			{
+				"operator": "AND",
+				"criterias": [
+					{
+						"operator": "OR",
+						"criterions": [
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009334017",
+								"comment": "kernel-default is not affected"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009335425",
+								"comment": "kernel-default-base is not affected"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009335423",
+								"comment": "kernel-default-devel is not affected"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009335426",
+								"comment": "kernel-default-man is not affected"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009334791",
+								"comment": "kernel-devel is not affected"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009334792",
+								"comment": "kernel-macros is not affected"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009333928",
+								"comment": "kernel-source is not affected"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009340306",
+								"comment": "kernel-devel-azure is not affected"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009340305",
+								"comment": "kernel-source-azure is not affected"
+							}
+						]
+					}
+				],
+				"criterions": [
+					{
+						"test_ref": "oval:org.opensuse.security:tst:2009258033",
+						"comment": "SUSE Linux Enterprise Server 12 SP5 is installed"
+					}
+				]
+			},
+			{
+				"operator": "AND",
+				"criterias": [
+					{
+						"operator": "OR",
+						"criterions": [
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009334017",
+								"comment": "kernel-default is not affected"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009335425",
+								"comment": "kernel-default-base is not affected"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009335423",
+								"comment": "kernel-default-devel is not affected"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009335426",
+								"comment": "kernel-default-man is not affected"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009334791",
+								"comment": "kernel-devel is not affected"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009334792",
+								"comment": "kernel-macros is not affected"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009333928",
+								"comment": "kernel-source is not affected"
+							}
+						]
+					}
+				],
+				"criterions": [
+					{
+						"test_ref": "oval:org.opensuse.security:tst:2009240280",
+						"comment": "SUSE Linux Enterprise Server 12 SP4-LTSS is installed"
+					}
+				]
+			},
+			{
+				"operator": "AND",
+				"criterias": [
+					{
+						"operator": "OR",
+						"criterions": [
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009728711",
+								"comment": "kernel-devel-rt is not affected"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009728712",
+								"comment": "kernel-source-rt is not affected"
+							}
+						]
+					}
+				],
+				"criterions": [
+					{
+						"test_ref": "oval:org.opensuse.security:tst:2009279486",
+						"comment": "SUSE Linux Enterprise Real Time 12 SP5 is installed"
+					}
+				]
+			}
+		]
+	}
+}
