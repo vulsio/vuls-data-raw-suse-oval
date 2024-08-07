@@ -164,6 +164,41 @@
 				"ref_id": "SUSE-SU-2024:2755-1",
 				"ref_url": "https://lists.suse.com/pipermail/sle-security-updates/2024-August/019097.html",
 				"source": "SUSE-SU"
+			},
+			{
+				"ref_id": "SUSE-SU-2024:2758-1",
+				"ref_url": "https://lists.suse.com/pipermail/sle-updates/2024-August/036317.html",
+				"source": "SUSE-SU"
+			},
+			{
+				"ref_id": "SUSE-SU-2024:2759-1",
+				"ref_url": "https://lists.suse.com/pipermail/sle-updates/2024-August/036316.html",
+				"source": "SUSE-SU"
+			},
+			{
+				"ref_id": "SUSE-SU-2024:2760-1",
+				"ref_url": "https://lists.suse.com/pipermail/sle-security-updates/2024-August/019107.html",
+				"source": "SUSE-SU"
+			},
+			{
+				"ref_id": "SUSE-SU-2024:2771-1",
+				"ref_url": "https://lists.suse.com/pipermail/sle-updates/2024-August/036321.html",
+				"source": "SUSE-SU"
+			},
+			{
+				"ref_id": "SUSE-SU-2024:2773-1",
+				"ref_url": "https://lists.suse.com/pipermail/sle-updates/2024-August/036320.html",
+				"source": "SUSE-SU"
+			},
+			{
+				"ref_id": "SUSE-SU-2024:2792-1",
+				"ref_url": "https://lists.suse.com/pipermail/sle-updates/2024-August/036328.html",
+				"source": "SUSE-SU"
+			},
+			{
+				"ref_id": "SUSE-SU-2024:2793-1",
+				"ref_url": "https://lists.suse.com/pipermail/sle-updates/2024-August/036329.html",
+				"source": "SUSE-SU"
 			}
 		],
 		"description": "\n    In the Linux kernel, the following vulnerability has been resolved:\n\nBluetooth: Fix use-after-free bugs caused by sco_sock_timeout\n\nWhen the sco connection is established and then, the sco socket\nis releasing, timeout_work will be scheduled to judge whether\nthe sco disconnection is timeout. The sock will be deallocated\nlater, but it is dereferenced again in sco_sock_timeout. As a\nresult, the use-after-free bugs will happen. The root cause is\nshown below:\n\n    Cleanup Thread               |      Worker Thread\nsco_sock_release                 |\n  sco_sock_close                 |\n    __sco_sock_close             |\n      sco_sock_set_timer         |\n        schedule_delayed_work    |\n  sco_sock_kill                  |    (wait a time)\n    sock_put(sk) //FREE          |  sco_sock_timeout\n                                 |    sock_hold(sk) //USE\n\nThe KASAN report triggered by POC is shown below:\n\n[   95.890016] ==================================================================\n[   95.890496] BUG: KASAN: slab-use-after-free in sco_sock_timeout+0x5e/0x1c0\n[   95.890755] Write of size 4 at addr ffff88800c388080 by task kworker/0:0/7\n...\n[   95.890755] Workqueue: events sco_sock_timeout\n[   95.890755] Call Trace:\n[   95.890755]  <TASK>\n[   95.890755]  dump_stack_lvl+0x45/0x110\n[   95.890755]  print_address_description+0x78/0x390\n[   95.890755]  print_report+0x11b/0x250\n[   95.890755]  ? __virt_addr_valid+0xbe/0xf0\n[   95.890755]  ? sco_sock_timeout+0x5e/0x1c0\n[   95.890755]  kasan_report+0x139/0x170\n[   95.890755]  ? update_load_avg+0xe5/0x9f0\n[   95.890755]  ? sco_sock_timeout+0x5e/0x1c0\n[   95.890755]  kasan_check_range+0x2c3/0x2e0\n[   95.890755]  sco_sock_timeout+0x5e/0x1c0\n[   95.890755]  process_one_work+0x561/0xc50\n[   95.890755]  worker_thread+0xab2/0x13c0\n[   95.890755]  ? pr_cont_work+0x490/0x490\n[   95.890755]  kthread+0x279/0x300\n[   95.890755]  ? pr_cont_work+0x490/0x490\n[   95.890755]  ? kthread_blkcg+0xa0/0xa0\n[   95.890755]  ret_from_fork+0x34/0x60\n[   95.890755]  ? kthread_blkcg+0xa0/0xa0\n[   95.890755]  ret_from_fork_asm+0x11/0x20\n[   95.890755]  </TASK>\n[   95.890755]\n[   95.890755] Allocated by task 506:\n[   95.890755]  kasan_save_track+0x3f/0x70\n[   95.890755]  __kasan_kmalloc+0x86/0x90\n[   95.890755]  __kmalloc+0x17f/0x360\n[   95.890755]  sk_prot_alloc+0xe1/0x1a0\n[   95.890755]  sk_alloc+0x31/0x4e0\n[   95.890755]  bt_sock_alloc+0x2b/0x2a0\n[   95.890755]  sco_sock_create+0xad/0x320\n[   95.890755]  bt_sock_create+0x145/0x320\n[   95.890755]  __sock_create+0x2e1/0x650\n[   95.890755]  __sys_socket+0xd0/0x280\n[   95.890755]  __x64_sys_socket+0x75/0x80\n[   95.890755]  do_syscall_64+0xc4/0x1b0\n[   95.890755]  entry_SYSCALL_64_after_hwframe+0x67/0x6f\n[   95.890755]\n[   95.890755] Freed by task 506:\n[   95.890755]  kasan_save_track+0x3f/0x70\n[   95.890755]  kasan_save_free_info+0x40/0x50\n[   95.890755]  poison_slab_object+0x118/0x180\n[   95.890755]  __kasan_slab_free+0x12/0x30\n[   95.890755]  kfree+0xb2/0x240\n[   95.890755]  __sk_destruct+0x317/0x410\n[   95.890755]  sco_sock_release+0x232/0x280\n[   95.890755]  sock_close+0xb2/0x210\n[   95.890755]  __fput+0x37f/0x770\n[   95.890755]  task_work_run+0x1ae/0x210\n[   95.890755]  get_signal+0xe17/0xf70\n[   95.890755]  arch_do_signal_or_restart+0x3f/0x520\n[   95.890755]  syscall_exit_to_user_mode+0x55/0x120\n[   95.890755]  do_syscall_64+0xd1/0x1b0\n[   95.890755]  entry_SYSCALL_64_after_hwframe+0x67/0x6f\n[   95.890755]\n[   95.890755] The buggy address belongs to the object at ffff88800c388000\n[   95.890755]  which belongs to the cache kmalloc-1k of size 1024\n[   95.890755] The buggy address is located 128 bytes inside of\n[   95.890755]  freed 1024-byte region [ffff88800c388000, ffff88800c388400)\n[   95.890755]\n[   95.890755] The buggy address belongs to the physical page:\n[   95.890755] page: refcount:1 mapcount:0 mapping:0000000000000000 index:0xffff88800c38a800 pfn:0xc388\n[   95.890755] head: order:3 entire_mapcount:0 nr_pages_mapped:0 pincount:0\n[   95.890755] ano\n---truncated---\n    ",
@@ -196,7 +231,7 @@
 				"date": "2024-06-13"
 			},
 			"updated": {
-				"date": "2024-08-06"
+				"date": "2024-08-07"
 			},
 			"affected_cpe_list": {
 				"cpe": [
@@ -386,6 +421,19 @@
 										"operator": "AND",
 										"criterions": [
 											{
+												"test_ref": "oval:org.opensuse.security:tst:2009799561",
+												"comment": "kernel-default 5.3.18-150200.24.160.2 is installed"
+											},
+											{
+												"test_ref": "oval:org.opensuse.security:tst:2009878069",
+												"comment": "no kernel-livepatch-5_3_18-150200_24_160-default is greater or equal than 13-150200.2.1"
+											}
+										]
+									},
+									{
+										"operator": "AND",
+										"criterions": [
+											{
 												"test_ref": "oval:org.opensuse.security:tst:2009804085",
 												"comment": "kernel-default 5.3.18-150200.24.163.1 is installed"
 											},
@@ -444,6 +492,19 @@
 											{
 												"test_ref": "oval:org.opensuse.security:tst:2009877995",
 												"comment": "no kernel-livepatch-5_3_18-150200_24_175-default is greater or equal than 11-150200.2.1"
+											}
+										]
+									},
+									{
+										"operator": "AND",
+										"criterions": [
+											{
+												"test_ref": "oval:org.opensuse.security:tst:2009849454",
+												"comment": "kernel-default 5.3.18-150200.24.178.1 is installed"
+											},
+											{
+												"test_ref": "oval:org.opensuse.security:tst:2009878070",
+												"comment": "no kernel-livepatch-5_3_18-150200_24_178-default is greater or equal than 8-150200.2.1"
 											}
 										]
 									},
@@ -563,6 +624,97 @@
 										"operator": "AND",
 										"criterions": [
 											{
+												"test_ref": "oval:org.opensuse.security:tst:2009796008",
+												"comment": "kernel-default 5.3.18-150300.59.127.1 is installed"
+											},
+											{
+												"test_ref": "oval:org.opensuse.security:tst:2009878071",
+												"comment": "no kernel-livepatch-5_3_18-150300_59_127-default is greater or equal than 14-150300.2.1"
+											}
+										]
+									},
+									{
+										"operator": "AND",
+										"criterions": [
+											{
+												"test_ref": "oval:org.opensuse.security:tst:2009799638",
+												"comment": "kernel-default 5.3.18-150300.59.130.1 is installed"
+											},
+											{
+												"test_ref": "oval:org.opensuse.security:tst:2009878072",
+												"comment": "no kernel-livepatch-5_3_18-150300_59_130-default is greater or equal than 13-150300.2.1"
+											}
+										]
+									},
+									{
+										"operator": "AND",
+										"criterions": [
+											{
+												"test_ref": "oval:org.opensuse.security:tst:2009804090",
+												"comment": "kernel-default 5.3.18-150300.59.133.1 is installed"
+											},
+											{
+												"test_ref": "oval:org.opensuse.security:tst:2009878073",
+												"comment": "no kernel-livepatch-5_3_18-150300_59_133-default is greater or equal than 12-150300.2.1"
+											}
+										]
+									},
+									{
+										"operator": "AND",
+										"criterions": [
+											{
+												"test_ref": "oval:org.opensuse.security:tst:2009804092",
+												"comment": "kernel-default 5.3.18-150300.59.138.1 is installed"
+											},
+											{
+												"test_ref": "oval:org.opensuse.security:tst:2009878074",
+												"comment": "no kernel-livepatch-5_3_18-150300_59_138-default is greater or equal than 12-150300.2.1"
+											}
+										]
+									},
+									{
+										"operator": "AND",
+										"criterions": [
+											{
+												"test_ref": "oval:org.opensuse.security:tst:2009816440",
+												"comment": "kernel-default 5.3.18-150300.59.141.2 is installed"
+											},
+											{
+												"test_ref": "oval:org.opensuse.security:tst:2009878075",
+												"comment": "no kernel-livepatch-5_3_18-150300_59_141-default is greater or equal than 11-150300.2.1"
+											}
+										]
+									},
+									{
+										"operator": "AND",
+										"criterions": [
+											{
+												"test_ref": "oval:org.opensuse.security:tst:2009845693",
+												"comment": "kernel-default 5.3.18-150300.59.144.1 is installed"
+											},
+											{
+												"test_ref": "oval:org.opensuse.security:tst:2009878076",
+												"comment": "no kernel-livepatch-5_3_18-150300_59_144-default is greater or equal than 10-150300.2.1"
+											}
+										]
+									},
+									{
+										"operator": "AND",
+										"criterions": [
+											{
+												"test_ref": "oval:org.opensuse.security:tst:2009845695",
+												"comment": "kernel-default 5.3.18-150300.59.147.2 is installed"
+											},
+											{
+												"test_ref": "oval:org.opensuse.security:tst:2009878077",
+												"comment": "no kernel-livepatch-5_3_18-150300_59_147-default is greater or equal than 10-150300.2.1"
+											}
+										]
+									},
+									{
+										"operator": "AND",
+										"criterions": [
+											{
 												"test_ref": "oval:org.opensuse.security:tst:2009854326",
 												"comment": "kernel-default 5.3.18-150300.59.153.2 is installed"
 											},
@@ -571,12 +723,38 @@
 												"comment": "no kernel-livepatch-5_3_18-150300_59_153-default is greater or equal than 6-150300.7.6.1"
 											}
 										]
+									},
+									{
+										"operator": "AND",
+										"criterions": [
+											{
+												"test_ref": "oval:org.opensuse.security:tst:2009861761",
+												"comment": "kernel-default 5.3.18-150300.59.158.1 is installed"
+											},
+											{
+												"test_ref": "oval:org.opensuse.security:tst:2009878061",
+												"comment": "no kernel-livepatch-5_3_18-150300_59_158-default is greater or equal than 5-150300.7.6.1"
+											}
+										]
+									},
+									{
+										"operator": "AND",
+										"criterions": [
+											{
+												"test_ref": "oval:org.opensuse.security:tst:2009868517",
+												"comment": "kernel-default 5.3.18-150300.59.161.1 is installed"
+											},
+											{
+												"test_ref": "oval:org.opensuse.security:tst:2009878062",
+												"comment": "no kernel-livepatch-5_3_18-150300_59_161-default is greater or equal than 4-150300.7.6.1"
+											}
+										]
 									}
 								],
 								"criterions": [
 									{
-										"test_ref": "oval:org.opensuse.security:tst:2009854336",
-										"comment": "kernel-default is less than 5.3.18-150300.59.153.2"
+										"test_ref": "oval:org.opensuse.security:tst:2009871852",
+										"comment": "kernel-default is less than 5.3.18-150300.59.161.1"
 									}
 								]
 							}
@@ -753,8 +931,44 @@
 								"comment": "kernel-default-livepatch-devel-5.3.18-150300.59.164.1 is installed"
 							},
 							{
+								"test_ref": "oval:org.opensuse.security:tst:2009878151",
+								"comment": "kernel-livepatch-5_3_18-150300_59_127-default-14-150300.2.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009878156",
+								"comment": "kernel-livepatch-5_3_18-150300_59_130-default-13-150300.2.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009878157",
+								"comment": "kernel-livepatch-5_3_18-150300_59_133-default-12-150300.2.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009878158",
+								"comment": "kernel-livepatch-5_3_18-150300_59_138-default-12-150300.2.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009878153",
+								"comment": "kernel-livepatch-5_3_18-150300_59_141-default-11-150300.2.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009878159",
+								"comment": "kernel-livepatch-5_3_18-150300_59_144-default-10-150300.2.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009878154",
+								"comment": "kernel-livepatch-5_3_18-150300_59_147-default-10-150300.2.1 is installed"
+							},
+							{
 								"test_ref": "oval:org.opensuse.security:tst:2009878025",
 								"comment": "kernel-livepatch-5_3_18-150300_59_153-default-6-150300.7.6.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009878152",
+								"comment": "kernel-livepatch-5_3_18-150300_59_158-default-5-150300.7.6.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009878155",
+								"comment": "kernel-livepatch-5_3_18-150300_59_161-default-4-150300.7.6.1 is installed"
 							},
 							{
 								"test_ref": "oval:org.opensuse.security:tst:2009868814",
@@ -865,6 +1079,10 @@
 								"comment": "kernel-livepatch-5_3_18-150200_24_157-default-14-150200.2.1 is installed"
 							},
 							{
+								"test_ref": "oval:org.opensuse.security:tst:2009878191",
+								"comment": "kernel-livepatch-5_3_18-150200_24_160-default-13-150200.2.1 is installed"
+							},
+							{
 								"test_ref": "oval:org.opensuse.security:tst:2009878034",
 								"comment": "kernel-livepatch-5_3_18-150200_24_163-default-12-150200.2.1 is installed"
 							},
@@ -883,6 +1101,10 @@
 							{
 								"test_ref": "oval:org.opensuse.security:tst:2009878038",
 								"comment": "kernel-livepatch-5_3_18-150200_24_175-default-11-150200.2.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009878190",
+								"comment": "kernel-livepatch-5_3_18-150200_24_178-default-8-150200.2.1 is installed"
 							},
 							{
 								"test_ref": "oval:org.opensuse.security:tst:2009878039",

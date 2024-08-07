@@ -289,6 +289,31 @@
 				"ref_id": "SUSE-SU-2024:2755-1",
 				"ref_url": "https://lists.suse.com/pipermail/sle-security-updates/2024-August/019097.html",
 				"source": "SUSE-SU"
+			},
+			{
+				"ref_id": "SUSE-SU-2024:2758-1",
+				"ref_url": "https://lists.suse.com/pipermail/sle-updates/2024-August/036317.html",
+				"source": "SUSE-SU"
+			},
+			{
+				"ref_id": "SUSE-SU-2024:2759-1",
+				"ref_url": "https://lists.suse.com/pipermail/sle-updates/2024-August/036316.html",
+				"source": "SUSE-SU"
+			},
+			{
+				"ref_id": "SUSE-SU-2024:2773-1",
+				"ref_url": "https://lists.suse.com/pipermail/sle-updates/2024-August/036320.html",
+				"source": "SUSE-SU"
+			},
+			{
+				"ref_id": "SUSE-SU-2024:2792-1",
+				"ref_url": "https://lists.suse.com/pipermail/sle-updates/2024-August/036328.html",
+				"source": "SUSE-SU"
+			},
+			{
+				"ref_id": "SUSE-SU-2024:2797-1",
+				"ref_url": "https://lists.suse.com/pipermail/sle-updates/2024-August/036344.html",
+				"source": "SUSE-SU"
 			}
 		],
 		"description": "\n    In the Linux kernel, the following vulnerability has been resolved:\n\naf_unix: Fix garbage collector racing against connect()\n\nGarbage collector does not take into account the risk of embryo getting\nenqueued during the garbage collection. If such embryo has a peer that\ncarries SCM_RIGHTS, two consecutive passes of scan_children() may see a\ndifferent set of children. Leading to an incorrectly elevated inflight\ncount, and then a dangling pointer within the gc_inflight_list.\n\nsockets are AF_UNIX/SOCK_STREAM\nS is an unconnected socket\nL is a listening in-flight socket bound to addr, not in fdtable\nV's fd will be passed via sendmsg(), gets inflight count bumped\n\nconnect(S, addr)\tsendmsg(S, [V]); close(V)\t__unix_gc()\n----------------\t-------------------------\t-----------\n\nNS = unix_create1()\nskb1 = sock_wmalloc(NS)\nL = unix_find_other(addr)\nunix_state_lock(L)\nunix_peer(S) = NS\n\t\t\t// V count=1 inflight=0\n\n \t\t\tNS = unix_peer(S)\n \t\t\tskb2 = sock_alloc()\n\t\t\tskb_queue_tail(NS, skb2[V])\n\n\t\t\t// V became in-flight\n\t\t\t// V count=2 inflight=1\n\n\t\t\tclose(V)\n\n\t\t\t// V count=1 inflight=1\n\t\t\t// GC candidate condition met\n\n\t\t\t\t\t\tfor u in gc_inflight_list:\n\t\t\t\t\t\t  if (total_refs == inflight_refs)\n\t\t\t\t\t\t    add u to gc_candidates\n\n\t\t\t\t\t\t// gc_candidates={L, V}\n\n\t\t\t\t\t\tfor u in gc_candidates:\n\t\t\t\t\t\t  scan_children(u, dec_inflight)\n\n\t\t\t\t\t\t// embryo (skb1) was not\n\t\t\t\t\t\t// reachable from L yet, so V's\n\t\t\t\t\t\t// inflight remains unchanged\n__skb_queue_tail(L, skb1)\nunix_state_unlock(L)\n\t\t\t\t\t\tfor u in gc_candidates:\n\t\t\t\t\t\t  if (u.inflight)\n\t\t\t\t\t\t    scan_children(u, inc_inflight_move_tail)\n\n\t\t\t\t\t\t// V count=1 inflight=2 (!)\n\nIf there is a GC-candidate listening socket, lock/unlock its state. This\nmakes GC wait until the end of any ongoing connect() to that socket. After\nflipping the lock, a possibly SCM-laden embryo is already enqueued. And if\nthere is another embryo coming, it can not possibly carry SCM_RIGHTS. At\nthis point, unix_inflight() can not happen because unix_gc_lock is already\ntaken. Inflight graph remains unaffected.\n    ",
@@ -321,7 +346,7 @@
 				"date": "2024-06-22"
 			},
 			"updated": {
-				"date": "2024-08-06"
+				"date": "2024-08-07"
 			},
 			"affected_cpe_list": {
 				"cpe": [
@@ -563,8 +588,8 @@
 												"comment": "kernel-default 5.3.18-150300.59.158.1 is installed"
 											},
 											{
-												"test_ref": "oval:org.opensuse.security:tst:2009871834",
-												"comment": "no kernel-livepatch-5_3_18-150300_59_158-default is greater or equal than 4-150300.7.6.1"
+												"test_ref": "oval:org.opensuse.security:tst:2009878061",
+												"comment": "no kernel-livepatch-5_3_18-150300_59_158-default is greater or equal than 5-150300.7.6.1"
 											}
 										]
 									},
@@ -576,16 +601,29 @@
 												"comment": "kernel-default 5.3.18-150300.59.161.1 is installed"
 											},
 											{
-												"test_ref": "oval:org.opensuse.security:tst:2009871851",
-												"comment": "no kernel-livepatch-5_3_18-150300_59_161-default is greater or equal than 3-150300.7.6.1"
+												"test_ref": "oval:org.opensuse.security:tst:2009878062",
+												"comment": "no kernel-livepatch-5_3_18-150300_59_161-default is greater or equal than 4-150300.7.6.1"
+											}
+										]
+									},
+									{
+										"operator": "AND",
+										"criterions": [
+											{
+												"test_ref": "oval:org.opensuse.security:tst:2009878066",
+												"comment": "kernel-default 5.3.18-150300.59.164.1 is installed"
+											},
+											{
+												"test_ref": "oval:org.opensuse.security:tst:2009878067",
+												"comment": "no kernel-livepatch-5_3_18-150300_59_164-default is greater or equal than 2-150300.7.6.1"
 											}
 										]
 									}
 								],
 								"criterions": [
 									{
-										"test_ref": "oval:org.opensuse.security:tst:2009871852",
-										"comment": "kernel-default is less than 5.3.18-150300.59.161.1"
+										"test_ref": "oval:org.opensuse.security:tst:2009878068",
+										"comment": "kernel-default is less than 5.3.18-150300.59.164.1"
 									}
 								]
 							}
@@ -809,12 +847,25 @@
 												"comment": "no kernel-livepatch-5_3_18-150200_24_191-default is greater or equal than 4-150200.5.6.1"
 											}
 										]
+									},
+									{
+										"operator": "AND",
+										"criterions": [
+											{
+												"test_ref": "oval:org.opensuse.security:tst:2009878063",
+												"comment": "kernel-default 5.3.18-150200.24.194.1 is installed"
+											},
+											{
+												"test_ref": "oval:org.opensuse.security:tst:2009878064",
+												"comment": "no kernel-livepatch-5_3_18-150200_24_194-default is greater or equal than 2-150200.5.6.1"
+											}
+										]
 									}
 								],
 								"criterions": [
 									{
-										"test_ref": "oval:org.opensuse.security:tst:2009868516",
-										"comment": "kernel-default is less than 5.3.18-150200.24.191.1"
+										"test_ref": "oval:org.opensuse.security:tst:2009878065",
+										"comment": "kernel-default is less than 5.3.18-150200.24.194.1"
 									}
 								]
 							}
@@ -1543,12 +1594,16 @@
 								"comment": "kernel-livepatch-5_3_18-150300_59_153-default-6-150300.7.6.1 is installed"
 							},
 							{
-								"test_ref": "oval:org.opensuse.security:tst:2009871939",
-								"comment": "kernel-livepatch-5_3_18-150300_59_158-default-4-150300.7.6.1 is installed"
+								"test_ref": "oval:org.opensuse.security:tst:2009878152",
+								"comment": "kernel-livepatch-5_3_18-150300_59_158-default-5-150300.7.6.1 is installed"
 							},
 							{
-								"test_ref": "oval:org.opensuse.security:tst:2009871943",
-								"comment": "kernel-livepatch-5_3_18-150300_59_161-default-3-150300.7.6.1 is installed"
+								"test_ref": "oval:org.opensuse.security:tst:2009878155",
+								"comment": "kernel-livepatch-5_3_18-150300_59_161-default-4-150300.7.6.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009878162",
+								"comment": "kernel-livepatch-5_3_18-150300_59_164-default-2-150300.7.6.1 is installed"
 							},
 							{
 								"test_ref": "oval:org.opensuse.security:tst:2009871942",
@@ -1701,6 +1756,10 @@
 							{
 								"test_ref": "oval:org.opensuse.security:tst:2009878041",
 								"comment": "kernel-livepatch-5_3_18-150200_24_191-default-4-150200.5.6.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009878194",
+								"comment": "kernel-livepatch-5_3_18-150200_24_194-default-2-150200.5.6.1 is installed"
 							},
 							{
 								"test_ref": "oval:org.opensuse.security:tst:2009872091",
