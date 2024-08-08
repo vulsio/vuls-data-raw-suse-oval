@@ -10,12 +10,18 @@
 				"SUSE Enterprise Storage 7",
 				"SUSE Enterprise Storage 7.1",
 				"SUSE Linux Enterprise Desktop 15 SP5",
+				"SUSE Linux Enterprise Desktop 15 SP6",
 				"SUSE Linux Enterprise High Performance Computing 15 SP2",
 				"SUSE Linux Enterprise High Performance Computing 15 SP3",
 				"SUSE Linux Enterprise High Performance Computing 15 SP4",
 				"SUSE Linux Enterprise High Performance Computing 15 SP5",
+				"SUSE Linux Enterprise High Performance Computing 15 SP6",
+				"SUSE Linux Enterprise Live Patching 15 SP6",
 				"SUSE Linux Enterprise Module for Basesystem 15 SP5",
+				"SUSE Linux Enterprise Module for Basesystem 15 SP6",
 				"SUSE Linux Enterprise Module for Development Tools 15 SP5",
+				"SUSE Linux Enterprise Module for Development Tools 15 SP6",
+				"SUSE Linux Enterprise Module for Legacy 15 SP6",
 				"SUSE Linux Enterprise Module for Public Cloud 15 SP2",
 				"SUSE Linux Enterprise Module for Public Cloud 15 SP3",
 				"SUSE Linux Enterprise Module for Public Cloud 15 SP4",
@@ -28,11 +34,14 @@
 				"SUSE Linux Enterprise Server 15 SP4",
 				"SUSE Linux Enterprise Server 15 SP4-LTSS",
 				"SUSE Linux Enterprise Server 15 SP5",
+				"SUSE Linux Enterprise Server 15 SP6",
 				"SUSE Linux Enterprise Server 15-LTSS",
 				"SUSE Linux Enterprise Server for SAP Applications 15 SP2",
 				"SUSE Linux Enterprise Server for SAP Applications 15 SP3",
 				"SUSE Linux Enterprise Server for SAP Applications 15 SP4",
 				"SUSE Linux Enterprise Server for SAP Applications 15 SP5",
+				"SUSE Linux Enterprise Server for SAP Applications 15 SP6",
+				"SUSE Linux Enterprise Workstation Extension 15 SP6",
 				"SUSE Manager Proxy 4.1",
 				"SUSE Manager Proxy 4.2",
 				"SUSE Manager Proxy 4.3",
@@ -54,6 +63,11 @@
 				"ref_id": "SUSE CVE-2024-26826",
 				"ref_url": "https://www.suse.com/security/cve/CVE-2024-26826",
 				"source": "SUSE CVE"
+			},
+			{
+				"ref_id": "SUSE-SU-2024:2802-1",
+				"ref_url": "https://lists.suse.com/pipermail/sle-security-updates/2024-August/019133.html",
+				"source": "SUSE-SU"
 			}
 		],
 		"description": "\n    In the Linux kernel, the following vulnerability has been resolved:\n\nmptcp: fix data re-injection from stale subflow\n\nWhen the MPTCP PM detects that a subflow is stale, all the packet\nscheduler must re-inject all the mptcp-level unacked data. To avoid\nacquiring unneeded locks, it first try to check if any unacked data\nis present at all in the RTX queue, but such check is currently\nbroken, as it uses TCP-specific helper on an MPTCP socket.\n\nFunnily enough fuzzers and static checkers are happy, as the accessed\nmemory still belongs to the mptcp_sock struct, and even from a\nfunctional perspective the recovery completed successfully, as\nthe short-cut test always failed.\n\nA recent unrelated TCP change - commit d5fed5addb2b (\"tcp: reorganize\ntcp_sock fast path variables\") - exposed the issue, as the tcp field\nreorganization makes the mptcp code always skip the re-inection.\n\nFix the issue dropping the bogus call: we are on a slow path, the early\noptimization proved once again to be evil.\n    ",
@@ -82,18 +96,23 @@
 				"date": "2024-04-19"
 			},
 			"updated": {
-				"date": "2024-04-26"
+				"date": "2024-08-08"
 			},
 			"affected_cpe_list": {
 				"cpe": [
 					"cpe:/o:suse:ses:7",
 					"cpe:/o:suse:ses:7.1",
 					"cpe:/o:suse:sle-module-basesystem:15:sp5",
+					"cpe:/o:suse:sle-module-basesystem:15:sp6",
 					"cpe:/o:suse:sle-module-development-tools:15:sp5",
+					"cpe:/o:suse:sle-module-development-tools:15:sp6",
+					"cpe:/o:suse:sle-module-legacy:15:sp6",
+					"cpe:/o:suse:sle-module-live-patching:15:sp6",
 					"cpe:/o:suse:sle-module-public-cloud:15:sp2",
 					"cpe:/o:suse:sle-module-public-cloud:15:sp3",
 					"cpe:/o:suse:sle-module-public-cloud:15:sp4",
 					"cpe:/o:suse:sle-module-public-cloud:15:sp5",
+					"cpe:/o:suse:sle-we:15:sp6",
 					"cpe:/o:suse:sle_hpc:15:sp2",
 					"cpe:/o:suse:sle_hpc:15:sp3",
 					"cpe:/o:suse:sle_hpc:15:sp4",
@@ -233,6 +252,70 @@
 					{
 						"test_ref": "oval:org.opensuse.security:tst:2009340305",
 						"comment": "kernel-source-azure is not affected"
+					}
+				]
+			},
+			{
+				"operator": "AND",
+				"criterias": [
+					{
+						"operator": "OR",
+						"criterions": [
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009856172",
+								"comment": "SUSE Linux Enterprise High Performance Computing 15 SP6 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009856282",
+								"comment": "SUSE Linux Enterprise Module for Legacy 15 SP6 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009856174",
+								"comment": "SUSE Linux Enterprise Server 15 SP6 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009856175",
+								"comment": "SUSE Linux Enterprise Server for SAP Applications 15 SP6 is installed"
+							}
+						]
+					}
+				],
+				"criterions": [
+					{
+						"test_ref": "oval:org.opensuse.security:tst:2009878344",
+						"comment": "reiserfs-kmp-default-6.4.0-150600.23.17.1 is installed"
+					}
+				]
+			},
+			{
+				"operator": "AND",
+				"criterias": [
+					{
+						"operator": "OR",
+						"criterions": [
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009856171",
+								"comment": "SUSE Linux Enterprise Desktop 15 SP6 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009856174",
+								"comment": "SUSE Linux Enterprise Server 15 SP6 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009856175",
+								"comment": "SUSE Linux Enterprise Server for SAP Applications 15 SP6 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009856347",
+								"comment": "SUSE Linux Enterprise Workstation Extension 15 SP6 is installed"
+							}
+						]
+					}
+				],
+				"criterions": [
+					{
+						"test_ref": "oval:org.opensuse.security:tst:2009878419",
+						"comment": "kernel-default-extra-6.4.0-150600.23.17.1 is installed"
 					}
 				]
 			},
@@ -484,6 +567,152 @@
 								"comment": "kernel-source-azure is not affected"
 							}
 						]
+					}
+				]
+			},
+			{
+				"operator": "AND",
+				"criterias": [
+					{
+						"operator": "OR",
+						"criterions": [
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009856171",
+								"comment": "SUSE Linux Enterprise Desktop 15 SP6 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009856172",
+								"comment": "SUSE Linux Enterprise High Performance Computing 15 SP6 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009856173",
+								"comment": "SUSE Linux Enterprise Module for Basesystem 15 SP6 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009856174",
+								"comment": "SUSE Linux Enterprise Server 15 SP6 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009856175",
+								"comment": "SUSE Linux Enterprise Server for SAP Applications 15 SP6 is installed"
+							}
+						]
+					},
+					{
+						"operator": "OR",
+						"criterions": [
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009878307",
+								"comment": "kernel-64kb-6.4.0-150600.23.17.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009878308",
+								"comment": "kernel-64kb-devel-6.4.0-150600.23.17.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009878316",
+								"comment": "kernel-default-6.4.0-150600.23.17.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009878317",
+								"comment": "kernel-default-base-6.4.0-150600.23.17.1.150600.12.6.2 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009878319",
+								"comment": "kernel-default-devel-6.4.0-150600.23.17.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009878325",
+								"comment": "kernel-devel-6.4.0-150600.23.17.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009878332",
+								"comment": "kernel-macros-6.4.0-150600.23.17.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009878338",
+								"comment": "kernel-zfcpdump-6.4.0-150600.23.17.1 is installed"
+							}
+						]
+					}
+				]
+			},
+			{
+				"operator": "AND",
+				"criterias": [
+					{
+						"operator": "OR",
+						"criterions": [
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009856171",
+								"comment": "SUSE Linux Enterprise Desktop 15 SP6 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009856172",
+								"comment": "SUSE Linux Enterprise High Performance Computing 15 SP6 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009856253",
+								"comment": "SUSE Linux Enterprise Module for Development Tools 15 SP6 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009856174",
+								"comment": "SUSE Linux Enterprise Server 15 SP6 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009856175",
+								"comment": "SUSE Linux Enterprise Server for SAP Applications 15 SP6 is installed"
+							}
+						]
+					},
+					{
+						"operator": "OR",
+						"criterions": [
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009878326",
+								"comment": "kernel-docs-6.4.0-150600.23.17.3 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009878333",
+								"comment": "kernel-obs-build-6.4.0-150600.23.17.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009878335",
+								"comment": "kernel-source-6.4.0-150600.23.17.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009878337",
+								"comment": "kernel-syms-6.4.0-150600.23.17.1 is installed"
+							}
+						]
+					}
+				]
+			},
+			{
+				"operator": "AND",
+				"criterias": [
+					{
+						"operator": "OR",
+						"criterions": [
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009878416",
+								"comment": "kernel-default-livepatch-6.4.0-150600.23.17.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009878417",
+								"comment": "kernel-default-livepatch-devel-6.4.0-150600.23.17.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009878418",
+								"comment": "kernel-livepatch-6_4_0-150600_23_17-default-1-150600.13.3.1 is installed"
+							}
+						]
+					}
+				],
+				"criterions": [
+					{
+						"test_ref": "oval:org.opensuse.security:tst:2009857543",
+						"comment": "SUSE Linux Enterprise Live Patching 15 SP6 is installed"
 					}
 				]
 			}
