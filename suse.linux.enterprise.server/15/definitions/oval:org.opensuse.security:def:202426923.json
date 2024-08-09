@@ -314,6 +314,66 @@
 				"ref_id": "SUSE-SU-2024:2797-1",
 				"ref_url": "https://lists.suse.com/pipermail/sle-updates/2024-August/036344.html",
 				"source": "SUSE-SU"
+			},
+			{
+				"ref_id": "SUSE-SU-2024:2821-1",
+				"ref_url": "https://lists.suse.com/pipermail/sle-updates/2024-August/036385.html",
+				"source": "SUSE-SU"
+			},
+			{
+				"ref_id": "SUSE-SU-2024:2822-1",
+				"ref_url": "https://lists.suse.com/pipermail/sle-updates/2024-August/036384.html",
+				"source": "SUSE-SU"
+			},
+			{
+				"ref_id": "SUSE-SU-2024:2823-1",
+				"ref_url": "https://lists.suse.com/pipermail/sle-updates/2024-August/036383.html",
+				"source": "SUSE-SU"
+			},
+			{
+				"ref_id": "SUSE-SU-2024:2824-1",
+				"ref_url": "https://lists.suse.com/pipermail/sle-updates/2024-August/036382.html",
+				"source": "SUSE-SU"
+			},
+			{
+				"ref_id": "SUSE-SU-2024:2825-1",
+				"ref_url": "https://lists.suse.com/pipermail/sle-updates/2024-August/036381.html",
+				"source": "SUSE-SU"
+			},
+			{
+				"ref_id": "SUSE-SU-2024:2840-1",
+				"ref_url": "https://lists.suse.com/pipermail/sle-updates/2024-August/036375.html",
+				"source": "SUSE-SU"
+			},
+			{
+				"ref_id": "SUSE-SU-2024:2841-1",
+				"ref_url": "https://lists.suse.com/pipermail/sle-updates/2024-August/036374.html",
+				"source": "SUSE-SU"
+			},
+			{
+				"ref_id": "SUSE-SU-2024:2843-1",
+				"ref_url": "https://lists.suse.com/pipermail/sle-updates/2024-August/036373.html",
+				"source": "SUSE-SU"
+			},
+			{
+				"ref_id": "SUSE-SU-2024:2850-1",
+				"ref_url": "https://lists.suse.com/pipermail/sle-updates/2024-August/036372.html",
+				"source": "SUSE-SU"
+			},
+			{
+				"ref_id": "SUSE-SU-2024:2851-1",
+				"ref_url": "https://lists.suse.com/pipermail/sle-updates/2024-August/036371.html",
+				"source": "SUSE-SU"
+			},
+			{
+				"ref_id": "SUSE-SU-2024:2852-1",
+				"ref_url": "https://lists.suse.com/pipermail/sle-updates/2024-August/036366.html",
+				"source": "SUSE-SU"
+			},
+			{
+				"ref_id": "SUSE-SU-2024:2853-1",
+				"ref_url": "https://lists.suse.com/pipermail/sle-security-updates/2024-August/019141.html",
+				"source": "SUSE-SU"
 			}
 		],
 		"description": "\n    In the Linux kernel, the following vulnerability has been resolved:\n\naf_unix: Fix garbage collector racing against connect()\n\nGarbage collector does not take into account the risk of embryo getting\nenqueued during the garbage collection. If such embryo has a peer that\ncarries SCM_RIGHTS, two consecutive passes of scan_children() may see a\ndifferent set of children. Leading to an incorrectly elevated inflight\ncount, and then a dangling pointer within the gc_inflight_list.\n\nsockets are AF_UNIX/SOCK_STREAM\nS is an unconnected socket\nL is a listening in-flight socket bound to addr, not in fdtable\nV's fd will be passed via sendmsg(), gets inflight count bumped\n\nconnect(S, addr)\tsendmsg(S, [V]); close(V)\t__unix_gc()\n----------------\t-------------------------\t-----------\n\nNS = unix_create1()\nskb1 = sock_wmalloc(NS)\nL = unix_find_other(addr)\nunix_state_lock(L)\nunix_peer(S) = NS\n\t\t\t// V count=1 inflight=0\n\n \t\t\tNS = unix_peer(S)\n \t\t\tskb2 = sock_alloc()\n\t\t\tskb_queue_tail(NS, skb2[V])\n\n\t\t\t// V became in-flight\n\t\t\t// V count=2 inflight=1\n\n\t\t\tclose(V)\n\n\t\t\t// V count=1 inflight=1\n\t\t\t// GC candidate condition met\n\n\t\t\t\t\t\tfor u in gc_inflight_list:\n\t\t\t\t\t\t  if (total_refs == inflight_refs)\n\t\t\t\t\t\t    add u to gc_candidates\n\n\t\t\t\t\t\t// gc_candidates={L, V}\n\n\t\t\t\t\t\tfor u in gc_candidates:\n\t\t\t\t\t\t  scan_children(u, dec_inflight)\n\n\t\t\t\t\t\t// embryo (skb1) was not\n\t\t\t\t\t\t// reachable from L yet, so V's\n\t\t\t\t\t\t// inflight remains unchanged\n__skb_queue_tail(L, skb1)\nunix_state_unlock(L)\n\t\t\t\t\t\tfor u in gc_candidates:\n\t\t\t\t\t\t  if (u.inflight)\n\t\t\t\t\t\t    scan_children(u, inc_inflight_move_tail)\n\n\t\t\t\t\t\t// V count=1 inflight=2 (!)\n\nIf there is a GC-candidate listening socket, lock/unlock its state. This\nmakes GC wait until the end of any ongoing connect() to that socket. After\nflipping the lock, a possibly SCM-laden embryo is already enqueued. And if\nthere is another embryo coming, it can not possibly carry SCM_RIGHTS. At\nthis point, unix_inflight() can not happen because unix_gc_lock is already\ntaken. Inflight graph remains unaffected.\n    ",
@@ -346,7 +406,7 @@
 				"date": "2024-06-22"
 			},
 			"updated": {
-				"date": "2024-08-07"
+				"date": "2024-08-09"
 			},
 			"affected_cpe_list": {
 				"cpe": [
@@ -968,8 +1028,8 @@
 												"comment": "kernel-default 5.14.21-150400.24.108.1 is installed"
 											},
 											{
-												"test_ref": "oval:org.opensuse.security:tst:2009872659",
-												"comment": "no kernel-livepatch-5_14_21-150400_24_108-default is greater or equal than 6-150400.9.8.1"
+												"test_ref": "oval:org.opensuse.security:tst:2009878531",
+												"comment": "no kernel-livepatch-5_14_21-150400_24_108-default is greater or equal than 7-150400.9.8.1"
 											}
 										]
 									},
@@ -981,8 +1041,8 @@
 												"comment": "kernel-default 5.14.21-150400.24.111.2 is installed"
 											},
 											{
-												"test_ref": "oval:org.opensuse.security:tst:2009872660",
-												"comment": "no kernel-livepatch-5_14_21-150400_24_111-default is greater or equal than 4-150400.9.6.1"
+												"test_ref": "oval:org.opensuse.security:tst:2009878532",
+												"comment": "no kernel-livepatch-5_14_21-150400_24_111-default is greater or equal than 5-150400.9.6.1"
 											}
 										]
 									},
@@ -994,8 +1054,8 @@
 												"comment": "kernel-default 5.14.21-150400.24.116.1 is installed"
 											},
 											{
-												"test_ref": "oval:org.opensuse.security:tst:2009872661",
-												"comment": "no kernel-livepatch-5_14_21-150400_24_116-default is greater or equal than 4-150400.9.8.1"
+												"test_ref": "oval:org.opensuse.security:tst:2009878533",
+												"comment": "no kernel-livepatch-5_14_21-150400_24_116-default is greater or equal than 5-150400.9.8.1"
 											}
 										]
 									},
@@ -1007,8 +1067,21 @@
 												"comment": "kernel-default 5.14.21-150400.24.119.1 is installed"
 											},
 											{
-												"test_ref": "oval:org.opensuse.security:tst:2009872676",
-												"comment": "no kernel-livepatch-5_14_21-150400_24_119-default is greater or equal than 3-150400.9.6.1"
+												"test_ref": "oval:org.opensuse.security:tst:2009878537",
+												"comment": "no kernel-livepatch-5_14_21-150400_24_119-default is greater or equal than 4-150400.9.6.1"
+											}
+										]
+									},
+									{
+										"operator": "AND",
+										"criterions": [
+											{
+												"test_ref": "oval:org.opensuse.security:tst:2009878543",
+												"comment": "kernel-default 5.14.21-150400.24.122.2 is installed"
+											},
+											{
+												"test_ref": "oval:org.opensuse.security:tst:2009878544",
+												"comment": "no kernel-livepatch-5_14_21-150400_24_122-default is greater or equal than 2-150400.9.6.1"
 											}
 										]
 									},
@@ -1455,24 +1528,28 @@
 								"comment": "kernel-livepatch-5_14_21-150500_55_44-default-8-150500.2.1 is installed"
 							},
 							{
-								"test_ref": "oval:org.opensuse.security:tst:2009873056",
-								"comment": "kernel-livepatch-5_14_21-150500_55_49-default-6-150500.11.8.1 is installed"
+								"test_ref": "oval:org.opensuse.security:tst:2009878626",
+								"comment": "kernel-livepatch-5_14_21-150500_55_49-default-7-150500.11.8.1 is installed"
 							},
 							{
-								"test_ref": "oval:org.opensuse.security:tst:2009873057",
-								"comment": "kernel-livepatch-5_14_21-150500_55_52-default-4-150500.11.6.1 is installed"
+								"test_ref": "oval:org.opensuse.security:tst:2009878627",
+								"comment": "kernel-livepatch-5_14_21-150500_55_52-default-5-150500.11.6.1 is installed"
 							},
 							{
-								"test_ref": "oval:org.opensuse.security:tst:2009873058",
-								"comment": "kernel-livepatch-5_14_21-150500_55_59-default-4-150500.11.10.1 is installed"
+								"test_ref": "oval:org.opensuse.security:tst:2009878619",
+								"comment": "kernel-livepatch-5_14_21-150500_55_59-default-5-150500.11.10.1 is installed"
 							},
 							{
-								"test_ref": "oval:org.opensuse.security:tst:2009873061",
-								"comment": "kernel-livepatch-5_14_21-150500_55_62-default-2-150500.11.6.1 is installed"
+								"test_ref": "oval:org.opensuse.security:tst:2009878628",
+								"comment": "kernel-livepatch-5_14_21-150500_55_62-default-3-150500.11.6.1 is installed"
 							},
 							{
-								"test_ref": "oval:org.opensuse.security:tst:2009873812",
-								"comment": "kernel-livepatch-5_14_21-150500_55_65-default-2-150500.11.6.1 is installed"
+								"test_ref": "oval:org.opensuse.security:tst:2009878632",
+								"comment": "kernel-livepatch-5_14_21-150500_55_65-default-3-150500.11.6.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009878631",
+								"comment": "kernel-livepatch-5_14_21-150500_55_68-default-2-150500.11.6.1 is installed"
 							},
 							{
 								"test_ref": "oval:org.opensuse.security:tst:2009873814",
@@ -1862,20 +1939,24 @@
 								"comment": "kernel-livepatch-5_14_21-150400_24_103-default-7-150400.2.1 is installed"
 							},
 							{
-								"test_ref": "oval:org.opensuse.security:tst:2009873039",
-								"comment": "kernel-livepatch-5_14_21-150400_24_108-default-6-150400.9.8.1 is installed"
+								"test_ref": "oval:org.opensuse.security:tst:2009878603",
+								"comment": "kernel-livepatch-5_14_21-150400_24_108-default-7-150400.9.8.1 is installed"
 							},
 							{
-								"test_ref": "oval:org.opensuse.security:tst:2009873040",
-								"comment": "kernel-livepatch-5_14_21-150400_24_111-default-4-150400.9.6.1 is installed"
+								"test_ref": "oval:org.opensuse.security:tst:2009878616",
+								"comment": "kernel-livepatch-5_14_21-150400_24_111-default-5-150400.9.6.1 is installed"
 							},
 							{
-								"test_ref": "oval:org.opensuse.security:tst:2009873041",
-								"comment": "kernel-livepatch-5_14_21-150400_24_116-default-4-150400.9.8.1 is installed"
+								"test_ref": "oval:org.opensuse.security:tst:2009878604",
+								"comment": "kernel-livepatch-5_14_21-150400_24_116-default-5-150400.9.8.1 is installed"
 							},
 							{
-								"test_ref": "oval:org.opensuse.security:tst:2009873042",
-								"comment": "kernel-livepatch-5_14_21-150400_24_119-default-3-150400.9.6.1 is installed"
+								"test_ref": "oval:org.opensuse.security:tst:2009878617",
+								"comment": "kernel-livepatch-5_14_21-150400_24_119-default-4-150400.9.6.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009878607",
+								"comment": "kernel-livepatch-5_14_21-150400_24_122-default-2-150400.9.6.1 is installed"
 							},
 							{
 								"test_ref": "oval:org.opensuse.security:tst:2009874071",
