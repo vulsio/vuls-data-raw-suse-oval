@@ -9,10 +9,12 @@
 			"platform": [
 				"SUSE Linux Enterprise Desktop 15 SP6",
 				"SUSE Linux Enterprise High Performance Computing 15 SP6",
+				"SUSE Linux Enterprise Live Patching 15 SP5",
 				"SUSE Linux Enterprise Live Patching 15 SP6",
 				"SUSE Linux Enterprise Module for Basesystem 15 SP6",
 				"SUSE Linux Enterprise Module for Development Tools 15 SP6",
 				"SUSE Linux Enterprise Module for Legacy 15 SP6",
+				"SUSE Linux Enterprise Module for Public Cloud 15 SP6",
 				"SUSE Linux Enterprise Server 15 SP6",
 				"SUSE Linux Enterprise Server for SAP Applications 15 SP6",
 				"SUSE Linux Enterprise Workstation Extension 15 SP6"
@@ -43,6 +45,16 @@
 				"ref_id": "SUSE-SU-2024:2802-1",
 				"ref_url": "https://lists.suse.com/pipermail/sle-security-updates/2024-August/019133.html",
 				"source": "SUSE-SU"
+			},
+			{
+				"ref_id": "SUSE-SU-2024:2894-1",
+				"ref_url": "https://lists.suse.com/pipermail/sle-updates/2024-August/036430.html",
+				"source": "SUSE-SU"
+			},
+			{
+				"ref_id": "SUSE-SU-2024:2896-1",
+				"ref_url": "https://lists.suse.com/pipermail/sle-security-updates/2024-August/019185.html",
+				"source": "SUSE-SU"
 			}
 		],
 		"description": "\n    In the Linux kernel, the following vulnerability has been resolved:\n\nllc: Drop support for ETH_P_TR_802_2.\n\nsyzbot reported an uninit-value bug below. [0]\n\nllc supports ETH_P_802_2 (0x0004) and used to support ETH_P_TR_802_2\n(0x0011), and syzbot abused the latter to trigger the bug.\n\n  write$tun(r0, &(0x7f0000000040)={@val={0x0, 0x11}, @val, @mpls={[], @llc={@snap={0xaa, 0x1, ')', \"90e5dd\"}}}}, 0x16)\n\nllc_conn_handler() initialises local variables {saddr,daddr}.mac\nbased on skb in llc_pdu_decode_sa()/llc_pdu_decode_da() and passes\nthem to __llc_lookup().\n\nHowever, the initialisation is done only when skb->protocol is\nhtons(ETH_P_802_2), otherwise, __llc_lookup_established() and\n__llc_lookup_listener() will read garbage.\n\nThe missing initialisation existed prior to commit 211ed865108e\n(\"net: delete all instances of special processing for token ring\").\n\nIt removed the part to kick out the token ring stuff but forgot to\nclose the door allowing ETH_P_TR_802_2 packets to sneak into llc_rcv().\n\nLet's remove llc_tr_packet_type and complete the deprecation.\n\n[0]:\nBUG: KMSAN: uninit-value in __llc_lookup_established+0xe9d/0xf90\n __llc_lookup_established+0xe9d/0xf90\n __llc_lookup net/llc/llc_conn.c:611 [inline]\n llc_conn_handler+0x4bd/0x1360 net/llc/llc_conn.c:791\n llc_rcv+0xfbb/0x14a0 net/llc/llc_input.c:206\n __netif_receive_skb_one_core net/core/dev.c:5527 [inline]\n __netif_receive_skb+0x1a6/0x5a0 net/core/dev.c:5641\n netif_receive_skb_internal net/core/dev.c:5727 [inline]\n netif_receive_skb+0x58/0x660 net/core/dev.c:5786\n tun_rx_batched+0x3ee/0x980 drivers/net/tun.c:1555\n tun_get_user+0x53af/0x66d0 drivers/net/tun.c:2002\n tun_chr_write_iter+0x3af/0x5d0 drivers/net/tun.c:2048\n call_write_iter include/linux/fs.h:2020 [inline]\n new_sync_write fs/read_write.c:491 [inline]\n vfs_write+0x8ef/0x1490 fs/read_write.c:584\n ksys_write+0x20f/0x4c0 fs/read_write.c:637\n __do_sys_write fs/read_write.c:649 [inline]\n __se_sys_write fs/read_write.c:646 [inline]\n __x64_sys_write+0x93/0xd0 fs/read_write.c:646\n do_syscall_x64 arch/x86/entry/common.c:51 [inline]\n do_syscall_64+0x44/0x110 arch/x86/entry/common.c:82\n entry_SYSCALL_64_after_hwframe+0x63/0x6b\n\nLocal variable daddr created at:\n llc_conn_handler+0x53/0x1360 net/llc/llc_conn.c:783\n llc_rcv+0xfbb/0x14a0 net/llc/llc_input.c:206\n\nCPU: 1 PID: 5004 Comm: syz-executor994 Not tainted 6.6.0-syzkaller-14500-g1c41041124bd #0\nHardware name: Google Google Compute Engine/Google Compute Engine, BIOS Google 10/09/2023\n    ",
@@ -71,14 +83,16 @@
 				"date": "2024-08-08"
 			},
 			"updated": {
-				"date": "2024-08-08"
+				"date": "2024-08-14"
 			},
 			"affected_cpe_list": {
 				"cpe": [
 					"cpe:/o:suse:sle-module-basesystem:15:sp6",
 					"cpe:/o:suse:sle-module-development-tools:15:sp6",
 					"cpe:/o:suse:sle-module-legacy:15:sp6",
+					"cpe:/o:suse:sle-module-live-patching:15:sp5",
 					"cpe:/o:suse:sle-module-live-patching:15:sp6",
+					"cpe:/o:suse:sle-module-public-cloud:15:sp6",
 					"cpe:/o:suse:sle-we:15:sp6"
 				]
 			}
@@ -148,6 +162,19 @@
 					{
 						"test_ref": "oval:org.opensuse.security:tst:2009878419",
 						"comment": "kernel-default-extra-6.4.0-150600.23.17.1 is installed"
+					}
+				]
+			},
+			{
+				"operator": "AND",
+				"criterions": [
+					{
+						"test_ref": "oval:org.opensuse.security:tst:2009764853",
+						"comment": "SUSE Linux Enterprise Live Patching 15 SP5 is installed"
+					},
+					{
+						"test_ref": "oval:org.opensuse.security:tst:2009879344",
+						"comment": "kernel-livepatch-5_14_21-150500_13_64-rt-1-150500.11.3.1 is installed"
 					}
 				]
 			},
@@ -294,6 +321,57 @@
 					{
 						"test_ref": "oval:org.opensuse.security:tst:2009857543",
 						"comment": "SUSE Linux Enterprise Live Patching 15 SP6 is installed"
+					}
+				]
+			},
+			{
+				"operator": "AND",
+				"criterias": [
+					{
+						"operator": "OR",
+						"criterions": [
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009856172",
+								"comment": "SUSE Linux Enterprise High Performance Computing 15 SP6 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009856320",
+								"comment": "SUSE Linux Enterprise Module for Public Cloud 15 SP6 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009856174",
+								"comment": "SUSE Linux Enterprise Server 15 SP6 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009856175",
+								"comment": "SUSE Linux Enterprise Server for SAP Applications 15 SP6 is installed"
+							}
+						]
+					},
+					{
+						"operator": "OR",
+						"criterions": [
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009879345",
+								"comment": "kernel-azure-6.4.0-150600.8.8.2 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009879346",
+								"comment": "kernel-azure-devel-6.4.0-150600.8.8.2 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009879347",
+								"comment": "kernel-devel-azure-6.4.0-150600.8.8.2 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009879348",
+								"comment": "kernel-source-azure-6.4.0-150600.8.8.2 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009879349",
+								"comment": "kernel-syms-azure-6.4.0-150600.8.8.1 is installed"
+							}
+						]
 					}
 				]
 			}

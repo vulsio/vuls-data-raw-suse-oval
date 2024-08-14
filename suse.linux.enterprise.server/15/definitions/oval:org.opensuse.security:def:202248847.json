@@ -7,6 +7,7 @@
 		"affected": {
 			"family": "unix",
 			"platform": [
+				"SUSE Linux Enterprise Live Patching 15 SP5",
 				"SUSE Linux Enterprise Server 15 SP1-LTSS",
 				"SUSE Linux Enterprise Server 15 SP2-LTSS",
 				"SUSE Linux Enterprise Server 15 SP3-LTSS",
@@ -25,6 +26,11 @@
 				"ref_id": "SUSE CVE-2022-48847",
 				"ref_url": "https://www.suse.com/security/cve/CVE-2022-48847",
 				"source": "SUSE CVE"
+			},
+			{
+				"ref_id": "SUSE-SU-2024:2894-1",
+				"ref_url": "https://lists.suse.com/pipermail/sle-updates/2024-August/036430.html",
+				"source": "SUSE-SU"
 			}
 		],
 		"description": "\n    In the Linux kernel, the following vulnerability has been resolved:\n\nwatch_queue: Fix filter limit check\n\nIn watch_queue_set_filter(), there are a couple of places where we check\nthat the filter type value does not exceed what the type_filter bitmap\ncan hold.  One place calculates the number of bits by:\n\n   if (tf[i].type >= sizeof(wfilter->type_filter) * 8)\n\nwhich is fine, but the second does:\n\n   if (tf[i].type >= sizeof(wfilter->type_filter) * BITS_PER_LONG)\n\nwhich is not.  This can lead to a couple of out-of-bounds writes due to\na too-large type:\n\n (1) __set_bit() on wfilter->type_filter\n (2) Writing more elements in wfilter->filters[] than we allocated.\n\nFix this by just using the proper WATCH_TYPE__NR instead, which is the\nnumber of types we actually know about.\n\nThe bug may cause an oops looking something like:\n\n  BUG: KASAN: slab-out-of-bounds in watch_queue_set_filter+0x659/0x740\n  Write of size 4 at addr ffff88800d2c66bc by task watch_queue_oob/611\n  ...\n  Call Trace:\n   <TASK>\n   dump_stack_lvl+0x45/0x59\n   print_address_description.constprop.0+0x1f/0x150\n   ...\n   kasan_report.cold+0x7f/0x11b\n   ...\n   watch_queue_set_filter+0x659/0x740\n   ...\n   __x64_sys_ioctl+0x127/0x190\n   do_syscall_64+0x43/0x90\n   entry_SYSCALL_64_after_hwframe+0x44/0xae\n\n  Allocated by task 611:\n   kasan_save_stack+0x1e/0x40\n   __kasan_kmalloc+0x81/0xa0\n   watch_queue_set_filter+0x23a/0x740\n   __x64_sys_ioctl+0x127/0x190\n   do_syscall_64+0x43/0x90\n   entry_SYSCALL_64_after_hwframe+0x44/0xae\n\n  The buggy address belongs to the object at ffff88800d2c66a0\n   which belongs to the cache kmalloc-32 of size 32\n  The buggy address is located 28 bytes inside of\n   32-byte region [ffff88800d2c66a0, ffff88800d2c66c0)\n    ",
@@ -55,10 +61,11 @@
 				"date": "2024-07-22"
 			},
 			"updated": {
-				"date": "2024-07-26"
+				"date": "2024-08-14"
 			},
 			"affected_cpe_list": {
 				"cpe": [
+					"cpe:/o:suse:sle-module-live-patching:15:sp5",
 					"cpe:/o:suse:sles-ltss:15",
 					"cpe:/o:suse:sles-ltss:15:sp1",
 					"cpe:/o:suse:sles-ltss:15:sp2",
@@ -72,6 +79,19 @@
 	"criteria": {
 		"operator": "OR",
 		"criterias": [
+			{
+				"operator": "AND",
+				"criterions": [
+					{
+						"test_ref": "oval:org.opensuse.security:tst:2009764853",
+						"comment": "SUSE Linux Enterprise Live Patching 15 SP5 is installed"
+					},
+					{
+						"test_ref": "oval:org.opensuse.security:tst:2009879344",
+						"comment": "kernel-livepatch-5_14_21-150500_13_64-rt-1-150500.11.3.1 is installed"
+					}
+				]
+			},
 			{
 				"operator": "AND",
 				"criterias": [

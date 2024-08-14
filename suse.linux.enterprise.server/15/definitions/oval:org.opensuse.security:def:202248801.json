@@ -7,6 +7,7 @@
 		"affected": {
 			"family": "unix",
 			"platform": [
+				"SUSE Linux Enterprise Live Patching 15 SP5",
 				"SUSE Linux Enterprise Server 15 SP1-LTSS",
 				"SUSE Linux Enterprise Server 15 SP2-LTSS",
 				"SUSE Linux Enterprise Server 15 SP3-LTSS",
@@ -25,6 +26,11 @@
 				"ref_id": "SUSE CVE-2022-48801",
 				"ref_url": "https://www.suse.com/security/cve/CVE-2022-48801",
 				"source": "SUSE CVE"
+			},
+			{
+				"ref_id": "SUSE-SU-2024:2894-1",
+				"ref_url": "https://lists.suse.com/pipermail/sle-updates/2024-August/036430.html",
+				"source": "SUSE-SU"
 			}
 		],
 		"description": "\n    In the Linux kernel, the following vulnerability has been resolved:\n\niio: buffer: Fix file related error handling in IIO_BUFFER_GET_FD_IOCTL\n\nIf we fail to copy the just created file descriptor to userland, we\ntry to clean up by putting back 'fd' and freeing 'ib'. The code uses\nput_unused_fd() for the former which is wrong, as the file descriptor\nwas already published by fd_install() which gets called internally by\nanon_inode_getfd().\n\nThis makes the error handling code leaving a half cleaned up file\ndescriptor table around and a partially destructed 'file' object,\nallowing userland to play use-after-free tricks on us, by abusing\nthe still usable fd and making the code operate on a dangling\n'file->private_data' pointer.\n\nInstead of leaving the kernel in a partially corrupted state, don't\nattempt to explicitly clean up and leave this to the process exit\npath that'll release any still valid fds, including the one created\nby the previous call to anon_inode_getfd(). Simply return -EFAULT to\nindicate the error.\n    ",
@@ -57,10 +63,11 @@
 				"date": "2024-07-17"
 			},
 			"updated": {
-				"date": "2024-07-22"
+				"date": "2024-08-14"
 			},
 			"affected_cpe_list": {
 				"cpe": [
+					"cpe:/o:suse:sle-module-live-patching:15:sp5",
 					"cpe:/o:suse:sles-ltss:15",
 					"cpe:/o:suse:sles-ltss:15:sp1",
 					"cpe:/o:suse:sles-ltss:15:sp2",
@@ -74,6 +81,19 @@
 	"criteria": {
 		"operator": "OR",
 		"criterias": [
+			{
+				"operator": "AND",
+				"criterions": [
+					{
+						"test_ref": "oval:org.opensuse.security:tst:2009764853",
+						"comment": "SUSE Linux Enterprise Live Patching 15 SP5 is installed"
+					},
+					{
+						"test_ref": "oval:org.opensuse.security:tst:2009879344",
+						"comment": "kernel-livepatch-5_14_21-150500_13_64-rt-1-150500.11.3.1 is installed"
+					}
+				]
+			},
 			{
 				"operator": "AND",
 				"criterias": [

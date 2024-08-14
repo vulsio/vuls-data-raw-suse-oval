@@ -21,6 +21,7 @@
 				"SUSE Linux Enterprise Module for Legacy 15 SP5",
 				"SUSE Linux Enterprise Module for Legacy 15 SP6",
 				"SUSE Linux Enterprise Module for Public Cloud 15 SP5",
+				"SUSE Linux Enterprise Module for Public Cloud 15 SP6",
 				"SUSE Linux Enterprise Server 15 SP4-LTSS",
 				"SUSE Linux Enterprise Server 15 SP4-TERADATA",
 				"SUSE Linux Enterprise Server 15 SP5",
@@ -87,6 +88,11 @@
 				"ref_id": "SUSE-SU-2024:2571-1",
 				"ref_url": "https://lists.suse.com/pipermail/sle-updates/2024-July/036103.html",
 				"source": "SUSE-SU"
+			},
+			{
+				"ref_id": "SUSE-SU-2024:2896-1",
+				"ref_url": "https://lists.suse.com/pipermail/sle-security-updates/2024-August/019185.html",
+				"source": "SUSE-SU"
 			}
 		],
 		"description": "\n    In the Linux kernel, the following vulnerability has been resolved:\n\ngfs2: ignore negated quota changes\n\nWhen lots of quota changes are made, there may be cases in which an\ninode's quota information is increased and then decreased, such as when\nblocks are added to a file, then deleted from it. If the timing is\nright, function do_qc can add pending quota changes to a transaction,\nthen later, another call to do_qc can negate those changes, resulting\nin a net gain of 0. The quota_change information is recorded in the qc\nbuffer (and qd element of the inode as well). The buffer is added to the\ntransaction by the first call to do_qc, but a subsequent call changes\nthe value from non-zero back to zero. At that point it's too late to\nremove the buffer_head from the transaction. Later, when the quota sync\ncode is called, the zero-change qd element is discovered and flagged as\nan assert warning. If the fs is mounted with errors=panic, the kernel\nwill panic.\n\nThis is usually seen when files are truncated and the quota changes are\nnegated by punch_hole/truncate which uses gfs2_quota_hold and\ngfs2_quota_unhold rather than block allocations that use gfs2_quota_lock\nand gfs2_quota_unlock which automatically do quota sync.\n\nThis patch solves the problem by adding a check to qd_check_sync such\nthat net-zero quota changes already added to the transaction are no\nlonger deemed necessary to be synced, and skipped.\n\nIn this case references are taken for the qd and the slot from do_qc\nso those need to be put. The normal sequence of events for a normal\nnon-zero quota change is as follows:\n\ngfs2_quota_change\n   do_qc\n      qd_hold\n      slot_hold\n\nLater, when the changes are to be synced:\n\ngfs2_quota_sync\n   qd_fish\n      qd_check_sync\n         gets qd ref via lockref_get_not_dead\n   do_sync\n      do_qc(QC_SYNC)\n         qd_put\n\t    lockref_put_or_lock\n   qd_unlock\n      qd_put\n         lockref_put_or_lock\n\nIn the net-zero change case, we add a check to qd_check_sync so it puts\nthe qd and slot references acquired in gfs2_quota_change and skip the\nunneeded sync.\n    ",
@@ -115,7 +121,7 @@
 				"date": "2024-06-13"
 			},
 			"updated": {
-				"date": "2024-07-29"
+				"date": "2024-08-14"
 			},
 			"affected_cpe_list": {
 				"cpe": [
@@ -129,6 +135,7 @@
 					"cpe:/o:suse:sle-module-live-patching:15:sp5",
 					"cpe:/o:suse:sle-module-live-patching:15:sp6",
 					"cpe:/o:suse:sle-module-public-cloud:15:sp5",
+					"cpe:/o:suse:sle-module-public-cloud:15:sp6",
 					"cpe:/o:suse:sle-we:15:sp5",
 					"cpe:/o:suse:sle-we:15:sp6",
 					"cpe:/o:suse:sle_hpc:15:sp5",
@@ -824,6 +831,57 @@
 					{
 						"test_ref": "oval:org.opensuse.security:tst:2009857543",
 						"comment": "SUSE Linux Enterprise Live Patching 15 SP6 is installed"
+					}
+				]
+			},
+			{
+				"operator": "AND",
+				"criterias": [
+					{
+						"operator": "OR",
+						"criterions": [
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009856172",
+								"comment": "SUSE Linux Enterprise High Performance Computing 15 SP6 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009856320",
+								"comment": "SUSE Linux Enterprise Module for Public Cloud 15 SP6 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009856174",
+								"comment": "SUSE Linux Enterprise Server 15 SP6 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009856175",
+								"comment": "SUSE Linux Enterprise Server for SAP Applications 15 SP6 is installed"
+							}
+						]
+					},
+					{
+						"operator": "OR",
+						"criterions": [
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009879345",
+								"comment": "kernel-azure-6.4.0-150600.8.8.2 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009879346",
+								"comment": "kernel-azure-devel-6.4.0-150600.8.8.2 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009879347",
+								"comment": "kernel-devel-azure-6.4.0-150600.8.8.2 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009879348",
+								"comment": "kernel-source-azure-6.4.0-150600.8.8.2 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009879349",
+								"comment": "kernel-syms-azure-6.4.0-150600.8.8.1 is installed"
+							}
+						]
 					}
 				]
 			}

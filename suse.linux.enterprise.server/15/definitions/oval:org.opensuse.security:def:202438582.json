@@ -16,6 +16,7 @@
 				"SUSE Linux Enterprise Module for Development Tools 15 SP6",
 				"SUSE Linux Enterprise Module for Legacy 15 SP6",
 				"SUSE Linux Enterprise Module for Public Cloud 15 SP5",
+				"SUSE Linux Enterprise Module for Public Cloud 15 SP6",
 				"SUSE Linux Enterprise Server 15 SP5",
 				"SUSE Linux Enterprise Server 15 SP6",
 				"SUSE Linux Enterprise Server for SAP Applications 15 SP5",
@@ -48,6 +49,11 @@
 				"ref_id": "SUSE-SU-2024:2571-1",
 				"ref_url": "https://lists.suse.com/pipermail/sle-updates/2024-July/036103.html",
 				"source": "SUSE-SU"
+			},
+			{
+				"ref_id": "SUSE-SU-2024:2896-1",
+				"ref_url": "https://lists.suse.com/pipermail/sle-security-updates/2024-August/019185.html",
+				"source": "SUSE-SU"
 			}
 		],
 		"description": "\n    In the Linux kernel, the following vulnerability has been resolved:\n\nnilfs2: fix potential hang in nilfs_detach_log_writer()\n\nSyzbot has reported a potential hang in nilfs_detach_log_writer() called\nduring nilfs2 unmount.\n\nAnalysis revealed that this is because nilfs_segctor_sync(), which\nsynchronizes with the log writer thread, can be called after\nnilfs_segctor_destroy() terminates that thread, as shown in the call trace\nbelow:\n\nnilfs_detach_log_writer\n  nilfs_segctor_destroy\n    nilfs_segctor_kill_thread  --> Shut down log writer thread\n    flush_work\n      nilfs_iput_work_func\n        nilfs_dispose_list\n          iput\n            nilfs_evict_inode\n              nilfs_transaction_commit\n                nilfs_construct_segment (if inode needs sync)\n                  nilfs_segctor_sync  --> Attempt to synchronize with\n                                          log writer thread\n                           *** DEADLOCK ***\n\nFix this issue by changing nilfs_segctor_sync() so that the log writer\nthread returns normally without synchronizing after it terminates, and by\nforcing tasks that are already waiting to complete once after the thread\nterminates.\n\nThe skipped inode metadata flushout will then be processed together in the\nsubsequent cleanup work in nilfs_segctor_destroy().\n    ",
@@ -76,7 +82,7 @@
 				"date": "2024-07-10"
 			},
 			"updated": {
-				"date": "2024-07-23"
+				"date": "2024-08-14"
 			},
 			"affected_cpe_list": {
 				"cpe": [
@@ -86,6 +92,7 @@
 					"cpe:/o:suse:sle-module-live-patching:15:sp5",
 					"cpe:/o:suse:sle-module-live-patching:15:sp6",
 					"cpe:/o:suse:sle-module-public-cloud:15:sp5",
+					"cpe:/o:suse:sle-module-public-cloud:15:sp6",
 					"cpe:/o:suse:sle-we:15:sp6",
 					"cpe:/o:suse:sle_hpc:15:sp5",
 					"cpe:/o:suse:sles:15:sp5",
@@ -368,6 +375,57 @@
 					{
 						"test_ref": "oval:org.opensuse.security:tst:2009857543",
 						"comment": "SUSE Linux Enterprise Live Patching 15 SP6 is installed"
+					}
+				]
+			},
+			{
+				"operator": "AND",
+				"criterias": [
+					{
+						"operator": "OR",
+						"criterions": [
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009856172",
+								"comment": "SUSE Linux Enterprise High Performance Computing 15 SP6 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009856320",
+								"comment": "SUSE Linux Enterprise Module for Public Cloud 15 SP6 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009856174",
+								"comment": "SUSE Linux Enterprise Server 15 SP6 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009856175",
+								"comment": "SUSE Linux Enterprise Server for SAP Applications 15 SP6 is installed"
+							}
+						]
+					},
+					{
+						"operator": "OR",
+						"criterions": [
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009879345",
+								"comment": "kernel-azure-6.4.0-150600.8.8.2 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009879346",
+								"comment": "kernel-azure-devel-6.4.0-150600.8.8.2 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009879347",
+								"comment": "kernel-devel-azure-6.4.0-150600.8.8.2 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009879348",
+								"comment": "kernel-source-azure-6.4.0-150600.8.8.2 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009879349",
+								"comment": "kernel-syms-azure-6.4.0-150600.8.8.1 is installed"
+							}
+						]
 					}
 				]
 			}

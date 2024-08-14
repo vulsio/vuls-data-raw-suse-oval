@@ -1,0 +1,343 @@
+{
+	"id": "oval:org.opensuse.security:def:202248842",
+	"version": "1",
+	"class": "vulnerability",
+	"metadata": {
+		"title": "CVE-2022-48842",
+		"affected": {
+			"family": "unix",
+			"platform": [
+				"openSUSE Leap 15.5"
+			]
+		},
+		"reference": [
+			{
+				"ref_id": "Mitre CVE-2022-48842",
+				"ref_url": "https://cve.mitre.org/cgi-bin/cvename.cgi?name=CVE-2022-48842",
+				"source": "CVE"
+			},
+			{
+				"ref_id": "SUSE CVE-2022-48842",
+				"ref_url": "https://www.suse.com/security/cve/CVE-2022-48842",
+				"source": "SUSE CVE"
+			},
+			{
+				"ref_id": "SUSE-SU-2024:2894-1",
+				"ref_url": "https://lists.suse.com/pipermail/sle-updates/2024-August/036430.html",
+				"source": "SUSE-SU"
+			}
+		],
+		"description": "\n    In the Linux kernel, the following vulnerability has been resolved:\n\nice: Fix race condition during interface enslave\n\nCommit 5dbbbd01cbba83 (\"ice: Avoid RTNL lock when re-creating\nauxiliary device\") changes a process of re-creation of aux device\nso ice_plug_aux_dev() is called from ice_service_task() context.\nThis unfortunately opens a race window that can result in dead-lock\nwhen interface has left LAG and immediately enters LAG again.\n\nReproducer:\n```\n#!/bin/sh\n\nip link add lag0 type bond mode 1 miimon 100\nip link set lag0\n\nfor n in {1..10}; do\n        echo Cycle: $n\n        ip link set ens7f0 master lag0\n        sleep 1\n        ip link set ens7f0 nomaster\ndone\n```\n\nThis results in:\n[20976.208697] Workqueue: ice ice_service_task [ice]\n[20976.213422] Call Trace:\n[20976.215871]  __schedule+0x2d1/0x830\n[20976.219364]  schedule+0x35/0xa0\n[20976.222510]  schedule_preempt_disabled+0xa/0x10\n[20976.227043]  __mutex_lock.isra.7+0x310/0x420\n[20976.235071]  enum_all_gids_of_dev_cb+0x1c/0x100 [ib_core]\n[20976.251215]  ib_enum_roce_netdev+0xa4/0xe0 [ib_core]\n[20976.256192]  ib_cache_setup_one+0x33/0xa0 [ib_core]\n[20976.261079]  ib_register_device+0x40d/0x580 [ib_core]\n[20976.266139]  irdma_ib_register_device+0x129/0x250 [irdma]\n[20976.281409]  irdma_probe+0x2c1/0x360 [irdma]\n[20976.285691]  auxiliary_bus_probe+0x45/0x70\n[20976.289790]  really_probe+0x1f2/0x480\n[20976.298509]  driver_probe_device+0x49/0xc0\n[20976.302609]  bus_for_each_drv+0x79/0xc0\n[20976.306448]  __device_attach+0xdc/0x160\n[20976.310286]  bus_probe_device+0x9d/0xb0\n[20976.314128]  device_add+0x43c/0x890\n[20976.321287]  __auxiliary_device_add+0x43/0x60\n[20976.325644]  ice_plug_aux_dev+0xb2/0x100 [ice]\n[20976.330109]  ice_service_task+0xd0c/0xed0 [ice]\n[20976.342591]  process_one_work+0x1a7/0x360\n[20976.350536]  worker_thread+0x30/0x390\n[20976.358128]  kthread+0x10a/0x120\n[20976.365547]  ret_from_fork+0x1f/0x40\n...\n[20976.438030] task:ip              state:D stack:    0 pid:213658 ppid:213627 flags:0x00004084\n[20976.446469] Call Trace:\n[20976.448921]  __schedule+0x2d1/0x830\n[20976.452414]  schedule+0x35/0xa0\n[20976.455559]  schedule_preempt_disabled+0xa/0x10\n[20976.460090]  __mutex_lock.isra.7+0x310/0x420\n[20976.464364]  device_del+0x36/0x3c0\n[20976.467772]  ice_unplug_aux_dev+0x1a/0x40 [ice]\n[20976.472313]  ice_lag_event_handler+0x2a2/0x520 [ice]\n[20976.477288]  notifier_call_chain+0x47/0x70\n[20976.481386]  __netdev_upper_dev_link+0x18b/0x280\n[20976.489845]  bond_enslave+0xe05/0x1790 [bonding]\n[20976.494475]  do_setlink+0x336/0xf50\n[20976.502517]  __rtnl_newlink+0x529/0x8b0\n[20976.543441]  rtnl_newlink+0x43/0x60\n[20976.546934]  rtnetlink_rcv_msg+0x2b1/0x360\n[20976.559238]  netlink_rcv_skb+0x4c/0x120\n[20976.563079]  netlink_unicast+0x196/0x230\n[20976.567005]  netlink_sendmsg+0x204/0x3d0\n[20976.570930]  sock_sendmsg+0x4c/0x50\n[20976.574423]  ____sys_sendmsg+0x1eb/0x250\n[20976.586807]  ___sys_sendmsg+0x7c/0xc0\n[20976.606353]  __sys_sendmsg+0x57/0xa0\n[20976.609930]  do_syscall_64+0x5b/0x1a0\n[20976.613598]  entry_SYSCALL_64_after_hwframe+0x65/0xca\n\n1. Command 'ip link ... set nomaster' causes that ice_plug_aux_dev()\n   is called from ice_service_task() context, aux device is created\n   and associated device->lock is taken.\n2. Command 'ip link ... set master...' calls ice's notifier under\n   RTNL lock and that notifier calls ice_unplug_aux_dev(). That\n   function tries to take aux device->lock but this is already taken\n   by ice_plug_aux_dev() in step 1\n3. Later ice_plug_aux_dev() tries to take RTNL lock but this is already\n   taken in step 2\n4. Dead-lock\n\nThe patch fixes this issue by following changes:\n- Bit ICE_FLAG_PLUG_AUX_DEV is kept to be set during ice_plug_aux_dev()\n  call in ice_service_task()\n- The bit is checked in ice_clear_rdma_cap() and only if it is not set\n  then ice_unplug_aux_dev() is called. If it is set (in other words\n  plugging of aux device was requested and ice_plug_aux_dev() is\n  potentially running) then the function only clears the\n---truncated---\n    ",
+		"advisory": {
+			"from": "security@suse.de",
+			"severity": "Moderate",
+			"cve": [
+				{
+					"text": "CVE-2022-48842 at SUSE",
+					"href": "https://www.suse.com/security/cve/CVE-2022-48842/",
+					"impact": "medium",
+					"cvss3": "4.1/CVSS:3.1/AV:L/AC:H/PR:H/UI:N/S:U/C:N/I:N/A:H"
+				},
+				{
+					"text": "CVE-2022-48842 at NVD",
+					"href": "https://nvd.nist.gov/vuln/detail/CVE-2022-48842",
+					"impact": "medium",
+					"cvss3": "4.7/CVSS:3.1/AV:L/AC:H/PR:L/UI:N/S:U/C:N/I:N/A:H"
+				}
+			],
+			"bugzilla": [
+				{
+					"text": "SUSE bug 1228064",
+					"href": "https://bugzilla.suse.com/1228064"
+				}
+			],
+			"issued": {
+				"date": "2024-08-14"
+			},
+			"updated": {
+				"date": "2024-08-14"
+			},
+			"affected_cpe_list": {
+				"cpe": [
+					"cpe:/o:opensuse:leap:15.5"
+				]
+			}
+		}
+	},
+	"criteria": {
+		"operator": "AND",
+		"criterias": [
+			{
+				"operator": "OR",
+				"criterias": [
+					{
+						"operator": "AND",
+						"criterions": [
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009879140",
+								"comment": "cluster-md-kmp-rt-5.14.21-150500.13.64.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009342853",
+								"comment": "cluster-md-kmp-rt is signed with openSUSE key"
+							}
+						]
+					},
+					{
+						"operator": "AND",
+						"criterions": [
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009879141",
+								"comment": "dlm-kmp-rt-5.14.21-150500.13.64.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009342855",
+								"comment": "dlm-kmp-rt is signed with openSUSE key"
+							}
+						]
+					},
+					{
+						"operator": "AND",
+						"criterions": [
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009879142",
+								"comment": "gfs2-kmp-rt-5.14.21-150500.13.64.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009342857",
+								"comment": "gfs2-kmp-rt is signed with openSUSE key"
+							}
+						]
+					},
+					{
+						"operator": "AND",
+						"criterions": [
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009879143",
+								"comment": "kernel-devel-rt-5.14.21-150500.13.64.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009342859",
+								"comment": "kernel-devel-rt is signed with openSUSE key"
+							}
+						]
+					},
+					{
+						"operator": "AND",
+						"criterions": [
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009879144",
+								"comment": "kernel-rt-5.14.21-150500.13.64.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009342860",
+								"comment": "kernel-rt is signed with openSUSE key"
+							}
+						]
+					},
+					{
+						"operator": "AND",
+						"criterions": [
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009879145",
+								"comment": "kernel-rt-devel-5.14.21-150500.13.64.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009342861",
+								"comment": "kernel-rt-devel is signed with openSUSE key"
+							}
+						]
+					},
+					{
+						"operator": "AND",
+						"criterions": [
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009879146",
+								"comment": "kernel-rt-extra-5.14.21-150500.13.64.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009342862",
+								"comment": "kernel-rt-extra is signed with openSUSE key"
+							}
+						]
+					},
+					{
+						"operator": "AND",
+						"criterions": [
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009879147",
+								"comment": "kernel-rt-livepatch-5.14.21-150500.13.64.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009771783",
+								"comment": "kernel-rt-livepatch is signed with openSUSE key"
+							}
+						]
+					},
+					{
+						"operator": "AND",
+						"criterions": [
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009879148",
+								"comment": "kernel-rt-livepatch-devel-5.14.21-150500.13.64.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009623297",
+								"comment": "kernel-rt-livepatch-devel is signed with openSUSE key"
+							}
+						]
+					},
+					{
+						"operator": "AND",
+						"criterions": [
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009879149",
+								"comment": "kernel-rt-optional-5.14.21-150500.13.64.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009771784",
+								"comment": "kernel-rt-optional is signed with openSUSE key"
+							}
+						]
+					},
+					{
+						"operator": "AND",
+						"criterions": [
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009879150",
+								"comment": "kernel-rt-vdso-5.14.21-150500.13.64.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009771785",
+								"comment": "kernel-rt-vdso is signed with openSUSE key"
+							}
+						]
+					},
+					{
+						"operator": "AND",
+						"criterions": [
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009879151",
+								"comment": "kernel-rt_debug-5.14.21-150500.13.64.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009342863",
+								"comment": "kernel-rt_debug is signed with openSUSE key"
+							}
+						]
+					},
+					{
+						"operator": "AND",
+						"criterions": [
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009879152",
+								"comment": "kernel-rt_debug-devel-5.14.21-150500.13.64.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009342864",
+								"comment": "kernel-rt_debug-devel is signed with openSUSE key"
+							}
+						]
+					},
+					{
+						"operator": "AND",
+						"criterions": [
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009879153",
+								"comment": "kernel-rt_debug-livepatch-devel-5.14.21-150500.13.64.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009623299",
+								"comment": "kernel-rt_debug-livepatch-devel is signed with openSUSE key"
+							}
+						]
+					},
+					{
+						"operator": "AND",
+						"criterions": [
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009879154",
+								"comment": "kernel-rt_debug-vdso-5.14.21-150500.13.64.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009771786",
+								"comment": "kernel-rt_debug-vdso is signed with openSUSE key"
+							}
+						]
+					},
+					{
+						"operator": "AND",
+						"criterions": [
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009879155",
+								"comment": "kernel-source-rt-5.14.21-150500.13.64.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009342866",
+								"comment": "kernel-source-rt is signed with openSUSE key"
+							}
+						]
+					},
+					{
+						"operator": "AND",
+						"criterions": [
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009879156",
+								"comment": "kernel-syms-rt-5.14.21-150500.13.64.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009342867",
+								"comment": "kernel-syms-rt is signed with openSUSE key"
+							}
+						]
+					},
+					{
+						"operator": "AND",
+						"criterions": [
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009879157",
+								"comment": "kselftests-kmp-rt-5.14.21-150500.13.64.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009342868",
+								"comment": "kselftests-kmp-rt is signed with openSUSE key"
+							}
+						]
+					},
+					{
+						"operator": "AND",
+						"criterions": [
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009879158",
+								"comment": "ocfs2-kmp-rt-5.14.21-150500.13.64.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009342870",
+								"comment": "ocfs2-kmp-rt is signed with openSUSE key"
+							}
+						]
+					},
+					{
+						"operator": "AND",
+						"criterions": [
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009879159",
+								"comment": "reiserfs-kmp-rt-5.14.21-150500.13.64.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009342872",
+								"comment": "reiserfs-kmp-rt is signed with openSUSE key"
+							}
+						]
+					}
+				]
+			}
+		],
+		"criterions": [
+			{
+				"test_ref": "oval:org.opensuse.security:tst:2009752682",
+				"comment": "openSUSE Leap 15.5 is installed"
+			}
+		]
+	}
+}

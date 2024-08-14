@@ -9,10 +9,12 @@
 			"platform": [
 				"SUSE Linux Enterprise Desktop 15 SP6",
 				"SUSE Linux Enterprise High Performance Computing 15 SP6",
+				"SUSE Linux Enterprise Live Patching 15 SP5",
 				"SUSE Linux Enterprise Live Patching 15 SP6",
 				"SUSE Linux Enterprise Module for Basesystem 15 SP6",
 				"SUSE Linux Enterprise Module for Development Tools 15 SP6",
 				"SUSE Linux Enterprise Module for Legacy 15 SP6",
+				"SUSE Linux Enterprise Module for Public Cloud 15 SP6",
 				"SUSE Linux Enterprise Server 15 SP6",
 				"SUSE Linux Enterprise Server for SAP Applications 15 SP6",
 				"SUSE Linux Enterprise Workstation Extension 15 SP6"
@@ -48,6 +50,16 @@
 				"ref_id": "SUSE-SU-2024:2571-1",
 				"ref_url": "https://lists.suse.com/pipermail/sle-updates/2024-July/036103.html",
 				"source": "SUSE-SU"
+			},
+			{
+				"ref_id": "SUSE-SU-2024:2894-1",
+				"ref_url": "https://lists.suse.com/pipermail/sle-updates/2024-August/036430.html",
+				"source": "SUSE-SU"
+			},
+			{
+				"ref_id": "SUSE-SU-2024:2896-1",
+				"ref_url": "https://lists.suse.com/pipermail/sle-security-updates/2024-August/019185.html",
+				"source": "SUSE-SU"
 			}
 		],
 		"description": "\n    In the Linux kernel, the following vulnerability has been resolved:\n\nvfio/platform: Create persistent IRQ handlers\n\nThe vfio-platform SET_IRQS ioctl currently allows loopback triggering of\nan interrupt before a signaling eventfd has been configured by the user,\nwhich thereby allows a NULL pointer dereference.\n\nRather than register the IRQ relative to a valid trigger, register all\nIRQs in a disabled state in the device open path.  This allows mask\noperations on the IRQ to nest within the overall enable state governed\nby a valid eventfd signal.  This decouples @masked, protected by the\n@locked spinlock from @trigger, protected via the @igate mutex.\n\nIn doing so, it's guaranteed that changes to @trigger cannot race the\nIRQ handlers because the IRQ handler is synchronously disabled before\nmodifying the trigger, and loopback triggering of the IRQ via ioctl is\nsafe due to serialization with trigger changes via igate.\n\nFor compatibility, request_irq() failures are maintained to be local to\nthe SET_IRQS ioctl rather than a fatal error in the open device path.\nThis allows, for example, a userspace driver with polling mode support\nto continue to work regardless of moving the request_irq() call site.\nThis necessarily blocks all SET_IRQS access to the failed index.\n    ",
@@ -76,14 +88,16 @@
 				"date": "2024-07-23"
 			},
 			"updated": {
-				"date": "2024-07-23"
+				"date": "2024-08-14"
 			},
 			"affected_cpe_list": {
 				"cpe": [
 					"cpe:/o:suse:sle-module-basesystem:15:sp6",
 					"cpe:/o:suse:sle-module-development-tools:15:sp6",
 					"cpe:/o:suse:sle-module-legacy:15:sp6",
+					"cpe:/o:suse:sle-module-live-patching:15:sp5",
 					"cpe:/o:suse:sle-module-live-patching:15:sp6",
+					"cpe:/o:suse:sle-module-public-cloud:15:sp6",
 					"cpe:/o:suse:sle-we:15:sp6"
 				]
 			}
@@ -153,6 +167,19 @@
 					{
 						"test_ref": "oval:org.opensuse.security:tst:2009875321",
 						"comment": "kernel-default-extra-6.4.0-150600.23.14.2 is installed"
+					}
+				]
+			},
+			{
+				"operator": "AND",
+				"criterions": [
+					{
+						"test_ref": "oval:org.opensuse.security:tst:2009764853",
+						"comment": "SUSE Linux Enterprise Live Patching 15 SP5 is installed"
+					},
+					{
+						"test_ref": "oval:org.opensuse.security:tst:2009879344",
+						"comment": "kernel-livepatch-5_14_21-150500_13_64-rt-1-150500.11.3.1 is installed"
 					}
 				]
 			},
@@ -299,6 +326,57 @@
 					{
 						"test_ref": "oval:org.opensuse.security:tst:2009857543",
 						"comment": "SUSE Linux Enterprise Live Patching 15 SP6 is installed"
+					}
+				]
+			},
+			{
+				"operator": "AND",
+				"criterias": [
+					{
+						"operator": "OR",
+						"criterions": [
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009856172",
+								"comment": "SUSE Linux Enterprise High Performance Computing 15 SP6 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009856320",
+								"comment": "SUSE Linux Enterprise Module for Public Cloud 15 SP6 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009856174",
+								"comment": "SUSE Linux Enterprise Server 15 SP6 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009856175",
+								"comment": "SUSE Linux Enterprise Server for SAP Applications 15 SP6 is installed"
+							}
+						]
+					},
+					{
+						"operator": "OR",
+						"criterions": [
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009879345",
+								"comment": "kernel-azure-6.4.0-150600.8.8.2 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009879346",
+								"comment": "kernel-azure-devel-6.4.0-150600.8.8.2 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009879347",
+								"comment": "kernel-devel-azure-6.4.0-150600.8.8.2 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009879348",
+								"comment": "kernel-source-azure-6.4.0-150600.8.8.2 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009879349",
+								"comment": "kernel-syms-azure-6.4.0-150600.8.8.1 is installed"
+							}
+						]
 					}
 				]
 			}
