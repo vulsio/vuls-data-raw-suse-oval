@@ -7,7 +7,9 @@
 		"affected": {
 			"family": "unix",
 			"platform": [
-				"SUSE Linux Enterprise Real Time 12 SP5"
+				"SUSE Linux Enterprise Real Time 12 SP5",
+				"SUSE Linux Enterprise Server 12 SP5",
+				"SUSE Linux Enterprise Server for SAP Applications 12 SP5"
 			]
 		},
 		"reference": [
@@ -65,6 +67,11 @@
 				"ref_id": "SUSE-SU-2024:2892-1",
 				"ref_url": "https://lists.suse.com/pipermail/sle-security-updates/2024-August/019188.html",
 				"source": "SUSE-SU"
+			},
+			{
+				"ref_id": "SUSE-SU-2024:2901-1",
+				"ref_url": "https://lists.suse.com/pipermail/sle-updates/2024-August/036444.html",
+				"source": "SUSE-SU"
 			}
 		],
 		"description": "\n    In the Linux kernel, the following vulnerability has been resolved:\n\nnfp: Fix memory leak in nfp_cpp_area_cache_add()\n\nIn line 800 (#1), nfp_cpp_area_alloc() allocates and initializes a\nCPP area structure. But in line 807 (#2), when the cache is allocated\nfailed, this CPP area structure is not freed, which will result in\nmemory leak.\n\nWe can fix it by freeing the CPP area when the cache is allocated\nfailed (#2).\n\n792 int nfp_cpp_area_cache_add(struct nfp_cpp *cpp, size_t size)\n793 {\n794 \tstruct nfp_cpp_area_cache *cache;\n795 \tstruct nfp_cpp_area *area;\n\n800\tarea = nfp_cpp_area_alloc(cpp, NFP_CPP_ID(7, NFP_CPP_ACTION_RW, 0),\n801 \t\t\t\t  0, size);\n\t// #1: allocates and initializes\n\n802 \tif (!area)\n803 \t\treturn -ENOMEM;\n\n805 \tcache = kzalloc(sizeof(*cache), GFP_KERNEL);\n806 \tif (!cache)\n807 \t\treturn -ENOMEM; // #2: missing free\n\n817\treturn 0;\n818 }\n    ",
@@ -95,76 +102,130 @@
 				"date": "2024-08-14"
 			},
 			"updated": {
-				"date": "2024-08-14"
+				"date": "2024-08-15"
 			},
 			"affected_cpe_list": {
 				"cpe": [
+					"cpe:/o:suse:sles:12:sp5",
+					"cpe:/o:suse:sles_sap:12:sp5",
 					"cpe:/o:suse:suse-linux-enterprise-rt:12:sp5"
 				]
 			}
 		}
 	},
 	"criteria": {
-		"operator": "AND",
+		"operator": "OR",
 		"criterias": [
 			{
-				"operator": "OR",
+				"operator": "AND",
+				"criterias": [
+					{
+						"operator": "OR",
+						"criterions": [
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009879350",
+								"comment": "cluster-md-kmp-rt-4.12.14-10.197.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009879351",
+								"comment": "dlm-kmp-rt-4.12.14-10.197.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009879352",
+								"comment": "gfs2-kmp-rt-4.12.14-10.197.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009879353",
+								"comment": "kernel-devel-rt-4.12.14-10.197.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009879354",
+								"comment": "kernel-rt-4.12.14-10.197.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009879355",
+								"comment": "kernel-rt-base-4.12.14-10.197.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009879356",
+								"comment": "kernel-rt-devel-4.12.14-10.197.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009879357",
+								"comment": "kernel-rt_debug-4.12.14-10.197.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009879358",
+								"comment": "kernel-rt_debug-devel-4.12.14-10.197.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009879359",
+								"comment": "kernel-source-rt-4.12.14-10.197.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009879360",
+								"comment": "kernel-syms-rt-4.12.14-10.197.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009879361",
+								"comment": "ocfs2-kmp-rt-4.12.14-10.197.1 is installed"
+							}
+						]
+					}
+				],
 				"criterions": [
 					{
-						"test_ref": "oval:org.opensuse.security:tst:2009879350",
-						"comment": "cluster-md-kmp-rt-4.12.14-10.197.1 is installed"
-					},
-					{
-						"test_ref": "oval:org.opensuse.security:tst:2009879351",
-						"comment": "dlm-kmp-rt-4.12.14-10.197.1 is installed"
-					},
-					{
-						"test_ref": "oval:org.opensuse.security:tst:2009879352",
-						"comment": "gfs2-kmp-rt-4.12.14-10.197.1 is installed"
-					},
-					{
-						"test_ref": "oval:org.opensuse.security:tst:2009879353",
-						"comment": "kernel-devel-rt-4.12.14-10.197.1 is installed"
-					},
-					{
-						"test_ref": "oval:org.opensuse.security:tst:2009879354",
-						"comment": "kernel-rt-4.12.14-10.197.1 is installed"
-					},
-					{
-						"test_ref": "oval:org.opensuse.security:tst:2009879355",
-						"comment": "kernel-rt-base-4.12.14-10.197.1 is installed"
-					},
-					{
-						"test_ref": "oval:org.opensuse.security:tst:2009879356",
-						"comment": "kernel-rt-devel-4.12.14-10.197.1 is installed"
-					},
-					{
-						"test_ref": "oval:org.opensuse.security:tst:2009879357",
-						"comment": "kernel-rt_debug-4.12.14-10.197.1 is installed"
-					},
-					{
-						"test_ref": "oval:org.opensuse.security:tst:2009879358",
-						"comment": "kernel-rt_debug-devel-4.12.14-10.197.1 is installed"
-					},
-					{
-						"test_ref": "oval:org.opensuse.security:tst:2009879359",
-						"comment": "kernel-source-rt-4.12.14-10.197.1 is installed"
-					},
-					{
-						"test_ref": "oval:org.opensuse.security:tst:2009879360",
-						"comment": "kernel-syms-rt-4.12.14-10.197.1 is installed"
-					},
-					{
-						"test_ref": "oval:org.opensuse.security:tst:2009879361",
-						"comment": "ocfs2-kmp-rt-4.12.14-10.197.1 is installed"
+						"test_ref": "oval:org.opensuse.security:tst:2009279486",
+						"comment": "SUSE Linux Enterprise Real Time 12 SP5 is installed"
 					}
 				]
-			}
-		],
-		"criterions": [
+			},
 			{
-				"test_ref": "oval:org.opensuse.security:tst:2009279486",
-				"comment": "SUSE Linux Enterprise Real Time 12 SP5 is installed"
+				"operator": "AND",
+				"criterias": [
+					{
+						"operator": "OR",
+						"criterions": [
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009258033",
+								"comment": "SUSE Linux Enterprise Server 12 SP5 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009258806",
+								"comment": "SUSE Linux Enterprise Server for SAP Applications 12 SP5 is installed"
+							}
+						]
+					},
+					{
+						"operator": "OR",
+						"criterions": [
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009879532",
+								"comment": "kernel-azure-4.12.14-16.194.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009879533",
+								"comment": "kernel-azure-base-4.12.14-16.194.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009879534",
+								"comment": "kernel-azure-devel-4.12.14-16.194.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009879535",
+								"comment": "kernel-devel-azure-4.12.14-16.194.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009879536",
+								"comment": "kernel-source-azure-4.12.14-16.194.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009879537",
+								"comment": "kernel-syms-azure-4.12.14-16.194.1 is installed"
+							}
+						]
+					}
+				]
 			}
 		]
 	}

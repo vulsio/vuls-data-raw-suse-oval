@@ -60,6 +60,11 @@
 				"ref_id": "SUSE-SU-2024:2190-1",
 				"ref_url": "https://lists.suse.com/pipermail/sle-updates/2024-June/035732.html",
 				"source": "SUSE-SU"
+			},
+			{
+				"ref_id": "SUSE-SU-2024:2901-1",
+				"ref_url": "https://lists.suse.com/pipermail/sle-updates/2024-August/036444.html",
+				"source": "SUSE-SU"
 			}
 		],
 		"description": "\n    In the Linux kernel, the following vulnerability has been resolved:\n\nax25: fix use-after-free bugs caused by ax25_ds_del_timer\n\nWhen the ax25 device is detaching, the ax25_dev_device_down()\ncalls ax25_ds_del_timer() to cleanup the slave_timer. When\nthe timer handler is running, the ax25_ds_del_timer() that\ncalls del_timer() in it will return directly. As a result,\nthe use-after-free bugs could happen, one of the scenarios\nis shown below:\n\n      (Thread 1)          |      (Thread 2)\n                          | ax25_ds_timeout()\nax25_dev_device_down()    |\n  ax25_ds_del_timer()     |\n    del_timer()           |\n  ax25_dev_put() //FREE   |\n                          |  ax25_dev-> //USE\n\nIn order to mitigate bugs, when the device is detaching, use\ntimer_shutdown_sync() to stop the timer.\n    ",
@@ -88,7 +93,7 @@
 				"date": "2024-06-12"
 			},
 			"updated": {
-				"date": "2024-07-29"
+				"date": "2024-08-15"
 			},
 			"affected_cpe_list": {
 				"cpe": [
@@ -204,85 +209,6 @@
 						"operator": "OR",
 						"criterions": [
 							{
-								"test_ref": "oval:org.opensuse.security:tst:2009258033",
-								"comment": "SUSE Linux Enterprise Server 12 SP5 is installed"
-							},
-							{
-								"test_ref": "oval:org.opensuse.security:tst:2009258806",
-								"comment": "SUSE Linux Enterprise Server for SAP Applications 12 SP5 is installed"
-							}
-						]
-					},
-					{
-						"operator": "OR",
-						"criterions": [
-							{
-								"test_ref": "oval:org.opensuse.security:tst:2009865517",
-								"comment": "kernel-azure-4.12.14-16.188.1 is installed"
-							},
-							{
-								"test_ref": "oval:org.opensuse.security:tst:2009865518",
-								"comment": "kernel-azure-base-4.12.14-16.188.1 is installed"
-							},
-							{
-								"test_ref": "oval:org.opensuse.security:tst:2009865519",
-								"comment": "kernel-azure-devel-4.12.14-16.188.1 is installed"
-							},
-							{
-								"test_ref": "oval:org.opensuse.security:tst:2009868863",
-								"comment": "kernel-default-4.12.14-122.219.1 is installed"
-							},
-							{
-								"test_ref": "oval:org.opensuse.security:tst:2009868864",
-								"comment": "kernel-default-base-4.12.14-122.219.1 is installed"
-							},
-							{
-								"test_ref": "oval:org.opensuse.security:tst:2009868865",
-								"comment": "kernel-default-devel-4.12.14-122.219.1 is installed"
-							},
-							{
-								"test_ref": "oval:org.opensuse.security:tst:2009868866",
-								"comment": "kernel-default-man-4.12.14-122.219.1 is installed"
-							},
-							{
-								"test_ref": "oval:org.opensuse.security:tst:2009868867",
-								"comment": "kernel-devel-4.12.14-122.219.1 is installed"
-							},
-							{
-								"test_ref": "oval:org.opensuse.security:tst:2009865520",
-								"comment": "kernel-devel-azure-4.12.14-16.188.1 is installed"
-							},
-							{
-								"test_ref": "oval:org.opensuse.security:tst:2009868868",
-								"comment": "kernel-macros-4.12.14-122.219.1 is installed"
-							},
-							{
-								"test_ref": "oval:org.opensuse.security:tst:2009868869",
-								"comment": "kernel-source-4.12.14-122.219.1 is installed"
-							},
-							{
-								"test_ref": "oval:org.opensuse.security:tst:2009865521",
-								"comment": "kernel-source-azure-4.12.14-16.188.1 is installed"
-							},
-							{
-								"test_ref": "oval:org.opensuse.security:tst:2009868870",
-								"comment": "kernel-syms-4.12.14-122.219.1 is installed"
-							},
-							{
-								"test_ref": "oval:org.opensuse.security:tst:2009865522",
-								"comment": "kernel-syms-azure-4.12.14-16.188.1 is installed"
-							}
-						]
-					}
-				]
-			},
-			{
-				"operator": "AND",
-				"criterias": [
-					{
-						"operator": "OR",
-						"criterions": [
-							{
 								"test_ref": "oval:org.opensuse.security:tst:2009868858",
 								"comment": "kernel-default-kgraft-4.12.14-122.219.1 is installed"
 							},
@@ -345,6 +271,85 @@
 					{
 						"test_ref": "oval:org.opensuse.security:tst:2009876317",
 						"comment": "SUSE Linux Enterprise Server 12 SP3-TERADATA is installed"
+					}
+				]
+			},
+			{
+				"operator": "AND",
+				"criterias": [
+					{
+						"operator": "OR",
+						"criterions": [
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009258033",
+								"comment": "SUSE Linux Enterprise Server 12 SP5 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009258806",
+								"comment": "SUSE Linux Enterprise Server for SAP Applications 12 SP5 is installed"
+							}
+						]
+					},
+					{
+						"operator": "OR",
+						"criterions": [
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009879532",
+								"comment": "kernel-azure-4.12.14-16.194.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009879533",
+								"comment": "kernel-azure-base-4.12.14-16.194.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009879534",
+								"comment": "kernel-azure-devel-4.12.14-16.194.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009868863",
+								"comment": "kernel-default-4.12.14-122.219.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009868864",
+								"comment": "kernel-default-base-4.12.14-122.219.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009868865",
+								"comment": "kernel-default-devel-4.12.14-122.219.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009868866",
+								"comment": "kernel-default-man-4.12.14-122.219.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009868867",
+								"comment": "kernel-devel-4.12.14-122.219.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009879535",
+								"comment": "kernel-devel-azure-4.12.14-16.194.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009868868",
+								"comment": "kernel-macros-4.12.14-122.219.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009868869",
+								"comment": "kernel-source-4.12.14-122.219.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009879536",
+								"comment": "kernel-source-azure-4.12.14-16.194.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009868870",
+								"comment": "kernel-syms-4.12.14-122.219.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009879537",
+								"comment": "kernel-syms-azure-4.12.14-16.194.1 is installed"
+							}
+						]
 					}
 				]
 			}
