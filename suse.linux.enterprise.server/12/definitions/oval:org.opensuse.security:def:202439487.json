@@ -7,9 +7,11 @@
 		"affected": {
 			"family": "unix",
 			"platform": [
+				"SUSE Linux Enterprise Live Patching 12 SP5",
 				"SUSE Linux Enterprise Real Time 12 SP5",
 				"SUSE Linux Enterprise Server 12 SP5",
-				"SUSE Linux Enterprise Server for SAP Applications 12 SP5"
+				"SUSE Linux Enterprise Server for SAP Applications 12 SP5",
+				"SUSE Linux Enterprise Workstation Extension 12 SP5"
 			]
 		},
 		"reference": [
@@ -47,6 +49,21 @@
 				"ref_id": "SUSE-SU-2024:2901-1",
 				"ref_url": "https://lists.suse.com/pipermail/sle-updates/2024-August/036444.html",
 				"source": "SUSE-SU"
+			},
+			{
+				"ref_id": "SUSE-SU-2024:2939-1",
+				"ref_url": "https://lists.suse.com/pipermail/sle-security-updates/2024-August/019211.html",
+				"source": "SUSE-SU"
+			},
+			{
+				"ref_id": "SUSE-SU-2024:2940-1",
+				"ref_url": "https://lists.suse.com/pipermail/sle-updates/2024-August/036478.html",
+				"source": "SUSE-SU"
+			},
+			{
+				"ref_id": "SUSE-SU-2024:2947-1",
+				"ref_url": "https://lists.suse.com/pipermail/sle-updates/2024-August/036488.html",
+				"source": "SUSE-SU"
 			}
 		],
 		"description": "\n    In the Linux kernel, the following vulnerability has been resolved:\n\nbonding: Fix out-of-bounds read in bond_option_arp_ip_targets_set()\n\nIn function bond_option_arp_ip_targets_set(), if newval->string is an\nempty string, newval->string+1 will point to the byte after the\nstring, causing an out-of-bound read.\n\nBUG: KASAN: slab-out-of-bounds in strlen+0x7d/0xa0 lib/string.c:418\nRead of size 1 at addr ffff8881119c4781 by task syz-executor665/8107\nCPU: 1 PID: 8107 Comm: syz-executor665 Not tainted 6.7.0-rc7 #1\nHardware name: QEMU Standard PC (i440FX + PIIX, 1996), BIOS 1.15.0-1 04/01/2014\nCall Trace:\n <TASK>\n __dump_stack lib/dump_stack.c:88 [inline]\n dump_stack_lvl+0xd9/0x150 lib/dump_stack.c:106\n print_address_description mm/kasan/report.c:364 [inline]\n print_report+0xc1/0x5e0 mm/kasan/report.c:475\n kasan_report+0xbe/0xf0 mm/kasan/report.c:588\n strlen+0x7d/0xa0 lib/string.c:418\n __fortify_strlen include/linux/fortify-string.h:210 [inline]\n in4_pton+0xa3/0x3f0 net/core/utils.c:130\n bond_option_arp_ip_targets_set+0xc2/0x910\ndrivers/net/bonding/bond_options.c:1201\n __bond_opt_set+0x2a4/0x1030 drivers/net/bonding/bond_options.c:767\n __bond_opt_set_notify+0x48/0x150 drivers/net/bonding/bond_options.c:792\n bond_opt_tryset_rtnl+0xda/0x160 drivers/net/bonding/bond_options.c:817\n bonding_sysfs_store_option+0xa1/0x120 drivers/net/bonding/bond_sysfs.c:156\n dev_attr_store+0x54/0x80 drivers/base/core.c:2366\n sysfs_kf_write+0x114/0x170 fs/sysfs/file.c:136\n kernfs_fop_write_iter+0x337/0x500 fs/kernfs/file.c:334\n call_write_iter include/linux/fs.h:2020 [inline]\n new_sync_write fs/read_write.c:491 [inline]\n vfs_write+0x96a/0xd80 fs/read_write.c:584\n ksys_write+0x122/0x250 fs/read_write.c:637\n do_syscall_x64 arch/x86/entry/common.c:52 [inline]\n do_syscall_64+0x40/0x110 arch/x86/entry/common.c:83\n entry_SYSCALL_64_after_hwframe+0x63/0x6b\n---[ end trace ]---\n\nFix it by adding a check of string length before using it.\n    ",
@@ -75,10 +92,12 @@
 				"date": "2024-08-14"
 			},
 			"updated": {
-				"date": "2024-08-15"
+				"date": "2024-08-17"
 			},
 			"affected_cpe_list": {
 				"cpe": [
+					"cpe:/o:suse:sle-live-patching:12:sp5",
+					"cpe:/o:suse:sle-we:12:sp5",
 					"cpe:/o:suse:sles:12:sp5",
 					"cpe:/o:suse:sles_sap:12:sp5",
 					"cpe:/o:suse:suse-linux-enterprise-rt:12:sp5"
@@ -89,6 +108,34 @@
 	"criteria": {
 		"operator": "OR",
 		"criterias": [
+			{
+				"operator": "AND",
+				"criterias": [
+					{
+						"operator": "OR",
+						"criterions": [
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009258033",
+								"comment": "SUSE Linux Enterprise Server 12 SP5 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009258806",
+								"comment": "SUSE Linux Enterprise Server for SAP Applications 12 SP5 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009258650",
+								"comment": "SUSE Linux Enterprise Workstation Extension 12 SP5 is installed"
+							}
+						]
+					}
+				],
+				"criterions": [
+					{
+						"test_ref": "oval:org.opensuse.security:tst:2009880130",
+						"comment": "kernel-default-extra-4.12.14-122.225.1 is installed"
+					}
+				]
+			},
 			{
 				"operator": "AND",
 				"criterias": [
@@ -185,18 +232,78 @@
 								"comment": "kernel-azure-devel-4.12.14-16.194.1 is installed"
 							},
 							{
+								"test_ref": "oval:org.opensuse.security:tst:2009880120",
+								"comment": "kernel-default-4.12.14-122.225.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009880121",
+								"comment": "kernel-default-base-4.12.14-122.225.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009880122",
+								"comment": "kernel-default-devel-4.12.14-122.225.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009880123",
+								"comment": "kernel-default-man-4.12.14-122.225.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009880124",
+								"comment": "kernel-devel-4.12.14-122.225.1 is installed"
+							},
+							{
 								"test_ref": "oval:org.opensuse.security:tst:2009879535",
 								"comment": "kernel-devel-azure-4.12.14-16.194.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009880125",
+								"comment": "kernel-macros-4.12.14-122.225.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009880126",
+								"comment": "kernel-source-4.12.14-122.225.1 is installed"
 							},
 							{
 								"test_ref": "oval:org.opensuse.security:tst:2009879536",
 								"comment": "kernel-source-azure-4.12.14-16.194.1 is installed"
 							},
 							{
+								"test_ref": "oval:org.opensuse.security:tst:2009880127",
+								"comment": "kernel-syms-4.12.14-122.225.1 is installed"
+							},
+							{
 								"test_ref": "oval:org.opensuse.security:tst:2009879537",
 								"comment": "kernel-syms-azure-4.12.14-16.194.1 is installed"
 							}
 						]
+					}
+				]
+			},
+			{
+				"operator": "AND",
+				"criterias": [
+					{
+						"operator": "OR",
+						"criterions": [
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009880115",
+								"comment": "kernel-default-kgraft-4.12.14-122.225.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009880116",
+								"comment": "kernel-default-kgraft-devel-4.12.14-122.225.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009880117",
+								"comment": "kgraft-patch-4_12_14-122_225-default-1-8.3.1 is installed"
+							}
+						]
+					}
+				],
+				"criterions": [
+					{
+						"test_ref": "oval:org.opensuse.security:tst:2009273148",
+						"comment": "SUSE Linux Enterprise Live Patching 12 SP5 is installed"
 					}
 				]
 			}

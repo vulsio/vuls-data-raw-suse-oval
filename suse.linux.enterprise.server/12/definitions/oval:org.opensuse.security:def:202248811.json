@@ -7,9 +7,11 @@
 		"affected": {
 			"family": "unix",
 			"platform": [
+				"SUSE Linux Enterprise Live Patching 12 SP5",
 				"SUSE Linux Enterprise Real Time 12 SP5",
 				"SUSE Linux Enterprise Server 12 SP5",
-				"SUSE Linux Enterprise Server for SAP Applications 12 SP5"
+				"SUSE Linux Enterprise Server for SAP Applications 12 SP5",
+				"SUSE Linux Enterprise Workstation Extension 12 SP5"
 			]
 		},
 		"reference": [
@@ -47,6 +49,21 @@
 				"ref_id": "SUSE-SU-2024:2929-1",
 				"ref_url": "https://lists.suse.com/pipermail/sle-updates/2024-August/036473.html",
 				"source": "SUSE-SU"
+			},
+			{
+				"ref_id": "SUSE-SU-2024:2939-1",
+				"ref_url": "https://lists.suse.com/pipermail/sle-security-updates/2024-August/019211.html",
+				"source": "SUSE-SU"
+			},
+			{
+				"ref_id": "SUSE-SU-2024:2940-1",
+				"ref_url": "https://lists.suse.com/pipermail/sle-updates/2024-August/036478.html",
+				"source": "SUSE-SU"
+			},
+			{
+				"ref_id": "SUSE-SU-2024:2947-1",
+				"ref_url": "https://lists.suse.com/pipermail/sle-updates/2024-August/036488.html",
+				"source": "SUSE-SU"
 			}
 		],
 		"description": "\n    In the Linux kernel, the following vulnerability has been resolved:\n\nibmvnic: don't release napi in __ibmvnic_open()\n\nIf __ibmvnic_open() encounters an error such as when setting link state,\nit calls release_resources() which frees the napi structures needlessly.\nInstead, have __ibmvnic_open() only clean up the work it did so far (i.e.\ndisable napi and irqs) and leave the rest to the callers.\n\nIf caller of __ibmvnic_open() is ibmvnic_open(), it should release the\nresources immediately. If the caller is do_reset() or do_hard_reset(),\nthey will release the resources on the next reset.\n\nThis fixes following crash that occurred when running the drmgr command\nseveral times to add/remove a vnic interface:\n\n\t[102056] ibmvnic 30000003 env3: Disabling rx_scrq[6] irq\n\t[102056] ibmvnic 30000003 env3: Disabling rx_scrq[7] irq\n\t[102056] ibmvnic 30000003 env3: Replenished 8 pools\n\tKernel attempted to read user page (10) - exploit attempt? (uid: 0)\n\tBUG: Kernel NULL pointer dereference on read at 0x00000010\n\tFaulting instruction address: 0xc000000000a3c840\n\tOops: Kernel access of bad area, sig: 11 [#1]\n\tLE PAGE_SIZE=64K MMU=Radix SMP NR_CPUS=2048 NUMA pSeries\n\t...\n\tCPU: 9 PID: 102056 Comm: kworker/9:2 Kdump: loaded Not tainted 5.16.0-rc5-autotest-g6441998e2e37 #1\n\tWorkqueue: events_long __ibmvnic_reset [ibmvnic]\n\tNIP:  c000000000a3c840 LR: c0080000029b5378 CTR: c000000000a3c820\n\tREGS: c0000000548e37e0 TRAP: 0300   Not tainted  (5.16.0-rc5-autotest-g6441998e2e37)\n\tMSR:  8000000000009033 <SF,EE,ME,IR,DR,RI,LE>  CR: 28248484  XER: 00000004\n\tCFAR: c0080000029bdd24 DAR: 0000000000000010 DSISR: 40000000 IRQMASK: 0\n\tGPR00: c0080000029b55d0 c0000000548e3a80 c0000000028f0200 0000000000000000\n\t...\n\tNIP [c000000000a3c840] napi_enable+0x20/0xc0\n\tLR [c0080000029b5378] __ibmvnic_open+0xf0/0x430 [ibmvnic]\n\tCall Trace:\n\t[c0000000548e3a80] [0000000000000006] 0x6 (unreliable)\n\t[c0000000548e3ab0] [c0080000029b55d0] __ibmvnic_open+0x348/0x430 [ibmvnic]\n\t[c0000000548e3b40] [c0080000029bcc28] __ibmvnic_reset+0x500/0xdf0 [ibmvnic]\n\t[c0000000548e3c60] [c000000000176228] process_one_work+0x288/0x570\n\t[c0000000548e3d00] [c000000000176588] worker_thread+0x78/0x660\n\t[c0000000548e3da0] [c0000000001822f0] kthread+0x1c0/0x1d0\n\t[c0000000548e3e10] [c00000000000cf64] ret_from_kernel_thread+0x5c/0x64\n\tInstruction dump:\n\t7d2948f8 792307e0 4e800020 60000000 3c4c01eb 384239e0 f821ffd1 39430010\n\t38a0fff6 e92d1100 f9210028 39200000 <e9030010> f9010020 60420000 e9210020\n\t---[ end trace 5f8033b08fd27706 ]---\n    ",
@@ -75,10 +92,12 @@
 				"date": "2024-08-14"
 			},
 			"updated": {
-				"date": "2024-08-16"
+				"date": "2024-08-17"
 			},
 			"affected_cpe_list": {
 				"cpe": [
+					"cpe:/o:suse:sle-live-patching:12:sp5",
+					"cpe:/o:suse:sle-we:12:sp5",
 					"cpe:/o:suse:sles:12:sp5",
 					"cpe:/o:suse:sles_sap:12:sp5",
 					"cpe:/o:suse:suse-linux-enterprise-rt:12:sp5"
@@ -89,6 +108,34 @@
 	"criteria": {
 		"operator": "OR",
 		"criterias": [
+			{
+				"operator": "AND",
+				"criterias": [
+					{
+						"operator": "OR",
+						"criterions": [
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009258033",
+								"comment": "SUSE Linux Enterprise Server 12 SP5 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009258806",
+								"comment": "SUSE Linux Enterprise Server for SAP Applications 12 SP5 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009258650",
+								"comment": "SUSE Linux Enterprise Workstation Extension 12 SP5 is installed"
+							}
+						]
+					}
+				],
+				"criterions": [
+					{
+						"test_ref": "oval:org.opensuse.security:tst:2009880130",
+						"comment": "kernel-default-extra-4.12.14-122.225.1 is installed"
+					}
+				]
+			},
 			{
 				"operator": "AND",
 				"criterias": [
@@ -185,18 +232,78 @@
 								"comment": "kernel-azure-devel-4.12.14-16.194.1 is installed"
 							},
 							{
+								"test_ref": "oval:org.opensuse.security:tst:2009880120",
+								"comment": "kernel-default-4.12.14-122.225.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009880121",
+								"comment": "kernel-default-base-4.12.14-122.225.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009880122",
+								"comment": "kernel-default-devel-4.12.14-122.225.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009880123",
+								"comment": "kernel-default-man-4.12.14-122.225.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009880124",
+								"comment": "kernel-devel-4.12.14-122.225.1 is installed"
+							},
+							{
 								"test_ref": "oval:org.opensuse.security:tst:2009879535",
 								"comment": "kernel-devel-azure-4.12.14-16.194.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009880125",
+								"comment": "kernel-macros-4.12.14-122.225.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009880126",
+								"comment": "kernel-source-4.12.14-122.225.1 is installed"
 							},
 							{
 								"test_ref": "oval:org.opensuse.security:tst:2009879536",
 								"comment": "kernel-source-azure-4.12.14-16.194.1 is installed"
 							},
 							{
+								"test_ref": "oval:org.opensuse.security:tst:2009880127",
+								"comment": "kernel-syms-4.12.14-122.225.1 is installed"
+							},
+							{
 								"test_ref": "oval:org.opensuse.security:tst:2009879537",
 								"comment": "kernel-syms-azure-4.12.14-16.194.1 is installed"
 							}
 						]
+					}
+				]
+			},
+			{
+				"operator": "AND",
+				"criterias": [
+					{
+						"operator": "OR",
+						"criterions": [
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009880115",
+								"comment": "kernel-default-kgraft-4.12.14-122.225.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009880116",
+								"comment": "kernel-default-kgraft-devel-4.12.14-122.225.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009880117",
+								"comment": "kgraft-patch-4_12_14-122_225-default-1-8.3.1 is installed"
+							}
+						]
+					}
+				],
+				"criterions": [
+					{
+						"test_ref": "oval:org.opensuse.security:tst:2009273148",
+						"comment": "SUSE Linux Enterprise Live Patching 12 SP5 is installed"
 					}
 				]
 			}

@@ -7,9 +7,11 @@
 		"affected": {
 			"family": "unix",
 			"platform": [
+				"SUSE Linux Enterprise Live Patching 12 SP5",
 				"SUSE Linux Enterprise Real Time 12 SP5",
 				"SUSE Linux Enterprise Server 12 SP5",
-				"SUSE Linux Enterprise Server for SAP Applications 12 SP5"
+				"SUSE Linux Enterprise Server for SAP Applications 12 SP5",
+				"SUSE Linux Enterprise Workstation Extension 12 SP5"
 			]
 		},
 		"reference": [
@@ -42,6 +44,11 @@
 				"ref_id": "SUSE-SU-2024:2901-1",
 				"ref_url": "https://lists.suse.com/pipermail/sle-updates/2024-August/036444.html",
 				"source": "SUSE-SU"
+			},
+			{
+				"ref_id": "SUSE-SU-2024:2940-1",
+				"ref_url": "https://lists.suse.com/pipermail/sle-updates/2024-August/036478.html",
+				"source": "SUSE-SU"
 			}
 		],
 		"description": "\n    In the Linux kernel, the following vulnerability has been resolved:\n\ni40e: Do not allow untrusted VF to remove administratively set MAC\n\nCurrently when PF administratively sets VF's MAC address and the VF\nis put down (VF tries to delete all MACs) then the MAC is removed\nfrom MAC filters and primary VF MAC is zeroed.\n\nDo not allow untrusted VF to remove primary MAC when it was set\nadministratively by PF.\n\nReproducer:\n1) Create VF\n2) Set VF interface up\n3) Administratively set the VF's MAC\n4) Put VF interface down\n\n[root@host ~]# echo 1 > /sys/class/net/enp2s0f0/device/sriov_numvfs\n[root@host ~]# ip link set enp2s0f0v0 up\n[root@host ~]# ip link set enp2s0f0 vf 0 mac fe:6c:b5:da:c7:7d\n[root@host ~]# ip link show enp2s0f0\n23: enp2s0f0: <BROADCAST,MULTICAST,UP,LOWER_UP> mtu 1500 qdisc mq state UP mode DEFAULT group default qlen 1000\n    link/ether 3c:ec:ef:b7:dd:04 brd ff:ff:ff:ff:ff:ff\n    vf 0     link/ether fe:6c:b5:da:c7:7d brd ff:ff:ff:ff:ff:ff, spoof checking on, link-state auto, trust off\n[root@host ~]# ip link set enp2s0f0v0 down\n[root@host ~]# ip link show enp2s0f0\n23: enp2s0f0: <BROADCAST,MULTICAST,UP,LOWER_UP> mtu 1500 qdisc mq state UP mode DEFAULT group default qlen 1000\n    link/ether 3c:ec:ef:b7:dd:04 brd ff:ff:ff:ff:ff:ff\n    vf 0     link/ether 00:00:00:00:00:00 brd ff:ff:ff:ff:ff:ff, spoof checking on, link-state auto, trust off\n    ",
@@ -70,10 +77,12 @@
 				"date": "2024-08-14"
 			},
 			"updated": {
-				"date": "2024-08-15"
+				"date": "2024-08-17"
 			},
 			"affected_cpe_list": {
 				"cpe": [
+					"cpe:/o:suse:sle-live-patching:12:sp5",
+					"cpe:/o:suse:sle-we:12:sp5",
 					"cpe:/o:suse:sles:12:sp5",
 					"cpe:/o:suse:sles_sap:12:sp5",
 					"cpe:/o:suse:suse-linux-enterprise-rt:12:sp5"
@@ -84,6 +93,34 @@
 	"criteria": {
 		"operator": "OR",
 		"criterias": [
+			{
+				"operator": "AND",
+				"criterias": [
+					{
+						"operator": "OR",
+						"criterions": [
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009258033",
+								"comment": "SUSE Linux Enterprise Server 12 SP5 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009258806",
+								"comment": "SUSE Linux Enterprise Server for SAP Applications 12 SP5 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009258650",
+								"comment": "SUSE Linux Enterprise Workstation Extension 12 SP5 is installed"
+							}
+						]
+					}
+				],
+				"criterions": [
+					{
+						"test_ref": "oval:org.opensuse.security:tst:2009880130",
+						"comment": "kernel-default-extra-4.12.14-122.225.1 is installed"
+					}
+				]
+			},
 			{
 				"operator": "AND",
 				"criterias": [
@@ -180,18 +217,78 @@
 								"comment": "kernel-azure-devel-4.12.14-16.194.1 is installed"
 							},
 							{
+								"test_ref": "oval:org.opensuse.security:tst:2009880120",
+								"comment": "kernel-default-4.12.14-122.225.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009880121",
+								"comment": "kernel-default-base-4.12.14-122.225.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009880122",
+								"comment": "kernel-default-devel-4.12.14-122.225.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009880123",
+								"comment": "kernel-default-man-4.12.14-122.225.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009880124",
+								"comment": "kernel-devel-4.12.14-122.225.1 is installed"
+							},
+							{
 								"test_ref": "oval:org.opensuse.security:tst:2009879535",
 								"comment": "kernel-devel-azure-4.12.14-16.194.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009880125",
+								"comment": "kernel-macros-4.12.14-122.225.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009880126",
+								"comment": "kernel-source-4.12.14-122.225.1 is installed"
 							},
 							{
 								"test_ref": "oval:org.opensuse.security:tst:2009879536",
 								"comment": "kernel-source-azure-4.12.14-16.194.1 is installed"
 							},
 							{
+								"test_ref": "oval:org.opensuse.security:tst:2009880127",
+								"comment": "kernel-syms-4.12.14-122.225.1 is installed"
+							},
+							{
 								"test_ref": "oval:org.opensuse.security:tst:2009879537",
 								"comment": "kernel-syms-azure-4.12.14-16.194.1 is installed"
 							}
 						]
+					}
+				]
+			},
+			{
+				"operator": "AND",
+				"criterias": [
+					{
+						"operator": "OR",
+						"criterions": [
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009880115",
+								"comment": "kernel-default-kgraft-4.12.14-122.225.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009880116",
+								"comment": "kernel-default-kgraft-devel-4.12.14-122.225.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009880117",
+								"comment": "kgraft-patch-4_12_14-122_225-default-1-8.3.1 is installed"
+							}
+						]
+					}
+				],
+				"criterions": [
+					{
+						"test_ref": "oval:org.opensuse.security:tst:2009273148",
+						"comment": "SUSE Linux Enterprise Live Patching 12 SP5 is installed"
 					}
 				]
 			}

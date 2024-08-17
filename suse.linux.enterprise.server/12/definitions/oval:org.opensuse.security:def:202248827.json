@@ -7,9 +7,11 @@
 		"affected": {
 			"family": "unix",
 			"platform": [
+				"SUSE Linux Enterprise Live Patching 12 SP5",
 				"SUSE Linux Enterprise Real Time 12 SP5",
 				"SUSE Linux Enterprise Server 12 SP5",
-				"SUSE Linux Enterprise Server for SAP Applications 12 SP5"
+				"SUSE Linux Enterprise Server for SAP Applications 12 SP5",
+				"SUSE Linux Enterprise Workstation Extension 12 SP5"
 			]
 		},
 		"reference": [
@@ -47,6 +49,21 @@
 				"ref_id": "SUSE-SU-2024:2929-1",
 				"ref_url": "https://lists.suse.com/pipermail/sle-updates/2024-August/036473.html",
 				"source": "SUSE-SU"
+			},
+			{
+				"ref_id": "SUSE-SU-2024:2939-1",
+				"ref_url": "https://lists.suse.com/pipermail/sle-security-updates/2024-August/019211.html",
+				"source": "SUSE-SU"
+			},
+			{
+				"ref_id": "SUSE-SU-2024:2940-1",
+				"ref_url": "https://lists.suse.com/pipermail/sle-updates/2024-August/036478.html",
+				"source": "SUSE-SU"
+			},
+			{
+				"ref_id": "SUSE-SU-2024:2947-1",
+				"ref_url": "https://lists.suse.com/pipermail/sle-updates/2024-August/036488.html",
+				"source": "SUSE-SU"
 			}
 		],
 		"description": "\n    In the Linux kernel, the following vulnerability has been resolved:\n\nNFSD: Fix the behavior of READ near OFFSET_MAX\n\nDan Aloni reports:\n> Due to commit 8cfb9015280d (\"NFS: Always provide aligned buffers to\n> the RPC read layers\") on the client, a read of 0xfff is aligned up\n> to server rsize of 0x1000.\n>\n> As a result, in a test where the server has a file of size\n> 0x7fffffffffffffff, and the client tries to read from the offset\n> 0x7ffffffffffff000, the read causes loff_t overflow in the server\n> and it returns an NFS code of EINVAL to the client. The client as\n> a result indefinitely retries the request.\n\nThe Linux NFS client does not handle NFS?ERR_INVAL, even though all\nNFS specifications permit servers to return that status code for a\nREAD.\n\nInstead of NFS?ERR_INVAL, have out-of-range READ requests succeed\nand return a short result. Set the EOF flag in the result to prevent\nthe client from retrying the READ request. This behavior appears to\nbe consistent with Solaris NFS servers.\n\nNote that NFSv3 and NFSv4 use u64 offset values on the wire. These\nmust be converted to loff_t internally before use -- an implicit\ntype cast is not adequate for this purpose. Otherwise VFS checks\nagainst sb->s_maxbytes do not work properly.\n    ",
@@ -75,10 +92,12 @@
 				"date": "2024-08-14"
 			},
 			"updated": {
-				"date": "2024-08-16"
+				"date": "2024-08-17"
 			},
 			"affected_cpe_list": {
 				"cpe": [
+					"cpe:/o:suse:sle-live-patching:12:sp5",
+					"cpe:/o:suse:sle-we:12:sp5",
 					"cpe:/o:suse:sles:12:sp5",
 					"cpe:/o:suse:sles_sap:12:sp5",
 					"cpe:/o:suse:suse-linux-enterprise-rt:12:sp5"
@@ -89,6 +108,34 @@
 	"criteria": {
 		"operator": "OR",
 		"criterias": [
+			{
+				"operator": "AND",
+				"criterias": [
+					{
+						"operator": "OR",
+						"criterions": [
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009258033",
+								"comment": "SUSE Linux Enterprise Server 12 SP5 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009258806",
+								"comment": "SUSE Linux Enterprise Server for SAP Applications 12 SP5 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009258650",
+								"comment": "SUSE Linux Enterprise Workstation Extension 12 SP5 is installed"
+							}
+						]
+					}
+				],
+				"criterions": [
+					{
+						"test_ref": "oval:org.opensuse.security:tst:2009880130",
+						"comment": "kernel-default-extra-4.12.14-122.225.1 is installed"
+					}
+				]
+			},
 			{
 				"operator": "AND",
 				"criterias": [
@@ -185,18 +232,78 @@
 								"comment": "kernel-azure-devel-4.12.14-16.194.1 is installed"
 							},
 							{
+								"test_ref": "oval:org.opensuse.security:tst:2009880120",
+								"comment": "kernel-default-4.12.14-122.225.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009880121",
+								"comment": "kernel-default-base-4.12.14-122.225.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009880122",
+								"comment": "kernel-default-devel-4.12.14-122.225.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009880123",
+								"comment": "kernel-default-man-4.12.14-122.225.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009880124",
+								"comment": "kernel-devel-4.12.14-122.225.1 is installed"
+							},
+							{
 								"test_ref": "oval:org.opensuse.security:tst:2009879535",
 								"comment": "kernel-devel-azure-4.12.14-16.194.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009880125",
+								"comment": "kernel-macros-4.12.14-122.225.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009880126",
+								"comment": "kernel-source-4.12.14-122.225.1 is installed"
 							},
 							{
 								"test_ref": "oval:org.opensuse.security:tst:2009879536",
 								"comment": "kernel-source-azure-4.12.14-16.194.1 is installed"
 							},
 							{
+								"test_ref": "oval:org.opensuse.security:tst:2009880127",
+								"comment": "kernel-syms-4.12.14-122.225.1 is installed"
+							},
+							{
 								"test_ref": "oval:org.opensuse.security:tst:2009879537",
 								"comment": "kernel-syms-azure-4.12.14-16.194.1 is installed"
 							}
 						]
+					}
+				]
+			},
+			{
+				"operator": "AND",
+				"criterias": [
+					{
+						"operator": "OR",
+						"criterions": [
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009880115",
+								"comment": "kernel-default-kgraft-4.12.14-122.225.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009880116",
+								"comment": "kernel-default-kgraft-devel-4.12.14-122.225.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009880117",
+								"comment": "kgraft-patch-4_12_14-122_225-default-1-8.3.1 is installed"
+							}
+						]
+					}
+				],
+				"criterions": [
+					{
+						"test_ref": "oval:org.opensuse.security:tst:2009273148",
+						"comment": "SUSE Linux Enterprise Live Patching 12 SP5 is installed"
 					}
 				]
 			}

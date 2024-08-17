@@ -7,9 +7,11 @@
 		"affected": {
 			"family": "unix",
 			"platform": [
+				"SUSE Linux Enterprise Live Patching 12 SP5",
 				"SUSE Linux Enterprise Real Time 12 SP5",
 				"SUSE Linux Enterprise Server 12 SP5",
-				"SUSE Linux Enterprise Server for SAP Applications 12 SP5"
+				"SUSE Linux Enterprise Server for SAP Applications 12 SP5",
+				"SUSE Linux Enterprise Workstation Extension 12 SP5"
 			]
 		},
 		"reference": [
@@ -47,6 +49,21 @@
 				"ref_id": "SUSE-SU-2024:2901-1",
 				"ref_url": "https://lists.suse.com/pipermail/sle-updates/2024-August/036444.html",
 				"source": "SUSE-SU"
+			},
+			{
+				"ref_id": "SUSE-SU-2024:2939-1",
+				"ref_url": "https://lists.suse.com/pipermail/sle-security-updates/2024-August/019211.html",
+				"source": "SUSE-SU"
+			},
+			{
+				"ref_id": "SUSE-SU-2024:2940-1",
+				"ref_url": "https://lists.suse.com/pipermail/sle-updates/2024-August/036478.html",
+				"source": "SUSE-SU"
+			},
+			{
+				"ref_id": "SUSE-SU-2024:2947-1",
+				"ref_url": "https://lists.suse.com/pipermail/sle-updates/2024-August/036488.html",
+				"source": "SUSE-SU"
 			}
 		],
 		"description": "\n    In the Linux kernel, the following vulnerability has been resolved:\n\nKVM: Fix a data race on last_boosted_vcpu in kvm_vcpu_on_spin()\n\nUse {READ,WRITE}_ONCE() to access kvm->last_boosted_vcpu to ensure the\nloads and stores are atomic.  In the extremely unlikely scenario the\ncompiler tears the stores, it's theoretically possible for KVM to attempt\nto get a vCPU using an out-of-bounds index, e.g. if the write is split\ninto multiple 8-bit stores, and is paired with a 32-bit load on a VM with\n257 vCPUs:\n\n  CPU0                              CPU1\n  last_boosted_vcpu = 0xff;\n\n                                    (last_boosted_vcpu = 0x100)\n                                    last_boosted_vcpu[15:8] = 0x01;\n  i = (last_boosted_vcpu = 0x1ff)\n                                    last_boosted_vcpu[7:0] = 0x00;\n\n  vcpu = kvm->vcpu_array[0x1ff];\n\nAs detected by KCSAN:\n\n  BUG: KCSAN: data-race in kvm_vcpu_on_spin [kvm] / kvm_vcpu_on_spin [kvm]\n\n  write to 0xffffc90025a92344 of 4 bytes by task 4340 on cpu 16:\n  kvm_vcpu_on_spin (arch/x86/kvm/../../../virt/kvm/kvm_main.c:4112) kvm\n  handle_pause (arch/x86/kvm/vmx/vmx.c:5929) kvm_intel\n  vmx_handle_exit (arch/x86/kvm/vmx/vmx.c:?\n\t\t arch/x86/kvm/vmx/vmx.c:6606) kvm_intel\n  vcpu_run (arch/x86/kvm/x86.c:11107 arch/x86/kvm/x86.c:11211) kvm\n  kvm_arch_vcpu_ioctl_run (arch/x86/kvm/x86.c:?) kvm\n  kvm_vcpu_ioctl (arch/x86/kvm/../../../virt/kvm/kvm_main.c:?) kvm\n  __se_sys_ioctl (fs/ioctl.c:52 fs/ioctl.c:904 fs/ioctl.c:890)\n  __x64_sys_ioctl (fs/ioctl.c:890)\n  x64_sys_call (arch/x86/entry/syscall_64.c:33)\n  do_syscall_64 (arch/x86/entry/common.c:?)\n  entry_SYSCALL_64_after_hwframe (arch/x86/entry/entry_64.S:130)\n\n  read to 0xffffc90025a92344 of 4 bytes by task 4342 on cpu 4:\n  kvm_vcpu_on_spin (arch/x86/kvm/../../../virt/kvm/kvm_main.c:4069) kvm\n  handle_pause (arch/x86/kvm/vmx/vmx.c:5929) kvm_intel\n  vmx_handle_exit (arch/x86/kvm/vmx/vmx.c:?\n\t\t\tarch/x86/kvm/vmx/vmx.c:6606) kvm_intel\n  vcpu_run (arch/x86/kvm/x86.c:11107 arch/x86/kvm/x86.c:11211) kvm\n  kvm_arch_vcpu_ioctl_run (arch/x86/kvm/x86.c:?) kvm\n  kvm_vcpu_ioctl (arch/x86/kvm/../../../virt/kvm/kvm_main.c:?) kvm\n  __se_sys_ioctl (fs/ioctl.c:52 fs/ioctl.c:904 fs/ioctl.c:890)\n  __x64_sys_ioctl (fs/ioctl.c:890)\n  x64_sys_call (arch/x86/entry/syscall_64.c:33)\n  do_syscall_64 (arch/x86/entry/common.c:?)\n  entry_SYSCALL_64_after_hwframe (arch/x86/entry/entry_64.S:130)\n\n  value changed: 0x00000012 -> 0x00000000\n    ",
@@ -75,10 +92,12 @@
 				"date": "2024-08-14"
 			},
 			"updated": {
-				"date": "2024-08-15"
+				"date": "2024-08-17"
 			},
 			"affected_cpe_list": {
 				"cpe": [
+					"cpe:/o:suse:sle-live-patching:12:sp5",
+					"cpe:/o:suse:sle-we:12:sp5",
 					"cpe:/o:suse:sles:12:sp5",
 					"cpe:/o:suse:sles_sap:12:sp5",
 					"cpe:/o:suse:suse-linux-enterprise-rt:12:sp5"
@@ -89,6 +108,34 @@
 	"criteria": {
 		"operator": "OR",
 		"criterias": [
+			{
+				"operator": "AND",
+				"criterias": [
+					{
+						"operator": "OR",
+						"criterions": [
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009258033",
+								"comment": "SUSE Linux Enterprise Server 12 SP5 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009258806",
+								"comment": "SUSE Linux Enterprise Server for SAP Applications 12 SP5 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009258650",
+								"comment": "SUSE Linux Enterprise Workstation Extension 12 SP5 is installed"
+							}
+						]
+					}
+				],
+				"criterions": [
+					{
+						"test_ref": "oval:org.opensuse.security:tst:2009880130",
+						"comment": "kernel-default-extra-4.12.14-122.225.1 is installed"
+					}
+				]
+			},
 			{
 				"operator": "AND",
 				"criterias": [
@@ -185,18 +232,78 @@
 								"comment": "kernel-azure-devel-4.12.14-16.194.1 is installed"
 							},
 							{
+								"test_ref": "oval:org.opensuse.security:tst:2009880120",
+								"comment": "kernel-default-4.12.14-122.225.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009880121",
+								"comment": "kernel-default-base-4.12.14-122.225.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009880122",
+								"comment": "kernel-default-devel-4.12.14-122.225.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009880123",
+								"comment": "kernel-default-man-4.12.14-122.225.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009880124",
+								"comment": "kernel-devel-4.12.14-122.225.1 is installed"
+							},
+							{
 								"test_ref": "oval:org.opensuse.security:tst:2009879535",
 								"comment": "kernel-devel-azure-4.12.14-16.194.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009880125",
+								"comment": "kernel-macros-4.12.14-122.225.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009880126",
+								"comment": "kernel-source-4.12.14-122.225.1 is installed"
 							},
 							{
 								"test_ref": "oval:org.opensuse.security:tst:2009879536",
 								"comment": "kernel-source-azure-4.12.14-16.194.1 is installed"
 							},
 							{
+								"test_ref": "oval:org.opensuse.security:tst:2009880127",
+								"comment": "kernel-syms-4.12.14-122.225.1 is installed"
+							},
+							{
 								"test_ref": "oval:org.opensuse.security:tst:2009879537",
 								"comment": "kernel-syms-azure-4.12.14-16.194.1 is installed"
 							}
 						]
+					}
+				]
+			},
+			{
+				"operator": "AND",
+				"criterias": [
+					{
+						"operator": "OR",
+						"criterions": [
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009880115",
+								"comment": "kernel-default-kgraft-4.12.14-122.225.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009880116",
+								"comment": "kernel-default-kgraft-devel-4.12.14-122.225.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009880117",
+								"comment": "kgraft-patch-4_12_14-122_225-default-1-8.3.1 is installed"
+							}
+						]
+					}
+				],
+				"criterions": [
+					{
+						"test_ref": "oval:org.opensuse.security:tst:2009273148",
+						"comment": "SUSE Linux Enterprise Live Patching 12 SP5 is installed"
 					}
 				]
 			}

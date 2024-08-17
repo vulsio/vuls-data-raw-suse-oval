@@ -7,10 +7,12 @@
 		"affected": {
 			"family": "unix",
 			"platform": [
+				"SUSE Linux Enterprise Live Patching 12 SP5",
 				"SUSE Linux Enterprise Real Time 12 SP5",
 				"SUSE Linux Enterprise Server 12 SP3-LTSS-TERADATA",
 				"SUSE Linux Enterprise Server 12 SP5",
-				"SUSE Linux Enterprise Server for SAP Applications 12 SP5"
+				"SUSE Linux Enterprise Server for SAP Applications 12 SP5",
+				"SUSE Linux Enterprise Workstation Extension 12 SP5"
 			]
 		},
 		"reference": [
@@ -68,6 +70,16 @@
 				"ref_id": "SUSE-SU-2024:2923-1",
 				"ref_url": "https://lists.suse.com/pipermail/sle-security-updates/2024-August/019201.html",
 				"source": "SUSE-SU"
+			},
+			{
+				"ref_id": "SUSE-SU-2024:2940-1",
+				"ref_url": "https://lists.suse.com/pipermail/sle-updates/2024-August/036478.html",
+				"source": "SUSE-SU"
+			},
+			{
+				"ref_id": "SUSE-SU-2024:2948-1",
+				"ref_url": "https://lists.suse.com/pipermail/sle-security-updates/2024-August/019219.html",
+				"source": "SUSE-SU"
 			}
 		],
 		"description": "\n    In the Linux kernel, the following vulnerability has been resolved:\n\nscsi: scsi_debug: Fix out-of-bound read in resp_report_tgtpgs()\n\nThe following issue was observed running syzkaller:\n\nBUG: KASAN: slab-out-of-bounds in memcpy include/linux/string.h:377 [inline]\nBUG: KASAN: slab-out-of-bounds in sg_copy_buffer+0x150/0x1c0 lib/scatterlist.c:831\nRead of size 2132 at addr ffff8880aea95dc8 by task syz-executor.0/9815\n\nCPU: 0 PID: 9815 Comm: syz-executor.0 Not tainted 4.19.202-00874-gfc0fe04215a9 #2\nHardware name: QEMU Standard PC (i440FX + PIIX, 1996), BIOS 1.10.2-1ubuntu1 04/01/2014\nCall Trace:\n __dump_stack lib/dump_stack.c:77 [inline]\n dump_stack+0xe4/0x14a lib/dump_stack.c:118\n print_address_description+0x73/0x280 mm/kasan/report.c:253\n kasan_report_error mm/kasan/report.c:352 [inline]\n kasan_report+0x272/0x370 mm/kasan/report.c:410\n memcpy+0x1f/0x50 mm/kasan/kasan.c:302\n memcpy include/linux/string.h:377 [inline]\n sg_copy_buffer+0x150/0x1c0 lib/scatterlist.c:831\n fill_from_dev_buffer+0x14f/0x340 drivers/scsi/scsi_debug.c:1021\n resp_report_tgtpgs+0x5aa/0x770 drivers/scsi/scsi_debug.c:1772\n schedule_resp+0x464/0x12f0 drivers/scsi/scsi_debug.c:4429\n scsi_debug_queuecommand+0x467/0x1390 drivers/scsi/scsi_debug.c:5835\n scsi_dispatch_cmd+0x3fc/0x9b0 drivers/scsi/scsi_lib.c:1896\n scsi_request_fn+0x1042/0x1810 drivers/scsi/scsi_lib.c:2034\n __blk_run_queue_uncond block/blk-core.c:464 [inline]\n __blk_run_queue+0x1a4/0x380 block/blk-core.c:484\n blk_execute_rq_nowait+0x1c2/0x2d0 block/blk-exec.c:78\n sg_common_write.isra.19+0xd74/0x1dc0 drivers/scsi/sg.c:847\n sg_write.part.23+0x6e0/0xd00 drivers/scsi/sg.c:716\n sg_write+0x64/0xa0 drivers/scsi/sg.c:622\n __vfs_write+0xed/0x690 fs/read_write.c:485\nkill_bdev:block_device:00000000e138492c\n vfs_write+0x184/0x4c0 fs/read_write.c:549\n ksys_write+0x107/0x240 fs/read_write.c:599\n do_syscall_64+0xc2/0x560 arch/x86/entry/common.c:293\n entry_SYSCALL_64_after_hwframe+0x49/0xbe\n\nWe get 'alen' from command its type is int. If userspace passes a large\nlength we will get a negative 'alen'.\n\nSwitch n, alen, and rlen to u32.\n    ",
@@ -96,10 +108,12 @@
 				"date": "2024-08-14"
 			},
 			"updated": {
-				"date": "2024-08-16"
+				"date": "2024-08-17"
 			},
 			"affected_cpe_list": {
 				"cpe": [
+					"cpe:/o:suse:sle-live-patching:12:sp5",
+					"cpe:/o:suse:sle-we:12:sp5",
 					"cpe:/o:suse:sles:12:sp5",
 					"cpe:/o:suse:sles_sap:12:sp5",
 					"cpe:/o:suse:sles_teradata:12:sp3-ltss",
@@ -111,6 +125,34 @@
 	"criteria": {
 		"operator": "OR",
 		"criterias": [
+			{
+				"operator": "AND",
+				"criterias": [
+					{
+						"operator": "OR",
+						"criterions": [
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009258033",
+								"comment": "SUSE Linux Enterprise Server 12 SP5 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009258806",
+								"comment": "SUSE Linux Enterprise Server for SAP Applications 12 SP5 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009258650",
+								"comment": "SUSE Linux Enterprise Workstation Extension 12 SP5 is installed"
+							}
+						]
+					}
+				],
+				"criterions": [
+					{
+						"test_ref": "oval:org.opensuse.security:tst:2009880130",
+						"comment": "kernel-default-extra-4.12.14-122.225.1 is installed"
+					}
+				]
+			},
 			{
 				"operator": "AND",
 				"criterias": [
@@ -207,12 +249,44 @@
 								"comment": "kernel-azure-devel-4.12.14-16.194.1 is installed"
 							},
 							{
+								"test_ref": "oval:org.opensuse.security:tst:2009880120",
+								"comment": "kernel-default-4.12.14-122.225.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009880121",
+								"comment": "kernel-default-base-4.12.14-122.225.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009880122",
+								"comment": "kernel-default-devel-4.12.14-122.225.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009880123",
+								"comment": "kernel-default-man-4.12.14-122.225.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009880124",
+								"comment": "kernel-devel-4.12.14-122.225.1 is installed"
+							},
+							{
 								"test_ref": "oval:org.opensuse.security:tst:2009879535",
 								"comment": "kernel-devel-azure-4.12.14-16.194.1 is installed"
 							},
 							{
+								"test_ref": "oval:org.opensuse.security:tst:2009880125",
+								"comment": "kernel-macros-4.12.14-122.225.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009880126",
+								"comment": "kernel-source-4.12.14-122.225.1 is installed"
+							},
+							{
 								"test_ref": "oval:org.opensuse.security:tst:2009879536",
 								"comment": "kernel-source-azure-4.12.14-16.194.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009880127",
+								"comment": "kernel-syms-4.12.14-122.225.1 is installed"
 							},
 							{
 								"test_ref": "oval:org.opensuse.security:tst:2009879537",
@@ -263,6 +337,34 @@
 					{
 						"test_ref": "oval:org.opensuse.security:tst:2009158922",
 						"comment": "SUSE Linux Enterprise Server 12 SP3-LTSS-TERADATA is installed"
+					}
+				]
+			},
+			{
+				"operator": "AND",
+				"criterias": [
+					{
+						"operator": "OR",
+						"criterions": [
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009880115",
+								"comment": "kernel-default-kgraft-4.12.14-122.225.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009880116",
+								"comment": "kernel-default-kgraft-devel-4.12.14-122.225.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009880117",
+								"comment": "kgraft-patch-4_12_14-122_225-default-1-8.3.1 is installed"
+							}
+						]
+					}
+				],
+				"criterions": [
+					{
+						"test_ref": "oval:org.opensuse.security:tst:2009273148",
+						"comment": "SUSE Linux Enterprise Live Patching 12 SP5 is installed"
 					}
 				]
 			}

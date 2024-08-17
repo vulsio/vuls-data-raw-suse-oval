@@ -7,11 +7,13 @@
 		"affected": {
 			"family": "unix",
 			"platform": [
+				"SUSE Linux Enterprise Live Patching 12 SP5",
 				"SUSE Linux Enterprise Real Time 12 SP5",
 				"SUSE Linux Enterprise Server 12 SP4-LTSS",
 				"SUSE Linux Enterprise Server 12 SP5",
 				"SUSE Linux Enterprise Server for SAP Applications 12 SP4",
-				"SUSE Linux Enterprise Server for SAP Applications 12 SP5"
+				"SUSE Linux Enterprise Server for SAP Applications 12 SP5",
+				"SUSE Linux Enterprise Workstation Extension 12 SP5"
 			]
 		},
 		"reference": [
@@ -54,6 +56,16 @@
 				"ref_id": "SUSE-SU-2024:2929-1",
 				"ref_url": "https://lists.suse.com/pipermail/sle-updates/2024-August/036473.html",
 				"source": "SUSE-SU"
+			},
+			{
+				"ref_id": "SUSE-SU-2024:2939-1",
+				"ref_url": "https://lists.suse.com/pipermail/sle-security-updates/2024-August/019211.html",
+				"source": "SUSE-SU"
+			},
+			{
+				"ref_id": "SUSE-SU-2024:2940-1",
+				"ref_url": "https://lists.suse.com/pipermail/sle-updates/2024-August/036478.html",
+				"source": "SUSE-SU"
 			}
 		],
 		"description": "\n    In the Linux kernel, the following vulnerability has been resolved:\n\nUSB: core: Make do_proc_control() and do_proc_bulk() killable\n\nThe USBDEVFS_CONTROL and USBDEVFS_BULK ioctls invoke\nusb_start_wait_urb(), which contains an uninterruptible wait with a\nuser-specified timeout value.  If timeout value is very large and the\ndevice being accessed does not respond in a reasonable amount of time,\nthe kernel will complain about \"Task X blocked for more than N\nseconds\", as found in testing by syzbot:\n\nINFO: task syz-executor.0:8700 blocked for more than 143 seconds.\n      Not tainted 5.14.0-rc7-syzkaller #0\n\"echo 0 > /proc/sys/kernel/hung_task_timeout_secs\" disables this message.\ntask:syz-executor.0  state:D stack:23192 pid: 8700 ppid:  8455 flags:0x00004004\nCall Trace:\n context_switch kernel/sched/core.c:4681 [inline]\n __schedule+0xc07/0x11f0 kernel/sched/core.c:5938\n schedule+0x14b/0x210 kernel/sched/core.c:6017\n schedule_timeout+0x98/0x2f0 kernel/time/timer.c:1857\n do_wait_for_common+0x2da/0x480 kernel/sched/completion.c:85\n __wait_for_common kernel/sched/completion.c:106 [inline]\n wait_for_common kernel/sched/completion.c:117 [inline]\n wait_for_completion_timeout+0x46/0x60 kernel/sched/completion.c:157\n usb_start_wait_urb+0x167/0x550 drivers/usb/core/message.c:63\n do_proc_bulk+0x978/0x1080 drivers/usb/core/devio.c:1236\n proc_bulk drivers/usb/core/devio.c:1273 [inline]\n usbdev_do_ioctl drivers/usb/core/devio.c:2547 [inline]\n usbdev_ioctl+0x3441/0x6b10 drivers/usb/core/devio.c:2713\n...\n\nTo fix this problem, this patch replaces usbfs's calls to\nusb_control_msg() and usb_bulk_msg() with special-purpose code that\ndoes essentially the same thing (as recommended in the comment for\nusb_start_wait_urb()), except that it always uses a killable wait and\nit uses GFP_KERNEL rather than GFP_NOIO.\n    ",
@@ -82,10 +94,12 @@
 				"date": "2024-06-24"
 			},
 			"updated": {
-				"date": "2024-08-16"
+				"date": "2024-08-17"
 			},
 			"affected_cpe_list": {
 				"cpe": [
+					"cpe:/o:suse:sle-live-patching:12:sp5",
+					"cpe:/o:suse:sle-we:12:sp5",
 					"cpe:/o:suse:sles-ltss:12:sp4",
 					"cpe:/o:suse:sles:12:sp5",
 					"cpe:/o:suse:sles_sap:12:sp4",
@@ -98,6 +112,34 @@
 	"criteria": {
 		"operator": "OR",
 		"criterias": [
+			{
+				"operator": "AND",
+				"criterias": [
+					{
+						"operator": "OR",
+						"criterions": [
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009258033",
+								"comment": "SUSE Linux Enterprise Server 12 SP5 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009258806",
+								"comment": "SUSE Linux Enterprise Server for SAP Applications 12 SP5 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009258650",
+								"comment": "SUSE Linux Enterprise Workstation Extension 12 SP5 is installed"
+							}
+						]
+					}
+				],
+				"criterions": [
+					{
+						"test_ref": "oval:org.opensuse.security:tst:2009880130",
+						"comment": "kernel-default-extra-4.12.14-122.225.1 is installed"
+					}
+				]
+			},
 			{
 				"operator": "AND",
 				"criterias": [
@@ -253,50 +295,15 @@
 						"operator": "OR",
 						"criterions": [
 							{
-								"test_ref": "oval:org.opensuse.security:tst:2009879532",
-								"comment": "kernel-azure-4.12.14-16.194.1 is installed"
+								"test_ref": "oval:org.opensuse.security:tst:2009258033",
+								"comment": "SUSE Linux Enterprise Server 12 SP5 is installed"
 							},
 							{
-								"test_ref": "oval:org.opensuse.security:tst:2009879533",
-								"comment": "kernel-azure-base-4.12.14-16.194.1 is installed"
-							},
-							{
-								"test_ref": "oval:org.opensuse.security:tst:2009879534",
-								"comment": "kernel-azure-devel-4.12.14-16.194.1 is installed"
-							},
-							{
-								"test_ref": "oval:org.opensuse.security:tst:2009879535",
-								"comment": "kernel-devel-azure-4.12.14-16.194.1 is installed"
-							},
-							{
-								"test_ref": "oval:org.opensuse.security:tst:2009879536",
-								"comment": "kernel-source-azure-4.12.14-16.194.1 is installed"
-							},
-							{
-								"test_ref": "oval:org.opensuse.security:tst:2009879537",
-								"comment": "kernel-syms-azure-4.12.14-16.194.1 is installed"
-							},
-							{
-								"test_ref": "oval:org.opensuse.security:tst:2009334017",
-								"comment": "kernel-default is not affected"
-							},
-							{
-								"test_ref": "oval:org.opensuse.security:tst:2009333928",
-								"comment": "kernel-source is not affected"
+								"test_ref": "oval:org.opensuse.security:tst:2009258806",
+								"comment": "SUSE Linux Enterprise Server for SAP Applications 12 SP5 is installed"
 							}
 						]
-					}
-				],
-				"criterions": [
-					{
-						"test_ref": "oval:org.opensuse.security:tst:2009258806",
-						"comment": "SUSE Linux Enterprise Server for SAP Applications 12 SP5 is installed"
-					}
-				]
-			},
-			{
-				"operator": "AND",
-				"criterias": [
+					},
 					{
 						"operator": "OR",
 						"criterions": [
@@ -313,52 +320,78 @@
 								"comment": "kernel-azure-devel-4.12.14-16.194.1 is installed"
 							},
 							{
+								"test_ref": "oval:org.opensuse.security:tst:2009880120",
+								"comment": "kernel-default-4.12.14-122.225.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009880121",
+								"comment": "kernel-default-base-4.12.14-122.225.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009880122",
+								"comment": "kernel-default-devel-4.12.14-122.225.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009880123",
+								"comment": "kernel-default-man-4.12.14-122.225.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009880124",
+								"comment": "kernel-devel-4.12.14-122.225.1 is installed"
+							},
+							{
 								"test_ref": "oval:org.opensuse.security:tst:2009879535",
 								"comment": "kernel-devel-azure-4.12.14-16.194.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009880125",
+								"comment": "kernel-macros-4.12.14-122.225.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009880126",
+								"comment": "kernel-source-4.12.14-122.225.1 is installed"
 							},
 							{
 								"test_ref": "oval:org.opensuse.security:tst:2009879536",
 								"comment": "kernel-source-azure-4.12.14-16.194.1 is installed"
 							},
 							{
+								"test_ref": "oval:org.opensuse.security:tst:2009880127",
+								"comment": "kernel-syms-4.12.14-122.225.1 is installed"
+							},
+							{
 								"test_ref": "oval:org.opensuse.security:tst:2009879537",
 								"comment": "kernel-syms-azure-4.12.14-16.194.1 is installed"
+							}
+						]
+					}
+				]
+			},
+			{
+				"operator": "AND",
+				"criterias": [
+					{
+						"operator": "OR",
+						"criterions": [
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009880115",
+								"comment": "kernel-default-kgraft-4.12.14-122.225.1 is installed"
 							},
 							{
-								"test_ref": "oval:org.opensuse.security:tst:2009334017",
-								"comment": "kernel-default is not affected"
+								"test_ref": "oval:org.opensuse.security:tst:2009880116",
+								"comment": "kernel-default-kgraft-devel-4.12.14-122.225.1 is installed"
 							},
 							{
-								"test_ref": "oval:org.opensuse.security:tst:2009335425",
-								"comment": "kernel-default-base is not affected"
-							},
-							{
-								"test_ref": "oval:org.opensuse.security:tst:2009335423",
-								"comment": "kernel-default-devel is not affected"
-							},
-							{
-								"test_ref": "oval:org.opensuse.security:tst:2009335426",
-								"comment": "kernel-default-man is not affected"
-							},
-							{
-								"test_ref": "oval:org.opensuse.security:tst:2009334791",
-								"comment": "kernel-devel is not affected"
-							},
-							{
-								"test_ref": "oval:org.opensuse.security:tst:2009334792",
-								"comment": "kernel-macros is not affected"
-							},
-							{
-								"test_ref": "oval:org.opensuse.security:tst:2009333928",
-								"comment": "kernel-source is not affected"
+								"test_ref": "oval:org.opensuse.security:tst:2009880117",
+								"comment": "kgraft-patch-4_12_14-122_225-default-1-8.3.1 is installed"
 							}
 						]
 					}
 				],
 				"criterions": [
 					{
-						"test_ref": "oval:org.opensuse.security:tst:2009258033",
-						"comment": "SUSE Linux Enterprise Server 12 SP5 is installed"
+						"test_ref": "oval:org.opensuse.security:tst:2009273148",
+						"comment": "SUSE Linux Enterprise Live Patching 12 SP5 is installed"
 					}
 				]
 			}

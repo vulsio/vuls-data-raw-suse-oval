@@ -7,13 +7,17 @@
 		"affected": {
 			"family": "unix",
 			"platform": [
+				"SUSE Linux Enterprise Desktop 15 SP5",
 				"SUSE Linux Enterprise Desktop 15 SP6",
 				"SUSE Linux Enterprise High Performance Computing 15 SP5",
 				"SUSE Linux Enterprise High Performance Computing 15 SP6",
 				"SUSE Linux Enterprise Live Patching 15 SP5",
 				"SUSE Linux Enterprise Live Patching 15 SP6",
+				"SUSE Linux Enterprise Module for Basesystem 15 SP5",
 				"SUSE Linux Enterprise Module for Basesystem 15 SP6",
+				"SUSE Linux Enterprise Module for Development Tools 15 SP5",
 				"SUSE Linux Enterprise Module for Development Tools 15 SP6",
+				"SUSE Linux Enterprise Module for Legacy 15 SP5",
 				"SUSE Linux Enterprise Module for Legacy 15 SP6",
 				"SUSE Linux Enterprise Module for Public Cloud 15 SP5",
 				"SUSE Linux Enterprise Module for Public Cloud 15 SP6",
@@ -21,6 +25,7 @@
 				"SUSE Linux Enterprise Server 15 SP6",
 				"SUSE Linux Enterprise Server for SAP Applications 15 SP5",
 				"SUSE Linux Enterprise Server for SAP Applications 15 SP6",
+				"SUSE Linux Enterprise Workstation Extension 15 SP5",
 				"SUSE Linux Enterprise Workstation Extension 15 SP6"
 			]
 		},
@@ -69,6 +74,11 @@
 				"ref_id": "SUSE-SU-2024:2896-1",
 				"ref_url": "https://lists.suse.com/pipermail/sle-security-updates/2024-August/019185.html",
 				"source": "SUSE-SU"
+			},
+			{
+				"ref_id": "SUSE-SU-2024:2939-1",
+				"ref_url": "https://lists.suse.com/pipermail/sle-security-updates/2024-August/019211.html",
+				"source": "SUSE-SU"
 			}
 		],
 		"description": "\n    In the Linux kernel, the following vulnerability has been resolved:\n\ntipc: Change nla_policy for bearer-related names to NLA_NUL_STRING\n\nsyzbot reported the following uninit-value access issue [1]:\n\n=====================================================\nBUG: KMSAN: uninit-value in strlen lib/string.c:418 [inline]\nBUG: KMSAN: uninit-value in strstr+0xb8/0x2f0 lib/string.c:756\n strlen lib/string.c:418 [inline]\n strstr+0xb8/0x2f0 lib/string.c:756\n tipc_nl_node_reset_link_stats+0x3ea/0xb50 net/tipc/node.c:2595\n genl_family_rcv_msg_doit net/netlink/genetlink.c:971 [inline]\n genl_family_rcv_msg net/netlink/genetlink.c:1051 [inline]\n genl_rcv_msg+0x11ec/0x1290 net/netlink/genetlink.c:1066\n netlink_rcv_skb+0x371/0x650 net/netlink/af_netlink.c:2545\n genl_rcv+0x40/0x60 net/netlink/genetlink.c:1075\n netlink_unicast_kernel net/netlink/af_netlink.c:1342 [inline]\n netlink_unicast+0xf47/0x1250 net/netlink/af_netlink.c:1368\n netlink_sendmsg+0x1238/0x13d0 net/netlink/af_netlink.c:1910\n sock_sendmsg_nosec net/socket.c:730 [inline]\n sock_sendmsg net/socket.c:753 [inline]\n ____sys_sendmsg+0x9c2/0xd60 net/socket.c:2541\n ___sys_sendmsg+0x28d/0x3c0 net/socket.c:2595\n __sys_sendmsg net/socket.c:2624 [inline]\n __do_sys_sendmsg net/socket.c:2633 [inline]\n __se_sys_sendmsg net/socket.c:2631 [inline]\n __x64_sys_sendmsg+0x307/0x490 net/socket.c:2631\n do_syscall_x64 arch/x86/entry/common.c:50 [inline]\n do_syscall_64+0x41/0xc0 arch/x86/entry/common.c:80\n entry_SYSCALL_64_after_hwframe+0x63/0xcd\n\nUninit was created at:\n slab_post_alloc_hook+0x12f/0xb70 mm/slab.h:767\n slab_alloc_node mm/slub.c:3478 [inline]\n kmem_cache_alloc_node+0x577/0xa80 mm/slub.c:3523\n kmalloc_reserve+0x13d/0x4a0 net/core/skbuff.c:559\n __alloc_skb+0x318/0x740 net/core/skbuff.c:650\n alloc_skb include/linux/skbuff.h:1286 [inline]\n netlink_alloc_large_skb net/netlink/af_netlink.c:1214 [inline]\n netlink_sendmsg+0xb34/0x13d0 net/netlink/af_netlink.c:1885\n sock_sendmsg_nosec net/socket.c:730 [inline]\n sock_sendmsg net/socket.c:753 [inline]\n ____sys_sendmsg+0x9c2/0xd60 net/socket.c:2541\n ___sys_sendmsg+0x28d/0x3c0 net/socket.c:2595\n __sys_sendmsg net/socket.c:2624 [inline]\n __do_sys_sendmsg net/socket.c:2633 [inline]\n __se_sys_sendmsg net/socket.c:2631 [inline]\n __x64_sys_sendmsg+0x307/0x490 net/socket.c:2631\n do_syscall_x64 arch/x86/entry/common.c:50 [inline]\n do_syscall_64+0x41/0xc0 arch/x86/entry/common.c:80\n entry_SYSCALL_64_after_hwframe+0x63/0xcd\n\nTIPC bearer-related names including link names must be null-terminated\nstrings. If a link name which is not null-terminated is passed through\nnetlink, strstr() and similar functions can cause buffer overrun. This\ncauses the above issue.\n\nThis patch changes the nla_policy for bearer-related names from NLA_STRING\nto NLA_NUL_STRING. This resolves the issue by ensuring that only\nnull-terminated strings are accepted as bearer-related names.\n\nsyzbot reported similar uninit-value issue related to bearer names [2]. The\nroot cause of this issue is that a non-null-terminated bearer name was\npassed. This patch also resolved this issue.\n    ",
@@ -97,19 +107,24 @@
 				"date": "2024-07-10"
 			},
 			"updated": {
-				"date": "2024-08-14"
+				"date": "2024-08-17"
 			},
 			"affected_cpe_list": {
 				"cpe": [
+					"cpe:/o:suse:sle-module-basesystem:15:sp5",
 					"cpe:/o:suse:sle-module-basesystem:15:sp6",
+					"cpe:/o:suse:sle-module-development-tools:15:sp5",
 					"cpe:/o:suse:sle-module-development-tools:15:sp6",
+					"cpe:/o:suse:sle-module-legacy:15:sp5",
 					"cpe:/o:suse:sle-module-legacy:15:sp6",
 					"cpe:/o:suse:sle-module-live-patching:15:sp5",
 					"cpe:/o:suse:sle-module-live-patching:15:sp6",
 					"cpe:/o:suse:sle-module-public-cloud:15:sp5",
 					"cpe:/o:suse:sle-module-public-cloud:15:sp6",
+					"cpe:/o:suse:sle-we:15:sp5",
 					"cpe:/o:suse:sle-we:15:sp6",
 					"cpe:/o:suse:sle_hpc:15:sp5",
+					"cpe:/o:suse:sled:15:sp5",
 					"cpe:/o:suse:sles:15:sp5",
 					"cpe:/o:suse:sles_sap:15:sp5"
 				]
@@ -119,19 +134,6 @@
 	"criteria": {
 		"operator": "OR",
 		"criterias": [
-			{
-				"operator": "AND",
-				"criterions": [
-					{
-						"test_ref": "oval:org.opensuse.security:tst:2009764853",
-						"comment": "SUSE Linux Enterprise Live Patching 15 SP5 is installed"
-					},
-					{
-						"test_ref": "oval:org.opensuse.security:tst:2009872378",
-						"comment": "kernel-livepatch-5_14_21-150500_13_61-rt-1-150500.11.3.1 is installed"
-					}
-				]
-			},
 			{
 				"operator": "AND",
 				"criterias": [
@@ -193,6 +195,70 @@
 					{
 						"test_ref": "oval:org.opensuse.security:tst:2009875321",
 						"comment": "kernel-default-extra-6.4.0-150600.23.14.2 is installed"
+					}
+				]
+			},
+			{
+				"operator": "AND",
+				"criterias": [
+					{
+						"operator": "OR",
+						"criterions": [
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009759899",
+								"comment": "SUSE Linux Enterprise High Performance Computing 15 SP5 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009760608",
+								"comment": "SUSE Linux Enterprise Module for Legacy 15 SP5 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009759901",
+								"comment": "SUSE Linux Enterprise Server 15 SP5 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009759902",
+								"comment": "SUSE Linux Enterprise Server for SAP Applications 15 SP5 is installed"
+							}
+						]
+					}
+				],
+				"criterions": [
+					{
+						"test_ref": "oval:org.opensuse.security:tst:2009879907",
+						"comment": "reiserfs-kmp-default-5.14.21-150500.55.73.1 is installed"
+					}
+				]
+			},
+			{
+				"operator": "AND",
+				"criterias": [
+					{
+						"operator": "OR",
+						"criterions": [
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009759898",
+								"comment": "SUSE Linux Enterprise Desktop 15 SP5 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009759901",
+								"comment": "SUSE Linux Enterprise Server 15 SP5 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009759902",
+								"comment": "SUSE Linux Enterprise Server for SAP Applications 15 SP5 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009766857",
+								"comment": "SUSE Linux Enterprise Workstation Extension 15 SP5 is installed"
+							}
+						]
+					}
+				],
+				"criterions": [
+					{
+						"test_ref": "oval:org.opensuse.security:tst:2009880109",
+						"comment": "kernel-default-extra-5.14.21-150500.55.73.1 is installed"
 					}
 				]
 			},
@@ -441,6 +507,156 @@
 								"comment": "kernel-syms-azure-6.4.0-150600.8.8.1 is installed"
 							}
 						]
+					}
+				]
+			},
+			{
+				"operator": "AND",
+				"criterias": [
+					{
+						"operator": "OR",
+						"criterions": [
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009759898",
+								"comment": "SUSE Linux Enterprise Desktop 15 SP5 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009759899",
+								"comment": "SUSE Linux Enterprise High Performance Computing 15 SP5 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009759900",
+								"comment": "SUSE Linux Enterprise Module for Basesystem 15 SP5 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009759901",
+								"comment": "SUSE Linux Enterprise Server 15 SP5 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009759902",
+								"comment": "SUSE Linux Enterprise Server for SAP Applications 15 SP5 is installed"
+							}
+						]
+					},
+					{
+						"operator": "OR",
+						"criterions": [
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009879870",
+								"comment": "kernel-64kb-5.14.21-150500.55.73.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009879871",
+								"comment": "kernel-64kb-devel-5.14.21-150500.55.73.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009879879",
+								"comment": "kernel-default-5.14.21-150500.55.73.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009879880",
+								"comment": "kernel-default-base-5.14.21-150500.55.73.1.150500.6.33.8 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009879882",
+								"comment": "kernel-default-devel-5.14.21-150500.55.73.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009879888",
+								"comment": "kernel-devel-5.14.21-150500.55.73.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009879895",
+								"comment": "kernel-macros-5.14.21-150500.55.73.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009879901",
+								"comment": "kernel-zfcpdump-5.14.21-150500.55.73.1 is installed"
+							}
+						]
+					}
+				]
+			},
+			{
+				"operator": "AND",
+				"criterias": [
+					{
+						"operator": "OR",
+						"criterions": [
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009759898",
+								"comment": "SUSE Linux Enterprise Desktop 15 SP5 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009759899",
+								"comment": "SUSE Linux Enterprise High Performance Computing 15 SP5 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009760583",
+								"comment": "SUSE Linux Enterprise Module for Development Tools 15 SP5 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009759901",
+								"comment": "SUSE Linux Enterprise Server 15 SP5 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009759902",
+								"comment": "SUSE Linux Enterprise Server for SAP Applications 15 SP5 is installed"
+							}
+						]
+					},
+					{
+						"operator": "OR",
+						"criterions": [
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009879889",
+								"comment": "kernel-docs-5.14.21-150500.55.73.2 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009879896",
+								"comment": "kernel-obs-build-5.14.21-150500.55.73.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009879898",
+								"comment": "kernel-source-5.14.21-150500.55.73.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009879900",
+								"comment": "kernel-syms-5.14.21-150500.55.73.1 is installed"
+							}
+						]
+					}
+				]
+			},
+			{
+				"operator": "AND",
+				"criterias": [
+					{
+						"operator": "OR",
+						"criterions": [
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009880106",
+								"comment": "kernel-default-livepatch-5.14.21-150500.55.73.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009880107",
+								"comment": "kernel-default-livepatch-devel-5.14.21-150500.55.73.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009872378",
+								"comment": "kernel-livepatch-5_14_21-150500_13_61-rt-1-150500.11.3.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009880108",
+								"comment": "kernel-livepatch-5_14_21-150500_55_73-default-1-150500.11.3.1 is installed"
+							}
+						]
+					}
+				],
+				"criterions": [
+					{
+						"test_ref": "oval:org.opensuse.security:tst:2009764853",
+						"comment": "SUSE Linux Enterprise Live Patching 15 SP5 is installed"
 					}
 				]
 			}
