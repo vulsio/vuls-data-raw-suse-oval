@@ -110,6 +110,11 @@
 				"ref_id": "SUSE-SU-2024:2190-1",
 				"ref_url": "https://lists.suse.com/pipermail/sle-updates/2024-June/035732.html",
 				"source": "SUSE-SU"
+			},
+			{
+				"ref_id": "SUSE-SU-2024:2203-1",
+				"ref_url": "https://lists.suse.com/pipermail/sle-security-updates/2024-August/019244.html",
+				"source": "SUSE-SU"
 			}
 		],
 		"description": "\n    In the Linux kernel, the following vulnerability has been resolved:\n\nbpf, sockmap: Prevent lock inversion deadlock in map delete elem\n\nsyzkaller started using corpuses where a BPF tracing program deletes\nelements from a sockmap/sockhash map. Because BPF tracing programs can be\ninvoked from any interrupt context, locks taken during a map_delete_elem\noperation must be hardirq-safe. Otherwise a deadlock due to lock inversion\nis possible, as reported by lockdep:\n\n       CPU0                    CPU1\n       ----                    ----\n  lock(&htab->buckets[i].lock);\n                               local_irq_disable();\n                               lock(&host->lock);\n                               lock(&htab->buckets[i].lock);\n  <Interrupt>\n    lock(&host->lock);\n\nLocks in sockmap are hardirq-unsafe by design. We expects elements to be\ndeleted from sockmap/sockhash only in task (normal) context with interrupts\nenabled, or in softirq context.\n\nDetect when map_delete_elem operation is invoked from a context which is\n_not_ hardirq-unsafe, that is interrupts are disabled, and bail out with an\nerror.\n\nNote that map updates are not affected by this issue. BPF verifier does not\nallow updating sockmap/sockhash from a BPF tracing program today.\n    ",
@@ -138,7 +143,7 @@
 				"date": "2024-05-21"
 			},
 			"updated": {
-				"date": "2024-07-29"
+				"date": "2024-08-20"
 			},
 			"affected_cpe_list": {
 				"cpe": [

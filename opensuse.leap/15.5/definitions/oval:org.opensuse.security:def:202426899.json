@@ -25,6 +25,11 @@
 				"ref_id": "SUSE-SU-2024:2135-1",
 				"ref_url": "https://lists.suse.com/pipermail/sle-updates/2024-June/035681.html",
 				"source": "SUSE-SU"
+			},
+			{
+				"ref_id": "SUSE-SU-2024:2203-1",
+				"ref_url": "https://lists.suse.com/pipermail/sle-security-updates/2024-August/019244.html",
+				"source": "SUSE-SU"
 			}
 		],
 		"description": "\n    In the Linux kernel, the following vulnerability has been resolved:\n\nblock: fix deadlock between bd_link_disk_holder and partition scan\n\n'open_mutex' of gendisk is used to protect open/close block devices. But\nin bd_link_disk_holder(), it is used to protect the creation of symlink\nbetween holding disk and slave bdev, which introduces some issues.\n\nWhen bd_link_disk_holder() is called, the driver is usually in the process\nof initialization/modification and may suspend submitting io. At this\ntime, any io hold 'open_mutex', such as scanning partitions, can cause\ndeadlocks. For example, in raid:\n\nT1                              T2\nbdev_open_by_dev\n lock open_mutex [1]\n ...\n  efi_partition\n  ...\n   md_submit_bio\n\t\t\t\tmd_ioctl mddev_syspend\n\t\t\t\t  -> suspend all io\n\t\t\t\t md_add_new_disk\n\t\t\t\t  bind_rdev_to_array\n\t\t\t\t   bd_link_disk_holder\n\t\t\t\t    try lock open_mutex [2]\n    md_handle_request\n     -> wait mddev_resume\n\nT1 scan partition, T2 add a new device to raid. T1 waits for T2 to resume\nmddev, but T2 waits for open_mutex held by T1. Deadlock occurs.\n\nFix it by introducing a local mutex 'blk_holder_mutex' to replace\n'open_mutex'.\n    ",
@@ -55,7 +60,7 @@
 				"date": "2024-05-02"
 			},
 			"updated": {
-				"date": "2024-07-03"
+				"date": "2024-08-20"
 			},
 			"affected_cpe_list": {
 				"cpe": [
