@@ -10,6 +10,7 @@
 				"SUSE Linux Enterprise Live Patching 12 SP5",
 				"SUSE Linux Enterprise Real Time 12 SP5",
 				"SUSE Linux Enterprise Server 12 SP3-LTSS-TERADATA",
+				"SUSE Linux Enterprise Server 12 SP3-TERADATA",
 				"SUSE Linux Enterprise Server 12 SP5",
 				"SUSE Linux Enterprise Server for SAP Applications 12 SP5",
 				"SUSE Linux Enterprise Workstation Extension 12 SP5"
@@ -90,6 +91,11 @@
 				"ref_id": "SUSE-SU-2024:2939-1",
 				"ref_url": "https://lists.suse.com/pipermail/sle-security-updates/2024-August/019211.html",
 				"source": "SUSE-SU"
+			},
+			{
+				"ref_id": "SUSE-SU-2024:2973-1",
+				"ref_url": "https://lists.suse.com/pipermail/sle-security-updates/2024-August/019280.html",
+				"source": "SUSE-SU"
 			}
 		],
 		"description": "\n    In the Linux kernel, the following vulnerability has been resolved:\n\nusb: gadget: f_fs: Fix race between aio_cancel() and AIO request complete\n\nFFS based applications can utilize the aio_cancel() callback to dequeue\npending USB requests submitted to the UDC.  There is a scenario where the\nFFS application issues an AIO cancel call, while the UDC is handling a\nsoft disconnect.  For a DWC3 based implementation, the callstack looks\nlike the following:\n\n    DWC3 Gadget                               FFS Application\ndwc3_gadget_soft_disconnect()              ...\n  --> dwc3_stop_active_transfers()\n    --> dwc3_gadget_giveback(-ESHUTDOWN)\n      --> ffs_epfile_async_io_complete()   ffs_aio_cancel()\n        --> usb_ep_free_request()            --> usb_ep_dequeue()\n\nThere is currently no locking implemented between the AIO completion\nhandler and AIO cancel, so the issue occurs if the completion routine is\nrunning in parallel to an AIO cancel call coming from the FFS application.\nAs the completion call frees the USB request (io_data->req) the FFS\napplication is also referencing it for the usb_ep_dequeue() call.  This can\nlead to accessing a stale/hanging pointer.\n\ncommit b566d38857fc (\"usb: gadget: f_fs: use io_data->status consistently\")\nrelocated the usb_ep_free_request() into ffs_epfile_async_io_complete().\nHowever, in order to properly implement locking to mitigate this issue, the\nspinlock can't be added to ffs_epfile_async_io_complete(), as\nusb_ep_dequeue() (if successfully dequeuing a USB request) will call the\nfunction driver's completion handler in the same context.  Hence, leading\ninto a deadlock.\n\nFix this issue by moving the usb_ep_free_request() back to\nffs_user_copy_worker(), and ensuring that it explicitly sets io_data->req\nto NULL after freeing it within the ffs->eps_lock.  This resolves the race\ncondition above, as the ffs_aio_cancel() routine will not continue\nattempting to dequeue a request that has already been freed, or the\nffs_user_copy_work() not freeing the USB request until the AIO cancel is\ndone referencing it.\n\nThis fix depends on\n  commit b566d38857fc (\"usb: gadget: f_fs: use io_data->status\n  consistently\")\n    ",
@@ -122,7 +128,7 @@
 				"date": "2024-07-10"
 			},
 			"updated": {
-				"date": "2024-08-20"
+				"date": "2024-08-21"
 			},
 			"affected_cpe_list": {
 				"cpe": [
@@ -130,6 +136,7 @@
 					"cpe:/o:suse:sle-we:12:sp5",
 					"cpe:/o:suse:sles:12:sp5",
 					"cpe:/o:suse:sles_sap:12:sp5",
+					"cpe:/o:suse:sles_teradata:12:sp3",
 					"cpe:/o:suse:sles_teradata:12:sp3-ltss",
 					"cpe:/o:suse:suse-linux-enterprise-rt:12:sp5"
 				]
@@ -379,6 +386,50 @@
 					{
 						"test_ref": "oval:org.opensuse.security:tst:2009158922",
 						"comment": "SUSE Linux Enterprise Server 12 SP3-LTSS-TERADATA is installed"
+					}
+				]
+			},
+			{
+				"operator": "AND",
+				"criterias": [
+					{
+						"operator": "OR",
+						"criterions": [
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009880744",
+								"comment": "kernel-default-4.4.140-96.149.TDC.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009880745",
+								"comment": "kernel-default-base-4.4.140-96.149.TDC.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009880746",
+								"comment": "kernel-default-devel-4.4.140-96.149.TDC.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009880747",
+								"comment": "kernel-devel-4.4.140-96.149.TDC.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009880748",
+								"comment": "kernel-macros-4.4.140-96.149.TDC.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009880749",
+								"comment": "kernel-source-4.4.140-96.149.TDC.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009880750",
+								"comment": "kernel-syms-4.4.140-96.149.TDC.1 is installed"
+							}
+						]
+					}
+				],
+				"criterions": [
+					{
+						"test_ref": "oval:org.opensuse.security:tst:2009876317",
+						"comment": "SUSE Linux Enterprise Server 12 SP3-TERADATA is installed"
 					}
 				]
 			}

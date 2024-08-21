@@ -49,6 +49,11 @@
 				"ref_id": "SUSE-SU-2024:2203-1",
 				"ref_url": "https://lists.suse.com/pipermail/sle-security-updates/2024-August/019244.html",
 				"source": "SUSE-SU"
+			},
+			{
+				"ref_id": "SUSE-SU-2024:2973-1",
+				"ref_url": "https://lists.suse.com/pipermail/sle-security-updates/2024-August/019280.html",
+				"source": "SUSE-SU"
 			}
 		],
 		"description": "\n    In the Linux kernel, the following vulnerability has been resolved:\n\nmm/secretmem: fix GUP-fast succeeding on secretmem folios\n\nfolio_is_secretmem() currently relies on secretmem folios being LRU\nfolios, to save some cycles.\n\nHowever, folios might reside in a folio batch without the LRU flag set, or\ntemporarily have their LRU flag cleared.  Consequently, the LRU flag is\nunreliable for this purpose.\n\nIn particular, this is the case when secretmem_fault() allocates a fresh\npage and calls filemap_add_folio()->folio_add_lru().  The folio might be\nadded to the per-cpu folio batch and won't get the LRU flag set until the\nbatch was drained using e.g., lru_add_drain().\n\nConsequently, folio_is_secretmem() might not detect secretmem folios and\nGUP-fast can succeed in grabbing a secretmem folio, crashing the kernel\nwhen we would later try reading/writing to the folio, because the folio\nhas been unmapped from the directmap.\n\nFix it by removing that unreliable check.\n    ",
@@ -77,7 +82,7 @@
 				"date": "2024-05-21"
 			},
 			"updated": {
-				"date": "2024-08-20"
+				"date": "2024-08-21"
 			},
 			"affected_cpe_list": {
 				"cpe": [
