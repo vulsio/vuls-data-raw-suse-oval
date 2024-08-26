@@ -1,9 +1,9 @@
 {
-	"id": "oval:org.opensuse.security:def:202248929",
+	"id": "oval:org.opensuse.security:def:202248921",
 	"version": "1",
 	"class": "vulnerability",
 	"metadata": {
-		"title": "CVE-2022-48929",
+		"title": "CVE-2022-48921",
 		"affected": {
 			"family": "unix",
 			"platform": [
@@ -17,42 +17,40 @@
 		},
 		"reference": [
 			{
-				"ref_id": "Mitre CVE-2022-48929",
-				"ref_url": "https://cve.mitre.org/cgi-bin/cvename.cgi?name=CVE-2022-48929",
+				"ref_id": "Mitre CVE-2022-48921",
+				"ref_url": "https://cve.mitre.org/cgi-bin/cvename.cgi?name=CVE-2022-48921",
 				"source": "CVE"
 			},
 			{
-				"ref_id": "SUSE CVE-2022-48929",
-				"ref_url": "https://www.suse.com/security/cve/CVE-2022-48929",
+				"ref_id": "SUSE CVE-2022-48921",
+				"ref_url": "https://www.suse.com/security/cve/CVE-2022-48921",
 				"source": "SUSE CVE"
 			}
 		],
-		"description": "\n    In the Linux kernel, the following vulnerability has been resolved:\n\nbpf: Fix crash due to out of bounds access into reg2btf_ids.\n\nWhen commit e6ac2450d6de (\"bpf: Support bpf program calling kernel function\") added\nkfunc support, it defined reg2btf_ids as a cheap way to translate the verifier\nreg type to the appropriate btf_vmlinux BTF ID, however\ncommit c25b2ae13603 (\"bpf: Replace PTR_TO_XXX_OR_NULL with PTR_TO_XXX | PTR_MAYBE_NULL\")\nmoved the __BPF_REG_TYPE_MAX from the last member of bpf_reg_type enum to after\nthe base register types, and defined other variants using type flag\ncomposition. However, now, the direct usage of reg->type to index into\nreg2btf_ids may no longer fall into __BPF_REG_TYPE_MAX range, and hence lead to\nout of bounds access and kernel crash on dereference of bad pointer.\n    ",
+		"description": "\n    In the Linux kernel, the following vulnerability has been resolved:\n\nsched/fair: Fix fault in reweight_entity\n\nSyzbot found a GPF in reweight_entity. This has been bisected to\ncommit 4ef0c5c6b5ba (\"kernel/sched: Fix sched_fork() access an invalid\nsched_task_group\")\n\nThere is a race between sched_post_fork() and setpriority(PRIO_PGRP)\nwithin a thread group that causes a null-ptr-deref in\nreweight_entity() in CFS. The scenario is that the main process spawns\nnumber of new threads, which then call setpriority(PRIO_PGRP, 0, -20),\nwait, and exit.  For each of the new threads the copy_process() gets\ninvoked, which adds the new task_struct and calls sched_post_fork()\nfor it.\n\nIn the above scenario there is a possibility that\nsetpriority(PRIO_PGRP) and set_one_prio() will be called for a thread\nin the group that is just being created by copy_process(), and for\nwhich the sched_post_fork() has not been executed yet. This will\ntrigger a null pointer dereference in reweight_entity(), as it will\ntry to access the run queue pointer, which hasn't been set.\n\nBefore the mentioned change the cfs_rq pointer for the task  has been\nset in sched_fork(), which is called much earlier in copy_process(),\nbefore the new task is added to the thread_group.  Now it is done in\nthe sched_post_fork(), which is called after that.  To fix the issue\nthe remove the update_load param from the update_load param() function\nand call reweight_task() only if the task flag doesn't have the\nTASK_NEW flag set.\n    ",
 		"advisory": {
 			"from": "security@suse.de",
 			"severity": "Moderate",
 			"cve": [
 				{
-					"text": "CVE-2022-48929 at SUSE",
-					"href": "https://www.suse.com/security/cve/CVE-2022-48929/",
+					"text": "CVE-2022-48921 at SUSE",
+					"href": "https://www.suse.com/security/cve/CVE-2022-48921/",
 					"impact": "medium",
 					"cvss3": "5.5/CVSS:3.1/AV:L/AC:L/PR:L/UI:N/S:U/C:N/I:N/A:H"
 				},
 				{
-					"text": "CVE-2022-48929 at NVD",
-					"href": "https://nvd.nist.gov/vuln/detail/CVE-2022-48929",
-					"impact": "medium",
-					"cvss3": "5.5/CVSS:3.1/AV:L/AC:L/PR:L/UI:N/S:U/C:N/I:N/A:H"
+					"text": "CVE-2022-48921 at NVD",
+					"href": "https://nvd.nist.gov/vuln/detail/CVE-2022-48921"
 				}
 			],
 			"bugzilla": [
 				{
-					"text": "SUSE bug 1229625",
-					"href": "https://bugzilla.suse.com/1229625"
+					"text": "SUSE bug 1229635",
+					"href": "https://bugzilla.suse.com/1229635"
 				}
 			],
 			"issued": {
-				"date": "2024-08-23"
+				"date": "2024-08-26"
 			},
 			"updated": {
 				"date": "2024-08-26"
