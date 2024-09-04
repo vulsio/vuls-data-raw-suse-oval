@@ -1,0 +1,203 @@
+{
+	"id": "oval:org.opensuse.security:def:202442472",
+	"version": "1",
+	"class": "vulnerability",
+	"metadata": {
+		"title": "CVE-2024-42472",
+		"affected": {
+			"family": "unix",
+			"platform": [
+				"openSUSE Leap 15.6"
+			]
+		},
+		"reference": [
+			{
+				"ref_id": "Mitre CVE-2024-42472",
+				"ref_url": "https://cve.mitre.org/cgi-bin/cvename.cgi?name=CVE-2024-42472",
+				"source": "CVE"
+			},
+			{
+				"ref_id": "SUSE CVE-2024-42472",
+				"ref_url": "https://www.suse.com/security/cve/CVE-2024-42472",
+				"source": "SUSE CVE"
+			},
+			{
+				"ref_id": "SUSE-SU-2024:3073-1",
+				"ref_url": "https://lists.suse.com/pipermail/sle-updates/2024-September/036729.html",
+				"source": "SUSE-SU"
+			},
+			{
+				"ref_id": "SUSE-SU-2024:3104-1",
+				"ref_url": "https://lists.suse.com/pipermail/sle-updates/2024-September/036768.html",
+				"source": "SUSE-SU"
+			}
+		],
+		"description": "\n    Flatpak is a Linux application sandboxing and distribution framework. Prior to versions 1.14.0 and 1.15.10, a malicious or compromised Flatpak app using persistent directories could access and write files outside of what it would otherwise have access to, which is an attack on integrity and confidentiality.\n\nWhen `persistent=subdir` is used in the application permissions (represented as `--persist=subdir` in the command-line interface), that means that an application which otherwise doesn't have access to the real user home directory will see an empty home directory with a writeable subdirectory `subdir`. Behind the scenes, this directory is actually a bind mount and the data is stored in the per-application directory as `~/.var/app/$APPID/subdir`. This allows existing apps that are not aware of the per-application directory to still work as intended without general home directory access.\n\nHowever, the application does have write access to the application directory `~/.var/app/$APPID` where this directory is stored. If the source directory for the `persistent`/`--persist` option is replaced by a symlink, then the next time the application is started, the bind mount will follow the symlink and mount whatever it points to into the sandbox.\n\nPartial protection against this vulnerability can be provided by patching Flatpak using the patches in commits ceec2ffc and 98f79773. However, this leaves a race condition that could be exploited by two instances of a malicious app running in parallel. Closing the race condition requires updating or patching the version of bubblewrap that is used by Flatpak to add the new `--bind-fd` option using the patch and then patching Flatpak to use it. If Flatpak has been configured at build-time with `-Dsystem_bubblewrap=bwrap` (1.15.x) or `--with-system-bubblewrap=bwrap` (1.14.x or older), or a similar option, then the version of bubblewrap that needs to be patched is a system copy that is distributed separately, typically `/usr/bin/bwrap`. This configuration is the one that is typically used in Linux distributions. If Flatpak has been configured at build-time with `-Dsystem_bubblewrap=` (1.15.x) or with `--without-system-bubblewrap` (1.14.x or older), then it is the bundled version of bubblewrap that is included with Flatpak that must be patched. This is typically installed as `/usr/libexec/flatpak-bwrap`. This configuration is the default when building from source code.\n\nFor the 1.14.x stable branch, these changes are included in Flatpak 1.14.10. The bundled version of bubblewrap included in this release has been updated to 0.6.3. For the 1.15.x development branch, these changes are included in Flatpak 1.15.10. The bundled version of bubblewrap in this release is a Meson \"wrap\" subproject, which has been updated to 0.10.0. The 1.12.x and 1.10.x branches will not be updated for this vulnerability. Long-term support OS distributions should backport the individual changes into their versions of Flatpak and bubblewrap, or update to newer versions if their stability policy allows it. As a workaround, avoid using applications using the `persistent` (`--persist`) permission.\n    ",
+		"advisory": {
+			"from": "security@suse.de",
+			"severity": "Critical",
+			"cve": [
+				{
+					"text": "CVE-2024-42472 at SUSE",
+					"href": "https://www.suse.com/security/cve/CVE-2024-42472/",
+					"impact": "high",
+					"cvss3": "8.4/CVSS:3.1/AV:L/AC:L/PR:L/UI:N/S:C/C:H/I:H/A:N"
+				},
+				{
+					"text": "CVE-2024-42472 at NVD",
+					"href": "https://nvd.nist.gov/vuln/detail/CVE-2024-42472"
+				}
+			],
+			"bugzilla": [
+				{
+					"text": "SUSE bug 1229157",
+					"href": "https://bugzilla.suse.com/1229157"
+				}
+			],
+			"issued": {
+				"date": "2024-09-04"
+			},
+			"updated": {
+				"date": "2024-09-04"
+			},
+			"affected_cpe_list": {
+				"cpe": [
+					"cpe:/o:opensuse:leap:15.6"
+				]
+			}
+		}
+	},
+	"criteria": {
+		"operator": "AND",
+		"criterias": [
+			{
+				"operator": "OR",
+				"criterias": [
+					{
+						"operator": "AND",
+						"criterions": [
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009940585",
+								"comment": "bubblewrap-0.8.0-150500.3.6.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009177243",
+								"comment": "bubblewrap is signed with openSUSE key"
+							}
+						]
+					},
+					{
+						"operator": "AND",
+						"criterions": [
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009940586",
+								"comment": "bubblewrap-zsh-completion-0.8.0-150500.3.6.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009940682",
+								"comment": "bubblewrap-zsh-completion is signed with openSUSE key"
+							}
+						]
+					},
+					{
+						"operator": "AND",
+						"criterions": [
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009940714",
+								"comment": "flatpak-1.14.6-150600.3.3.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009171006",
+								"comment": "flatpak is signed with openSUSE key"
+							}
+						]
+					},
+					{
+						"operator": "AND",
+						"criterions": [
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009940715",
+								"comment": "flatpak-devel-1.14.6-150600.3.3.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009171008",
+								"comment": "flatpak-devel is signed with openSUSE key"
+							}
+						]
+					},
+					{
+						"operator": "AND",
+						"criterions": [
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009940716",
+								"comment": "flatpak-remote-flathub-1.14.6-150600.3.3.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009858966",
+								"comment": "flatpak-remote-flathub is signed with openSUSE key"
+							}
+						]
+					},
+					{
+						"operator": "AND",
+						"criterions": [
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009940717",
+								"comment": "flatpak-zsh-completion-1.14.6-150600.3.3.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009350833",
+								"comment": "flatpak-zsh-completion is signed with openSUSE key"
+							}
+						]
+					},
+					{
+						"operator": "AND",
+						"criterions": [
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009940718",
+								"comment": "libflatpak0-1.14.6-150600.3.3.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009171009",
+								"comment": "libflatpak0 is signed with openSUSE key"
+							}
+						]
+					},
+					{
+						"operator": "AND",
+						"criterions": [
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009940719",
+								"comment": "system-user-flatpak-1.14.6-150600.3.3.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009350838",
+								"comment": "system-user-flatpak is signed with openSUSE key"
+							}
+						]
+					},
+					{
+						"operator": "AND",
+						"criterions": [
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009940720",
+								"comment": "typelib-1_0-Flatpak-1_0-1.14.6-150600.3.3.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009171010",
+								"comment": "typelib-1_0-Flatpak-1_0 is signed with openSUSE key"
+							}
+						]
+					}
+				]
+			}
+		],
+		"criterions": [
+			{
+				"test_ref": "oval:org.opensuse.security:tst:2009864054",
+				"comment": "openSUSE Leap 15.6 is installed"
+			}
+		]
+	}
+}
