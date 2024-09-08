@@ -1,0 +1,185 @@
+{
+	"id": "oval:org.opensuse.security:def:202352910",
+	"version": "1",
+	"class": "vulnerability",
+	"metadata": {
+		"title": "CVE-2023-52910",
+		"affected": {
+			"family": "unix",
+			"platform": [
+				"SUSE Linux Enterprise Server 15 SP1-LTSS",
+				"SUSE Linux Enterprise Server 15 SP2-LTSS",
+				"SUSE Linux Enterprise Server 15 SP3-LTSS",
+				"SUSE Linux Enterprise Server 15-LTSS",
+				"SUSE Linux Enterprise Server for SAP Applications 15 SP2",
+				"SUSE Linux Enterprise Server for SAP Applications 15 SP3"
+			]
+		},
+		"reference": [
+			{
+				"ref_id": "Mitre CVE-2023-52910",
+				"ref_url": "https://cve.mitre.org/cgi-bin/cvename.cgi?name=CVE-2023-52910",
+				"source": "CVE"
+			},
+			{
+				"ref_id": "SUSE CVE-2023-52910",
+				"ref_url": "https://www.suse.com/security/cve/CVE-2023-52910",
+				"source": "SUSE CVE"
+			}
+		],
+		"description": "\n    In the Linux kernel, the following vulnerability has been resolved:\n\niommu/iova: Fix alloc iova overflows issue\n\nIn __alloc_and_insert_iova_range, there is an issue that retry_pfn\noverflows. The value of iovad->anchor.pfn_hi is ~0UL, then when\niovad->cached_node is iovad->anchor, curr_iova->pfn_hi + 1 will\noverflow. As a result, if the retry logic is executed, low_pfn is\nupdated to 0, and then new_pfn < low_pfn returns false to make the\nallocation successful.\n\nThis issue occurs in the following two situations:\n1. The first iova size exceeds the domain size. When initializing\niova domain, iovad->cached_node is assigned as iovad->anchor. For\nexample, the iova domain size is 10M, start_pfn is 0x1_F000_0000,\nand the iova size allocated for the first time is 11M. The\nfollowing is the log information, new->pfn_lo is smaller than\niovad->cached_node.\n\nExample log as follows:\n[  223.798112][T1705487] sh: [name:iova&]__alloc_and_insert_iova_range\nstart_pfn:0x1f0000,retry_pfn:0x0,size:0xb00,limit_pfn:0x1f0a00\n[  223.799590][T1705487] sh: [name:iova&]__alloc_and_insert_iova_range\nsuccess start_pfn:0x1f0000,new->pfn_lo:0x1efe00,new->pfn_hi:0x1f08ff\n\n2. The node with the largest iova->pfn_lo value in the iova domain\nis deleted, iovad->cached_node will be updated to iovad->anchor,\nand then the alloc iova size exceeds the maximum iova size that can\nbe allocated in the domain.\n\nAfter judging that retry_pfn is less than limit_pfn, call retry_pfn+1\nto fix the overflow issue.\n    ",
+		"advisory": {
+			"from": "security@suse.de",
+			"severity": "Moderate",
+			"cve": [
+				{
+					"text": "CVE-2023-52910 at SUSE",
+					"href": "https://www.suse.com/security/cve/CVE-2023-52910/",
+					"impact": "medium",
+					"cvss3": "5.5/CVSS:3.1/AV:L/AC:L/PR:L/UI:N/S:U/C:N/I:N/A:H"
+				},
+				{
+					"text": "CVE-2023-52910 at NVD",
+					"href": "https://nvd.nist.gov/vuln/detail/CVE-2023-52910"
+				}
+			],
+			"bugzilla": [
+				{
+					"text": "SUSE bug 1229523",
+					"href": "https://bugzilla.suse.com/1229523"
+				}
+			],
+			"issued": {
+				"date": "2024-09-08"
+			},
+			"updated": {
+				"date": "2024-09-08"
+			},
+			"affected_cpe_list": {
+				"cpe": [
+					"cpe:/o:suse:sles-ltss:15",
+					"cpe:/o:suse:sles-ltss:15:sp1",
+					"cpe:/o:suse:sles-ltss:15:sp2",
+					"cpe:/o:suse:sles-ltss:15:sp3",
+					"cpe:/o:suse:sles_sap:15:sp2",
+					"cpe:/o:suse:sles_sap:15:sp3"
+				]
+			}
+		}
+	},
+	"criteria": {
+		"operator": "OR",
+		"criterias": [
+			{
+				"operator": "AND",
+				"criterias": [
+					{
+						"operator": "OR",
+						"criterions": [
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009660213",
+								"comment": "SUSE Linux Enterprise Server 15 SP2-LTSS is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009729178",
+								"comment": "SUSE Linux Enterprise Server 15 SP3-LTSS is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009659637",
+								"comment": "SUSE Linux Enterprise Server for SAP Applications 15 SP2 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009669878",
+								"comment": "SUSE Linux Enterprise Server for SAP Applications 15 SP3 is installed"
+							}
+						]
+					},
+					{
+						"operator": "OR",
+						"criterions": [
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009334017",
+								"comment": "kernel-default is not affected"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009335423",
+								"comment": "kernel-default-devel is not affected"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009338037",
+								"comment": "reiserfs-kmp-default is not affected"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009334791",
+								"comment": "kernel-devel is not affected"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009334792",
+								"comment": "kernel-macros is not affected"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009333928",
+								"comment": "kernel-source is not affected"
+							}
+						]
+					}
+				]
+			},
+			{
+				"operator": "AND",
+				"criterias": [
+					{
+						"operator": "OR",
+						"criterions": [
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009341508",
+								"comment": "SUSE Linux Enterprise Server 15 SP1-LTSS is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009302033",
+								"comment": "SUSE Linux Enterprise Server 15-LTSS is installed"
+							}
+						]
+					},
+					{
+						"operator": "OR",
+						"criterions": [
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009334017",
+								"comment": "kernel-default is not affected"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009335425",
+								"comment": "kernel-default-base is not affected"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009335423",
+								"comment": "kernel-default-devel is not affected"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009335426",
+								"comment": "kernel-default-man is not affected"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009338037",
+								"comment": "reiserfs-kmp-default is not affected"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009334791",
+								"comment": "kernel-devel is not affected"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009334792",
+								"comment": "kernel-macros is not affected"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009333928",
+								"comment": "kernel-source is not affected"
+							}
+						]
+					}
+				]
+			}
+		]
+	}
+}
