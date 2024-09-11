@@ -8,13 +8,17 @@
 			"family": "unix",
 			"platform": [
 				"SUSE Linux Enterprise Desktop 15 SP6",
+				"SUSE Linux Enterprise High Performance Computing 15 SP5",
 				"SUSE Linux Enterprise High Performance Computing 15 SP6",
 				"SUSE Linux Enterprise Module for Basesystem 15 SP6",
 				"SUSE Linux Enterprise Module for Development Tools 15 SP6",
+				"SUSE Linux Enterprise Module for Public Cloud 15 SP5",
 				"SUSE Linux Enterprise Module for Public Cloud 15 SP6",
 				"SUSE Linux Enterprise Server 15 SP1-LTSS",
+				"SUSE Linux Enterprise Server 15 SP5",
 				"SUSE Linux Enterprise Server 15 SP6",
 				"SUSE Linux Enterprise Server 15-LTSS",
+				"SUSE Linux Enterprise Server for SAP Applications 15 SP5",
 				"SUSE Linux Enterprise Server for SAP Applications 15 SP6"
 			]
 		},
@@ -28,6 +32,11 @@
 				"ref_id": "SUSE CVE-2022-48645",
 				"ref_url": "https://www.suse.com/security/cve/CVE-2022-48645",
 				"source": "SUSE CVE"
+			},
+			{
+				"ref_id": "SUSE-SU-2024:3190-1",
+				"ref_url": "https://lists.suse.com/pipermail/sle-security-updates/2024-September/019403.html",
+				"source": "SUSE-SU"
 			}
 		],
 		"description": "\n    In the Linux kernel, the following vulnerability has been resolved:\n\nnet: enetc: deny offload of tc-based TSN features on VF interfaces\n\nTSN features on the ENETC (taprio, cbs, gate, police) are configured\nthrough a mix of command BD ring messages and port registers:\nenetc_port_rd(), enetc_port_wr().\n\nPort registers are a region of the ENETC memory map which are only\naccessible from the PCIe Physical Function. They are not accessible from\nthe Virtual Functions.\n\nMoreover, attempting to access these registers crashes the kernel:\n\n$ echo 1 > /sys/bus/pci/devices/0000\\:00\\:00.0/sriov_numvfs\npci 0000:00:01.0: [1957:ef00] type 00 class 0x020001\nfsl_enetc_vf 0000:00:01.0: Adding to iommu group 15\nfsl_enetc_vf 0000:00:01.0: enabling device (0000 -> 0002)\nfsl_enetc_vf 0000:00:01.0 eno0vf0: renamed from eth0\n$ tc qdisc replace dev eno0vf0 root taprio num_tc 8 map 0 1 2 3 4 5 6 7 \\\n\tqueues 1@0 1@1 1@2 1@3 1@4 1@5 1@6 1@7 base-time 0 \\\n\tsched-entry S 0x7f 900000 sched-entry S 0x80 100000 flags 0x2\nUnable to handle kernel paging request at virtual address ffff800009551a08\nInternal error: Oops: 96000007 [#1] PREEMPT SMP\npc : enetc_setup_tc_taprio+0x170/0x47c\nlr : enetc_setup_tc_taprio+0x16c/0x47c\nCall trace:\n enetc_setup_tc_taprio+0x170/0x47c\n enetc_setup_tc+0x38/0x2dc\n taprio_change+0x43c/0x970\n taprio_init+0x188/0x1e0\n qdisc_create+0x114/0x470\n tc_modify_qdisc+0x1fc/0x6c0\n rtnetlink_rcv_msg+0x12c/0x390\n\nSplit enetc_setup_tc() into separate functions for the PF and for the\nVF drivers. Also remove enetc_qos.o from being included into\nenetc-vf.ko, since it serves absolutely no purpose there.\n    ",
@@ -56,15 +65,19 @@
 				"date": "2024-04-30"
 			},
 			"updated": {
-				"date": "2024-05-31"
+				"date": "2024-09-11"
 			},
 			"affected_cpe_list": {
 				"cpe": [
 					"cpe:/o:suse:sle-module-basesystem:15:sp6",
 					"cpe:/o:suse:sle-module-development-tools:15:sp6",
+					"cpe:/o:suse:sle-module-public-cloud:15:sp5",
 					"cpe:/o:suse:sle-module-public-cloud:15:sp6",
+					"cpe:/o:suse:sle_hpc:15:sp5",
 					"cpe:/o:suse:sles-ltss:15",
-					"cpe:/o:suse:sles-ltss:15:sp1"
+					"cpe:/o:suse:sles-ltss:15:sp1",
+					"cpe:/o:suse:sles:15:sp5",
+					"cpe:/o:suse:sles_sap:15:sp5"
 				]
 			}
 		}
@@ -255,6 +268,57 @@
 							{
 								"test_ref": "oval:org.opensuse.security:tst:2009340305",
 								"comment": "kernel-source-azure is not affected"
+							}
+						]
+					}
+				]
+			},
+			{
+				"operator": "AND",
+				"criterias": [
+					{
+						"operator": "OR",
+						"criterions": [
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009759899",
+								"comment": "SUSE Linux Enterprise High Performance Computing 15 SP5 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009762868",
+								"comment": "SUSE Linux Enterprise Module for Public Cloud 15 SP5 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009759901",
+								"comment": "SUSE Linux Enterprise Server 15 SP5 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009759902",
+								"comment": "SUSE Linux Enterprise Server for SAP Applications 15 SP5 is installed"
+							}
+						]
+					},
+					{
+						"operator": "OR",
+						"criterions": [
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009941981",
+								"comment": "kernel-azure-5.14.21-150500.33.66.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009941982",
+								"comment": "kernel-azure-devel-5.14.21-150500.33.66.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009941987",
+								"comment": "kernel-devel-azure-5.14.21-150500.33.66.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009941988",
+								"comment": "kernel-source-azure-5.14.21-150500.33.66.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009941989",
+								"comment": "kernel-syms-azure-5.14.21-150500.33.66.1 is installed"
 							}
 						]
 					}

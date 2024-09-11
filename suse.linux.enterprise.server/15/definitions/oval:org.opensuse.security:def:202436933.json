@@ -7,8 +7,17 @@
 		"affected": {
 			"family": "unix",
 			"platform": [
+				"SUSE Linux Enterprise High Performance Computing 15 SP5",
+				"SUSE Linux Enterprise High Performance Computing 15 SP6",
+				"SUSE Linux Enterprise Live Patching 15 SP6",
+				"SUSE Linux Enterprise Module for Public Cloud 15 SP5",
+				"SUSE Linux Enterprise Module for Public Cloud 15 SP6",
 				"SUSE Linux Enterprise Server 15 SP1-LTSS",
-				"SUSE Linux Enterprise Server 15-LTSS"
+				"SUSE Linux Enterprise Server 15 SP5",
+				"SUSE Linux Enterprise Server 15 SP6",
+				"SUSE Linux Enterprise Server 15-LTSS",
+				"SUSE Linux Enterprise Server for SAP Applications 15 SP5",
+				"SUSE Linux Enterprise Server for SAP Applications 15 SP6"
 			]
 		},
 		"reference": [
@@ -21,6 +30,21 @@
 				"ref_id": "SUSE CVE-2024-36933",
 				"ref_url": "https://www.suse.com/security/cve/CVE-2024-36933",
 				"source": "SUSE CVE"
+			},
+			{
+				"ref_id": "SUSE-SU-2024:3190-1",
+				"ref_url": "https://lists.suse.com/pipermail/sle-security-updates/2024-September/019403.html",
+				"source": "SUSE-SU"
+			},
+			{
+				"ref_id": "SUSE-SU-2024:3194-1",
+				"ref_url": "https://lists.suse.com/pipermail/sle-updates/2024-September/036835.html",
+				"source": "SUSE-SU"
+			},
+			{
+				"ref_id": "SUSE-SU-2024:3195-1",
+				"ref_url": "https://lists.suse.com/pipermail/sle-updates/2024-September/036842.html",
+				"source": "SUSE-SU"
 			}
 		],
 		"description": "\n    In the Linux kernel, the following vulnerability has been resolved:\n\nnsh: Restore skb->{protocol,data,mac_header} for outer header in nsh_gso_segment().\n\nsyzbot triggered various splats (see [0] and links) by a crafted GSO\npacket of VIRTIO_NET_HDR_GSO_UDP layering the following protocols:\n\n  ETH_P_8021AD + ETH_P_NSH + ETH_P_IPV6 + IPPROTO_UDP\n\nNSH can encapsulate IPv4, IPv6, Ethernet, NSH, and MPLS.  As the inner\nprotocol can be Ethernet, NSH GSO handler, nsh_gso_segment(), calls\nskb_mac_gso_segment() to invoke inner protocol GSO handlers.\n\nnsh_gso_segment() does the following for the original skb before\ncalling skb_mac_gso_segment()\n\n  1. reset skb->network_header\n  2. save the original skb->{mac_heaeder,mac_len} in a local variable\n  3. pull the NSH header\n  4. resets skb->mac_header\n  5. set up skb->mac_len and skb->protocol for the inner protocol.\n\nand does the following for the segmented skb\n\n  6. set ntohs(ETH_P_NSH) to skb->protocol\n  7. push the NSH header\n  8. restore skb->mac_header\n  9. set skb->mac_header + mac_len to skb->network_header\n 10. restore skb->mac_len\n\nThere are two problems in 6-7 and 8-9.\n\n  (a)\n  After 6 & 7, skb->data points to the NSH header, so the outer header\n  (ETH_P_8021AD in this case) is stripped when skb is sent out of netdev.\n\n  Also, if NSH is encapsulated by NSH + Ethernet (so NSH-Ethernet-NSH),\n  skb_pull() in the first nsh_gso_segment() will make skb->data point\n  to the middle of the outer NSH or Ethernet header because the Ethernet\n  header is not pulled by the second nsh_gso_segment().\n\n  (b)\n  While restoring skb->{mac_header,network_header} in 8 & 9,\n  nsh_gso_segment() does not assume that the data in the linear\n  buffer is shifted.\n\n  However, udp6_ufo_fragment() could shift the data and change\n  skb->mac_header accordingly as demonstrated by syzbot.\n\n  If this happens, even the restored skb->mac_header points to\n  the middle of the outer header.\n\nIt seems nsh_gso_segment() has never worked with outer headers so far.\n\nAt the end of nsh_gso_segment(), the outer header must be restored for\nthe segmented skb, instead of the NSH header.\n\nTo do that, let's calculate the outer header position relatively from\nthe inner header and set skb->{data,mac_header,protocol} properly.\n\n[0]:\nBUG: KMSAN: uninit-value in ipvlan_process_outbound drivers/net/ipvlan/ipvlan_core.c:524 [inline]\nBUG: KMSAN: uninit-value in ipvlan_xmit_mode_l3 drivers/net/ipvlan/ipvlan_core.c:602 [inline]\nBUG: KMSAN: uninit-value in ipvlan_queue_xmit+0xf44/0x16b0 drivers/net/ipvlan/ipvlan_core.c:668\n ipvlan_process_outbound drivers/net/ipvlan/ipvlan_core.c:524 [inline]\n ipvlan_xmit_mode_l3 drivers/net/ipvlan/ipvlan_core.c:602 [inline]\n ipvlan_queue_xmit+0xf44/0x16b0 drivers/net/ipvlan/ipvlan_core.c:668\n ipvlan_start_xmit+0x5c/0x1a0 drivers/net/ipvlan/ipvlan_main.c:222\n __netdev_start_xmit include/linux/netdevice.h:4989 [inline]\n netdev_start_xmit include/linux/netdevice.h:5003 [inline]\n xmit_one net/core/dev.c:3547 [inline]\n dev_hard_start_xmit+0x244/0xa10 net/core/dev.c:3563\n __dev_queue_xmit+0x33ed/0x51c0 net/core/dev.c:4351\n dev_queue_xmit include/linux/netdevice.h:3171 [inline]\n packet_xmit+0x9c/0x6b0 net/packet/af_packet.c:276\n packet_snd net/packet/af_packet.c:3081 [inline]\n packet_sendmsg+0x8aef/0x9f10 net/packet/af_packet.c:3113\n sock_sendmsg_nosec net/socket.c:730 [inline]\n __sock_sendmsg net/socket.c:745 [inline]\n __sys_sendto+0x735/0xa10 net/socket.c:2191\n __do_sys_sendto net/socket.c:2203 [inline]\n __se_sys_sendto net/socket.c:2199 [inline]\n __x64_sys_sendto+0x125/0x1c0 net/socket.c:2199\n do_syscall_x64 arch/x86/entry/common.c:52 [inline]\n do_syscall_64+0xcf/0x1e0 arch/x86/entry/common.c:83\n entry_SYSCALL_64_after_hwframe+0x63/0x6b\n\nUninit was created at:\n slab_post_alloc_hook mm/slub.c:3819 [inline]\n slab_alloc_node mm/slub.c:3860 [inline]\n __do_kmalloc_node mm/slub.c:3980 [inline]\n __kmalloc_node_track_caller+0x705/0x1000 mm/slub.c:4001\n kmalloc_reserve+0x249/0x4a0 net/core/skbuff.c:582\n __\n---truncated---\n    ",
@@ -49,66 +73,192 @@
 				"date": "2024-06-04"
 			},
 			"updated": {
-				"date": "2024-06-29"
+				"date": "2024-09-11"
 			},
 			"affected_cpe_list": {
 				"cpe": [
+					"cpe:/o:suse:sle-module-live-patching:15:sp6",
+					"cpe:/o:suse:sle-module-public-cloud:15:sp5",
+					"cpe:/o:suse:sle-module-public-cloud:15:sp6",
+					"cpe:/o:suse:sle_hpc:15:sp5",
 					"cpe:/o:suse:sles-ltss:15",
-					"cpe:/o:suse:sles-ltss:15:sp1"
+					"cpe:/o:suse:sles-ltss:15:sp1",
+					"cpe:/o:suse:sles:15:sp5",
+					"cpe:/o:suse:sles_sap:15:sp5"
 				]
 			}
 		}
 	},
 	"criteria": {
-		"operator": "AND",
+		"operator": "OR",
 		"criterias": [
 			{
-				"operator": "OR",
+				"operator": "AND",
 				"criterions": [
 					{
-						"test_ref": "oval:org.opensuse.security:tst:2009341508",
-						"comment": "SUSE Linux Enterprise Server 15 SP1-LTSS is installed"
+						"test_ref": "oval:org.opensuse.security:tst:2009857543",
+						"comment": "SUSE Linux Enterprise Live Patching 15 SP6 is installed"
 					},
 					{
-						"test_ref": "oval:org.opensuse.security:tst:2009302033",
-						"comment": "SUSE Linux Enterprise Server 15-LTSS is installed"
+						"test_ref": "oval:org.opensuse.security:tst:2009942033",
+						"comment": "kernel-livepatch-6_4_0-150600_10_8-rt-1-150600.1.3.2 is installed"
 					}
 				]
 			},
 			{
-				"operator": "OR",
-				"criterions": [
+				"operator": "AND",
+				"criterias": [
 					{
-						"test_ref": "oval:org.opensuse.security:tst:2009334017",
-						"comment": "kernel-default is not affected"
+						"operator": "OR",
+						"criterions": [
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009341508",
+								"comment": "SUSE Linux Enterprise Server 15 SP1-LTSS is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009302033",
+								"comment": "SUSE Linux Enterprise Server 15-LTSS is installed"
+							}
+						]
 					},
 					{
-						"test_ref": "oval:org.opensuse.security:tst:2009335425",
-						"comment": "kernel-default-base is not affected"
+						"operator": "OR",
+						"criterions": [
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009334017",
+								"comment": "kernel-default is not affected"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009335425",
+								"comment": "kernel-default-base is not affected"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009335423",
+								"comment": "kernel-default-devel is not affected"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009335426",
+								"comment": "kernel-default-man is not affected"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009338037",
+								"comment": "reiserfs-kmp-default is not affected"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009334791",
+								"comment": "kernel-devel is not affected"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009334792",
+								"comment": "kernel-macros is not affected"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009333928",
+								"comment": "kernel-source is not affected"
+							}
+						]
+					}
+				]
+			},
+			{
+				"operator": "AND",
+				"criterias": [
+					{
+						"operator": "OR",
+						"criterions": [
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009759899",
+								"comment": "SUSE Linux Enterprise High Performance Computing 15 SP5 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009762868",
+								"comment": "SUSE Linux Enterprise Module for Public Cloud 15 SP5 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009759901",
+								"comment": "SUSE Linux Enterprise Server 15 SP5 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009759902",
+								"comment": "SUSE Linux Enterprise Server for SAP Applications 15 SP5 is installed"
+							}
+						]
 					},
 					{
-						"test_ref": "oval:org.opensuse.security:tst:2009335423",
-						"comment": "kernel-default-devel is not affected"
+						"operator": "OR",
+						"criterions": [
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009941981",
+								"comment": "kernel-azure-5.14.21-150500.33.66.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009941982",
+								"comment": "kernel-azure-devel-5.14.21-150500.33.66.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009941987",
+								"comment": "kernel-devel-azure-5.14.21-150500.33.66.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009941988",
+								"comment": "kernel-source-azure-5.14.21-150500.33.66.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009941989",
+								"comment": "kernel-syms-azure-5.14.21-150500.33.66.1 is installed"
+							}
+						]
+					}
+				]
+			},
+			{
+				"operator": "AND",
+				"criterias": [
+					{
+						"operator": "OR",
+						"criterions": [
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009856172",
+								"comment": "SUSE Linux Enterprise High Performance Computing 15 SP6 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009856320",
+								"comment": "SUSE Linux Enterprise Module for Public Cloud 15 SP6 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009856174",
+								"comment": "SUSE Linux Enterprise Server 15 SP6 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009856175",
+								"comment": "SUSE Linux Enterprise Server for SAP Applications 15 SP6 is installed"
+							}
+						]
 					},
 					{
-						"test_ref": "oval:org.opensuse.security:tst:2009335426",
-						"comment": "kernel-default-man is not affected"
-					},
-					{
-						"test_ref": "oval:org.opensuse.security:tst:2009338037",
-						"comment": "reiserfs-kmp-default is not affected"
-					},
-					{
-						"test_ref": "oval:org.opensuse.security:tst:2009334791",
-						"comment": "kernel-devel is not affected"
-					},
-					{
-						"test_ref": "oval:org.opensuse.security:tst:2009334792",
-						"comment": "kernel-macros is not affected"
-					},
-					{
-						"test_ref": "oval:org.opensuse.security:tst:2009333928",
-						"comment": "kernel-source is not affected"
+						"operator": "OR",
+						"criterions": [
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009941998",
+								"comment": "kernel-azure-6.4.0-150600.8.11.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009941999",
+								"comment": "kernel-azure-devel-6.4.0-150600.8.11.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009942004",
+								"comment": "kernel-devel-azure-6.4.0-150600.8.11.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009942005",
+								"comment": "kernel-source-azure-6.4.0-150600.8.11.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009942006",
+								"comment": "kernel-syms-azure-6.4.0-150600.8.11.1 is installed"
+							}
+						]
 					}
 				]
 			}

@@ -1,0 +1,297 @@
+{
+	"id": "oval:org.opensuse.security:def:202443882",
+	"version": "1",
+	"class": "vulnerability",
+	"metadata": {
+		"title": "CVE-2024-43882",
+		"affected": {
+			"family": "unix",
+			"platform": [
+				"openSUSE Leap 15.5"
+			]
+		},
+		"reference": [
+			{
+				"ref_id": "Mitre CVE-2024-43882",
+				"ref_url": "https://cve.mitre.org/cgi-bin/cvename.cgi?name=CVE-2024-43882",
+				"source": "CVE"
+			},
+			{
+				"ref_id": "SUSE CVE-2024-43882",
+				"ref_url": "https://www.suse.com/security/cve/CVE-2024-43882",
+				"source": "SUSE CVE"
+			},
+			{
+				"ref_id": "SUSE-SU-2024:3189-1",
+				"ref_url": "https://lists.suse.com/pipermail/sle-security-updates/2024-September/019404.html",
+				"source": "SUSE-SU"
+			},
+			{
+				"ref_id": "SUSE-SU-2024:3190-1",
+				"ref_url": "https://lists.suse.com/pipermail/sle-security-updates/2024-September/019403.html",
+				"source": "SUSE-SU"
+			},
+			{
+				"ref_id": "SUSE-SU-2024:3194-1",
+				"ref_url": "https://lists.suse.com/pipermail/sle-updates/2024-September/036835.html",
+				"source": "SUSE-SU"
+			},
+			{
+				"ref_id": "SUSE-SU-2024:3195-1",
+				"ref_url": "https://lists.suse.com/pipermail/sle-updates/2024-September/036842.html",
+				"source": "SUSE-SU"
+			}
+		],
+		"description": "\n    In the Linux kernel, the following vulnerability has been resolved:\n\nexec: Fix ToCToU between perm check and set-uid/gid usage\n\nWhen opening a file for exec via do_filp_open(), permission checking is\ndone against the file's metadata at that moment, and on success, a file\npointer is passed back. Much later in the execve() code path, the file\nmetadata (specifically mode, uid, and gid) is used to determine if/how\nto set the uid and gid. However, those values may have changed since the\npermissions check, meaning the execution may gain unintended privileges.\n\nFor example, if a file could change permissions from executable and not\nset-id:\n\n---------x 1 root root 16048 Aug  7 13:16 target\n\nto set-id and non-executable:\n\n---S------ 1 root root 16048 Aug  7 13:16 target\n\nit is possible to gain root privileges when execution should have been\ndisallowed.\n\nWhile this race condition is rare in real-world scenarios, it has been\nobserved (and proven exploitable) when package managers are updating\nthe setuid bits of installed programs. Such files start with being\nworld-executable but then are adjusted to be group-exec with a set-uid\nbit. For example, \"chmod o-x,u+s target\" makes \"target\" executable only\nby uid \"root\" and gid \"cdrom\", while also becoming setuid-root:\n\n-rwxr-xr-x 1 root cdrom 16048 Aug  7 13:16 target\n\nbecomes:\n\n-rwsr-xr-- 1 root cdrom 16048 Aug  7 13:16 target\n\nBut racing the chmod means users without group \"cdrom\" membership can\nget the permission to execute \"target\" just before the chmod, and when\nthe chmod finishes, the exec reaches brpm_fill_uid(), and performs the\nsetuid to root, violating the expressed authorization of \"only cdrom\ngroup members can setuid to root\".\n\nRe-check that we still have execute permissions in case the metadata\nhas changed. It would be better to keep a copy from the perm-check time,\nbut until we can do that refactoring, the least-bad option is to do a\nfull inode_permission() call (under inode lock). It is understood that\nthis is safe against dead-locks, but hardly optimal.\n    ",
+		"advisory": {
+			"from": "security@suse.de",
+			"severity": "Moderate",
+			"cve": [
+				{
+					"text": "CVE-2024-43882 at SUSE",
+					"href": "https://www.suse.com/security/cve/CVE-2024-43882/",
+					"impact": "high",
+					"cvss3": "7/CVSS:3.1/AV:L/AC:H/PR:L/UI:N/S:U/C:H/I:H/A:H"
+				},
+				{
+					"text": "CVE-2024-43882 at NVD",
+					"href": "https://nvd.nist.gov/vuln/detail/CVE-2024-43882",
+					"impact": "high",
+					"cvss3": "7/CVSS:3.1/AV:L/AC:H/PR:L/UI:N/S:U/C:H/I:H/A:H"
+				}
+			],
+			"bugzilla": [
+				{
+					"text": "SUSE bug 1229503",
+					"href": "https://bugzilla.suse.com/1229503"
+				},
+				{
+					"text": "SUSE bug 1229504",
+					"href": "https://bugzilla.suse.com/1229504"
+				}
+			],
+			"issued": {
+				"date": "2024-09-11"
+			},
+			"updated": {
+				"date": "2024-09-11"
+			},
+			"affected_cpe_list": {
+				"cpe": [
+					"cpe:/o:opensuse:leap:15.5"
+				]
+			}
+		}
+	},
+	"criteria": {
+		"operator": "AND",
+		"criterias": [
+			{
+				"operator": "OR",
+				"criterias": [
+					{
+						"operator": "AND",
+						"criterions": [
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009941978",
+								"comment": "cluster-md-kmp-azure-5.14.21-150500.33.66.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009623277",
+								"comment": "cluster-md-kmp-azure is signed with openSUSE key"
+							}
+						]
+					},
+					{
+						"operator": "AND",
+						"criterions": [
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009941979",
+								"comment": "dlm-kmp-azure-5.14.21-150500.33.66.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009623279",
+								"comment": "dlm-kmp-azure is signed with openSUSE key"
+							}
+						]
+					},
+					{
+						"operator": "AND",
+						"criterions": [
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009941980",
+								"comment": "gfs2-kmp-azure-5.14.21-150500.33.66.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009623281",
+								"comment": "gfs2-kmp-azure is signed with openSUSE key"
+							}
+						]
+					},
+					{
+						"operator": "AND",
+						"criterions": [
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009941981",
+								"comment": "kernel-azure-5.14.21-150500.33.66.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009623283",
+								"comment": "kernel-azure is signed with openSUSE key"
+							}
+						]
+					},
+					{
+						"operator": "AND",
+						"criterions": [
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009941982",
+								"comment": "kernel-azure-devel-5.14.21-150500.33.66.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009623285",
+								"comment": "kernel-azure-devel is signed with openSUSE key"
+							}
+						]
+					},
+					{
+						"operator": "AND",
+						"criterions": [
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009941983",
+								"comment": "kernel-azure-extra-5.14.21-150500.33.66.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009623286",
+								"comment": "kernel-azure-extra is signed with openSUSE key"
+							}
+						]
+					},
+					{
+						"operator": "AND",
+						"criterions": [
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009941984",
+								"comment": "kernel-azure-livepatch-devel-5.14.21-150500.33.66.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009623287",
+								"comment": "kernel-azure-livepatch-devel is signed with openSUSE key"
+							}
+						]
+					},
+					{
+						"operator": "AND",
+						"criterions": [
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009941985",
+								"comment": "kernel-azure-optional-5.14.21-150500.33.66.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009623427",
+								"comment": "kernel-azure-optional is signed with openSUSE key"
+							}
+						]
+					},
+					{
+						"operator": "AND",
+						"criterions": [
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009941986",
+								"comment": "kernel-azure-vdso-5.14.21-150500.33.66.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009769740",
+								"comment": "kernel-azure-vdso is signed with openSUSE key"
+							}
+						]
+					},
+					{
+						"operator": "AND",
+						"criterions": [
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009941987",
+								"comment": "kernel-devel-azure-5.14.21-150500.33.66.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009623293",
+								"comment": "kernel-devel-azure is signed with openSUSE key"
+							}
+						]
+					},
+					{
+						"operator": "AND",
+						"criterions": [
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009941988",
+								"comment": "kernel-source-azure-5.14.21-150500.33.66.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009623300",
+								"comment": "kernel-source-azure is signed with openSUSE key"
+							}
+						]
+					},
+					{
+						"operator": "AND",
+						"criterions": [
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009941989",
+								"comment": "kernel-syms-azure-5.14.21-150500.33.66.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009623301",
+								"comment": "kernel-syms-azure is signed with openSUSE key"
+							}
+						]
+					},
+					{
+						"operator": "AND",
+						"criterions": [
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009941990",
+								"comment": "kselftests-kmp-azure-5.14.21-150500.33.66.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009623305",
+								"comment": "kselftests-kmp-azure is signed with openSUSE key"
+							}
+						]
+					},
+					{
+						"operator": "AND",
+						"criterions": [
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009941991",
+								"comment": "ocfs2-kmp-azure-5.14.21-150500.33.66.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009623306",
+								"comment": "ocfs2-kmp-azure is signed with openSUSE key"
+							}
+						]
+					},
+					{
+						"operator": "AND",
+						"criterions": [
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009941992",
+								"comment": "reiserfs-kmp-azure-5.14.21-150500.33.66.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009623308",
+								"comment": "reiserfs-kmp-azure is signed with openSUSE key"
+							}
+						]
+					}
+				]
+			}
+		],
+		"criterions": [
+			{
+				"test_ref": "oval:org.opensuse.security:tst:2009752682",
+				"comment": "openSUSE Leap 15.5 is installed"
+			}
+		]
+	}
+}

@@ -1,0 +1,291 @@
+{
+	"id": "oval:org.opensuse.security:def:202435971",
+	"version": "1",
+	"class": "vulnerability",
+	"metadata": {
+		"title": "CVE-2024-35971",
+		"affected": {
+			"family": "unix",
+			"platform": [
+				"openSUSE Leap 15.5"
+			]
+		},
+		"reference": [
+			{
+				"ref_id": "Mitre CVE-2024-35971",
+				"ref_url": "https://cve.mitre.org/cgi-bin/cvename.cgi?name=CVE-2024-35971",
+				"source": "CVE"
+			},
+			{
+				"ref_id": "SUSE CVE-2024-35971",
+				"ref_url": "https://www.suse.com/security/cve/CVE-2024-35971",
+				"source": "SUSE CVE"
+			},
+			{
+				"ref_id": "SUSE-SU-2024:2135-1",
+				"ref_url": "https://lists.suse.com/pipermail/sle-updates/2024-June/035681.html",
+				"source": "SUSE-SU"
+			},
+			{
+				"ref_id": "SUSE-SU-2024:2203-1",
+				"ref_url": "https://lists.suse.com/pipermail/sle-security-updates/2024-August/019244.html",
+				"source": "SUSE-SU"
+			},
+			{
+				"ref_id": "SUSE-SU-2024:2973-1",
+				"ref_url": "https://lists.suse.com/pipermail/sle-security-updates/2024-August/019280.html",
+				"source": "SUSE-SU"
+			},
+			{
+				"ref_id": "SUSE-SU-2024:3190-1",
+				"ref_url": "https://lists.suse.com/pipermail/sle-security-updates/2024-September/019403.html",
+				"source": "SUSE-SU"
+			}
+		],
+		"description": "\n    In the Linux kernel, the following vulnerability has been resolved:\n\nnet: ks8851: Handle softirqs at the end of IRQ thread to fix hang\n\nThe ks8851_irq() thread may call ks8851_rx_pkts() in case there are\nany packets in the MAC FIFO, which calls netif_rx(). This netif_rx()\nimplementation is guarded by local_bh_disable() and local_bh_enable().\nThe local_bh_enable() may call do_softirq() to run softirqs in case\nany are pending. One of the softirqs is net_rx_action, which ultimately\nreaches the driver .start_xmit callback. If that happens, the system\nhangs. The entire call chain is below:\n\nks8851_start_xmit_par from netdev_start_xmit\nnetdev_start_xmit from dev_hard_start_xmit\ndev_hard_start_xmit from sch_direct_xmit\nsch_direct_xmit from __dev_queue_xmit\n__dev_queue_xmit from __neigh_update\n__neigh_update from neigh_update\nneigh_update from arp_process.constprop.0\narp_process.constprop.0 from __netif_receive_skb_one_core\n__netif_receive_skb_one_core from process_backlog\nprocess_backlog from __napi_poll.constprop.0\n__napi_poll.constprop.0 from net_rx_action\nnet_rx_action from __do_softirq\n__do_softirq from call_with_stack\ncall_with_stack from do_softirq\ndo_softirq from __local_bh_enable_ip\n__local_bh_enable_ip from netif_rx\nnetif_rx from ks8851_irq\nks8851_irq from irq_thread_fn\nirq_thread_fn from irq_thread\nirq_thread from kthread\nkthread from ret_from_fork\n\nThe hang happens because ks8851_irq() first locks a spinlock in\nks8851_par.c ks8851_lock_par() spin_lock_irqsave(&ksp->lock, ...)\nand with that spinlock locked, calls netif_rx(). Once the execution\nreaches ks8851_start_xmit_par(), it calls ks8851_lock_par() again\nwhich attempts to claim the already locked spinlock again, and the\nhang happens.\n\nMove the do_softirq() call outside of the spinlock protected section\nof ks8851_irq() by disabling BHs around the entire spinlock protected\nsection of ks8851_irq() handler. Place local_bh_enable() outside of\nthe spinlock protected section, so that it can trigger do_softirq()\nwithout the ks8851_par.c ks8851_lock_par() spinlock being held, and\nsafely call ks8851_start_xmit_par() without attempting to lock the\nalready locked spinlock.\n\nSince ks8851_irq() is protected by local_bh_disable()/local_bh_enable()\nnow, replace netif_rx() with __netif_rx() which is not duplicating the\nlocal_bh_disable()/local_bh_enable() calls.\n    ",
+		"advisory": {
+			"from": "security@suse.de",
+			"severity": "Moderate",
+			"cve": [
+				{
+					"text": "CVE-2024-35971 at SUSE",
+					"href": "https://www.suse.com/security/cve/CVE-2024-35971/",
+					"impact": "medium",
+					"cvss3": "5.5/CVSS:3.1/AV:L/AC:L/PR:L/UI:N/S:U/C:N/I:N/A:H"
+				},
+				{
+					"text": "CVE-2024-35971 at NVD",
+					"href": "https://nvd.nist.gov/vuln/detail/CVE-2024-35971"
+				}
+			],
+			"bugzilla": [
+				{
+					"text": "SUSE bug 1224578",
+					"href": "https://bugzilla.suse.com/1224578"
+				}
+			],
+			"issued": {
+				"date": "2024-09-11"
+			},
+			"updated": {
+				"date": "2024-09-11"
+			},
+			"affected_cpe_list": {
+				"cpe": [
+					"cpe:/o:opensuse:leap:15.5"
+				]
+			}
+		}
+	},
+	"criteria": {
+		"operator": "AND",
+		"criterias": [
+			{
+				"operator": "OR",
+				"criterias": [
+					{
+						"operator": "AND",
+						"criterions": [
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009941978",
+								"comment": "cluster-md-kmp-azure-5.14.21-150500.33.66.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009623277",
+								"comment": "cluster-md-kmp-azure is signed with openSUSE key"
+							}
+						]
+					},
+					{
+						"operator": "AND",
+						"criterions": [
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009941979",
+								"comment": "dlm-kmp-azure-5.14.21-150500.33.66.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009623279",
+								"comment": "dlm-kmp-azure is signed with openSUSE key"
+							}
+						]
+					},
+					{
+						"operator": "AND",
+						"criterions": [
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009941980",
+								"comment": "gfs2-kmp-azure-5.14.21-150500.33.66.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009623281",
+								"comment": "gfs2-kmp-azure is signed with openSUSE key"
+							}
+						]
+					},
+					{
+						"operator": "AND",
+						"criterions": [
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009941981",
+								"comment": "kernel-azure-5.14.21-150500.33.66.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009623283",
+								"comment": "kernel-azure is signed with openSUSE key"
+							}
+						]
+					},
+					{
+						"operator": "AND",
+						"criterions": [
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009941982",
+								"comment": "kernel-azure-devel-5.14.21-150500.33.66.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009623285",
+								"comment": "kernel-azure-devel is signed with openSUSE key"
+							}
+						]
+					},
+					{
+						"operator": "AND",
+						"criterions": [
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009941983",
+								"comment": "kernel-azure-extra-5.14.21-150500.33.66.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009623286",
+								"comment": "kernel-azure-extra is signed with openSUSE key"
+							}
+						]
+					},
+					{
+						"operator": "AND",
+						"criterions": [
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009941984",
+								"comment": "kernel-azure-livepatch-devel-5.14.21-150500.33.66.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009623287",
+								"comment": "kernel-azure-livepatch-devel is signed with openSUSE key"
+							}
+						]
+					},
+					{
+						"operator": "AND",
+						"criterions": [
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009941985",
+								"comment": "kernel-azure-optional-5.14.21-150500.33.66.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009623427",
+								"comment": "kernel-azure-optional is signed with openSUSE key"
+							}
+						]
+					},
+					{
+						"operator": "AND",
+						"criterions": [
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009941986",
+								"comment": "kernel-azure-vdso-5.14.21-150500.33.66.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009769740",
+								"comment": "kernel-azure-vdso is signed with openSUSE key"
+							}
+						]
+					},
+					{
+						"operator": "AND",
+						"criterions": [
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009941987",
+								"comment": "kernel-devel-azure-5.14.21-150500.33.66.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009623293",
+								"comment": "kernel-devel-azure is signed with openSUSE key"
+							}
+						]
+					},
+					{
+						"operator": "AND",
+						"criterions": [
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009941988",
+								"comment": "kernel-source-azure-5.14.21-150500.33.66.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009623300",
+								"comment": "kernel-source-azure is signed with openSUSE key"
+							}
+						]
+					},
+					{
+						"operator": "AND",
+						"criterions": [
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009941989",
+								"comment": "kernel-syms-azure-5.14.21-150500.33.66.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009623301",
+								"comment": "kernel-syms-azure is signed with openSUSE key"
+							}
+						]
+					},
+					{
+						"operator": "AND",
+						"criterions": [
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009941990",
+								"comment": "kselftests-kmp-azure-5.14.21-150500.33.66.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009623305",
+								"comment": "kselftests-kmp-azure is signed with openSUSE key"
+							}
+						]
+					},
+					{
+						"operator": "AND",
+						"criterions": [
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009941991",
+								"comment": "ocfs2-kmp-azure-5.14.21-150500.33.66.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009623306",
+								"comment": "ocfs2-kmp-azure is signed with openSUSE key"
+							}
+						]
+					},
+					{
+						"operator": "AND",
+						"criterions": [
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009941992",
+								"comment": "reiserfs-kmp-azure-5.14.21-150500.33.66.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009623308",
+								"comment": "reiserfs-kmp-azure is signed with openSUSE key"
+							}
+						]
+					}
+				]
+			}
+		],
+		"criterions": [
+			{
+				"test_ref": "oval:org.opensuse.security:tst:2009752682",
+				"comment": "openSUSE Leap 15.5 is installed"
+			}
+		]
+	}
+}

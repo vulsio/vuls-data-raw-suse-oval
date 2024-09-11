@@ -7,8 +7,12 @@
 		"affected": {
 			"family": "unix",
 			"platform": [
+				"SUSE Linux Enterprise High Performance Computing 15 SP5",
+				"SUSE Linux Enterprise Module for Public Cloud 15 SP5",
 				"SUSE Linux Enterprise Server 15 SP1-LTSS",
-				"SUSE Linux Enterprise Server 15-LTSS"
+				"SUSE Linux Enterprise Server 15 SP5",
+				"SUSE Linux Enterprise Server 15-LTSS",
+				"SUSE Linux Enterprise Server for SAP Applications 15 SP5"
 			]
 		},
 		"reference": [
@@ -21,6 +25,11 @@
 				"ref_id": "SUSE CVE-2022-48869",
 				"ref_url": "https://www.suse.com/security/cve/CVE-2022-48869",
 				"source": "SUSE CVE"
+			},
+			{
+				"ref_id": "SUSE-SU-2024:3190-1",
+				"ref_url": "https://lists.suse.com/pipermail/sle-security-updates/2024-September/019403.html",
+				"source": "SUSE-SU"
 			}
 		],
 		"description": "\n    In the Linux kernel, the following vulnerability has been resolved:\n\nUSB: gadgetfs: Fix race between mounting and unmounting\n\nThe syzbot fuzzer and Gerald Lee have identified a use-after-free bug\nin the gadgetfs driver, involving processes concurrently mounting and\nunmounting the gadgetfs filesystem.  In particular, gadgetfs_fill_super()\ncan race with gadgetfs_kill_sb(), causing the latter to deallocate\nthe_device while the former is using it.  The output from KASAN says,\nin part:\n\nBUG: KASAN: use-after-free in instrument_atomic_read_write include/linux/instrumented.h:102 [inline]\nBUG: KASAN: use-after-free in atomic_fetch_sub_release include/linux/atomic/atomic-instrumented.h:176 [inline]\nBUG: KASAN: use-after-free in __refcount_sub_and_test include/linux/refcount.h:272 [inline]\nBUG: KASAN: use-after-free in __refcount_dec_and_test include/linux/refcount.h:315 [inline]\nBUG: KASAN: use-after-free in refcount_dec_and_test include/linux/refcount.h:333 [inline]\nBUG: KASAN: use-after-free in put_dev drivers/usb/gadget/legacy/inode.c:159 [inline]\nBUG: KASAN: use-after-free in gadgetfs_kill_sb+0x33/0x100 drivers/usb/gadget/legacy/inode.c:2086\nWrite of size 4 at addr ffff8880276d7840 by task syz-executor126/18689\n\nCPU: 0 PID: 18689 Comm: syz-executor126 Not tainted 6.1.0-syzkaller #0\nHardware name: Google Google Compute Engine/Google Compute Engine, BIOS Google 10/26/2022\nCall Trace:\n <TASK>\n...\n atomic_fetch_sub_release include/linux/atomic/atomic-instrumented.h:176 [inline]\n __refcount_sub_and_test include/linux/refcount.h:272 [inline]\n __refcount_dec_and_test include/linux/refcount.h:315 [inline]\n refcount_dec_and_test include/linux/refcount.h:333 [inline]\n put_dev drivers/usb/gadget/legacy/inode.c:159 [inline]\n gadgetfs_kill_sb+0x33/0x100 drivers/usb/gadget/legacy/inode.c:2086\n deactivate_locked_super+0xa7/0xf0 fs/super.c:332\n vfs_get_super fs/super.c:1190 [inline]\n get_tree_single+0xd0/0x160 fs/super.c:1207\n vfs_get_tree+0x88/0x270 fs/super.c:1531\n vfs_fsconfig_locked fs/fsopen.c:232 [inline]\n\nThe simplest solution is to ensure that gadgetfs_fill_super() and\ngadgetfs_kill_sb() are serialized by making them both acquire a new\nmutex.\n    ",
@@ -51,66 +60,126 @@
 				"date": "2024-08-22"
 			},
 			"updated": {
-				"date": "2024-09-08"
+				"date": "2024-09-11"
 			},
 			"affected_cpe_list": {
 				"cpe": [
+					"cpe:/o:suse:sle-module-public-cloud:15:sp5",
+					"cpe:/o:suse:sle_hpc:15:sp5",
 					"cpe:/o:suse:sles-ltss:15",
-					"cpe:/o:suse:sles-ltss:15:sp1"
+					"cpe:/o:suse:sles-ltss:15:sp1",
+					"cpe:/o:suse:sles:15:sp5",
+					"cpe:/o:suse:sles_sap:15:sp5"
 				]
 			}
 		}
 	},
 	"criteria": {
-		"operator": "AND",
+		"operator": "OR",
 		"criterias": [
 			{
-				"operator": "OR",
-				"criterions": [
+				"operator": "AND",
+				"criterias": [
 					{
-						"test_ref": "oval:org.opensuse.security:tst:2009341508",
-						"comment": "SUSE Linux Enterprise Server 15 SP1-LTSS is installed"
+						"operator": "OR",
+						"criterions": [
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009341508",
+								"comment": "SUSE Linux Enterprise Server 15 SP1-LTSS is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009302033",
+								"comment": "SUSE Linux Enterprise Server 15-LTSS is installed"
+							}
+						]
 					},
 					{
-						"test_ref": "oval:org.opensuse.security:tst:2009302033",
-						"comment": "SUSE Linux Enterprise Server 15-LTSS is installed"
+						"operator": "OR",
+						"criterions": [
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009334017",
+								"comment": "kernel-default is not affected"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009335425",
+								"comment": "kernel-default-base is not affected"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009335423",
+								"comment": "kernel-default-devel is not affected"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009335426",
+								"comment": "kernel-default-man is not affected"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009338037",
+								"comment": "reiserfs-kmp-default is not affected"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009334791",
+								"comment": "kernel-devel is not affected"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009334792",
+								"comment": "kernel-macros is not affected"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009333928",
+								"comment": "kernel-source is not affected"
+							}
+						]
 					}
 				]
 			},
 			{
-				"operator": "OR",
-				"criterions": [
+				"operator": "AND",
+				"criterias": [
 					{
-						"test_ref": "oval:org.opensuse.security:tst:2009334017",
-						"comment": "kernel-default is not affected"
+						"operator": "OR",
+						"criterions": [
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009759899",
+								"comment": "SUSE Linux Enterprise High Performance Computing 15 SP5 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009762868",
+								"comment": "SUSE Linux Enterprise Module for Public Cloud 15 SP5 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009759901",
+								"comment": "SUSE Linux Enterprise Server 15 SP5 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009759902",
+								"comment": "SUSE Linux Enterprise Server for SAP Applications 15 SP5 is installed"
+							}
+						]
 					},
 					{
-						"test_ref": "oval:org.opensuse.security:tst:2009335425",
-						"comment": "kernel-default-base is not affected"
-					},
-					{
-						"test_ref": "oval:org.opensuse.security:tst:2009335423",
-						"comment": "kernel-default-devel is not affected"
-					},
-					{
-						"test_ref": "oval:org.opensuse.security:tst:2009335426",
-						"comment": "kernel-default-man is not affected"
-					},
-					{
-						"test_ref": "oval:org.opensuse.security:tst:2009338037",
-						"comment": "reiserfs-kmp-default is not affected"
-					},
-					{
-						"test_ref": "oval:org.opensuse.security:tst:2009334791",
-						"comment": "kernel-devel is not affected"
-					},
-					{
-						"test_ref": "oval:org.opensuse.security:tst:2009334792",
-						"comment": "kernel-macros is not affected"
-					},
-					{
-						"test_ref": "oval:org.opensuse.security:tst:2009333928",
-						"comment": "kernel-source is not affected"
+						"operator": "OR",
+						"criterions": [
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009941981",
+								"comment": "kernel-azure-5.14.21-150500.33.66.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009941982",
+								"comment": "kernel-azure-devel-5.14.21-150500.33.66.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009941987",
+								"comment": "kernel-devel-azure-5.14.21-150500.33.66.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009941988",
+								"comment": "kernel-source-azure-5.14.21-150500.33.66.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009941989",
+								"comment": "kernel-syms-azure-5.14.21-150500.33.66.1 is installed"
+							}
+						]
 					}
 				]
 			}

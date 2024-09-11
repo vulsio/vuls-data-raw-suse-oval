@@ -1,0 +1,201 @@
+{
+	"id": "oval:org.opensuse.security:def:202443882",
+	"version": "1",
+	"class": "vulnerability",
+	"metadata": {
+		"title": "CVE-2024-43882",
+		"affected": {
+			"family": "unix",
+			"platform": [
+				"SUSE Linux Enterprise Real Time 12 SP5",
+				"SUSE Linux Enterprise Server 12 SP3-LTSS-TERADATA"
+			]
+		},
+		"reference": [
+			{
+				"ref_id": "Mitre CVE-2024-43882",
+				"ref_url": "https://cve.mitre.org/cgi-bin/cvename.cgi?name=CVE-2024-43882",
+				"source": "CVE"
+			},
+			{
+				"ref_id": "SUSE CVE-2024-43882",
+				"ref_url": "https://www.suse.com/security/cve/CVE-2024-43882",
+				"source": "SUSE CVE"
+			},
+			{
+				"ref_id": "SUSE-SU-2024:3189-1",
+				"ref_url": "https://lists.suse.com/pipermail/sle-security-updates/2024-September/019404.html",
+				"source": "SUSE-SU"
+			},
+			{
+				"ref_id": "SUSE-SU-2024:3190-1",
+				"ref_url": "https://lists.suse.com/pipermail/sle-security-updates/2024-September/019403.html",
+				"source": "SUSE-SU"
+			},
+			{
+				"ref_id": "SUSE-SU-2024:3194-1",
+				"ref_url": "https://lists.suse.com/pipermail/sle-updates/2024-September/036835.html",
+				"source": "SUSE-SU"
+			},
+			{
+				"ref_id": "SUSE-SU-2024:3195-1",
+				"ref_url": "https://lists.suse.com/pipermail/sle-updates/2024-September/036842.html",
+				"source": "SUSE-SU"
+			}
+		],
+		"description": "\n    In the Linux kernel, the following vulnerability has been resolved:\n\nexec: Fix ToCToU between perm check and set-uid/gid usage\n\nWhen opening a file for exec via do_filp_open(), permission checking is\ndone against the file's metadata at that moment, and on success, a file\npointer is passed back. Much later in the execve() code path, the file\nmetadata (specifically mode, uid, and gid) is used to determine if/how\nto set the uid and gid. However, those values may have changed since the\npermissions check, meaning the execution may gain unintended privileges.\n\nFor example, if a file could change permissions from executable and not\nset-id:\n\n---------x 1 root root 16048 Aug  7 13:16 target\n\nto set-id and non-executable:\n\n---S------ 1 root root 16048 Aug  7 13:16 target\n\nit is possible to gain root privileges when execution should have been\ndisallowed.\n\nWhile this race condition is rare in real-world scenarios, it has been\nobserved (and proven exploitable) when package managers are updating\nthe setuid bits of installed programs. Such files start with being\nworld-executable but then are adjusted to be group-exec with a set-uid\nbit. For example, \"chmod o-x,u+s target\" makes \"target\" executable only\nby uid \"root\" and gid \"cdrom\", while also becoming setuid-root:\n\n-rwxr-xr-x 1 root cdrom 16048 Aug  7 13:16 target\n\nbecomes:\n\n-rwsr-xr-- 1 root cdrom 16048 Aug  7 13:16 target\n\nBut racing the chmod means users without group \"cdrom\" membership can\nget the permission to execute \"target\" just before the chmod, and when\nthe chmod finishes, the exec reaches brpm_fill_uid(), and performs the\nsetuid to root, violating the expressed authorization of \"only cdrom\ngroup members can setuid to root\".\n\nRe-check that we still have execute permissions in case the metadata\nhas changed. It would be better to keep a copy from the perm-check time,\nbut until we can do that refactoring, the least-bad option is to do a\nfull inode_permission() call (under inode lock). It is understood that\nthis is safe against dead-locks, but hardly optimal.\n    ",
+		"advisory": {
+			"from": "security@suse.de",
+			"severity": "Moderate",
+			"cve": [
+				{
+					"text": "CVE-2024-43882 at SUSE",
+					"href": "https://www.suse.com/security/cve/CVE-2024-43882/",
+					"impact": "high",
+					"cvss3": "7/CVSS:3.1/AV:L/AC:H/PR:L/UI:N/S:U/C:H/I:H/A:H"
+				},
+				{
+					"text": "CVE-2024-43882 at NVD",
+					"href": "https://nvd.nist.gov/vuln/detail/CVE-2024-43882",
+					"impact": "high",
+					"cvss3": "7/CVSS:3.1/AV:L/AC:H/PR:L/UI:N/S:U/C:H/I:H/A:H"
+				}
+			],
+			"bugzilla": [
+				{
+					"text": "SUSE bug 1229503",
+					"href": "https://bugzilla.suse.com/1229503"
+				},
+				{
+					"text": "SUSE bug 1229504",
+					"href": "https://bugzilla.suse.com/1229504"
+				}
+			],
+			"issued": {
+				"date": "2024-09-11"
+			},
+			"updated": {
+				"date": "2024-09-11"
+			},
+			"affected_cpe_list": {
+				"cpe": [
+					"cpe:/o:suse:sles_teradata:12:sp3-ltss",
+					"cpe:/o:suse:suse-linux-enterprise-rt:12:sp5"
+				]
+			}
+		}
+	},
+	"criteria": {
+		"operator": "OR",
+		"criterias": [
+			{
+				"operator": "AND",
+				"criterias": [
+					{
+						"operator": "OR",
+						"criterions": [
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009942034",
+								"comment": "cluster-md-kmp-rt-4.12.14-10.200.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009942035",
+								"comment": "dlm-kmp-rt-4.12.14-10.200.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009942036",
+								"comment": "gfs2-kmp-rt-4.12.14-10.200.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009942037",
+								"comment": "kernel-devel-rt-4.12.14-10.200.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009942038",
+								"comment": "kernel-rt-4.12.14-10.200.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009942039",
+								"comment": "kernel-rt-base-4.12.14-10.200.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009942040",
+								"comment": "kernel-rt-devel-4.12.14-10.200.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009942041",
+								"comment": "kernel-rt_debug-4.12.14-10.200.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009942042",
+								"comment": "kernel-rt_debug-devel-4.12.14-10.200.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009942043",
+								"comment": "kernel-source-rt-4.12.14-10.200.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009942044",
+								"comment": "kernel-syms-rt-4.12.14-10.200.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009942045",
+								"comment": "ocfs2-kmp-rt-4.12.14-10.200.1 is installed"
+							}
+						]
+					}
+				],
+				"criterions": [
+					{
+						"test_ref": "oval:org.opensuse.security:tst:2009279486",
+						"comment": "SUSE Linux Enterprise Real Time 12 SP5 is installed"
+					}
+				]
+			},
+			{
+				"operator": "AND",
+				"criterias": [
+					{
+						"operator": "OR",
+						"criterions": [
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009942145",
+								"comment": "kernel-default-4.4.180-94.223.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009942146",
+								"comment": "kernel-default-base-4.4.180-94.223.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009942147",
+								"comment": "kernel-default-devel-4.4.180-94.223.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009942148",
+								"comment": "kernel-devel-4.4.180-94.223.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009942149",
+								"comment": "kernel-macros-4.4.180-94.223.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009942150",
+								"comment": "kernel-source-4.4.180-94.223.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009942151",
+								"comment": "kernel-syms-4.4.180-94.223.1 is installed"
+							}
+						]
+					}
+				],
+				"criterions": [
+					{
+						"test_ref": "oval:org.opensuse.security:tst:2009158922",
+						"comment": "SUSE Linux Enterprise Server 12 SP3-LTSS-TERADATA is installed"
+					}
+				]
+			}
+		]
+	}
+}

@@ -1,0 +1,201 @@
+{
+	"id": "oval:org.opensuse.security:def:202442232",
+	"version": "1",
+	"class": "vulnerability",
+	"metadata": {
+		"title": "CVE-2024-42232",
+		"affected": {
+			"family": "unix",
+			"platform": [
+				"SUSE Linux Enterprise Real Time 12 SP5",
+				"SUSE Linux Enterprise Server 12 SP3-LTSS-TERADATA"
+			]
+		},
+		"reference": [
+			{
+				"ref_id": "Mitre CVE-2024-42232",
+				"ref_url": "https://cve.mitre.org/cgi-bin/cvename.cgi?name=CVE-2024-42232",
+				"source": "CVE"
+			},
+			{
+				"ref_id": "SUSE CVE-2024-42232",
+				"ref_url": "https://www.suse.com/security/cve/CVE-2024-42232",
+				"source": "SUSE CVE"
+			},
+			{
+				"ref_id": "SUSE-SU-2024:3189-1",
+				"ref_url": "https://lists.suse.com/pipermail/sle-security-updates/2024-September/019404.html",
+				"source": "SUSE-SU"
+			},
+			{
+				"ref_id": "SUSE-SU-2024:3190-1",
+				"ref_url": "https://lists.suse.com/pipermail/sle-security-updates/2024-September/019403.html",
+				"source": "SUSE-SU"
+			},
+			{
+				"ref_id": "SUSE-SU-2024:3194-1",
+				"ref_url": "https://lists.suse.com/pipermail/sle-updates/2024-September/036835.html",
+				"source": "SUSE-SU"
+			},
+			{
+				"ref_id": "SUSE-SU-2024:3195-1",
+				"ref_url": "https://lists.suse.com/pipermail/sle-updates/2024-September/036842.html",
+				"source": "SUSE-SU"
+			}
+		],
+		"description": "\n    In the Linux kernel, the following vulnerability has been resolved:\n\nlibceph: fix race between delayed_work() and ceph_monc_stop()\n\nThe way the delayed work is handled in ceph_monc_stop() is prone to\nraces with mon_fault() and possibly also finish_hunting().  Both of\nthese can requeue the delayed work which wouldn't be canceled by any of\nthe following code in case that happens after cancel_delayed_work_sync()\nruns -- __close_session() doesn't mess with the delayed work in order\nto avoid interfering with the hunting interval logic.  This part was\nmissed in commit b5d91704f53e (\"libceph: behave in mon_fault() if\ncur_mon < 0\") and use-after-free can still ensue on monc and objects\nthat hang off of it, with monc->auth and monc->monmap being\nparticularly susceptible to quickly being reused.\n\nTo fix this:\n\n- clear monc->cur_mon and monc->hunting as part of closing the session\n  in ceph_monc_stop()\n- bail from delayed_work() if monc->cur_mon is cleared, similar to how\n  it's done in mon_fault() and finish_hunting() (based on monc->hunting)\n- call cancel_delayed_work_sync() after the session is closed\n    ",
+		"advisory": {
+			"from": "security@suse.de",
+			"severity": "Important",
+			"cve": [
+				{
+					"text": "CVE-2024-42232 at SUSE",
+					"href": "https://www.suse.com/security/cve/CVE-2024-42232/",
+					"impact": "high",
+					"cvss3": "7/CVSS:3.1/AV:L/AC:H/PR:L/UI:N/S:U/C:H/I:H/A:H"
+				},
+				{
+					"text": "CVE-2024-42232 at NVD",
+					"href": "https://nvd.nist.gov/vuln/detail/CVE-2024-42232",
+					"impact": "medium",
+					"cvss3": "5.5/CVSS:3.1/AV:L/AC:L/PR:L/UI:N/S:U/C:N/I:N/A:H"
+				}
+			],
+			"bugzilla": [
+				{
+					"text": "SUSE bug 1228959",
+					"href": "https://bugzilla.suse.com/1228959"
+				},
+				{
+					"text": "SUSE bug 1229458",
+					"href": "https://bugzilla.suse.com/1229458"
+				}
+			],
+			"issued": {
+				"date": "2024-09-11"
+			},
+			"updated": {
+				"date": "2024-09-11"
+			},
+			"affected_cpe_list": {
+				"cpe": [
+					"cpe:/o:suse:sles_teradata:12:sp3-ltss",
+					"cpe:/o:suse:suse-linux-enterprise-rt:12:sp5"
+				]
+			}
+		}
+	},
+	"criteria": {
+		"operator": "OR",
+		"criterias": [
+			{
+				"operator": "AND",
+				"criterias": [
+					{
+						"operator": "OR",
+						"criterions": [
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009942034",
+								"comment": "cluster-md-kmp-rt-4.12.14-10.200.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009942035",
+								"comment": "dlm-kmp-rt-4.12.14-10.200.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009942036",
+								"comment": "gfs2-kmp-rt-4.12.14-10.200.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009942037",
+								"comment": "kernel-devel-rt-4.12.14-10.200.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009942038",
+								"comment": "kernel-rt-4.12.14-10.200.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009942039",
+								"comment": "kernel-rt-base-4.12.14-10.200.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009942040",
+								"comment": "kernel-rt-devel-4.12.14-10.200.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009942041",
+								"comment": "kernel-rt_debug-4.12.14-10.200.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009942042",
+								"comment": "kernel-rt_debug-devel-4.12.14-10.200.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009942043",
+								"comment": "kernel-source-rt-4.12.14-10.200.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009942044",
+								"comment": "kernel-syms-rt-4.12.14-10.200.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009942045",
+								"comment": "ocfs2-kmp-rt-4.12.14-10.200.1 is installed"
+							}
+						]
+					}
+				],
+				"criterions": [
+					{
+						"test_ref": "oval:org.opensuse.security:tst:2009279486",
+						"comment": "SUSE Linux Enterprise Real Time 12 SP5 is installed"
+					}
+				]
+			},
+			{
+				"operator": "AND",
+				"criterias": [
+					{
+						"operator": "OR",
+						"criterions": [
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009942145",
+								"comment": "kernel-default-4.4.180-94.223.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009942146",
+								"comment": "kernel-default-base-4.4.180-94.223.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009942147",
+								"comment": "kernel-default-devel-4.4.180-94.223.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009942148",
+								"comment": "kernel-devel-4.4.180-94.223.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009942149",
+								"comment": "kernel-macros-4.4.180-94.223.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009942150",
+								"comment": "kernel-source-4.4.180-94.223.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009942151",
+								"comment": "kernel-syms-4.4.180-94.223.1 is installed"
+							}
+						]
+					}
+				],
+				"criterions": [
+					{
+						"test_ref": "oval:org.opensuse.security:tst:2009158922",
+						"comment": "SUSE Linux Enterprise Server 12 SP3-LTSS-TERADATA is installed"
+					}
+				]
+			}
+		]
+	}
+}

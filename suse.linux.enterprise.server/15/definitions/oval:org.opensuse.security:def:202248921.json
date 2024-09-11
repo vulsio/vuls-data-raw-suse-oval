@@ -7,12 +7,16 @@
 		"affected": {
 			"family": "unix",
 			"platform": [
+				"SUSE Linux Enterprise High Performance Computing 15 SP5",
+				"SUSE Linux Enterprise Module for Public Cloud 15 SP5",
 				"SUSE Linux Enterprise Server 15 SP1-LTSS",
 				"SUSE Linux Enterprise Server 15 SP2-LTSS",
 				"SUSE Linux Enterprise Server 15 SP3-LTSS",
+				"SUSE Linux Enterprise Server 15 SP5",
 				"SUSE Linux Enterprise Server 15-LTSS",
 				"SUSE Linux Enterprise Server for SAP Applications 15 SP2",
-				"SUSE Linux Enterprise Server for SAP Applications 15 SP3"
+				"SUSE Linux Enterprise Server for SAP Applications 15 SP3",
+				"SUSE Linux Enterprise Server for SAP Applications 15 SP5"
 			]
 		},
 		"reference": [
@@ -25,6 +29,11 @@
 				"ref_id": "SUSE CVE-2022-48921",
 				"ref_url": "https://www.suse.com/security/cve/CVE-2022-48921",
 				"source": "SUSE CVE"
+			},
+			{
+				"ref_id": "SUSE-SU-2024:3190-1",
+				"ref_url": "https://lists.suse.com/pipermail/sle-security-updates/2024-September/019403.html",
+				"source": "SUSE-SU"
 			}
 		],
 		"description": "\n    In the Linux kernel, the following vulnerability has been resolved:\n\nsched/fair: Fix fault in reweight_entity\n\nSyzbot found a GPF in reweight_entity. This has been bisected to\ncommit 4ef0c5c6b5ba (\"kernel/sched: Fix sched_fork() access an invalid\nsched_task_group\")\n\nThere is a race between sched_post_fork() and setpriority(PRIO_PGRP)\nwithin a thread group that causes a null-ptr-deref in\nreweight_entity() in CFS. The scenario is that the main process spawns\nnumber of new threads, which then call setpriority(PRIO_PGRP, 0, -20),\nwait, and exit.  For each of the new threads the copy_process() gets\ninvoked, which adds the new task_struct and calls sched_post_fork()\nfor it.\n\nIn the above scenario there is a possibility that\nsetpriority(PRIO_PGRP) and set_one_prio() will be called for a thread\nin the group that is just being created by copy_process(), and for\nwhich the sched_post_fork() has not been executed yet. This will\ntrigger a null pointer dereference in reweight_entity(), as it will\ntry to access the run queue pointer, which hasn't been set.\n\nBefore the mentioned change the cfs_rq pointer for the task  has been\nset in sched_fork(), which is called much earlier in copy_process(),\nbefore the new task is added to the thread_group.  Now it is done in\nthe sched_post_fork(), which is called after that.  To fix the issue\nthe remove the update_load param from the update_load param() function\nand call reweight_task() only if the task flag doesn't have the\nTASK_NEW flag set.\n    ",
@@ -53,16 +62,20 @@
 				"date": "2024-08-26"
 			},
 			"updated": {
-				"date": "2024-08-26"
+				"date": "2024-09-11"
 			},
 			"affected_cpe_list": {
 				"cpe": [
+					"cpe:/o:suse:sle-module-public-cloud:15:sp5",
+					"cpe:/o:suse:sle_hpc:15:sp5",
 					"cpe:/o:suse:sles-ltss:15",
 					"cpe:/o:suse:sles-ltss:15:sp1",
 					"cpe:/o:suse:sles-ltss:15:sp2",
 					"cpe:/o:suse:sles-ltss:15:sp3",
+					"cpe:/o:suse:sles:15:sp5",
 					"cpe:/o:suse:sles_sap:15:sp2",
-					"cpe:/o:suse:sles_sap:15:sp3"
+					"cpe:/o:suse:sles_sap:15:sp3",
+					"cpe:/o:suse:sles_sap:15:sp5"
 				]
 			}
 		}
@@ -175,6 +188,57 @@
 							{
 								"test_ref": "oval:org.opensuse.security:tst:2009333928",
 								"comment": "kernel-source is not affected"
+							}
+						]
+					}
+				]
+			},
+			{
+				"operator": "AND",
+				"criterias": [
+					{
+						"operator": "OR",
+						"criterions": [
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009759899",
+								"comment": "SUSE Linux Enterprise High Performance Computing 15 SP5 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009762868",
+								"comment": "SUSE Linux Enterprise Module for Public Cloud 15 SP5 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009759901",
+								"comment": "SUSE Linux Enterprise Server 15 SP5 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009759902",
+								"comment": "SUSE Linux Enterprise Server for SAP Applications 15 SP5 is installed"
+							}
+						]
+					},
+					{
+						"operator": "OR",
+						"criterions": [
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009941981",
+								"comment": "kernel-azure-5.14.21-150500.33.66.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009941982",
+								"comment": "kernel-azure-devel-5.14.21-150500.33.66.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009941987",
+								"comment": "kernel-devel-azure-5.14.21-150500.33.66.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009941988",
+								"comment": "kernel-source-azure-5.14.21-150500.33.66.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009941989",
+								"comment": "kernel-syms-azure-5.14.21-150500.33.66.1 is installed"
 							}
 						]
 					}

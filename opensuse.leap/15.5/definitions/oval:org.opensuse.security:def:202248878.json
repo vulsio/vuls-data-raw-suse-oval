@@ -1,0 +1,278 @@
+{
+	"id": "oval:org.opensuse.security:def:202248878",
+	"version": "1",
+	"class": "vulnerability",
+	"metadata": {
+		"title": "CVE-2022-48878",
+		"affected": {
+			"family": "unix",
+			"platform": [
+				"openSUSE Leap 15.5"
+			]
+		},
+		"reference": [
+			{
+				"ref_id": "Mitre CVE-2022-48878",
+				"ref_url": "https://cve.mitre.org/cgi-bin/cvename.cgi?name=CVE-2022-48878",
+				"source": "CVE"
+			},
+			{
+				"ref_id": "SUSE CVE-2022-48878",
+				"ref_url": "https://www.suse.com/security/cve/CVE-2022-48878",
+				"source": "SUSE CVE"
+			},
+			{
+				"ref_id": "SUSE-SU-2024:3190-1",
+				"ref_url": "https://lists.suse.com/pipermail/sle-security-updates/2024-September/019403.html",
+				"source": "SUSE-SU"
+			}
+		],
+		"description": "\n    In the Linux kernel, the following vulnerability has been resolved:\n\nBluetooth: hci_qca: Fix driver shutdown on closed serdev\n\nThe driver shutdown callback (which sends EDL_SOC_RESET to the device\nover serdev) should not be invoked when HCI device is not open (e.g. if\nhci_dev_open_sync() failed), because the serdev and its TTY are not open\neither.  Also skip this step if device is powered off\n(qca_power_shutdown()).\n\nThe shutdown callback causes use-after-free during system reboot with\nQualcomm Atheros Bluetooth:\n\n  Unable to handle kernel paging request at virtual address\n  0072662f67726fd7\n  ...\n  CPU: 6 PID: 1 Comm: systemd-shutdow Tainted: G        W\n  6.1.0-rt5-00325-g8a5f56bcfcca #8\n  Hardware name: Qualcomm Technologies, Inc. Robotics RB5 (DT)\n  Call trace:\n   tty_driver_flush_buffer+0x4/0x30\n   serdev_device_write_flush+0x24/0x34\n   qca_serdev_shutdown+0x80/0x130 [hci_uart]\n   device_shutdown+0x15c/0x260\n   kernel_restart+0x48/0xac\n\nKASAN report:\n\n  BUG: KASAN: use-after-free in tty_driver_flush_buffer+0x1c/0x50\n  Read of size 8 at addr ffff16270c2e0018 by task systemd-shutdow/1\n\n  CPU: 7 PID: 1 Comm: systemd-shutdow Not tainted\n  6.1.0-next-20221220-00014-gb85aaf97fb01-dirty #28\n  Hardware name: Qualcomm Technologies, Inc. Robotics RB5 (DT)\n  Call trace:\n   dump_backtrace.part.0+0xdc/0xf0\n   show_stack+0x18/0x30\n   dump_stack_lvl+0x68/0x84\n   print_report+0x188/0x488\n   kasan_report+0xa4/0xf0\n   __asan_load8+0x80/0xac\n   tty_driver_flush_buffer+0x1c/0x50\n   ttyport_write_flush+0x34/0x44\n   serdev_device_write_flush+0x48/0x60\n   qca_serdev_shutdown+0x124/0x274\n   device_shutdown+0x1e8/0x350\n   kernel_restart+0x48/0xb0\n   __do_sys_reboot+0x244/0x2d0\n   __arm64_sys_reboot+0x54/0x70\n   invoke_syscall+0x60/0x190\n   el0_svc_common.constprop.0+0x7c/0x160\n   do_el0_svc+0x44/0xf0\n   el0_svc+0x2c/0x6c\n   el0t_64_sync_handler+0xbc/0x140\n   el0t_64_sync+0x190/0x194\n    ",
+		"advisory": {
+			"from": "security@suse.de",
+			"severity": "Moderate",
+			"cve": [
+				{
+					"text": "CVE-2022-48878 at SUSE",
+					"href": "https://www.suse.com/security/cve/CVE-2022-48878/",
+					"impact": "medium",
+					"cvss3": "6.1/CVSS:3.1/AV:L/AC:L/PR:L/UI:N/S:U/C:L/I:N/A:H"
+				},
+				{
+					"text": "CVE-2022-48878 at NVD",
+					"href": "https://nvd.nist.gov/vuln/detail/CVE-2022-48878",
+					"impact": "high",
+					"cvss3": "7.8/CVSS:3.1/AV:L/AC:L/PR:L/UI:N/S:U/C:H/I:H/A:H"
+				}
+			],
+			"bugzilla": [
+				{
+					"text": "SUSE bug 1229554",
+					"href": "https://bugzilla.suse.com/1229554"
+				}
+			],
+			"issued": {
+				"date": "2024-09-11"
+			},
+			"updated": {
+				"date": "2024-09-11"
+			},
+			"affected_cpe_list": {
+				"cpe": [
+					"cpe:/o:opensuse:leap:15.5"
+				]
+			}
+		}
+	},
+	"criteria": {
+		"operator": "AND",
+		"criterias": [
+			{
+				"operator": "OR",
+				"criterias": [
+					{
+						"operator": "AND",
+						"criterions": [
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009941978",
+								"comment": "cluster-md-kmp-azure-5.14.21-150500.33.66.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009623277",
+								"comment": "cluster-md-kmp-azure is signed with openSUSE key"
+							}
+						]
+					},
+					{
+						"operator": "AND",
+						"criterions": [
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009941979",
+								"comment": "dlm-kmp-azure-5.14.21-150500.33.66.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009623279",
+								"comment": "dlm-kmp-azure is signed with openSUSE key"
+							}
+						]
+					},
+					{
+						"operator": "AND",
+						"criterions": [
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009941980",
+								"comment": "gfs2-kmp-azure-5.14.21-150500.33.66.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009623281",
+								"comment": "gfs2-kmp-azure is signed with openSUSE key"
+							}
+						]
+					},
+					{
+						"operator": "AND",
+						"criterions": [
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009941981",
+								"comment": "kernel-azure-5.14.21-150500.33.66.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009623283",
+								"comment": "kernel-azure is signed with openSUSE key"
+							}
+						]
+					},
+					{
+						"operator": "AND",
+						"criterions": [
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009941982",
+								"comment": "kernel-azure-devel-5.14.21-150500.33.66.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009623285",
+								"comment": "kernel-azure-devel is signed with openSUSE key"
+							}
+						]
+					},
+					{
+						"operator": "AND",
+						"criterions": [
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009941983",
+								"comment": "kernel-azure-extra-5.14.21-150500.33.66.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009623286",
+								"comment": "kernel-azure-extra is signed with openSUSE key"
+							}
+						]
+					},
+					{
+						"operator": "AND",
+						"criterions": [
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009941984",
+								"comment": "kernel-azure-livepatch-devel-5.14.21-150500.33.66.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009623287",
+								"comment": "kernel-azure-livepatch-devel is signed with openSUSE key"
+							}
+						]
+					},
+					{
+						"operator": "AND",
+						"criterions": [
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009941985",
+								"comment": "kernel-azure-optional-5.14.21-150500.33.66.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009623427",
+								"comment": "kernel-azure-optional is signed with openSUSE key"
+							}
+						]
+					},
+					{
+						"operator": "AND",
+						"criterions": [
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009941986",
+								"comment": "kernel-azure-vdso-5.14.21-150500.33.66.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009769740",
+								"comment": "kernel-azure-vdso is signed with openSUSE key"
+							}
+						]
+					},
+					{
+						"operator": "AND",
+						"criterions": [
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009941987",
+								"comment": "kernel-devel-azure-5.14.21-150500.33.66.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009623293",
+								"comment": "kernel-devel-azure is signed with openSUSE key"
+							}
+						]
+					},
+					{
+						"operator": "AND",
+						"criterions": [
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009941988",
+								"comment": "kernel-source-azure-5.14.21-150500.33.66.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009623300",
+								"comment": "kernel-source-azure is signed with openSUSE key"
+							}
+						]
+					},
+					{
+						"operator": "AND",
+						"criterions": [
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009941989",
+								"comment": "kernel-syms-azure-5.14.21-150500.33.66.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009623301",
+								"comment": "kernel-syms-azure is signed with openSUSE key"
+							}
+						]
+					},
+					{
+						"operator": "AND",
+						"criterions": [
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009941990",
+								"comment": "kselftests-kmp-azure-5.14.21-150500.33.66.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009623305",
+								"comment": "kselftests-kmp-azure is signed with openSUSE key"
+							}
+						]
+					},
+					{
+						"operator": "AND",
+						"criterions": [
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009941991",
+								"comment": "ocfs2-kmp-azure-5.14.21-150500.33.66.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009623306",
+								"comment": "ocfs2-kmp-azure is signed with openSUSE key"
+							}
+						]
+					},
+					{
+						"operator": "AND",
+						"criterions": [
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009941992",
+								"comment": "reiserfs-kmp-azure-5.14.21-150500.33.66.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009623308",
+								"comment": "reiserfs-kmp-azure is signed with openSUSE key"
+							}
+						]
+					}
+				]
+			}
+		],
+		"criterions": [
+			{
+				"test_ref": "oval:org.opensuse.security:tst:2009752682",
+				"comment": "openSUSE Leap 15.5 is installed"
+			}
+		]
+	}
+}

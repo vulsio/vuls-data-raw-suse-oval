@@ -11,6 +11,7 @@
 				"SUSE Linux Enterprise Desktop 15 SP6",
 				"SUSE Linux Enterprise High Performance Computing 15 SP5",
 				"SUSE Linux Enterprise High Performance Computing 15 SP6",
+				"SUSE Linux Enterprise Live Patching 15 SP6",
 				"SUSE Linux Enterprise Module for Basesystem 15 SP5",
 				"SUSE Linux Enterprise Module for Basesystem 15 SP6",
 				"SUSE Linux Enterprise Module for Development Tools 15 SP5",
@@ -41,6 +42,21 @@
 				"ref_id": "SUSE CVE-2024-35902",
 				"ref_url": "https://www.suse.com/security/cve/CVE-2024-35902",
 				"source": "SUSE CVE"
+			},
+			{
+				"ref_id": "SUSE-SU-2024:3190-1",
+				"ref_url": "https://lists.suse.com/pipermail/sle-security-updates/2024-September/019403.html",
+				"source": "SUSE-SU"
+			},
+			{
+				"ref_id": "SUSE-SU-2024:3194-1",
+				"ref_url": "https://lists.suse.com/pipermail/sle-updates/2024-September/036835.html",
+				"source": "SUSE-SU"
+			},
+			{
+				"ref_id": "SUSE-SU-2024:3195-1",
+				"ref_url": "https://lists.suse.com/pipermail/sle-updates/2024-September/036842.html",
+				"source": "SUSE-SU"
 			}
 		],
 		"description": "\n    In the Linux kernel, the following vulnerability has been resolved:\n\nnet/rds: fix possible cp null dereference\n\ncp might be null, calling cp->cp_conn would produce null dereference\n\n[Simon Horman adds:]\n\nAnalysis:\n\n* cp is a parameter of __rds_rdma_map and is not reassigned.\n\n* The following call-sites pass a NULL cp argument to __rds_rdma_map()\n\n  - rds_get_mr()\n  - rds_get_mr_for_dest\n\n* Prior to the code above, the following assumes that cp may be NULL\n  (which is indicative, but could itself be unnecessary)\n\n\ttrans_private = rs->rs_transport->get_mr(\n\t\tsg, nents, rs, &mr->r_key, cp ? cp->cp_conn : NULL,\n\t\targs->vec.addr, args->vec.bytes,\n\t\tneed_odp ? ODP_ZEROBASED : ODP_NOT_NEEDED);\n\n* The code modified by this patch is guarded by IS_ERR(trans_private),\n  where trans_private is assigned as per the previous point in this analysis.\n\n  The only implementation of get_mr that I could locate is rds_ib_get_mr()\n  which can return an ERR_PTR if the conn (4th) argument is NULL.\n\n* ret is set to PTR_ERR(trans_private).\n  rds_ib_get_mr can return ERR_PTR(-ENODEV) if the conn (4th) argument is NULL.\n  Thus ret may be -ENODEV in which case the code in question will execute.\n\nConclusion:\n* cp may be NULL at the point where this patch adds a check;\n  this patch does seem to address a possible bug\n    ",
@@ -67,7 +83,7 @@
 				"date": "2024-05-21"
 			},
 			"updated": {
-				"date": "2024-05-31"
+				"date": "2024-09-11"
 			},
 			"affected_cpe_list": {
 				"cpe": [
@@ -75,6 +91,7 @@
 					"cpe:/o:suse:sle-module-basesystem:15:sp6",
 					"cpe:/o:suse:sle-module-development-tools:15:sp5",
 					"cpe:/o:suse:sle-module-development-tools:15:sp6",
+					"cpe:/o:suse:sle-module-live-patching:15:sp6",
 					"cpe:/o:suse:sle-module-public-cloud:15:sp5",
 					"cpe:/o:suse:sle-module-public-cloud:15:sp6",
 					"cpe:/o:suse:sle_hpc:15:sp5",
@@ -96,6 +113,19 @@
 	"criteria": {
 		"operator": "OR",
 		"criterias": [
+			{
+				"operator": "AND",
+				"criterions": [
+					{
+						"test_ref": "oval:org.opensuse.security:tst:2009857543",
+						"comment": "SUSE Linux Enterprise Live Patching 15 SP6 is installed"
+					},
+					{
+						"test_ref": "oval:org.opensuse.security:tst:2009942033",
+						"comment": "kernel-livepatch-6_4_0-150600_10_8-rt-1-150600.1.3.2 is installed"
+					}
+				]
+			},
 			{
 				"operator": "AND",
 				"criterias": [
@@ -359,28 +389,63 @@
 								"comment": "SUSE Linux Enterprise High Performance Computing 15 SP5 is installed"
 							},
 							{
-								"test_ref": "oval:org.opensuse.security:tst:2009856172",
-								"comment": "SUSE Linux Enterprise High Performance Computing 15 SP6 is installed"
-							},
-							{
 								"test_ref": "oval:org.opensuse.security:tst:2009762868",
 								"comment": "SUSE Linux Enterprise Module for Public Cloud 15 SP5 is installed"
-							},
-							{
-								"test_ref": "oval:org.opensuse.security:tst:2009856320",
-								"comment": "SUSE Linux Enterprise Module for Public Cloud 15 SP6 is installed"
 							},
 							{
 								"test_ref": "oval:org.opensuse.security:tst:2009759901",
 								"comment": "SUSE Linux Enterprise Server 15 SP5 is installed"
 							},
 							{
-								"test_ref": "oval:org.opensuse.security:tst:2009856174",
-								"comment": "SUSE Linux Enterprise Server 15 SP6 is installed"
-							},
-							{
 								"test_ref": "oval:org.opensuse.security:tst:2009759902",
 								"comment": "SUSE Linux Enterprise Server for SAP Applications 15 SP5 is installed"
+							}
+						]
+					},
+					{
+						"operator": "OR",
+						"criterions": [
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009941981",
+								"comment": "kernel-azure-5.14.21-150500.33.66.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009941982",
+								"comment": "kernel-azure-devel-5.14.21-150500.33.66.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009941987",
+								"comment": "kernel-devel-azure-5.14.21-150500.33.66.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009941988",
+								"comment": "kernel-source-azure-5.14.21-150500.33.66.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009941989",
+								"comment": "kernel-syms-azure-5.14.21-150500.33.66.1 is installed"
+							}
+						]
+					}
+				]
+			},
+			{
+				"operator": "AND",
+				"criterias": [
+					{
+						"operator": "OR",
+						"criterions": [
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009856172",
+								"comment": "SUSE Linux Enterprise High Performance Computing 15 SP6 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009856320",
+								"comment": "SUSE Linux Enterprise Module for Public Cloud 15 SP6 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009856174",
+								"comment": "SUSE Linux Enterprise Server 15 SP6 is installed"
 							},
 							{
 								"test_ref": "oval:org.opensuse.security:tst:2009856175",
@@ -392,12 +457,24 @@
 						"operator": "OR",
 						"criterions": [
 							{
-								"test_ref": "oval:org.opensuse.security:tst:2009340306",
-								"comment": "kernel-devel-azure is not affected"
+								"test_ref": "oval:org.opensuse.security:tst:2009941998",
+								"comment": "kernel-azure-6.4.0-150600.8.11.1 is installed"
 							},
 							{
-								"test_ref": "oval:org.opensuse.security:tst:2009340305",
-								"comment": "kernel-source-azure is not affected"
+								"test_ref": "oval:org.opensuse.security:tst:2009941999",
+								"comment": "kernel-azure-devel-6.4.0-150600.8.11.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009942004",
+								"comment": "kernel-devel-azure-6.4.0-150600.8.11.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009942005",
+								"comment": "kernel-source-azure-6.4.0-150600.8.11.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009942006",
+								"comment": "kernel-syms-azure-6.4.0-150600.8.11.1 is installed"
 							}
 						]
 					}

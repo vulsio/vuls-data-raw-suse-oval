@@ -7,8 +7,12 @@
 		"affected": {
 			"family": "unix",
 			"platform": [
+				"SUSE Linux Enterprise High Performance Computing 15 SP5",
+				"SUSE Linux Enterprise Module for Public Cloud 15 SP5",
 				"SUSE Linux Enterprise Server 15 SP1-LTSS",
-				"SUSE Linux Enterprise Server 15-LTSS"
+				"SUSE Linux Enterprise Server 15 SP5",
+				"SUSE Linux Enterprise Server 15-LTSS",
+				"SUSE Linux Enterprise Server for SAP Applications 15 SP5"
 			]
 		},
 		"reference": [
@@ -21,6 +25,11 @@
 				"ref_id": "SUSE CVE-2023-52906",
 				"ref_url": "https://www.suse.com/security/cve/CVE-2023-52906",
 				"source": "SUSE CVE"
+			},
+			{
+				"ref_id": "SUSE-SU-2024:3190-1",
+				"ref_url": "https://lists.suse.com/pipermail/sle-security-updates/2024-September/019403.html",
+				"source": "SUSE-SU"
 			}
 		],
 		"description": "\n    In the Linux kernel, the following vulnerability has been resolved:\n\nnet/sched: act_mpls: Fix warning during failed attribute validation\n\nThe 'TCA_MPLS_LABEL' attribute is of 'NLA_U32' type, but has a\nvalidation type of 'NLA_VALIDATE_FUNCTION'. This is an invalid\ncombination according to the comment above 'struct nla_policy':\n\n\"\nMeaning of `validate' field, use via NLA_POLICY_VALIDATE_FN:\n   NLA_BINARY           Validation function called for the attribute.\n   All other            Unused - but note that it's a union\n\"\n\nThis can trigger the warning [1] in nla_get_range_unsigned() when\nvalidation of the attribute fails. Despite being of 'NLA_U32' type, the\nassociated 'min'/'max' fields in the policy are negative as they are\naliased by the 'validate' field.\n\nFix by changing the attribute type to 'NLA_BINARY' which is consistent\nwith the above comment and all other users of NLA_POLICY_VALIDATE_FN().\nAs a result, move the length validation to the validation function.\n\nNo regressions in MPLS tests:\n\n # ./tdc.py -f tc-tests/actions/mpls.json\n [...]\n # echo $?\n 0\n\n[1]\nWARNING: CPU: 0 PID: 17743 at lib/nlattr.c:118\nnla_get_range_unsigned+0x1d8/0x1e0 lib/nlattr.c:117\nModules linked in:\nCPU: 0 PID: 17743 Comm: syz-executor.0 Not tainted 6.1.0-rc8 #3\nHardware name: QEMU Standard PC (i440FX + PIIX, 1996), BIOS\nrel-1.13.0-48-gd9c812dda519-prebuilt.qemu.org 04/01/2014\nRIP: 0010:nla_get_range_unsigned+0x1d8/0x1e0 lib/nlattr.c:117\n[...]\nCall Trace:\n <TASK>\n __netlink_policy_dump_write_attr+0x23d/0x990 net/netlink/policy.c:310\n netlink_policy_dump_write_attr+0x22/0x30 net/netlink/policy.c:411\n netlink_ack_tlv_fill net/netlink/af_netlink.c:2454 [inline]\n netlink_ack+0x546/0x760 net/netlink/af_netlink.c:2506\n netlink_rcv_skb+0x1b7/0x240 net/netlink/af_netlink.c:2546\n rtnetlink_rcv+0x18/0x20 net/core/rtnetlink.c:6109\n netlink_unicast_kernel net/netlink/af_netlink.c:1319 [inline]\n netlink_unicast+0x5e9/0x6b0 net/netlink/af_netlink.c:1345\n netlink_sendmsg+0x739/0x860 net/netlink/af_netlink.c:1921\n sock_sendmsg_nosec net/socket.c:714 [inline]\n sock_sendmsg net/socket.c:734 [inline]\n ____sys_sendmsg+0x38f/0x500 net/socket.c:2482\n ___sys_sendmsg net/socket.c:2536 [inline]\n __sys_sendmsg+0x197/0x230 net/socket.c:2565\n __do_sys_sendmsg net/socket.c:2574 [inline]\n __se_sys_sendmsg net/socket.c:2572 [inline]\n __x64_sys_sendmsg+0x42/0x50 net/socket.c:2572\n do_syscall_x64 arch/x86/entry/common.c:50 [inline]\n do_syscall_64+0x2b/0x70 arch/x86/entry/common.c:80\n entry_SYSCALL_64_after_hwframe+0x63/0xcd\n    ",
@@ -49,66 +58,126 @@
 				"date": "2024-08-22"
 			},
 			"updated": {
-				"date": "2024-08-22"
+				"date": "2024-09-11"
 			},
 			"affected_cpe_list": {
 				"cpe": [
+					"cpe:/o:suse:sle-module-public-cloud:15:sp5",
+					"cpe:/o:suse:sle_hpc:15:sp5",
 					"cpe:/o:suse:sles-ltss:15",
-					"cpe:/o:suse:sles-ltss:15:sp1"
+					"cpe:/o:suse:sles-ltss:15:sp1",
+					"cpe:/o:suse:sles:15:sp5",
+					"cpe:/o:suse:sles_sap:15:sp5"
 				]
 			}
 		}
 	},
 	"criteria": {
-		"operator": "AND",
+		"operator": "OR",
 		"criterias": [
 			{
-				"operator": "OR",
-				"criterions": [
+				"operator": "AND",
+				"criterias": [
 					{
-						"test_ref": "oval:org.opensuse.security:tst:2009341508",
-						"comment": "SUSE Linux Enterprise Server 15 SP1-LTSS is installed"
+						"operator": "OR",
+						"criterions": [
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009341508",
+								"comment": "SUSE Linux Enterprise Server 15 SP1-LTSS is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009302033",
+								"comment": "SUSE Linux Enterprise Server 15-LTSS is installed"
+							}
+						]
 					},
 					{
-						"test_ref": "oval:org.opensuse.security:tst:2009302033",
-						"comment": "SUSE Linux Enterprise Server 15-LTSS is installed"
+						"operator": "OR",
+						"criterions": [
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009334017",
+								"comment": "kernel-default is not affected"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009335425",
+								"comment": "kernel-default-base is not affected"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009335423",
+								"comment": "kernel-default-devel is not affected"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009335426",
+								"comment": "kernel-default-man is not affected"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009338037",
+								"comment": "reiserfs-kmp-default is not affected"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009334791",
+								"comment": "kernel-devel is not affected"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009334792",
+								"comment": "kernel-macros is not affected"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009333928",
+								"comment": "kernel-source is not affected"
+							}
+						]
 					}
 				]
 			},
 			{
-				"operator": "OR",
-				"criterions": [
+				"operator": "AND",
+				"criterias": [
 					{
-						"test_ref": "oval:org.opensuse.security:tst:2009334017",
-						"comment": "kernel-default is not affected"
+						"operator": "OR",
+						"criterions": [
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009759899",
+								"comment": "SUSE Linux Enterprise High Performance Computing 15 SP5 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009762868",
+								"comment": "SUSE Linux Enterprise Module for Public Cloud 15 SP5 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009759901",
+								"comment": "SUSE Linux Enterprise Server 15 SP5 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009759902",
+								"comment": "SUSE Linux Enterprise Server for SAP Applications 15 SP5 is installed"
+							}
+						]
 					},
 					{
-						"test_ref": "oval:org.opensuse.security:tst:2009335425",
-						"comment": "kernel-default-base is not affected"
-					},
-					{
-						"test_ref": "oval:org.opensuse.security:tst:2009335423",
-						"comment": "kernel-default-devel is not affected"
-					},
-					{
-						"test_ref": "oval:org.opensuse.security:tst:2009335426",
-						"comment": "kernel-default-man is not affected"
-					},
-					{
-						"test_ref": "oval:org.opensuse.security:tst:2009338037",
-						"comment": "reiserfs-kmp-default is not affected"
-					},
-					{
-						"test_ref": "oval:org.opensuse.security:tst:2009334791",
-						"comment": "kernel-devel is not affected"
-					},
-					{
-						"test_ref": "oval:org.opensuse.security:tst:2009334792",
-						"comment": "kernel-macros is not affected"
-					},
-					{
-						"test_ref": "oval:org.opensuse.security:tst:2009333928",
-						"comment": "kernel-source is not affected"
+						"operator": "OR",
+						"criterions": [
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009941981",
+								"comment": "kernel-azure-5.14.21-150500.33.66.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009941982",
+								"comment": "kernel-azure-devel-5.14.21-150500.33.66.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009941987",
+								"comment": "kernel-devel-azure-5.14.21-150500.33.66.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009941988",
+								"comment": "kernel-source-azure-5.14.21-150500.33.66.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009941989",
+								"comment": "kernel-syms-azure-5.14.21-150500.33.66.1 is installed"
+							}
+						]
 					}
 				]
 			}

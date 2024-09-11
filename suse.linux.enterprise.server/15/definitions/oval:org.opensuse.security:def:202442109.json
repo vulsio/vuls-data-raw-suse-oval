@@ -9,19 +9,24 @@
 			"platform": [
 				"SUSE Linux Enterprise Desktop 15 SP5",
 				"SUSE Linux Enterprise High Performance Computing 15 SP5",
+				"SUSE Linux Enterprise High Performance Computing 15 SP6",
+				"SUSE Linux Enterprise Live Patching 15 SP6",
 				"SUSE Linux Enterprise Module for Basesystem 15 SP5",
 				"SUSE Linux Enterprise Module for Development Tools 15 SP5",
 				"SUSE Linux Enterprise Module for Public Cloud 15 SP5",
+				"SUSE Linux Enterprise Module for Public Cloud 15 SP6",
 				"SUSE Linux Enterprise Server 15 SP1-LTSS",
 				"SUSE Linux Enterprise Server 15 SP2-LTSS",
 				"SUSE Linux Enterprise Server 15 SP3-LTSS",
 				"SUSE Linux Enterprise Server 15 SP4-LTSS",
 				"SUSE Linux Enterprise Server 15 SP5",
+				"SUSE Linux Enterprise Server 15 SP6",
 				"SUSE Linux Enterprise Server 15-LTSS",
 				"SUSE Linux Enterprise Server for SAP Applications 15 SP2",
 				"SUSE Linux Enterprise Server for SAP Applications 15 SP3",
 				"SUSE Linux Enterprise Server for SAP Applications 15 SP4",
-				"SUSE Linux Enterprise Server for SAP Applications 15 SP5"
+				"SUSE Linux Enterprise Server for SAP Applications 15 SP5",
+				"SUSE Linux Enterprise Server for SAP Applications 15 SP6"
 			]
 		},
 		"reference": [
@@ -34,6 +39,16 @@
 				"ref_id": "SUSE CVE-2024-42109",
 				"ref_url": "https://www.suse.com/security/cve/CVE-2024-42109",
 				"source": "SUSE CVE"
+			},
+			{
+				"ref_id": "SUSE-SU-2024:3194-1",
+				"ref_url": "https://lists.suse.com/pipermail/sle-updates/2024-September/036835.html",
+				"source": "SUSE-SU"
+			},
+			{
+				"ref_id": "SUSE-SU-2024:3195-1",
+				"ref_url": "https://lists.suse.com/pipermail/sle-updates/2024-September/036842.html",
+				"source": "SUSE-SU"
 			}
 		],
 		"description": "\n    In the Linux kernel, the following vulnerability has been resolved:\n\nnetfilter: nf_tables: unconditionally flush pending work before notifier\n\nsyzbot reports:\n\nKASAN: slab-uaf in nft_ctx_update include/net/netfilter/nf_tables.h:1831\nKASAN: slab-uaf in nft_commit_release net/netfilter/nf_tables_api.c:9530\nKASAN: slab-uaf int nf_tables_trans_destroy_work+0x152b/0x1750 net/netfilter/nf_tables_api.c:9597\nRead of size 2 at addr ffff88802b0051c4 by task kworker/1:1/45\n[..]\nWorkqueue: events nf_tables_trans_destroy_work\nCall Trace:\n nft_ctx_update include/net/netfilter/nf_tables.h:1831 [inline]\n nft_commit_release net/netfilter/nf_tables_api.c:9530 [inline]\n nf_tables_trans_destroy_work+0x152b/0x1750 net/netfilter/nf_tables_api.c:9597\n\nProblem is that the notifier does a conditional flush, but its possible\nthat the table-to-be-removed is still referenced by transactions being\nprocessed by the worker, so we need to flush unconditionally.\n\nWe could make the flush_work depend on whether we found a table to delete\nin nf-next to avoid the flush for most cases.\n\nAFAICS this problem is only exposed in nf-next, with\ncommit e169285f8c56 (\"netfilter: nf_tables: do not store nft_ctx in transaction objects\"),\nwith this commit applied there is an unconditional fetch of\ntable->family which is whats triggering the above splat.\n    ",
@@ -64,13 +79,15 @@
 				"date": "2024-08-06"
 			},
 			"updated": {
-				"date": "2024-08-28"
+				"date": "2024-09-11"
 			},
 			"affected_cpe_list": {
 				"cpe": [
 					"cpe:/o:suse:sle-module-basesystem:15:sp5",
 					"cpe:/o:suse:sle-module-development-tools:15:sp5",
+					"cpe:/o:suse:sle-module-live-patching:15:sp6",
 					"cpe:/o:suse:sle-module-public-cloud:15:sp5",
+					"cpe:/o:suse:sle-module-public-cloud:15:sp6",
 					"cpe:/o:suse:sle_hpc:15:sp5",
 					"cpe:/o:suse:sled:15:sp5",
 					"cpe:/o:suse:sles-ltss:15",
@@ -90,6 +107,19 @@
 	"criteria": {
 		"operator": "OR",
 		"criterias": [
+			{
+				"operator": "AND",
+				"criterions": [
+					{
+						"test_ref": "oval:org.opensuse.security:tst:2009857543",
+						"comment": "SUSE Linux Enterprise Live Patching 15 SP6 is installed"
+					},
+					{
+						"test_ref": "oval:org.opensuse.security:tst:2009942033",
+						"comment": "kernel-livepatch-6_4_0-150600_10_8-rt-1-150600.1.3.2 is installed"
+					}
+				]
+			},
 			{
 				"operator": "AND",
 				"criterias": [
@@ -336,6 +366,57 @@
 							{
 								"test_ref": "oval:org.opensuse.security:tst:2009340305",
 								"comment": "kernel-source-azure is not affected"
+							}
+						]
+					}
+				]
+			},
+			{
+				"operator": "AND",
+				"criterias": [
+					{
+						"operator": "OR",
+						"criterions": [
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009856172",
+								"comment": "SUSE Linux Enterprise High Performance Computing 15 SP6 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009856320",
+								"comment": "SUSE Linux Enterprise Module for Public Cloud 15 SP6 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009856174",
+								"comment": "SUSE Linux Enterprise Server 15 SP6 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009856175",
+								"comment": "SUSE Linux Enterprise Server for SAP Applications 15 SP6 is installed"
+							}
+						]
+					},
+					{
+						"operator": "OR",
+						"criterions": [
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009941998",
+								"comment": "kernel-azure-6.4.0-150600.8.11.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009941999",
+								"comment": "kernel-azure-devel-6.4.0-150600.8.11.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009942004",
+								"comment": "kernel-devel-azure-6.4.0-150600.8.11.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009942005",
+								"comment": "kernel-source-azure-6.4.0-150600.8.11.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009942006",
+								"comment": "kernel-syms-azure-6.4.0-150600.8.11.1 is installed"
 							}
 						]
 					}

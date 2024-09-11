@@ -9,13 +9,18 @@
 			"platform": [
 				"SUSE Linux Enterprise Desktop 15 SP5",
 				"SUSE Linux Enterprise High Performance Computing 15 SP5",
+				"SUSE Linux Enterprise High Performance Computing 15 SP6",
 				"SUSE Linux Enterprise Live Patching 15 SP5",
+				"SUSE Linux Enterprise Live Patching 15 SP6",
 				"SUSE Linux Enterprise Module for Basesystem 15 SP5",
 				"SUSE Linux Enterprise Module for Development Tools 15 SP5",
 				"SUSE Linux Enterprise Module for Legacy 15 SP5",
 				"SUSE Linux Enterprise Module for Public Cloud 15 SP5",
+				"SUSE Linux Enterprise Module for Public Cloud 15 SP6",
 				"SUSE Linux Enterprise Server 15 SP5",
+				"SUSE Linux Enterprise Server 15 SP6",
 				"SUSE Linux Enterprise Server for SAP Applications 15 SP5",
+				"SUSE Linux Enterprise Server for SAP Applications 15 SP6",
 				"SUSE Linux Enterprise Workstation Extension 15 SP5"
 			]
 		},
@@ -59,6 +64,16 @@
 				"ref_id": "SUSE-SU-2024:2947-1",
 				"ref_url": "https://lists.suse.com/pipermail/sle-updates/2024-August/036488.html",
 				"source": "SUSE-SU"
+			},
+			{
+				"ref_id": "SUSE-SU-2024:3194-1",
+				"ref_url": "https://lists.suse.com/pipermail/sle-updates/2024-September/036835.html",
+				"source": "SUSE-SU"
+			},
+			{
+				"ref_id": "SUSE-SU-2024:3195-1",
+				"ref_url": "https://lists.suse.com/pipermail/sle-updates/2024-September/036842.html",
+				"source": "SUSE-SU"
 			}
 		],
 		"description": "\n    In the Linux kernel, the following vulnerability has been resolved:\n\nibmvnic: Add tx check to prevent skb leak\n\nBelow is a summary of how the driver stores a reference to an skb during\ntransmit:\n    tx_buff[free_map[consumer_index]]->skb = new_skb;\n    free_map[consumer_index] = IBMVNIC_INVALID_MAP;\n    consumer_index ++;\nWhere variable data looks like this:\n    free_map == [4, IBMVNIC_INVALID_MAP, IBMVNIC_INVALID_MAP, 0, 3]\n                                               \tconsumer_index^\n    tx_buff == [skb=null, skb=<ptr>, skb=<ptr>, skb=null, skb=null]\n\nThe driver has checks to ensure that free_map[consumer_index] pointed to\na valid index but there was no check to ensure that this index pointed\nto an unused/null skb address. So, if, by some chance, our free_map and\ntx_buff lists become out of sync then we were previously risking an\nskb memory leak. This could then cause tcp congestion control to stop\nsending packets, eventually leading to ETIMEDOUT.\n\nTherefore, add a conditional to ensure that the skb address is null. If\nnot then warn the user (because this is still a bug that should be\npatched) and free the old pointer to prevent memleak/tcp problems.\n    ",
@@ -74,7 +89,9 @@
 				},
 				{
 					"text": "CVE-2024-41066 at NVD",
-					"href": "https://nvd.nist.gov/vuln/detail/CVE-2024-41066"
+					"href": "https://nvd.nist.gov/vuln/detail/CVE-2024-41066",
+					"impact": "medium",
+					"cvss3": "5.5/CVSS:3.1/AV:L/AC:L/PR:L/UI:N/S:U/C:N/I:N/A:H"
 				}
 			],
 			"bugzilla": [
@@ -87,7 +104,7 @@
 				"date": "2024-08-14"
 			},
 			"updated": {
-				"date": "2024-08-17"
+				"date": "2024-09-11"
 			},
 			"affected_cpe_list": {
 				"cpe": [
@@ -95,7 +112,9 @@
 					"cpe:/o:suse:sle-module-development-tools:15:sp5",
 					"cpe:/o:suse:sle-module-legacy:15:sp5",
 					"cpe:/o:suse:sle-module-live-patching:15:sp5",
+					"cpe:/o:suse:sle-module-live-patching:15:sp6",
 					"cpe:/o:suse:sle-module-public-cloud:15:sp5",
+					"cpe:/o:suse:sle-module-public-cloud:15:sp6",
 					"cpe:/o:suse:sle-we:15:sp5",
 					"cpe:/o:suse:sle_hpc:15:sp5",
 					"cpe:/o:suse:sled:15:sp5",
@@ -169,6 +188,19 @@
 					{
 						"test_ref": "oval:org.opensuse.security:tst:2009880109",
 						"comment": "kernel-default-extra-5.14.21-150500.55.73.1 is installed"
+					}
+				]
+			},
+			{
+				"operator": "AND",
+				"criterions": [
+					{
+						"test_ref": "oval:org.opensuse.security:tst:2009857543",
+						"comment": "SUSE Linux Enterprise Live Patching 15 SP6 is installed"
+					},
+					{
+						"test_ref": "oval:org.opensuse.security:tst:2009942033",
+						"comment": "kernel-livepatch-6_4_0-150600_10_8-rt-1-150600.1.3.2 is installed"
 					}
 				]
 			},
@@ -370,6 +402,57 @@
 					{
 						"test_ref": "oval:org.opensuse.security:tst:2009764853",
 						"comment": "SUSE Linux Enterprise Live Patching 15 SP5 is installed"
+					}
+				]
+			},
+			{
+				"operator": "AND",
+				"criterias": [
+					{
+						"operator": "OR",
+						"criterions": [
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009856172",
+								"comment": "SUSE Linux Enterprise High Performance Computing 15 SP6 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009856320",
+								"comment": "SUSE Linux Enterprise Module for Public Cloud 15 SP6 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009856174",
+								"comment": "SUSE Linux Enterprise Server 15 SP6 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009856175",
+								"comment": "SUSE Linux Enterprise Server for SAP Applications 15 SP6 is installed"
+							}
+						]
+					},
+					{
+						"operator": "OR",
+						"criterions": [
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009941998",
+								"comment": "kernel-azure-6.4.0-150600.8.11.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009941999",
+								"comment": "kernel-azure-devel-6.4.0-150600.8.11.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009942004",
+								"comment": "kernel-devel-azure-6.4.0-150600.8.11.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009942005",
+								"comment": "kernel-source-azure-6.4.0-150600.8.11.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009942006",
+								"comment": "kernel-syms-azure-6.4.0-150600.8.11.1 is installed"
+							}
+						]
 					}
 				]
 			}

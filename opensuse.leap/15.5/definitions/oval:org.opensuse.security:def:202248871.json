@@ -1,0 +1,278 @@
+{
+	"id": "oval:org.opensuse.security:def:202248871",
+	"version": "1",
+	"class": "vulnerability",
+	"metadata": {
+		"title": "CVE-2022-48871",
+		"affected": {
+			"family": "unix",
+			"platform": [
+				"openSUSE Leap 15.5"
+			]
+		},
+		"reference": [
+			{
+				"ref_id": "Mitre CVE-2022-48871",
+				"ref_url": "https://cve.mitre.org/cgi-bin/cvename.cgi?name=CVE-2022-48871",
+				"source": "CVE"
+			},
+			{
+				"ref_id": "SUSE CVE-2022-48871",
+				"ref_url": "https://www.suse.com/security/cve/CVE-2022-48871",
+				"source": "SUSE CVE"
+			},
+			{
+				"ref_id": "SUSE-SU-2024:3190-1",
+				"ref_url": "https://lists.suse.com/pipermail/sle-security-updates/2024-September/019403.html",
+				"source": "SUSE-SU"
+			}
+		],
+		"description": "\n    In the Linux kernel, the following vulnerability has been resolved:\n\ntty: serial: qcom-geni-serial: fix slab-out-of-bounds on RX FIFO buffer\n\nDriver's probe allocates memory for RX FIFO (port->rx_fifo) based on\ndefault RX FIFO depth, e.g. 16.  Later during serial startup the\nqcom_geni_serial_port_setup() updates the RX FIFO depth\n(port->rx_fifo_depth) to match real device capabilities, e.g. to 32.\n\nThe RX UART handle code will read \"port->rx_fifo_depth\" number of words\ninto \"port->rx_fifo\" buffer, thus exceeding the bounds.  This can be\nobserved in certain configurations with Qualcomm Bluetooth HCI UART\ndevice and KASAN:\n\n  Bluetooth: hci0: QCA Product ID   :0x00000010\n  Bluetooth: hci0: QCA SOC Version  :0x400a0200\n  Bluetooth: hci0: QCA ROM Version  :0x00000200\n  Bluetooth: hci0: QCA Patch Version:0x00000d2b\n  Bluetooth: hci0: QCA controller version 0x02000200\n  Bluetooth: hci0: QCA Downloading qca/htbtfw20.tlv\n  bluetooth hci0: Direct firmware load for qca/htbtfw20.tlv failed with error -2\n  Bluetooth: hci0: QCA Failed to request file: qca/htbtfw20.tlv (-2)\n  Bluetooth: hci0: QCA Failed to download patch (-2)\n  ==================================================================\n  BUG: KASAN: slab-out-of-bounds in handle_rx_uart+0xa8/0x18c\n  Write of size 4 at addr ffff279347d578c0 by task swapper/0/0\n\n  CPU: 0 PID: 0 Comm: swapper/0 Not tainted 6.1.0-rt5-00350-gb2450b7e00be-dirty #26\n  Hardware name: Qualcomm Technologies, Inc. Robotics RB5 (DT)\n  Call trace:\n   dump_backtrace.part.0+0xe0/0xf0\n   show_stack+0x18/0x40\n   dump_stack_lvl+0x8c/0xb8\n   print_report+0x188/0x488\n   kasan_report+0xb4/0x100\n   __asan_store4+0x80/0xa4\n   handle_rx_uart+0xa8/0x18c\n   qcom_geni_serial_handle_rx+0x84/0x9c\n   qcom_geni_serial_isr+0x24c/0x760\n   __handle_irq_event_percpu+0x108/0x500\n   handle_irq_event+0x6c/0x110\n   handle_fasteoi_irq+0x138/0x2cc\n   generic_handle_domain_irq+0x48/0x64\n\nIf the RX FIFO depth changes after probe, be sure to resize the buffer.\n    ",
+		"advisory": {
+			"from": "security@suse.de",
+			"severity": "Moderate",
+			"cve": [
+				{
+					"text": "CVE-2022-48871 at SUSE",
+					"href": "https://www.suse.com/security/cve/CVE-2022-48871/",
+					"impact": "medium",
+					"cvss3": "5.5/CVSS:3.1/AV:L/AC:L/PR:L/UI:N/S:U/C:N/I:H/A:N"
+				},
+				{
+					"text": "CVE-2022-48871 at NVD",
+					"href": "https://nvd.nist.gov/vuln/detail/CVE-2022-48871",
+					"impact": "high",
+					"cvss3": "7.1/CVSS:3.1/AV:L/AC:L/PR:L/UI:N/S:U/C:H/I:N/A:H"
+				}
+			],
+			"bugzilla": [
+				{
+					"text": "SUSE bug 1229509",
+					"href": "https://bugzilla.suse.com/1229509"
+				}
+			],
+			"issued": {
+				"date": "2024-09-11"
+			},
+			"updated": {
+				"date": "2024-09-11"
+			},
+			"affected_cpe_list": {
+				"cpe": [
+					"cpe:/o:opensuse:leap:15.5"
+				]
+			}
+		}
+	},
+	"criteria": {
+		"operator": "AND",
+		"criterias": [
+			{
+				"operator": "OR",
+				"criterias": [
+					{
+						"operator": "AND",
+						"criterions": [
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009941978",
+								"comment": "cluster-md-kmp-azure-5.14.21-150500.33.66.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009623277",
+								"comment": "cluster-md-kmp-azure is signed with openSUSE key"
+							}
+						]
+					},
+					{
+						"operator": "AND",
+						"criterions": [
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009941979",
+								"comment": "dlm-kmp-azure-5.14.21-150500.33.66.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009623279",
+								"comment": "dlm-kmp-azure is signed with openSUSE key"
+							}
+						]
+					},
+					{
+						"operator": "AND",
+						"criterions": [
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009941980",
+								"comment": "gfs2-kmp-azure-5.14.21-150500.33.66.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009623281",
+								"comment": "gfs2-kmp-azure is signed with openSUSE key"
+							}
+						]
+					},
+					{
+						"operator": "AND",
+						"criterions": [
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009941981",
+								"comment": "kernel-azure-5.14.21-150500.33.66.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009623283",
+								"comment": "kernel-azure is signed with openSUSE key"
+							}
+						]
+					},
+					{
+						"operator": "AND",
+						"criterions": [
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009941982",
+								"comment": "kernel-azure-devel-5.14.21-150500.33.66.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009623285",
+								"comment": "kernel-azure-devel is signed with openSUSE key"
+							}
+						]
+					},
+					{
+						"operator": "AND",
+						"criterions": [
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009941983",
+								"comment": "kernel-azure-extra-5.14.21-150500.33.66.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009623286",
+								"comment": "kernel-azure-extra is signed with openSUSE key"
+							}
+						]
+					},
+					{
+						"operator": "AND",
+						"criterions": [
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009941984",
+								"comment": "kernel-azure-livepatch-devel-5.14.21-150500.33.66.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009623287",
+								"comment": "kernel-azure-livepatch-devel is signed with openSUSE key"
+							}
+						]
+					},
+					{
+						"operator": "AND",
+						"criterions": [
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009941985",
+								"comment": "kernel-azure-optional-5.14.21-150500.33.66.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009623427",
+								"comment": "kernel-azure-optional is signed with openSUSE key"
+							}
+						]
+					},
+					{
+						"operator": "AND",
+						"criterions": [
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009941986",
+								"comment": "kernel-azure-vdso-5.14.21-150500.33.66.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009769740",
+								"comment": "kernel-azure-vdso is signed with openSUSE key"
+							}
+						]
+					},
+					{
+						"operator": "AND",
+						"criterions": [
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009941987",
+								"comment": "kernel-devel-azure-5.14.21-150500.33.66.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009623293",
+								"comment": "kernel-devel-azure is signed with openSUSE key"
+							}
+						]
+					},
+					{
+						"operator": "AND",
+						"criterions": [
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009941988",
+								"comment": "kernel-source-azure-5.14.21-150500.33.66.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009623300",
+								"comment": "kernel-source-azure is signed with openSUSE key"
+							}
+						]
+					},
+					{
+						"operator": "AND",
+						"criterions": [
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009941989",
+								"comment": "kernel-syms-azure-5.14.21-150500.33.66.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009623301",
+								"comment": "kernel-syms-azure is signed with openSUSE key"
+							}
+						]
+					},
+					{
+						"operator": "AND",
+						"criterions": [
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009941990",
+								"comment": "kselftests-kmp-azure-5.14.21-150500.33.66.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009623305",
+								"comment": "kselftests-kmp-azure is signed with openSUSE key"
+							}
+						]
+					},
+					{
+						"operator": "AND",
+						"criterions": [
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009941991",
+								"comment": "ocfs2-kmp-azure-5.14.21-150500.33.66.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009623306",
+								"comment": "ocfs2-kmp-azure is signed with openSUSE key"
+							}
+						]
+					},
+					{
+						"operator": "AND",
+						"criterions": [
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009941992",
+								"comment": "reiserfs-kmp-azure-5.14.21-150500.33.66.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009623308",
+								"comment": "reiserfs-kmp-azure is signed with openSUSE key"
+							}
+						]
+					}
+				]
+			}
+		],
+		"criterions": [
+			{
+				"test_ref": "oval:org.opensuse.security:tst:2009752682",
+				"comment": "openSUSE Leap 15.5 is installed"
+			}
+		]
+	}
+}

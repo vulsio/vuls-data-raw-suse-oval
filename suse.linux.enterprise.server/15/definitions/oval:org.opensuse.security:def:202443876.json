@@ -9,19 +9,24 @@
 			"platform": [
 				"SUSE Linux Enterprise Desktop 15 SP5",
 				"SUSE Linux Enterprise High Performance Computing 15 SP5",
+				"SUSE Linux Enterprise High Performance Computing 15 SP6",
+				"SUSE Linux Enterprise Live Patching 15 SP6",
 				"SUSE Linux Enterprise Module for Basesystem 15 SP5",
 				"SUSE Linux Enterprise Module for Development Tools 15 SP5",
 				"SUSE Linux Enterprise Module for Public Cloud 15 SP5",
+				"SUSE Linux Enterprise Module for Public Cloud 15 SP6",
 				"SUSE Linux Enterprise Server 15 SP1-LTSS",
 				"SUSE Linux Enterprise Server 15 SP2-LTSS",
 				"SUSE Linux Enterprise Server 15 SP3-LTSS",
 				"SUSE Linux Enterprise Server 15 SP4-LTSS",
 				"SUSE Linux Enterprise Server 15 SP5",
+				"SUSE Linux Enterprise Server 15 SP6",
 				"SUSE Linux Enterprise Server 15-LTSS",
 				"SUSE Linux Enterprise Server for SAP Applications 15 SP2",
 				"SUSE Linux Enterprise Server for SAP Applications 15 SP3",
 				"SUSE Linux Enterprise Server for SAP Applications 15 SP4",
-				"SUSE Linux Enterprise Server for SAP Applications 15 SP5"
+				"SUSE Linux Enterprise Server for SAP Applications 15 SP5",
+				"SUSE Linux Enterprise Server for SAP Applications 15 SP6"
 			]
 		},
 		"reference": [
@@ -34,6 +39,16 @@
 				"ref_id": "SUSE CVE-2024-43876",
 				"ref_url": "https://www.suse.com/security/cve/CVE-2024-43876",
 				"source": "SUSE CVE"
+			},
+			{
+				"ref_id": "SUSE-SU-2024:3194-1",
+				"ref_url": "https://lists.suse.com/pipermail/sle-updates/2024-September/036835.html",
+				"source": "SUSE-SU"
+			},
+			{
+				"ref_id": "SUSE-SU-2024:3195-1",
+				"ref_url": "https://lists.suse.com/pipermail/sle-updates/2024-September/036842.html",
+				"source": "SUSE-SU"
 			}
 		],
 		"description": "\n    In the Linux kernel, the following vulnerability has been resolved:\n\nPCI: rcar: Demote WARN() to dev_warn_ratelimited() in rcar_pcie_wakeup()\n\nAvoid large backtrace, it is sufficient to warn the user that there has\nbeen a link problem. Either the link has failed and the system is in need\nof maintenance, or the link continues to work and user has been informed.\nThe message from the warning can be looked up in the sources.\n\nThis makes an actual link issue less verbose.\n\nFirst of all, this controller has a limitation in that the controller\ndriver has to assist the hardware with transition to L1 link state by\nwriting L1IATN to PMCTRL register, the L1 and L0 link state switching\nis not fully automatic on this controller.\n\nIn case of an ASMedia ASM1062 PCIe SATA controller which does not support\nASPM, on entry to suspend or during platform pm_test, the SATA controller\nenters D3hot state and the link enters L1 state. If the SATA controller\nwakes up before rcar_pcie_wakeup() was called and returns to D0, the link\nreturns to L0 before the controller driver even started its transition to\nL1 link state. At this point, the SATA controller did send an PM_ENTER_L1\nDLLP to the PCIe controller and the PCIe controller received it, and the\nPCIe controller did set PMSR PMEL1RX bit.\n\nOnce rcar_pcie_wakeup() is called, if the link is already back in L0 state\nand PMEL1RX bit is set, the controller driver has no way to determine if\nit should perform the link transition to L1 state, or treat the link as if\nit is in L0 state. Currently the driver attempts to perform the transition\nto L1 link state unconditionally, which in this specific case fails with a\nPMSR L1FAEG poll timeout, however the link still works as it is already\nback in L0 state.\n\nReduce this warning verbosity. In case the link is really broken, the\nrcar_pcie_config_access() would fail, otherwise it will succeed and any\nsystem with this controller and ASM1062 can suspend without generating\na backtrace.\n    ",
@@ -62,13 +77,15 @@
 				"date": "2024-08-22"
 			},
 			"updated": {
-				"date": "2024-08-22"
+				"date": "2024-09-11"
 			},
 			"affected_cpe_list": {
 				"cpe": [
 					"cpe:/o:suse:sle-module-basesystem:15:sp5",
 					"cpe:/o:suse:sle-module-development-tools:15:sp5",
+					"cpe:/o:suse:sle-module-live-patching:15:sp6",
 					"cpe:/o:suse:sle-module-public-cloud:15:sp5",
+					"cpe:/o:suse:sle-module-public-cloud:15:sp6",
 					"cpe:/o:suse:sle_hpc:15:sp5",
 					"cpe:/o:suse:sled:15:sp5",
 					"cpe:/o:suse:sles-ltss:15",
@@ -88,6 +105,19 @@
 	"criteria": {
 		"operator": "OR",
 		"criterias": [
+			{
+				"operator": "AND",
+				"criterions": [
+					{
+						"test_ref": "oval:org.opensuse.security:tst:2009857543",
+						"comment": "SUSE Linux Enterprise Live Patching 15 SP6 is installed"
+					},
+					{
+						"test_ref": "oval:org.opensuse.security:tst:2009942033",
+						"comment": "kernel-livepatch-6_4_0-150600_10_8-rt-1-150600.1.3.2 is installed"
+					}
+				]
+			},
 			{
 				"operator": "AND",
 				"criterias": [
@@ -334,6 +364,57 @@
 							{
 								"test_ref": "oval:org.opensuse.security:tst:2009340305",
 								"comment": "kernel-source-azure is not affected"
+							}
+						]
+					}
+				]
+			},
+			{
+				"operator": "AND",
+				"criterias": [
+					{
+						"operator": "OR",
+						"criterions": [
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009856172",
+								"comment": "SUSE Linux Enterprise High Performance Computing 15 SP6 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009856320",
+								"comment": "SUSE Linux Enterprise Module for Public Cloud 15 SP6 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009856174",
+								"comment": "SUSE Linux Enterprise Server 15 SP6 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009856175",
+								"comment": "SUSE Linux Enterprise Server for SAP Applications 15 SP6 is installed"
+							}
+						]
+					},
+					{
+						"operator": "OR",
+						"criterions": [
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009941998",
+								"comment": "kernel-azure-6.4.0-150600.8.11.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009941999",
+								"comment": "kernel-azure-devel-6.4.0-150600.8.11.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009942004",
+								"comment": "kernel-devel-azure-6.4.0-150600.8.11.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009942005",
+								"comment": "kernel-source-azure-6.4.0-150600.8.11.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009942006",
+								"comment": "kernel-syms-azure-6.4.0-150600.8.11.1 is installed"
 							}
 						]
 					}

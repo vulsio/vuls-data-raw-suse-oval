@@ -35,6 +35,11 @@
 				"ref_id": "SUSE-SU-2024:2947-1",
 				"ref_url": "https://lists.suse.com/pipermail/sle-updates/2024-August/036488.html",
 				"source": "SUSE-SU"
+			},
+			{
+				"ref_id": "SUSE-SU-2024:3190-1",
+				"ref_url": "https://lists.suse.com/pipermail/sle-security-updates/2024-September/019403.html",
+				"source": "SUSE-SU"
 			}
 		],
 		"description": "\n    In the Linux kernel, the following vulnerability has been resolved:\n\nipv6: fix memory leak in fib6_rule_suppress\n\nThe kernel leaks memory when a `fib` rule is present in IPv6 nftables\nfirewall rules and a suppress_prefix rule is present in the IPv6 routing\nrules (used by certain tools such as wg-quick). In such scenarios, every\nincoming packet will leak an allocation in `ip6_dst_cache` slab cache.\n\nAfter some hours of `bpftrace`-ing and source code reading, I tracked\ndown the issue to ca7a03c41753 (\"ipv6: do not free rt if\nFIB_LOOKUP_NOREF is set on suppress rule\").\n\nThe problem with that change is that the generic `args->flags` always have\n`FIB_LOOKUP_NOREF` set[1][2] but the IPv6-specific flag\n`RT6_LOOKUP_F_DST_NOREF` might not be, leading to `fib6_rule_suppress` not\ndecreasing the refcount when needed.\n\nHow to reproduce:\n - Add the following nftables rule to a prerouting chain:\n     meta nfproto ipv6 fib saddr . mark . iif oif missing drop\n   This can be done with:\n     sudo nft create table inet test\n     sudo nft create chain inet test test_chain '{ type filter hook prerouting priority filter + 10; policy accept; }'\n     sudo nft add rule inet test test_chain meta nfproto ipv6 fib saddr . mark . iif oif missing drop\n - Run:\n     sudo ip -6 rule add table main suppress_prefixlength 0\n - Watch `sudo slabtop -o | grep ip6_dst_cache` to see memory usage increase\n   with every incoming ipv6 packet.\n\nThis patch exposes the protocol-specific flags to the protocol\nspecific `suppress` function, and check the protocol-specific `flags`\nargument for RT6_LOOKUP_F_DST_NOREF instead of the generic\nFIB_LOOKUP_NOREF when decreasing the refcount, like this.\n\n[1]: https://github.com/torvalds/linux/blob/ca7a03c4175366a92cee0ccc4fec0038c3266e26/net/ipv6/fib6_rules.c#L71\n[2]: https://github.com/torvalds/linux/blob/ca7a03c4175366a92cee0ccc4fec0038c3266e26/net/ipv6/fib6_rules.c#L99\n    ",
@@ -65,7 +70,7 @@
 				"date": "2024-08-14"
 			},
 			"updated": {
-				"date": "2024-08-17"
+				"date": "2024-09-11"
 			},
 			"affected_cpe_list": {
 				"cpe": [
@@ -97,8 +102,8 @@
 						"operator": "AND",
 						"criterions": [
 							{
-								"test_ref": "oval:org.opensuse.security:tst:2009879908",
-								"comment": "cluster-md-kmp-azure-5.14.21-150500.33.63.1 is installed"
+								"test_ref": "oval:org.opensuse.security:tst:2009941978",
+								"comment": "cluster-md-kmp-azure-5.14.21-150500.33.66.1 is installed"
 							},
 							{
 								"test_ref": "oval:org.opensuse.security:tst:2009623277",
@@ -149,8 +154,8 @@
 						"operator": "AND",
 						"criterions": [
 							{
-								"test_ref": "oval:org.opensuse.security:tst:2009879909",
-								"comment": "dlm-kmp-azure-5.14.21-150500.33.63.1 is installed"
+								"test_ref": "oval:org.opensuse.security:tst:2009941979",
+								"comment": "dlm-kmp-azure-5.14.21-150500.33.66.1 is installed"
 							},
 							{
 								"test_ref": "oval:org.opensuse.security:tst:2009623279",
@@ -500,8 +505,8 @@
 						"operator": "AND",
 						"criterions": [
 							{
-								"test_ref": "oval:org.opensuse.security:tst:2009879910",
-								"comment": "gfs2-kmp-azure-5.14.21-150500.33.63.1 is installed"
+								"test_ref": "oval:org.opensuse.security:tst:2009941980",
+								"comment": "gfs2-kmp-azure-5.14.21-150500.33.66.1 is installed"
 							},
 							{
 								"test_ref": "oval:org.opensuse.security:tst:2009623281",
@@ -604,8 +609,8 @@
 						"operator": "AND",
 						"criterions": [
 							{
-								"test_ref": "oval:org.opensuse.security:tst:2009879911",
-								"comment": "kernel-azure-5.14.21-150500.33.63.1 is installed"
+								"test_ref": "oval:org.opensuse.security:tst:2009941981",
+								"comment": "kernel-azure-5.14.21-150500.33.66.1 is installed"
 							},
 							{
 								"test_ref": "oval:org.opensuse.security:tst:2009623283",
@@ -617,8 +622,8 @@
 						"operator": "AND",
 						"criterions": [
 							{
-								"test_ref": "oval:org.opensuse.security:tst:2009879912",
-								"comment": "kernel-azure-devel-5.14.21-150500.33.63.1 is installed"
+								"test_ref": "oval:org.opensuse.security:tst:2009941982",
+								"comment": "kernel-azure-devel-5.14.21-150500.33.66.1 is installed"
 							},
 							{
 								"test_ref": "oval:org.opensuse.security:tst:2009623285",
@@ -630,8 +635,8 @@
 						"operator": "AND",
 						"criterions": [
 							{
-								"test_ref": "oval:org.opensuse.security:tst:2009879913",
-								"comment": "kernel-azure-extra-5.14.21-150500.33.63.1 is installed"
+								"test_ref": "oval:org.opensuse.security:tst:2009941983",
+								"comment": "kernel-azure-extra-5.14.21-150500.33.66.1 is installed"
 							},
 							{
 								"test_ref": "oval:org.opensuse.security:tst:2009623286",
@@ -643,8 +648,8 @@
 						"operator": "AND",
 						"criterions": [
 							{
-								"test_ref": "oval:org.opensuse.security:tst:2009879914",
-								"comment": "kernel-azure-livepatch-devel-5.14.21-150500.33.63.1 is installed"
+								"test_ref": "oval:org.opensuse.security:tst:2009941984",
+								"comment": "kernel-azure-livepatch-devel-5.14.21-150500.33.66.1 is installed"
 							},
 							{
 								"test_ref": "oval:org.opensuse.security:tst:2009623287",
@@ -656,8 +661,8 @@
 						"operator": "AND",
 						"criterions": [
 							{
-								"test_ref": "oval:org.opensuse.security:tst:2009879915",
-								"comment": "kernel-azure-optional-5.14.21-150500.33.63.1 is installed"
+								"test_ref": "oval:org.opensuse.security:tst:2009941985",
+								"comment": "kernel-azure-optional-5.14.21-150500.33.66.1 is installed"
 							},
 							{
 								"test_ref": "oval:org.opensuse.security:tst:2009623427",
@@ -669,8 +674,8 @@
 						"operator": "AND",
 						"criterions": [
 							{
-								"test_ref": "oval:org.opensuse.security:tst:2009879916",
-								"comment": "kernel-azure-vdso-5.14.21-150500.33.63.1 is installed"
+								"test_ref": "oval:org.opensuse.security:tst:2009941986",
+								"comment": "kernel-azure-vdso-5.14.21-150500.33.66.1 is installed"
 							},
 							{
 								"test_ref": "oval:org.opensuse.security:tst:2009769740",
@@ -864,8 +869,8 @@
 						"operator": "AND",
 						"criterions": [
 							{
-								"test_ref": "oval:org.opensuse.security:tst:2009879917",
-								"comment": "kernel-devel-azure-5.14.21-150500.33.63.1 is installed"
+								"test_ref": "oval:org.opensuse.security:tst:2009941987",
+								"comment": "kernel-devel-azure-5.14.21-150500.33.66.1 is installed"
 							},
 							{
 								"test_ref": "oval:org.opensuse.security:tst:2009623293",
@@ -1163,8 +1168,8 @@
 						"operator": "AND",
 						"criterions": [
 							{
-								"test_ref": "oval:org.opensuse.security:tst:2009879918",
-								"comment": "kernel-source-azure-5.14.21-150500.33.63.1 is installed"
+								"test_ref": "oval:org.opensuse.security:tst:2009941988",
+								"comment": "kernel-source-azure-5.14.21-150500.33.66.1 is installed"
 							},
 							{
 								"test_ref": "oval:org.opensuse.security:tst:2009623300",
@@ -1215,8 +1220,8 @@
 						"operator": "AND",
 						"criterions": [
 							{
-								"test_ref": "oval:org.opensuse.security:tst:2009879919",
-								"comment": "kernel-syms-azure-5.14.21-150500.33.63.1 is installed"
+								"test_ref": "oval:org.opensuse.security:tst:2009941989",
+								"comment": "kernel-syms-azure-5.14.21-150500.33.66.1 is installed"
 							},
 							{
 								"test_ref": "oval:org.opensuse.security:tst:2009623301",
@@ -1267,8 +1272,8 @@
 						"operator": "AND",
 						"criterions": [
 							{
-								"test_ref": "oval:org.opensuse.security:tst:2009879920",
-								"comment": "kselftests-kmp-azure-5.14.21-150500.33.63.1 is installed"
+								"test_ref": "oval:org.opensuse.security:tst:2009941990",
+								"comment": "kselftests-kmp-azure-5.14.21-150500.33.66.1 is installed"
 							},
 							{
 								"test_ref": "oval:org.opensuse.security:tst:2009623305",
@@ -1319,8 +1324,8 @@
 						"operator": "AND",
 						"criterions": [
 							{
-								"test_ref": "oval:org.opensuse.security:tst:2009879921",
-								"comment": "ocfs2-kmp-azure-5.14.21-150500.33.63.1 is installed"
+								"test_ref": "oval:org.opensuse.security:tst:2009941991",
+								"comment": "ocfs2-kmp-azure-5.14.21-150500.33.66.1 is installed"
 							},
 							{
 								"test_ref": "oval:org.opensuse.security:tst:2009623306",
@@ -1371,8 +1376,8 @@
 						"operator": "AND",
 						"criterions": [
 							{
-								"test_ref": "oval:org.opensuse.security:tst:2009879922",
-								"comment": "reiserfs-kmp-azure-5.14.21-150500.33.63.1 is installed"
+								"test_ref": "oval:org.opensuse.security:tst:2009941992",
+								"comment": "reiserfs-kmp-azure-5.14.21-150500.33.66.1 is installed"
 							},
 							{
 								"test_ref": "oval:org.opensuse.security:tst:2009623308",
