@@ -9,6 +9,7 @@
 			"platform": [
 				"SUSE Linux Enterprise High Performance Computing 15 SP5",
 				"SUSE Linux Enterprise High Performance Computing 15 SP6",
+				"SUSE Linux Enterprise Live Patching 15 SP5",
 				"SUSE Linux Enterprise Live Patching 15 SP6",
 				"SUSE Linux Enterprise Module for Public Cloud 15 SP5",
 				"SUSE Linux Enterprise Module for Public Cloud 15 SP6",
@@ -49,6 +50,11 @@
 				"ref_id": "SUSE-SU-2024:3195-1",
 				"ref_url": "https://lists.suse.com/pipermail/sle-updates/2024-September/036842.html",
 				"source": "SUSE-SU"
+			},
+			{
+				"ref_id": "SUSE-SU-2024:3209-1",
+				"ref_url": "https://lists.suse.com/pipermail/sle-updates/2024-September/036854.html",
+				"source": "SUSE-SU"
 			}
 		],
 		"description": "\n    In the Linux kernel, the following vulnerability has been resolved:\n\nPCI/DPC: Fix use-after-free on concurrent DPC and hot-removal\n\nKeith reports a use-after-free when a DPC event occurs concurrently to\nhot-removal of the same portion of the hierarchy:\n\nThe dpc_handler() awaits readiness of the secondary bus below the\nDownstream Port where the DPC event occurred.  To do so, it polls the\nconfig space of the first child device on the secondary bus.  If that\nchild device is concurrently removed, accesses to its struct pci_dev\ncause the kernel to oops.\n\nThat's because pci_bridge_wait_for_secondary_bus() neglects to hold a\nreference on the child device.  Before v6.3, the function was only\ncalled on resume from system sleep or on runtime resume.  Holding a\nreference wasn't necessary back then because the pciehp IRQ thread\ncould never run concurrently.  (On resume from system sleep, IRQs are\nnot enabled until after the resume_noirq phase.  And runtime resume is\nalways awaited before a PCI device is removed.)\n\nHowever starting with v6.3, pci_bridge_wait_for_secondary_bus() is also\ncalled on a DPC event.  Commit 53b54ad074de (\"PCI/DPC: Await readiness\nof secondary bus after reset\"), which introduced that, failed to\nappreciate that pci_bridge_wait_for_secondary_bus() now needs to hold a\nreference on the child device because dpc_handler() and pciehp may\nindeed run concurrently.  The commit was backported to v5.10+ stable\nkernels, so that's the oldest one affected.\n\nAdd the missing reference acquisition.\n\nAbridged stack trace:\n\n  BUG: unable to handle page fault for address: 00000000091400c0\n  CPU: 15 PID: 2464 Comm: irq/53-pcie-dpc 6.9.0\n  RIP: pci_bus_read_config_dword+0x17/0x50\n  pci_dev_wait()\n  pci_bridge_wait_for_secondary_bus()\n  dpc_reset_link()\n  pcie_do_recovery()\n  dpc_handler()\n    ",
@@ -79,10 +85,11 @@
 				"date": "2024-08-20"
 			},
 			"updated": {
-				"date": "2024-09-11"
+				"date": "2024-09-12"
 			},
 			"affected_cpe_list": {
 				"cpe": [
+					"cpe:/o:suse:sle-module-live-patching:15:sp5",
 					"cpe:/o:suse:sle-module-live-patching:15:sp6",
 					"cpe:/o:suse:sle-module-public-cloud:15:sp5",
 					"cpe:/o:suse:sle-module-public-cloud:15:sp6",
@@ -112,6 +119,19 @@
 					{
 						"test_ref": "oval:org.opensuse.security:tst:2009942033",
 						"comment": "kernel-livepatch-6_4_0-150600_10_8-rt-1-150600.1.3.2 is installed"
+					}
+				]
+			},
+			{
+				"operator": "AND",
+				"criterions": [
+					{
+						"test_ref": "oval:org.opensuse.security:tst:2009764853",
+						"comment": "SUSE Linux Enterprise Live Patching 15 SP5 is installed"
+					},
+					{
+						"test_ref": "oval:org.opensuse.security:tst:2009942378",
+						"comment": "kernel-livepatch-5_14_21-150500_13_67-rt-1-150500.11.3.2 is installed"
 					}
 				]
 			},

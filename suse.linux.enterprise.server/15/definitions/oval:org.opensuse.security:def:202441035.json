@@ -9,6 +9,7 @@
 			"platform": [
 				"SUSE Linux Enterprise High Performance Computing 15 SP5",
 				"SUSE Linux Enterprise High Performance Computing 15 SP6",
+				"SUSE Linux Enterprise Live Patching 15 SP5",
 				"SUSE Linux Enterprise Live Patching 15 SP6",
 				"SUSE Linux Enterprise Module for Public Cloud 15 SP5",
 				"SUSE Linux Enterprise Module for Public Cloud 15 SP6",
@@ -48,6 +49,11 @@
 				"ref_id": "SUSE-SU-2024:3195-1",
 				"ref_url": "https://lists.suse.com/pipermail/sle-updates/2024-September/036842.html",
 				"source": "SUSE-SU"
+			},
+			{
+				"ref_id": "SUSE-SU-2024:3209-1",
+				"ref_url": "https://lists.suse.com/pipermail/sle-updates/2024-September/036854.html",
+				"source": "SUSE-SU"
 			}
 		],
 		"description": "\n    In the Linux kernel, the following vulnerability has been resolved:\n\nUSB: core: Fix duplicate endpoint bug by clearing reserved bits in the descriptor\n\nSyzbot has identified a bug in usbcore (see the Closes: tag below)\ncaused by our assumption that the reserved bits in an endpoint\ndescriptor's bEndpointAddress field will always be 0.  As a result of\nthe bug, the endpoint_is_duplicate() routine in config.c (and possibly\nother routines as well) may believe that two descriptors are for\ndistinct endpoints, even though they have the same direction and\nendpoint number.  This can lead to confusion, including the bug\nidentified by syzbot (two descriptors with matching endpoint numbers\nand directions, where one was interrupt and the other was bulk).\n\nTo fix the bug, we will clear the reserved bits in bEndpointAddress\nwhen we parse the descriptor.  (Note that both the USB-2.0 and USB-3.1\nspecs say these bits are \"Reserved, reset to zero\".)  This requires us\nto make a copy of the descriptor earlier in usb_parse_endpoint() and\nuse the copy instead of the original when checking for duplicates.\n    ",
@@ -76,10 +82,11 @@
 				"date": "2024-09-11"
 			},
 			"updated": {
-				"date": "2024-09-11"
+				"date": "2024-09-12"
 			},
 			"affected_cpe_list": {
 				"cpe": [
+					"cpe:/o:suse:sle-module-live-patching:15:sp5",
 					"cpe:/o:suse:sle-module-live-patching:15:sp6",
 					"cpe:/o:suse:sle-module-public-cloud:15:sp5",
 					"cpe:/o:suse:sle-module-public-cloud:15:sp6",
@@ -103,6 +110,19 @@
 					{
 						"test_ref": "oval:org.opensuse.security:tst:2009942033",
 						"comment": "kernel-livepatch-6_4_0-150600_10_8-rt-1-150600.1.3.2 is installed"
+					}
+				]
+			},
+			{
+				"operator": "AND",
+				"criterions": [
+					{
+						"test_ref": "oval:org.opensuse.security:tst:2009764853",
+						"comment": "SUSE Linux Enterprise Live Patching 15 SP5 is installed"
+					},
+					{
+						"test_ref": "oval:org.opensuse.security:tst:2009942378",
+						"comment": "kernel-livepatch-5_14_21-150500_13_67-rt-1-150500.11.3.2 is installed"
 					}
 				]
 			},

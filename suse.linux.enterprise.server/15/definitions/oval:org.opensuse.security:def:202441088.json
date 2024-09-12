@@ -9,6 +9,7 @@
 			"platform": [
 				"SUSE Linux Enterprise High Performance Computing 15 SP5",
 				"SUSE Linux Enterprise High Performance Computing 15 SP6",
+				"SUSE Linux Enterprise Live Patching 15 SP5",
 				"SUSE Linux Enterprise Live Patching 15 SP6",
 				"SUSE Linux Enterprise Module for Public Cloud 15 SP5",
 				"SUSE Linux Enterprise Module for Public Cloud 15 SP6",
@@ -49,6 +50,11 @@
 				"ref_id": "SUSE-SU-2024:3195-1",
 				"ref_url": "https://lists.suse.com/pipermail/sle-updates/2024-September/036842.html",
 				"source": "SUSE-SU"
+			},
+			{
+				"ref_id": "SUSE-SU-2024:3209-1",
+				"ref_url": "https://lists.suse.com/pipermail/sle-updates/2024-September/036854.html",
+				"source": "SUSE-SU"
 			}
 		],
 		"description": "\n    In the Linux kernel, the following vulnerability has been resolved:\n\ncan: mcp251xfd: fix infinite loop when xmit fails\n\nWhen the mcp251xfd_start_xmit() function fails, the driver stops\nprocessing messages, and the interrupt routine does not return,\nrunning indefinitely even after killing the running application.\n\nError messages:\n[  441.298819] mcp251xfd spi2.0 can0: ERROR in mcp251xfd_start_xmit: -16\n[  441.306498] mcp251xfd spi2.0 can0: Transmit Event FIFO buffer not empty. (seq=0x000017c7, tef_tail=0x000017cf, tef_head=0x000017d0, tx_head=0x000017d3).\n... and repeat forever.\n\nThe issue can be triggered when multiple devices share the same SPI\ninterface. And there is concurrent access to the bus.\n\nThe problem occurs because tx_ring->head increments even if\nmcp251xfd_start_xmit() fails. Consequently, the driver skips one TX\npackage while still expecting a response in\nmcp251xfd_handle_tefif_one().\n\nResolve the issue by starting a workqueue to write the tx obj\nsynchronously if err = -EBUSY. In case of another error, decrement\ntx_ring->head, remove skb from the echo stack, and drop the message.\n\n[mkl: use more imperative wording in patch description]\n    ",
@@ -79,10 +85,11 @@
 				"date": "2024-08-06"
 			},
 			"updated": {
-				"date": "2024-09-11"
+				"date": "2024-09-12"
 			},
 			"affected_cpe_list": {
 				"cpe": [
+					"cpe:/o:suse:sle-module-live-patching:15:sp5",
 					"cpe:/o:suse:sle-module-live-patching:15:sp6",
 					"cpe:/o:suse:sle-module-public-cloud:15:sp5",
 					"cpe:/o:suse:sle-module-public-cloud:15:sp6",
@@ -112,6 +119,19 @@
 					{
 						"test_ref": "oval:org.opensuse.security:tst:2009942033",
 						"comment": "kernel-livepatch-6_4_0-150600_10_8-rt-1-150600.1.3.2 is installed"
+					}
+				]
+			},
+			{
+				"operator": "AND",
+				"criterions": [
+					{
+						"test_ref": "oval:org.opensuse.security:tst:2009764853",
+						"comment": "SUSE Linux Enterprise Live Patching 15 SP5 is installed"
+					},
+					{
+						"test_ref": "oval:org.opensuse.security:tst:2009942378",
+						"comment": "kernel-livepatch-5_14_21-150500_13_67-rt-1-150500.11.3.2 is installed"
 					}
 				]
 			},

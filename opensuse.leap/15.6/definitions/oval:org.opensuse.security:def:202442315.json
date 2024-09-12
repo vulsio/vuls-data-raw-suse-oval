@@ -35,6 +35,11 @@
 				"ref_id": "SUSE-SU-2024:3195-1",
 				"ref_url": "https://lists.suse.com/pipermail/sle-updates/2024-September/036842.html",
 				"source": "SUSE-SU"
+			},
+			{
+				"ref_id": "SUSE-SU-2024:3209-1",
+				"ref_url": "https://lists.suse.com/pipermail/sle-updates/2024-September/036854.html",
+				"source": "SUSE-SU"
 			}
 		],
 		"description": "\n    In the Linux kernel, the following vulnerability has been resolved:\n\nexfat: fix potential deadlock on __exfat_get_dentry_set\n\nWhen accessing a file with more entries than ES_MAX_ENTRY_NUM, the bh-array\nis allocated in __exfat_get_entry_set. The problem is that the bh-array is\nallocated with GFP_KERNEL. It does not make sense. In the following cases,\na deadlock for sbi->s_lock between the two processes may occur.\n\n       CPU0                CPU1\n       ----                ----\n  kswapd\n   balance_pgdat\n    lock(fs_reclaim)\n                      exfat_iterate\n                       lock(&sbi->s_lock)\n                       exfat_readdir\n                        exfat_get_uniname_from_ext_entry\n                         exfat_get_dentry_set\n                          __exfat_get_dentry_set\n                           kmalloc_array\n                            ...\n                            lock(fs_reclaim)\n    ...\n    evict\n     exfat_evict_inode\n      lock(&sbi->s_lock)\n\nTo fix this, let's allocate bh-array with GFP_NOFS.\n    ",
@@ -65,7 +70,7 @@
 				"date": "2024-09-11"
 			},
 			"updated": {
-				"date": "2024-09-11"
+				"date": "2024-09-12"
 			},
 			"affected_cpe_list": {
 				"cpe": [
