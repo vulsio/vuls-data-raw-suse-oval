@@ -1,0 +1,219 @@
+{
+	"id": "oval:org.opensuse.security:def:202446683",
+	"version": "1",
+	"class": "vulnerability",
+	"metadata": {
+		"title": "CVE-2024-46683",
+		"affected": {
+			"family": "unix",
+			"platform": [
+				"SUSE Linux Enterprise Desktop 15 SP5",
+				"SUSE Linux Enterprise Desktop 15 SP6",
+				"SUSE Linux Enterprise High Performance Computing 15 SP5",
+				"SUSE Linux Enterprise High Performance Computing 15 SP6",
+				"SUSE Linux Enterprise Module for Basesystem 15 SP5",
+				"SUSE Linux Enterprise Module for Basesystem 15 SP6",
+				"SUSE Linux Enterprise Module for Development Tools 15 SP5",
+				"SUSE Linux Enterprise Module for Development Tools 15 SP6",
+				"SUSE Linux Enterprise Server 15 SP5",
+				"SUSE Linux Enterprise Server 15 SP6",
+				"SUSE Linux Enterprise Server for SAP Applications 15 SP5",
+				"SUSE Linux Enterprise Server for SAP Applications 15 SP6"
+			]
+		},
+		"reference": [
+			{
+				"ref_id": "Mitre CVE-2024-46683",
+				"ref_url": "https://cve.mitre.org/cgi-bin/cvename.cgi?name=CVE-2024-46683",
+				"source": "CVE"
+			},
+			{
+				"ref_id": "SUSE CVE-2024-46683",
+				"ref_url": "https://www.suse.com/security/cve/CVE-2024-46683",
+				"source": "SUSE CVE"
+			}
+		],
+		"description": "\n    In the Linux kernel, the following vulnerability has been resolved:\n\ndrm/xe: prevent UAF around preempt fence\n\nThe fence lock is part of the queue, therefore in the current design\nanything locking the fence should then also hold a ref to the queue to\nprevent the queue from being freed.\n\nHowever, currently it looks like we signal the fence and then drop the\nqueue ref, but if something is waiting on the fence, the waiter is\nkicked to wake up at some later point, where upon waking up it first\ngrabs the lock before checking the fence state. But if we have already\ndropped the queue ref, then the lock might already be freed as part of\nthe queue, leading to uaf.\n\nTo prevent this, move the fence lock into the fence itself so we don't\nrun into lifetime issues. Alternative might be to have device level\nlock, or only release the queue in the fence release callback, however\nthat might require pushing to another worker to avoid locking issues.\n\nReferences: https://gitlab.freedesktop.org/drm/xe/kernel/-/issues/2454\nReferences: https://gitlab.freedesktop.org/drm/xe/kernel/-/issues/2342\nReferences: https://gitlab.freedesktop.org/drm/xe/kernel/-/issues/2020\n(cherry picked from commit 7116c35aacedc38be6d15bd21b2fc936eed0008b)\n    ",
+		"advisory": {
+			"from": "security@suse.de",
+			"severity": "Important",
+			"cve": [
+				{
+					"text": "CVE-2024-46683 at SUSE",
+					"href": "https://www.suse.com/security/cve/CVE-2024-46683/",
+					"impact": "high",
+					"cvss3": "7/CVSS:3.1/AV:L/AC:H/PR:L/UI:N/S:U/C:H/I:H/A:H"
+				},
+				{
+					"text": "CVE-2024-46683 at NVD",
+					"href": "https://nvd.nist.gov/vuln/detail/CVE-2024-46683",
+					"impact": "high",
+					"cvss3": "7.8/CVSS:3.1/AV:L/AC:L/PR:L/UI:N/S:U/C:H/I:H/A:H"
+				}
+			],
+			"bugzilla": [
+				{
+					"text": "SUSE bug 1230560",
+					"href": "https://bugzilla.suse.com/1230560"
+				}
+			],
+			"issued": {
+				"date": "2024-09-14"
+			},
+			"updated": {
+				"date": "2024-09-14"
+			},
+			"affected_cpe_list": {
+				"cpe": [
+					"cpe:/o:suse:sle-module-basesystem:15:sp5",
+					"cpe:/o:suse:sle-module-basesystem:15:sp6",
+					"cpe:/o:suse:sle-module-development-tools:15:sp5",
+					"cpe:/o:suse:sle-module-development-tools:15:sp6",
+					"cpe:/o:suse:sle_hpc:15:sp5",
+					"cpe:/o:suse:sled:15:sp5",
+					"cpe:/o:suse:sles:15:sp5",
+					"cpe:/o:suse:sles_sap:15:sp5"
+				]
+			}
+		}
+	},
+	"criteria": {
+		"operator": "OR",
+		"criterias": [
+			{
+				"operator": "AND",
+				"criterias": [
+					{
+						"operator": "OR",
+						"criterions": [
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009759898",
+								"comment": "SUSE Linux Enterprise Desktop 15 SP5 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009856171",
+								"comment": "SUSE Linux Enterprise Desktop 15 SP6 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009759899",
+								"comment": "SUSE Linux Enterprise High Performance Computing 15 SP5 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009856172",
+								"comment": "SUSE Linux Enterprise High Performance Computing 15 SP6 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009760583",
+								"comment": "SUSE Linux Enterprise Module for Development Tools 15 SP5 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009856253",
+								"comment": "SUSE Linux Enterprise Module for Development Tools 15 SP6 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009759901",
+								"comment": "SUSE Linux Enterprise Server 15 SP5 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009856174",
+								"comment": "SUSE Linux Enterprise Server 15 SP6 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009759902",
+								"comment": "SUSE Linux Enterprise Server for SAP Applications 15 SP5 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009856175",
+								"comment": "SUSE Linux Enterprise Server for SAP Applications 15 SP6 is installed"
+							}
+						]
+					},
+					{
+						"operator": "OR",
+						"criterions": [
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009334017",
+								"comment": "kernel-default is not affected"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009333928",
+								"comment": "kernel-source is not affected"
+							}
+						]
+					}
+				]
+			},
+			{
+				"operator": "AND",
+				"criterias": [
+					{
+						"operator": "OR",
+						"criterions": [
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009759898",
+								"comment": "SUSE Linux Enterprise Desktop 15 SP5 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009856171",
+								"comment": "SUSE Linux Enterprise Desktop 15 SP6 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009759899",
+								"comment": "SUSE Linux Enterprise High Performance Computing 15 SP5 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009856172",
+								"comment": "SUSE Linux Enterprise High Performance Computing 15 SP6 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009759900",
+								"comment": "SUSE Linux Enterprise Module for Basesystem 15 SP5 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009856173",
+								"comment": "SUSE Linux Enterprise Module for Basesystem 15 SP6 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009759901",
+								"comment": "SUSE Linux Enterprise Server 15 SP5 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009856174",
+								"comment": "SUSE Linux Enterprise Server 15 SP6 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009759902",
+								"comment": "SUSE Linux Enterprise Server for SAP Applications 15 SP5 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009856175",
+								"comment": "SUSE Linux Enterprise Server for SAP Applications 15 SP6 is installed"
+							}
+						]
+					},
+					{
+						"operator": "OR",
+						"criterions": [
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009334017",
+								"comment": "kernel-default is not affected"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009335423",
+								"comment": "kernel-default-devel is not affected"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009334791",
+								"comment": "kernel-devel is not affected"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009334792",
+								"comment": "kernel-macros is not affected"
+							}
+						]
+					}
+				]
+			}
+		]
+	}
+}

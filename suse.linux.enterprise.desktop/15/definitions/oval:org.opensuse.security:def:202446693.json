@@ -1,0 +1,169 @@
+{
+	"id": "oval:org.opensuse.security:def:202446693",
+	"version": "1",
+	"class": "vulnerability",
+	"metadata": {
+		"title": "CVE-2024-46693",
+		"affected": {
+			"family": "unix",
+			"platform": [
+				"SUSE Linux Enterprise Desktop 15 SP5",
+				"SUSE Linux Enterprise High Performance Computing 15 SP5",
+				"SUSE Linux Enterprise Module for Basesystem 15 SP5",
+				"SUSE Linux Enterprise Module for Development Tools 15 SP5",
+				"SUSE Linux Enterprise Server 15 SP5",
+				"SUSE Linux Enterprise Server for SAP Applications 15 SP5"
+			]
+		},
+		"reference": [
+			{
+				"ref_id": "Mitre CVE-2024-46693",
+				"ref_url": "https://cve.mitre.org/cgi-bin/cvename.cgi?name=CVE-2024-46693",
+				"source": "CVE"
+			},
+			{
+				"ref_id": "SUSE CVE-2024-46693",
+				"ref_url": "https://www.suse.com/security/cve/CVE-2024-46693",
+				"source": "SUSE CVE"
+			}
+		],
+		"description": "\n    In the Linux kernel, the following vulnerability has been resolved:\n\nsoc: qcom: pmic_glink: Fix race during initialization\n\nAs pointed out by Stephen Boyd it is possible that during initialization\nof the pmic_glink child drivers, the protection-domain notifiers fires,\nand the associated work is scheduled, before the client registration\nreturns and as a result the local \"client\" pointer has been initialized.\n\nThe outcome of this is a NULL pointer dereference as the \"client\"\npointer is blindly dereferenced.\n\nTimeline provided by Stephen:\n CPU0                               CPU1\n ----                               ----\n ucsi->client = NULL;\n devm_pmic_glink_register_client()\n  client->pdr_notify(client->priv, pg->client_state)\n   pmic_glink_ucsi_pdr_notify()\n    schedule_work(&ucsi->register_work)\n    <schedule away>\n                                    pmic_glink_ucsi_register()\n                                     ucsi_register()\n                                      pmic_glink_ucsi_read_version()\n                                       pmic_glink_ucsi_read()\n                                        pmic_glink_ucsi_read()\n                                         pmic_glink_send(ucsi->client)\n                                         <client is NULL BAD>\n ucsi->client = client // Too late!\n\nThis code is identical across the altmode, battery manager and usci\nchild drivers.\n\nResolve this by splitting the allocation of the \"client\" object and the\nregistration thereof into two operations.\n\nThis only happens if the protection domain registry is populated at the\ntime of registration, which by the introduction of commit '1ebcde047c54\n(\"soc: qcom: add pd-mapper implementation\")' became much more likely.\n    ",
+		"advisory": {
+			"from": "security@suse.de",
+			"severity": "Moderate",
+			"cve": [
+				{
+					"text": "CVE-2024-46693 at SUSE",
+					"href": "https://www.suse.com/security/cve/CVE-2024-46693/",
+					"impact": "medium",
+					"cvss3": "5.5/CVSS:3.1/AV:L/AC:L/PR:L/UI:N/S:U/C:N/I:N/A:H"
+				},
+				{
+					"text": "CVE-2024-46693 at NVD",
+					"href": "https://nvd.nist.gov/vuln/detail/CVE-2024-46693"
+				}
+			],
+			"bugzilla": [
+				{
+					"text": "SUSE bug 1230521",
+					"href": "https://bugzilla.suse.com/1230521"
+				}
+			],
+			"issued": {
+				"date": "2024-09-14"
+			},
+			"updated": {
+				"date": "2024-09-14"
+			},
+			"affected_cpe_list": {
+				"cpe": [
+					"cpe:/o:suse:sle-module-basesystem:15:sp5",
+					"cpe:/o:suse:sle-module-development-tools:15:sp5",
+					"cpe:/o:suse:sle_hpc:15:sp5",
+					"cpe:/o:suse:sled:15:sp5",
+					"cpe:/o:suse:sles:15:sp5",
+					"cpe:/o:suse:sles_sap:15:sp5"
+				]
+			}
+		}
+	},
+	"criteria": {
+		"operator": "OR",
+		"criterias": [
+			{
+				"operator": "AND",
+				"criterias": [
+					{
+						"operator": "OR",
+						"criterions": [
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009759898",
+								"comment": "SUSE Linux Enterprise Desktop 15 SP5 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009759899",
+								"comment": "SUSE Linux Enterprise High Performance Computing 15 SP5 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009760583",
+								"comment": "SUSE Linux Enterprise Module for Development Tools 15 SP5 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009759901",
+								"comment": "SUSE Linux Enterprise Server 15 SP5 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009759902",
+								"comment": "SUSE Linux Enterprise Server for SAP Applications 15 SP5 is installed"
+							}
+						]
+					},
+					{
+						"operator": "OR",
+						"criterions": [
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009334017",
+								"comment": "kernel-default is not affected"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009333928",
+								"comment": "kernel-source is not affected"
+							}
+						]
+					}
+				]
+			},
+			{
+				"operator": "AND",
+				"criterias": [
+					{
+						"operator": "OR",
+						"criterions": [
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009759898",
+								"comment": "SUSE Linux Enterprise Desktop 15 SP5 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009759899",
+								"comment": "SUSE Linux Enterprise High Performance Computing 15 SP5 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009759900",
+								"comment": "SUSE Linux Enterprise Module for Basesystem 15 SP5 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009759901",
+								"comment": "SUSE Linux Enterprise Server 15 SP5 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009759902",
+								"comment": "SUSE Linux Enterprise Server for SAP Applications 15 SP5 is installed"
+							}
+						]
+					},
+					{
+						"operator": "OR",
+						"criterions": [
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009334017",
+								"comment": "kernel-default is not affected"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009335423",
+								"comment": "kernel-default-devel is not affected"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009334791",
+								"comment": "kernel-devel is not affected"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009334792",
+								"comment": "kernel-macros is not affected"
+							}
+						]
+					}
+				]
+			}
+		]
+	}
+}
