@@ -8,10 +8,13 @@
 			"family": "unix",
 			"platform": [
 				"SUSE Linux Enterprise High Performance Computing 15 SP5",
+				"SUSE Linux Enterprise Live Patching 15 SP3",
 				"SUSE Linux Enterprise Live Patching 15 SP5",
 				"SUSE Linux Enterprise Module for Public Cloud 15 SP5",
+				"SUSE Linux Enterprise Server 15 SP3-LTSS",
 				"SUSE Linux Enterprise Server 15 SP5",
 				"SUSE Linux Enterprise Server 15-LTSS",
+				"SUSE Linux Enterprise Server for SAP Applications 15 SP3",
 				"SUSE Linux Enterprise Server for SAP Applications 15 SP5"
 			]
 		},
@@ -50,6 +53,21 @@
 				"ref_id": "SUSE-SU-2024:3227-1",
 				"ref_url": "https://lists.suse.com/pipermail/sle-updates/2024-September/036874.html",
 				"source": "SUSE-SU"
+			},
+			{
+				"ref_id": "SUSE-SU-2024:3249-1",
+				"ref_url": "https://lists.suse.com/pipermail/sle-updates/2024-September/036898.html",
+				"source": "SUSE-SU"
+			},
+			{
+				"ref_id": "SUSE-SU-2024:3251-1",
+				"ref_url": "https://lists.suse.com/pipermail/sle-updates/2024-September/036895.html",
+				"source": "SUSE-SU"
+			},
+			{
+				"ref_id": "SUSE-SU-2024:3252-1",
+				"ref_url": "https://lists.suse.com/pipermail/sle-updates/2024-September/036896.html",
+				"source": "SUSE-SU"
 			}
 		],
 		"description": "\n    In the Linux kernel, the following vulnerability has been resolved:\n\nRDMA/cma: Do not change route.addr.src_addr outside state checks\n\nIf the state is not idle then resolve_prepare_src() should immediately\nfail and no change to global state should happen. However, it\nunconditionally overwrites the src_addr trying to build a temporary any\naddress.\n\nFor instance if the state is already RDMA_CM_LISTEN then this will corrupt\nthe src_addr and would cause the test in cma_cancel_operation():\n\n           if (cma_any_addr(cma_src_addr(id_priv)) && !id_priv->cma_dev)\n\nWhich would manifest as this trace from syzkaller:\n\n  BUG: KASAN: use-after-free in __list_add_valid+0x93/0xa0 lib/list_debug.c:26\n  Read of size 8 at addr ffff8881546491e0 by task syz-executor.1/32204\n\n  CPU: 1 PID: 32204 Comm: syz-executor.1 Not tainted 5.12.0-rc8-syzkaller #0\n  Hardware name: Google Google Compute Engine/Google Compute Engine, BIOS Google 01/01/2011\n  Call Trace:\n   __dump_stack lib/dump_stack.c:79 [inline]\n   dump_stack+0x141/0x1d7 lib/dump_stack.c:120\n   print_address_description.constprop.0.cold+0x5b/0x2f8 mm/kasan/report.c:232\n   __kasan_report mm/kasan/report.c:399 [inline]\n   kasan_report.cold+0x7c/0xd8 mm/kasan/report.c:416\n   __list_add_valid+0x93/0xa0 lib/list_debug.c:26\n   __list_add include/linux/list.h:67 [inline]\n   list_add_tail include/linux/list.h:100 [inline]\n   cma_listen_on_all drivers/infiniband/core/cma.c:2557 [inline]\n   rdma_listen+0x787/0xe00 drivers/infiniband/core/cma.c:3751\n   ucma_listen+0x16a/0x210 drivers/infiniband/core/ucma.c:1102\n   ucma_write+0x259/0x350 drivers/infiniband/core/ucma.c:1732\n   vfs_write+0x28e/0xa30 fs/read_write.c:603\n   ksys_write+0x1ee/0x250 fs/read_write.c:658\n   do_syscall_64+0x2d/0x70 arch/x86/entry/common.c:46\n   entry_SYSCALL_64_after_hwframe+0x44/0xae\n\nThis is indicating that an rdma_id_private was destroyed without doing\ncma_cancel_listens().\n\nInstead of trying to re-use the src_addr memory to indirectly create an\nany address derived from the dst build one explicitly on the stack and\nbind to that as any other normal flow would do. rdma_bind_addr() will copy\nit over the src_addr once it knows the state is valid.\n\nThis is similar to commit bc0bdc5afaa7 (\"RDMA/cma: Do not change\nroute.addr.src_addr.ss_family\")\n    ",
@@ -80,15 +98,18 @@
 				"date": "2024-08-23"
 			},
 			"updated": {
-				"date": "2024-09-13"
+				"date": "2024-09-17"
 			},
 			"affected_cpe_list": {
 				"cpe": [
+					"cpe:/o:suse:sle-module-live-patching:15:sp3",
 					"cpe:/o:suse:sle-module-live-patching:15:sp5",
 					"cpe:/o:suse:sle-module-public-cloud:15:sp5",
 					"cpe:/o:suse:sle_hpc:15:sp5",
 					"cpe:/o:suse:sles-ltss:15",
+					"cpe:/o:suse:sles-ltss:15:sp3",
 					"cpe:/o:suse:sles:15:sp5",
+					"cpe:/o:suse:sles_sap:15:sp3",
 					"cpe:/o:suse:sles_sap:15:sp5"
 				]
 			}
@@ -206,6 +227,174 @@
 								"comment": "kernel-syms-azure-5.14.21-150500.33.66.1 is installed"
 							}
 						]
+					}
+				]
+			},
+			{
+				"operator": "AND",
+				"criterias": [
+					{
+						"operator": "OR",
+						"criterions": [
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009942652",
+								"comment": "kernel-default-livepatch-5.3.18-150300.59.174.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009942653",
+								"comment": "kernel-default-livepatch-devel-5.3.18-150300.59.174.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009942654",
+								"comment": "kernel-livepatch-5_3_18-150300_59_174-default-1-150300.7.3.1 is installed"
+							}
+						]
+					}
+				],
+				"criterions": [
+					{
+						"test_ref": "oval:org.opensuse.security:tst:2009478738",
+						"comment": "SUSE Linux Enterprise Live Patching 15 SP3 is installed"
+					}
+				]
+			},
+			{
+				"operator": "AND",
+				"criterias": [
+					{
+						"operator": "OR",
+						"criterions": [
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009942659",
+								"comment": "kernel-64kb-5.3.18-150300.59.174.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009942660",
+								"comment": "kernel-64kb-devel-5.3.18-150300.59.174.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009942677",
+								"comment": "kernel-default-5.3.18-150300.59.174.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009942678",
+								"comment": "kernel-default-base-5.3.18-150300.59.174.1.150300.18.103.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009942679",
+								"comment": "kernel-default-devel-5.3.18-150300.59.174.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009942664",
+								"comment": "kernel-devel-5.3.18-150300.59.174.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009942665",
+								"comment": "kernel-docs-5.3.18-150300.59.174.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009942666",
+								"comment": "kernel-macros-5.3.18-150300.59.174.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009942680",
+								"comment": "kernel-obs-build-5.3.18-150300.59.174.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009942668",
+								"comment": "kernel-preempt-5.3.18-150300.59.174.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009942669",
+								"comment": "kernel-preempt-devel-5.3.18-150300.59.174.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009942670",
+								"comment": "kernel-source-5.3.18-150300.59.174.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009942681",
+								"comment": "kernel-syms-5.3.18-150300.59.174.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009942682",
+								"comment": "kernel-zfcpdump-5.3.18-150300.59.174.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009942683",
+								"comment": "reiserfs-kmp-default-5.3.18-150300.59.174.1 is installed"
+							}
+						]
+					}
+				],
+				"criterions": [
+					{
+						"test_ref": "oval:org.opensuse.security:tst:2009729178",
+						"comment": "SUSE Linux Enterprise Server 15 SP3-LTSS is installed"
+					}
+				]
+			},
+			{
+				"operator": "AND",
+				"criterias": [
+					{
+						"operator": "OR",
+						"criterions": [
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009942688",
+								"comment": "kernel-default-5.3.18-150300.59.174.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009942689",
+								"comment": "kernel-default-base-5.3.18-150300.59.174.1.150300.18.103.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009942690",
+								"comment": "kernel-default-devel-5.3.18-150300.59.174.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009942664",
+								"comment": "kernel-devel-5.3.18-150300.59.174.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009942665",
+								"comment": "kernel-docs-5.3.18-150300.59.174.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009942666",
+								"comment": "kernel-macros-5.3.18-150300.59.174.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009942691",
+								"comment": "kernel-obs-build-5.3.18-150300.59.174.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009942692",
+								"comment": "kernel-preempt-5.3.18-150300.59.174.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009942693",
+								"comment": "kernel-preempt-devel-5.3.18-150300.59.174.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009942670",
+								"comment": "kernel-source-5.3.18-150300.59.174.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009942694",
+								"comment": "kernel-syms-5.3.18-150300.59.174.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009942695",
+								"comment": "reiserfs-kmp-default-5.3.18-150300.59.174.1 is installed"
+							}
+						]
+					}
+				],
+				"criterions": [
+					{
+						"test_ref": "oval:org.opensuse.security:tst:2009669878",
+						"comment": "SUSE Linux Enterprise Server for SAP Applications 15 SP3 is installed"
 					}
 				]
 			}

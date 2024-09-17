@@ -7,7 +7,11 @@
 		"affected": {
 			"family": "unix",
 			"platform": [
-				"SUSE Linux Enterprise Real Time 12 SP5"
+				"SUSE Linux Enterprise Live Patching 12 SP5",
+				"SUSE Linux Enterprise Real Time 12 SP5",
+				"SUSE Linux Enterprise Server 12 SP5",
+				"SUSE Linux Enterprise Server for SAP Applications 12 SP5",
+				"SUSE Linux Enterprise Workstation Extension 12 SP5"
 			]
 		},
 		"reference": [
@@ -45,6 +49,16 @@
 				"ref_id": "SUSE-SU-2024:3209-1",
 				"ref_url": "https://lists.suse.com/pipermail/sle-updates/2024-September/036854.html",
 				"source": "SUSE-SU"
+			},
+			{
+				"ref_id": "SUSE-SU-2024:3251-1",
+				"ref_url": "https://lists.suse.com/pipermail/sle-updates/2024-September/036895.html",
+				"source": "SUSE-SU"
+			},
+			{
+				"ref_id": "SUSE-SU-2024:3252-1",
+				"ref_url": "https://lists.suse.com/pipermail/sle-updates/2024-September/036896.html",
+				"source": "SUSE-SU"
 			}
 		],
 		"description": "\n    In the Linux kernel, the following vulnerability has been resolved:\n\nusb: atm: cxacru: fix endpoint checking in cxacru_bind()\n\nSyzbot is still reporting quite an old issue [1] that occurs due to\nincomplete checking of present usb endpoints. As such, wrong\nendpoints types may be used at urb sumbitting stage which in turn\ntriggers a warning in usb_submit_urb().\n\nFix the issue by verifying that required endpoint types are present\nfor both in and out endpoints, taking into account cmd endpoint type.\n\nUnfortunately, this patch has not been tested on real hardware.\n\n[1] Syzbot report:\nusb 1-1: BOGUS urb xfer, pipe 1 != type 3\nWARNING: CPU: 0 PID: 8667 at drivers/usb/core/urb.c:502 usb_submit_urb+0xed2/0x18a0 drivers/usb/core/urb.c:502\nModules linked in:\nCPU: 0 PID: 8667 Comm: kworker/0:4 Not tainted 5.14.0-rc4-syzkaller #0\nHardware name: Google Google Compute Engine/Google Compute Engine, BIOS Google 01/01/2011\nWorkqueue: usb_hub_wq hub_event\nRIP: 0010:usb_submit_urb+0xed2/0x18a0 drivers/usb/core/urb.c:502\n...\nCall Trace:\n cxacru_cm+0x3c0/0x8e0 drivers/usb/atm/cxacru.c:649\n cxacru_card_status+0x22/0xd0 drivers/usb/atm/cxacru.c:760\n cxacru_bind+0x7ac/0x11a0 drivers/usb/atm/cxacru.c:1209\n usbatm_usb_probe+0x321/0x1ae0 drivers/usb/atm/usbatm.c:1055\n cxacru_usb_probe+0xdf/0x1e0 drivers/usb/atm/cxacru.c:1363\n usb_probe_interface+0x315/0x7f0 drivers/usb/core/driver.c:396\n call_driver_probe drivers/base/dd.c:517 [inline]\n really_probe+0x23c/0xcd0 drivers/base/dd.c:595\n __driver_probe_device+0x338/0x4d0 drivers/base/dd.c:747\n driver_probe_device+0x4c/0x1a0 drivers/base/dd.c:777\n __device_attach_driver+0x20b/0x2f0 drivers/base/dd.c:894\n bus_for_each_drv+0x15f/0x1e0 drivers/base/bus.c:427\n __device_attach+0x228/0x4a0 drivers/base/dd.c:965\n bus_probe_device+0x1e4/0x290 drivers/base/bus.c:487\n device_add+0xc2f/0x2180 drivers/base/core.c:3354\n usb_set_configuration+0x113a/0x1910 drivers/usb/core/message.c:2170\n usb_generic_driver_probe+0xba/0x100 drivers/usb/core/generic.c:238\n usb_probe_device+0xd9/0x2c0 drivers/usb/core/driver.c:293\n    ",
@@ -75,76 +89,220 @@
 				"date": "2024-09-11"
 			},
 			"updated": {
-				"date": "2024-09-12"
+				"date": "2024-09-17"
 			},
 			"affected_cpe_list": {
 				"cpe": [
+					"cpe:/o:suse:sle-live-patching:12:sp5",
+					"cpe:/o:suse:sle-we:12:sp5",
+					"cpe:/o:suse:sles:12:sp5",
+					"cpe:/o:suse:sles_sap:12:sp5",
 					"cpe:/o:suse:suse-linux-enterprise-rt:12:sp5"
 				]
 			}
 		}
 	},
 	"criteria": {
-		"operator": "AND",
+		"operator": "OR",
 		"criterias": [
 			{
-				"operator": "OR",
+				"operator": "AND",
+				"criterias": [
+					{
+						"operator": "OR",
+						"criterions": [
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009258033",
+								"comment": "SUSE Linux Enterprise Server 12 SP5 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009258806",
+								"comment": "SUSE Linux Enterprise Server for SAP Applications 12 SP5 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009258650",
+								"comment": "SUSE Linux Enterprise Workstation Extension 12 SP5 is installed"
+							}
+						]
+					}
+				],
 				"criterions": [
 					{
-						"test_ref": "oval:org.opensuse.security:tst:2009942034",
-						"comment": "cluster-md-kmp-rt-4.12.14-10.200.1 is installed"
-					},
-					{
-						"test_ref": "oval:org.opensuse.security:tst:2009942035",
-						"comment": "dlm-kmp-rt-4.12.14-10.200.1 is installed"
-					},
-					{
-						"test_ref": "oval:org.opensuse.security:tst:2009942036",
-						"comment": "gfs2-kmp-rt-4.12.14-10.200.1 is installed"
-					},
-					{
-						"test_ref": "oval:org.opensuse.security:tst:2009942037",
-						"comment": "kernel-devel-rt-4.12.14-10.200.1 is installed"
-					},
-					{
-						"test_ref": "oval:org.opensuse.security:tst:2009942038",
-						"comment": "kernel-rt-4.12.14-10.200.1 is installed"
-					},
-					{
-						"test_ref": "oval:org.opensuse.security:tst:2009942039",
-						"comment": "kernel-rt-base-4.12.14-10.200.1 is installed"
-					},
-					{
-						"test_ref": "oval:org.opensuse.security:tst:2009942040",
-						"comment": "kernel-rt-devel-4.12.14-10.200.1 is installed"
-					},
-					{
-						"test_ref": "oval:org.opensuse.security:tst:2009942041",
-						"comment": "kernel-rt_debug-4.12.14-10.200.1 is installed"
-					},
-					{
-						"test_ref": "oval:org.opensuse.security:tst:2009942042",
-						"comment": "kernel-rt_debug-devel-4.12.14-10.200.1 is installed"
-					},
-					{
-						"test_ref": "oval:org.opensuse.security:tst:2009942043",
-						"comment": "kernel-source-rt-4.12.14-10.200.1 is installed"
-					},
-					{
-						"test_ref": "oval:org.opensuse.security:tst:2009942044",
-						"comment": "kernel-syms-rt-4.12.14-10.200.1 is installed"
-					},
-					{
-						"test_ref": "oval:org.opensuse.security:tst:2009942045",
-						"comment": "ocfs2-kmp-rt-4.12.14-10.200.1 is installed"
+						"test_ref": "oval:org.opensuse.security:tst:2009942723",
+						"comment": "kernel-default-extra-4.12.14-122.228.1 is installed"
 					}
 				]
-			}
-		],
-		"criterions": [
+			},
 			{
-				"test_ref": "oval:org.opensuse.security:tst:2009279486",
-				"comment": "SUSE Linux Enterprise Real Time 12 SP5 is installed"
+				"operator": "AND",
+				"criterias": [
+					{
+						"operator": "OR",
+						"criterions": [
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009942034",
+								"comment": "cluster-md-kmp-rt-4.12.14-10.200.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009942035",
+								"comment": "dlm-kmp-rt-4.12.14-10.200.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009942036",
+								"comment": "gfs2-kmp-rt-4.12.14-10.200.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009942037",
+								"comment": "kernel-devel-rt-4.12.14-10.200.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009942038",
+								"comment": "kernel-rt-4.12.14-10.200.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009942039",
+								"comment": "kernel-rt-base-4.12.14-10.200.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009942040",
+								"comment": "kernel-rt-devel-4.12.14-10.200.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009942041",
+								"comment": "kernel-rt_debug-4.12.14-10.200.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009942042",
+								"comment": "kernel-rt_debug-devel-4.12.14-10.200.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009942043",
+								"comment": "kernel-source-rt-4.12.14-10.200.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009942044",
+								"comment": "kernel-syms-rt-4.12.14-10.200.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009942045",
+								"comment": "ocfs2-kmp-rt-4.12.14-10.200.1 is installed"
+							}
+						]
+					}
+				],
+				"criterions": [
+					{
+						"test_ref": "oval:org.opensuse.security:tst:2009279486",
+						"comment": "SUSE Linux Enterprise Real Time 12 SP5 is installed"
+					}
+				]
+			},
+			{
+				"operator": "AND",
+				"criterias": [
+					{
+						"operator": "OR",
+						"criterions": [
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009942704",
+								"comment": "kernel-default-kgraft-4.12.14-122.228.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009942705",
+								"comment": "kernel-default-kgraft-devel-4.12.14-122.228.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009942706",
+								"comment": "kgraft-patch-4_12_14-122_228-default-1-8.3.1 is installed"
+							}
+						]
+					}
+				],
+				"criterions": [
+					{
+						"test_ref": "oval:org.opensuse.security:tst:2009273148",
+						"comment": "SUSE Linux Enterprise Live Patching 12 SP5 is installed"
+					}
+				]
+			},
+			{
+				"operator": "AND",
+				"criterias": [
+					{
+						"operator": "OR",
+						"criterions": [
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009258033",
+								"comment": "SUSE Linux Enterprise Server 12 SP5 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009258806",
+								"comment": "SUSE Linux Enterprise Server for SAP Applications 12 SP5 is installed"
+							}
+						]
+					},
+					{
+						"operator": "OR",
+						"criterions": [
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009942717",
+								"comment": "kernel-azure-4.12.14-16.197.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009942718",
+								"comment": "kernel-azure-base-4.12.14-16.197.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009942719",
+								"comment": "kernel-azure-devel-4.12.14-16.197.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009942709",
+								"comment": "kernel-default-4.12.14-122.228.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009942710",
+								"comment": "kernel-default-base-4.12.14-122.228.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009942711",
+								"comment": "kernel-default-devel-4.12.14-122.228.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009942712",
+								"comment": "kernel-default-man-4.12.14-122.228.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009942713",
+								"comment": "kernel-devel-4.12.14-122.228.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009942720",
+								"comment": "kernel-devel-azure-4.12.14-16.197.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009942714",
+								"comment": "kernel-macros-4.12.14-122.228.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009942715",
+								"comment": "kernel-source-4.12.14-122.228.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009942721",
+								"comment": "kernel-source-azure-4.12.14-16.197.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009942716",
+								"comment": "kernel-syms-4.12.14-122.228.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009942722",
+								"comment": "kernel-syms-azure-4.12.14-16.197.1 is installed"
+							}
+						]
+					}
+				]
 			}
 		]
 	}

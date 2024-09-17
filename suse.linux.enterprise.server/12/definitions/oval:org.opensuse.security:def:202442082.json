@@ -7,9 +7,13 @@
 		"affected": {
 			"family": "unix",
 			"platform": [
+				"SUSE Linux Enterprise Live Patching 12 SP5",
 				"SUSE Linux Enterprise Real Time 12 SP5",
 				"SUSE Linux Enterprise Server 12 SP4-LTSS",
-				"SUSE Linux Enterprise Server for SAP Applications 12 SP4"
+				"SUSE Linux Enterprise Server 12 SP5",
+				"SUSE Linux Enterprise Server for SAP Applications 12 SP4",
+				"SUSE Linux Enterprise Server for SAP Applications 12 SP5",
+				"SUSE Linux Enterprise Workstation Extension 12 SP5"
 			]
 		},
 		"reference": [
@@ -47,6 +51,16 @@
 				"ref_id": "SUSE-SU-2024:3209-1",
 				"ref_url": "https://lists.suse.com/pipermail/sle-updates/2024-September/036854.html",
 				"source": "SUSE-SU"
+			},
+			{
+				"ref_id": "SUSE-SU-2024:3251-1",
+				"ref_url": "https://lists.suse.com/pipermail/sle-updates/2024-September/036895.html",
+				"source": "SUSE-SU"
+			},
+			{
+				"ref_id": "SUSE-SU-2024:3252-1",
+				"ref_url": "https://lists.suse.com/pipermail/sle-updates/2024-September/036896.html",
+				"source": "SUSE-SU"
 			}
 		],
 		"description": "\n    In the Linux kernel, the following vulnerability has been resolved:\n\nxdp: Remove WARN() from __xdp_reg_mem_model()\n\nsyzkaller reports a warning in __xdp_reg_mem_model().\n\nThe warning occurs only if __mem_id_init_hash_table() returns an error. It\nreturns the error in two cases:\n\n  1. memory allocation fails;\n  2. rhashtable_init() fails when some fields of rhashtable_params\n     struct are not initialized properly.\n\nThe second case cannot happen since there is a static const rhashtable_params\nstruct with valid fields. So, warning is only triggered when there is a\nproblem with memory allocation.\n\nThus, there is no sense in using WARN() to handle this error and it can be\nsafely removed.\n\nWARNING: CPU: 0 PID: 5065 at net/core/xdp.c:299 __xdp_reg_mem_model+0x2d9/0x650 net/core/xdp.c:299\n\nCPU: 0 PID: 5065 Comm: syz-executor883 Not tainted 6.8.0-syzkaller-05271-gf99c5f563c17 #0\nHardware name: Google Google Compute Engine/Google Compute Engine, BIOS Google 03/27/2024\nRIP: 0010:__xdp_reg_mem_model+0x2d9/0x650 net/core/xdp.c:299\n\nCall Trace:\n xdp_reg_mem_model+0x22/0x40 net/core/xdp.c:344\n xdp_test_run_setup net/bpf/test_run.c:188 [inline]\n bpf_test_run_xdp_live+0x365/0x1e90 net/bpf/test_run.c:377\n bpf_prog_test_run_xdp+0x813/0x11b0 net/bpf/test_run.c:1267\n bpf_prog_test_run+0x33a/0x3b0 kernel/bpf/syscall.c:4240\n __sys_bpf+0x48d/0x810 kernel/bpf/syscall.c:5649\n __do_sys_bpf kernel/bpf/syscall.c:5738 [inline]\n __se_sys_bpf kernel/bpf/syscall.c:5736 [inline]\n __x64_sys_bpf+0x7c/0x90 kernel/bpf/syscall.c:5736\n do_syscall_64+0xfb/0x240\n entry_SYSCALL_64_after_hwframe+0x6d/0x75\n\nFound by Linux Verification Center (linuxtesting.org) with syzkaller.\n    ",
@@ -77,12 +91,16 @@
 				"date": "2024-08-06"
 			},
 			"updated": {
-				"date": "2024-09-12"
+				"date": "2024-09-17"
 			},
 			"affected_cpe_list": {
 				"cpe": [
+					"cpe:/o:suse:sle-live-patching:12:sp5",
+					"cpe:/o:suse:sle-we:12:sp5",
 					"cpe:/o:suse:sles-ltss:12:sp4",
+					"cpe:/o:suse:sles:12:sp5",
 					"cpe:/o:suse:sles_sap:12:sp4",
+					"cpe:/o:suse:sles_sap:12:sp5",
 					"cpe:/o:suse:suse-linux-enterprise-rt:12:sp5"
 				]
 			}
@@ -91,6 +109,34 @@
 	"criteria": {
 		"operator": "OR",
 		"criterias": [
+			{
+				"operator": "AND",
+				"criterias": [
+					{
+						"operator": "OR",
+						"criterions": [
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009258033",
+								"comment": "SUSE Linux Enterprise Server 12 SP5 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009258806",
+								"comment": "SUSE Linux Enterprise Server for SAP Applications 12 SP5 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009258650",
+								"comment": "SUSE Linux Enterprise Workstation Extension 12 SP5 is installed"
+							}
+						]
+					}
+				],
+				"criterions": [
+					{
+						"test_ref": "oval:org.opensuse.security:tst:2009942723",
+						"comment": "kernel-default-extra-4.12.14-122.228.1 is installed"
+					}
+				]
+			},
 			{
 				"operator": "AND",
 				"criterias": [
@@ -236,6 +282,113 @@
 					{
 						"test_ref": "oval:org.opensuse.security:tst:2009279486",
 						"comment": "SUSE Linux Enterprise Real Time 12 SP5 is installed"
+					}
+				]
+			},
+			{
+				"operator": "AND",
+				"criterias": [
+					{
+						"operator": "OR",
+						"criterions": [
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009942704",
+								"comment": "kernel-default-kgraft-4.12.14-122.228.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009942705",
+								"comment": "kernel-default-kgraft-devel-4.12.14-122.228.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009942706",
+								"comment": "kgraft-patch-4_12_14-122_228-default-1-8.3.1 is installed"
+							}
+						]
+					}
+				],
+				"criterions": [
+					{
+						"test_ref": "oval:org.opensuse.security:tst:2009273148",
+						"comment": "SUSE Linux Enterprise Live Patching 12 SP5 is installed"
+					}
+				]
+			},
+			{
+				"operator": "AND",
+				"criterias": [
+					{
+						"operator": "OR",
+						"criterions": [
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009258033",
+								"comment": "SUSE Linux Enterprise Server 12 SP5 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009258806",
+								"comment": "SUSE Linux Enterprise Server for SAP Applications 12 SP5 is installed"
+							}
+						]
+					},
+					{
+						"operator": "OR",
+						"criterions": [
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009942717",
+								"comment": "kernel-azure-4.12.14-16.197.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009942718",
+								"comment": "kernel-azure-base-4.12.14-16.197.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009942719",
+								"comment": "kernel-azure-devel-4.12.14-16.197.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009942709",
+								"comment": "kernel-default-4.12.14-122.228.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009942710",
+								"comment": "kernel-default-base-4.12.14-122.228.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009942711",
+								"comment": "kernel-default-devel-4.12.14-122.228.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009942712",
+								"comment": "kernel-default-man-4.12.14-122.228.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009942713",
+								"comment": "kernel-devel-4.12.14-122.228.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009942720",
+								"comment": "kernel-devel-azure-4.12.14-16.197.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009942714",
+								"comment": "kernel-macros-4.12.14-122.228.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009942715",
+								"comment": "kernel-source-4.12.14-122.228.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009942721",
+								"comment": "kernel-source-azure-4.12.14-16.197.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009942716",
+								"comment": "kernel-syms-4.12.14-122.228.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009942722",
+								"comment": "kernel-syms-azure-4.12.14-16.197.1 is installed"
+							}
+						]
 					}
 				]
 			}

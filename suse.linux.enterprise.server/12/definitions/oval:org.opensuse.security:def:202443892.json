@@ -7,7 +7,11 @@
 		"affected": {
 			"family": "unix",
 			"platform": [
-				"SUSE Linux Enterprise Real Time 12 SP5"
+				"SUSE Linux Enterprise Live Patching 12 SP5",
+				"SUSE Linux Enterprise Real Time 12 SP5",
+				"SUSE Linux Enterprise Server 12 SP5",
+				"SUSE Linux Enterprise Server for SAP Applications 12 SP5",
+				"SUSE Linux Enterprise Workstation Extension 12 SP5"
 			]
 		},
 		"reference": [
@@ -45,6 +49,16 @@
 				"ref_id": "SUSE-SU-2024:3209-1",
 				"ref_url": "https://lists.suse.com/pipermail/sle-updates/2024-September/036854.html",
 				"source": "SUSE-SU"
+			},
+			{
+				"ref_id": "SUSE-SU-2024:3251-1",
+				"ref_url": "https://lists.suse.com/pipermail/sle-updates/2024-September/036895.html",
+				"source": "SUSE-SU"
+			},
+			{
+				"ref_id": "SUSE-SU-2024:3252-1",
+				"ref_url": "https://lists.suse.com/pipermail/sle-updates/2024-September/036896.html",
+				"source": "SUSE-SU"
 			}
 		],
 		"description": "\n    In the Linux kernel, the following vulnerability has been resolved:\n\nmemcg: protect concurrent access to mem_cgroup_idr\n\nCommit 73f576c04b94 (\"mm: memcontrol: fix cgroup creation failure after\nmany small jobs\") decoupled the memcg IDs from the CSS ID space to fix the\ncgroup creation failures.  It introduced IDR to maintain the memcg ID\nspace.  The IDR depends on external synchronization mechanisms for\nmodifications.  For the mem_cgroup_idr, the idr_alloc() and idr_replace()\nhappen within css callback and thus are protected through cgroup_mutex\nfrom concurrent modifications.  However idr_remove() for mem_cgroup_idr\nwas not protected against concurrency and can be run concurrently for\ndifferent memcgs when they hit their refcnt to zero.  Fix that.\n\nWe have been seeing list_lru based kernel crashes at a low frequency in\nour fleet for a long time.  These crashes were in different part of\nlist_lru code including list_lru_add(), list_lru_del() and reparenting\ncode.  Upon further inspection, it looked like for a given object (dentry\nand inode), the super_block's list_lru didn't have list_lru_one for the\nmemcg of that object.  The initial suspicions were either the object is\nnot allocated through kmem_cache_alloc_lru() or somehow\nmemcg_list_lru_alloc() failed to allocate list_lru_one() for a memcg but\nreturned success.  No evidence were found for these cases.\n\nLooking more deeply, we started seeing situations where valid memcg's id\nis not present in mem_cgroup_idr and in some cases multiple valid memcgs\nhave same id and mem_cgroup_idr is pointing to one of them.  So, the most\nreasonable explanation is that these situations can happen due to race\nbetween multiple idr_remove() calls or race between\nidr_alloc()/idr_replace() and idr_remove().  These races are causing\nmultiple memcgs to acquire the same ID and then offlining of one of them\nwould cleanup list_lrus on the system for all of them.  Later access from\nother memcgs to the list_lru cause crashes due to missing list_lru_one.\n    ",
@@ -75,76 +89,220 @@
 				"date": "2024-09-11"
 			},
 			"updated": {
-				"date": "2024-09-12"
+				"date": "2024-09-17"
 			},
 			"affected_cpe_list": {
 				"cpe": [
+					"cpe:/o:suse:sle-live-patching:12:sp5",
+					"cpe:/o:suse:sle-we:12:sp5",
+					"cpe:/o:suse:sles:12:sp5",
+					"cpe:/o:suse:sles_sap:12:sp5",
 					"cpe:/o:suse:suse-linux-enterprise-rt:12:sp5"
 				]
 			}
 		}
 	},
 	"criteria": {
-		"operator": "AND",
+		"operator": "OR",
 		"criterias": [
 			{
-				"operator": "OR",
+				"operator": "AND",
+				"criterias": [
+					{
+						"operator": "OR",
+						"criterions": [
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009258033",
+								"comment": "SUSE Linux Enterprise Server 12 SP5 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009258806",
+								"comment": "SUSE Linux Enterprise Server for SAP Applications 12 SP5 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009258650",
+								"comment": "SUSE Linux Enterprise Workstation Extension 12 SP5 is installed"
+							}
+						]
+					}
+				],
 				"criterions": [
 					{
-						"test_ref": "oval:org.opensuse.security:tst:2009942034",
-						"comment": "cluster-md-kmp-rt-4.12.14-10.200.1 is installed"
-					},
-					{
-						"test_ref": "oval:org.opensuse.security:tst:2009942035",
-						"comment": "dlm-kmp-rt-4.12.14-10.200.1 is installed"
-					},
-					{
-						"test_ref": "oval:org.opensuse.security:tst:2009942036",
-						"comment": "gfs2-kmp-rt-4.12.14-10.200.1 is installed"
-					},
-					{
-						"test_ref": "oval:org.opensuse.security:tst:2009942037",
-						"comment": "kernel-devel-rt-4.12.14-10.200.1 is installed"
-					},
-					{
-						"test_ref": "oval:org.opensuse.security:tst:2009942038",
-						"comment": "kernel-rt-4.12.14-10.200.1 is installed"
-					},
-					{
-						"test_ref": "oval:org.opensuse.security:tst:2009942039",
-						"comment": "kernel-rt-base-4.12.14-10.200.1 is installed"
-					},
-					{
-						"test_ref": "oval:org.opensuse.security:tst:2009942040",
-						"comment": "kernel-rt-devel-4.12.14-10.200.1 is installed"
-					},
-					{
-						"test_ref": "oval:org.opensuse.security:tst:2009942041",
-						"comment": "kernel-rt_debug-4.12.14-10.200.1 is installed"
-					},
-					{
-						"test_ref": "oval:org.opensuse.security:tst:2009942042",
-						"comment": "kernel-rt_debug-devel-4.12.14-10.200.1 is installed"
-					},
-					{
-						"test_ref": "oval:org.opensuse.security:tst:2009942043",
-						"comment": "kernel-source-rt-4.12.14-10.200.1 is installed"
-					},
-					{
-						"test_ref": "oval:org.opensuse.security:tst:2009942044",
-						"comment": "kernel-syms-rt-4.12.14-10.200.1 is installed"
-					},
-					{
-						"test_ref": "oval:org.opensuse.security:tst:2009942045",
-						"comment": "ocfs2-kmp-rt-4.12.14-10.200.1 is installed"
+						"test_ref": "oval:org.opensuse.security:tst:2009942723",
+						"comment": "kernel-default-extra-4.12.14-122.228.1 is installed"
 					}
 				]
-			}
-		],
-		"criterions": [
+			},
 			{
-				"test_ref": "oval:org.opensuse.security:tst:2009279486",
-				"comment": "SUSE Linux Enterprise Real Time 12 SP5 is installed"
+				"operator": "AND",
+				"criterias": [
+					{
+						"operator": "OR",
+						"criterions": [
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009942034",
+								"comment": "cluster-md-kmp-rt-4.12.14-10.200.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009942035",
+								"comment": "dlm-kmp-rt-4.12.14-10.200.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009942036",
+								"comment": "gfs2-kmp-rt-4.12.14-10.200.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009942037",
+								"comment": "kernel-devel-rt-4.12.14-10.200.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009942038",
+								"comment": "kernel-rt-4.12.14-10.200.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009942039",
+								"comment": "kernel-rt-base-4.12.14-10.200.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009942040",
+								"comment": "kernel-rt-devel-4.12.14-10.200.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009942041",
+								"comment": "kernel-rt_debug-4.12.14-10.200.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009942042",
+								"comment": "kernel-rt_debug-devel-4.12.14-10.200.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009942043",
+								"comment": "kernel-source-rt-4.12.14-10.200.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009942044",
+								"comment": "kernel-syms-rt-4.12.14-10.200.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009942045",
+								"comment": "ocfs2-kmp-rt-4.12.14-10.200.1 is installed"
+							}
+						]
+					}
+				],
+				"criterions": [
+					{
+						"test_ref": "oval:org.opensuse.security:tst:2009279486",
+						"comment": "SUSE Linux Enterprise Real Time 12 SP5 is installed"
+					}
+				]
+			},
+			{
+				"operator": "AND",
+				"criterias": [
+					{
+						"operator": "OR",
+						"criterions": [
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009942704",
+								"comment": "kernel-default-kgraft-4.12.14-122.228.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009942705",
+								"comment": "kernel-default-kgraft-devel-4.12.14-122.228.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009942706",
+								"comment": "kgraft-patch-4_12_14-122_228-default-1-8.3.1 is installed"
+							}
+						]
+					}
+				],
+				"criterions": [
+					{
+						"test_ref": "oval:org.opensuse.security:tst:2009273148",
+						"comment": "SUSE Linux Enterprise Live Patching 12 SP5 is installed"
+					}
+				]
+			},
+			{
+				"operator": "AND",
+				"criterias": [
+					{
+						"operator": "OR",
+						"criterions": [
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009258033",
+								"comment": "SUSE Linux Enterprise Server 12 SP5 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009258806",
+								"comment": "SUSE Linux Enterprise Server for SAP Applications 12 SP5 is installed"
+							}
+						]
+					},
+					{
+						"operator": "OR",
+						"criterions": [
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009942717",
+								"comment": "kernel-azure-4.12.14-16.197.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009942718",
+								"comment": "kernel-azure-base-4.12.14-16.197.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009942719",
+								"comment": "kernel-azure-devel-4.12.14-16.197.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009942709",
+								"comment": "kernel-default-4.12.14-122.228.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009942710",
+								"comment": "kernel-default-base-4.12.14-122.228.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009942711",
+								"comment": "kernel-default-devel-4.12.14-122.228.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009942712",
+								"comment": "kernel-default-man-4.12.14-122.228.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009942713",
+								"comment": "kernel-devel-4.12.14-122.228.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009942720",
+								"comment": "kernel-devel-azure-4.12.14-16.197.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009942714",
+								"comment": "kernel-macros-4.12.14-122.228.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009942715",
+								"comment": "kernel-source-4.12.14-122.228.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009942721",
+								"comment": "kernel-source-azure-4.12.14-16.197.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009942716",
+								"comment": "kernel-syms-4.12.14-122.228.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009942722",
+								"comment": "kernel-syms-azure-4.12.14-16.197.1 is installed"
+							}
+						]
+					}
+				]
 			}
 		]
 	}

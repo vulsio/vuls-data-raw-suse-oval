@@ -7,8 +7,12 @@
 		"affected": {
 			"family": "unix",
 			"platform": [
+				"SUSE Linux Enterprise Live Patching 12 SP5",
 				"SUSE Linux Enterprise Real Time 12 SP5",
-				"SUSE Linux Enterprise Server 12 SP3-LTSS-TERADATA"
+				"SUSE Linux Enterprise Server 12 SP3-LTSS-TERADATA",
+				"SUSE Linux Enterprise Server 12 SP5",
+				"SUSE Linux Enterprise Server for SAP Applications 12 SP5",
+				"SUSE Linux Enterprise Workstation Extension 12 SP5"
 			]
 		},
 		"reference": [
@@ -56,6 +60,21 @@
 				"ref_id": "SUSE-SU-2024:3227-1",
 				"ref_url": "https://lists.suse.com/pipermail/sle-updates/2024-September/036874.html",
 				"source": "SUSE-SU"
+			},
+			{
+				"ref_id": "SUSE-SU-2024:3249-1",
+				"ref_url": "https://lists.suse.com/pipermail/sle-updates/2024-September/036898.html",
+				"source": "SUSE-SU"
+			},
+			{
+				"ref_id": "SUSE-SU-2024:3251-1",
+				"ref_url": "https://lists.suse.com/pipermail/sle-updates/2024-September/036895.html",
+				"source": "SUSE-SU"
+			},
+			{
+				"ref_id": "SUSE-SU-2024:3252-1",
+				"ref_url": "https://lists.suse.com/pipermail/sle-updates/2024-September/036896.html",
+				"source": "SUSE-SU"
 			}
 		],
 		"description": "\n    In the Linux kernel, the following vulnerability has been resolved:\n\nlibceph: fix race between delayed_work() and ceph_monc_stop()\n\nThe way the delayed work is handled in ceph_monc_stop() is prone to\nraces with mon_fault() and possibly also finish_hunting().  Both of\nthese can requeue the delayed work which wouldn't be canceled by any of\nthe following code in case that happens after cancel_delayed_work_sync()\nruns -- __close_session() doesn't mess with the delayed work in order\nto avoid interfering with the hunting interval logic.  This part was\nmissed in commit b5d91704f53e (\"libceph: behave in mon_fault() if\ncur_mon < 0\") and use-after-free can still ensue on monc and objects\nthat hang off of it, with monc->auth and monc->monmap being\nparticularly susceptible to quickly being reused.\n\nTo fix this:\n\n- clear monc->cur_mon and monc->hunting as part of closing the session\n  in ceph_monc_stop()\n- bail from delayed_work() if monc->cur_mon is cleared, similar to how\n  it's done in mon_fault() and finish_hunting() (based on monc->hunting)\n- call cancel_delayed_work_sync() after the session is closed\n    ",
@@ -90,10 +109,14 @@
 				"date": "2024-09-11"
 			},
 			"updated": {
-				"date": "2024-09-13"
+				"date": "2024-09-17"
 			},
 			"affected_cpe_list": {
 				"cpe": [
+					"cpe:/o:suse:sle-live-patching:12:sp5",
+					"cpe:/o:suse:sle-we:12:sp5",
+					"cpe:/o:suse:sles:12:sp5",
+					"cpe:/o:suse:sles_sap:12:sp5",
 					"cpe:/o:suse:sles_teradata:12:sp3-ltss",
 					"cpe:/o:suse:suse-linux-enterprise-rt:12:sp5"
 				]
@@ -103,6 +126,34 @@
 	"criteria": {
 		"operator": "OR",
 		"criterias": [
+			{
+				"operator": "AND",
+				"criterias": [
+					{
+						"operator": "OR",
+						"criterions": [
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009258033",
+								"comment": "SUSE Linux Enterprise Server 12 SP5 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009258806",
+								"comment": "SUSE Linux Enterprise Server for SAP Applications 12 SP5 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009258650",
+								"comment": "SUSE Linux Enterprise Workstation Extension 12 SP5 is installed"
+							}
+						]
+					}
+				],
+				"criterions": [
+					{
+						"test_ref": "oval:org.opensuse.security:tst:2009942723",
+						"comment": "kernel-default-extra-4.12.14-122.228.1 is installed"
+					}
+				]
+			},
 			{
 				"operator": "AND",
 				"criterias": [
@@ -208,6 +259,113 @@
 					{
 						"test_ref": "oval:org.opensuse.security:tst:2009158922",
 						"comment": "SUSE Linux Enterprise Server 12 SP3-LTSS-TERADATA is installed"
+					}
+				]
+			},
+			{
+				"operator": "AND",
+				"criterias": [
+					{
+						"operator": "OR",
+						"criterions": [
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009942704",
+								"comment": "kernel-default-kgraft-4.12.14-122.228.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009942705",
+								"comment": "kernel-default-kgraft-devel-4.12.14-122.228.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009942706",
+								"comment": "kgraft-patch-4_12_14-122_228-default-1-8.3.1 is installed"
+							}
+						]
+					}
+				],
+				"criterions": [
+					{
+						"test_ref": "oval:org.opensuse.security:tst:2009273148",
+						"comment": "SUSE Linux Enterprise Live Patching 12 SP5 is installed"
+					}
+				]
+			},
+			{
+				"operator": "AND",
+				"criterias": [
+					{
+						"operator": "OR",
+						"criterions": [
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009258033",
+								"comment": "SUSE Linux Enterprise Server 12 SP5 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009258806",
+								"comment": "SUSE Linux Enterprise Server for SAP Applications 12 SP5 is installed"
+							}
+						]
+					},
+					{
+						"operator": "OR",
+						"criterions": [
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009942717",
+								"comment": "kernel-azure-4.12.14-16.197.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009942718",
+								"comment": "kernel-azure-base-4.12.14-16.197.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009942719",
+								"comment": "kernel-azure-devel-4.12.14-16.197.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009942709",
+								"comment": "kernel-default-4.12.14-122.228.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009942710",
+								"comment": "kernel-default-base-4.12.14-122.228.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009942711",
+								"comment": "kernel-default-devel-4.12.14-122.228.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009942712",
+								"comment": "kernel-default-man-4.12.14-122.228.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009942713",
+								"comment": "kernel-devel-4.12.14-122.228.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009942720",
+								"comment": "kernel-devel-azure-4.12.14-16.197.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009942714",
+								"comment": "kernel-macros-4.12.14-122.228.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009942715",
+								"comment": "kernel-source-4.12.14-122.228.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009942721",
+								"comment": "kernel-source-azure-4.12.14-16.197.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009942716",
+								"comment": "kernel-syms-4.12.14-122.228.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009942722",
+								"comment": "kernel-syms-azure-4.12.14-16.197.1 is installed"
+							}
+						]
 					}
 				]
 			}

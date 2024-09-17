@@ -7,7 +7,11 @@
 		"affected": {
 			"family": "unix",
 			"platform": [
-				"SUSE Linux Enterprise Real Time 12 SP5"
+				"SUSE Linux Enterprise Live Patching 12 SP5",
+				"SUSE Linux Enterprise Real Time 12 SP5",
+				"SUSE Linux Enterprise Server 12 SP5",
+				"SUSE Linux Enterprise Server for SAP Applications 12 SP5",
+				"SUSE Linux Enterprise Workstation Extension 12 SP5"
 			]
 		},
 		"reference": [
@@ -50,6 +54,16 @@
 				"ref_id": "SUSE-SU-2024:3189-1",
 				"ref_url": "https://lists.suse.com/pipermail/sle-security-updates/2024-September/019404.html",
 				"source": "SUSE-SU"
+			},
+			{
+				"ref_id": "SUSE-SU-2024:3251-1",
+				"ref_url": "https://lists.suse.com/pipermail/sle-updates/2024-September/036895.html",
+				"source": "SUSE-SU"
+			},
+			{
+				"ref_id": "SUSE-SU-2024:3252-1",
+				"ref_url": "https://lists.suse.com/pipermail/sle-updates/2024-September/036896.html",
+				"source": "SUSE-SU"
 			}
 		],
 		"description": "\n    In the Linux kernel, the following vulnerability has been resolved:\n\nefi: runtime: avoid EFIv2 runtime services on Apple x86 machines\n\nAditya reports [0] that his recent MacbookPro crashes in the firmware\nwhen using the variable services at runtime. The culprit appears to be a\ncall to QueryVariableInfo(), which we did not use to call on Apple x86\nmachines in the past as they only upgraded from EFI v1.10 to EFI v2.40\nfirmware fairly recently, and QueryVariableInfo() (along with\nUpdateCapsule() et al) was added in EFI v2.00.\n\nThe only runtime service introduced in EFI v2.00 that we actually use in\nLinux is QueryVariableInfo(), as the capsule based ones are optional,\ngenerally not used at runtime (all the LVFS/fwupd firmware update\ninfrastructure uses helper EFI programs that invoke capsule update at\nboot time, not runtime), and not implemented by Apple machines in the\nfirst place. QueryVariableInfo() is used to 'safely' set variables,\ni.e., only when there is enough space. This prevents machines with buggy\nfirmwares from corrupting their NVRAMs when they run out of space.\n\nGiven that Apple machines have been using EFI v1.10 services only for\nthe longest time (the EFI v2.0 spec was released in 2006, and Linux\nsupport for the newly introduced runtime services was added in 2011, but\nthe MacbookPro12,1 released in 2015 still claims to be EFI v1.10 only),\nlet's avoid the EFI v2.0 ones on all Apple x86 machines.\n\n[0] https://lore.kernel.org/all/6D757C75-65B1-468B-842D-10410081A8E4@live.com/\n    ",
@@ -78,76 +92,220 @@
 				"date": "2024-09-11"
 			},
 			"updated": {
-				"date": "2024-09-11"
+				"date": "2024-09-17"
 			},
 			"affected_cpe_list": {
 				"cpe": [
+					"cpe:/o:suse:sle-live-patching:12:sp5",
+					"cpe:/o:suse:sle-we:12:sp5",
+					"cpe:/o:suse:sles:12:sp5",
+					"cpe:/o:suse:sles_sap:12:sp5",
 					"cpe:/o:suse:suse-linux-enterprise-rt:12:sp5"
 				]
 			}
 		}
 	},
 	"criteria": {
-		"operator": "AND",
+		"operator": "OR",
 		"criterias": [
 			{
-				"operator": "OR",
+				"operator": "AND",
+				"criterias": [
+					{
+						"operator": "OR",
+						"criterions": [
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009258033",
+								"comment": "SUSE Linux Enterprise Server 12 SP5 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009258806",
+								"comment": "SUSE Linux Enterprise Server for SAP Applications 12 SP5 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009258650",
+								"comment": "SUSE Linux Enterprise Workstation Extension 12 SP5 is installed"
+							}
+						]
+					}
+				],
 				"criterions": [
 					{
-						"test_ref": "oval:org.opensuse.security:tst:2009942034",
-						"comment": "cluster-md-kmp-rt-4.12.14-10.200.1 is installed"
-					},
-					{
-						"test_ref": "oval:org.opensuse.security:tst:2009942035",
-						"comment": "dlm-kmp-rt-4.12.14-10.200.1 is installed"
-					},
-					{
-						"test_ref": "oval:org.opensuse.security:tst:2009942036",
-						"comment": "gfs2-kmp-rt-4.12.14-10.200.1 is installed"
-					},
-					{
-						"test_ref": "oval:org.opensuse.security:tst:2009942037",
-						"comment": "kernel-devel-rt-4.12.14-10.200.1 is installed"
-					},
-					{
-						"test_ref": "oval:org.opensuse.security:tst:2009942038",
-						"comment": "kernel-rt-4.12.14-10.200.1 is installed"
-					},
-					{
-						"test_ref": "oval:org.opensuse.security:tst:2009942039",
-						"comment": "kernel-rt-base-4.12.14-10.200.1 is installed"
-					},
-					{
-						"test_ref": "oval:org.opensuse.security:tst:2009942040",
-						"comment": "kernel-rt-devel-4.12.14-10.200.1 is installed"
-					},
-					{
-						"test_ref": "oval:org.opensuse.security:tst:2009942041",
-						"comment": "kernel-rt_debug-4.12.14-10.200.1 is installed"
-					},
-					{
-						"test_ref": "oval:org.opensuse.security:tst:2009942042",
-						"comment": "kernel-rt_debug-devel-4.12.14-10.200.1 is installed"
-					},
-					{
-						"test_ref": "oval:org.opensuse.security:tst:2009942043",
-						"comment": "kernel-source-rt-4.12.14-10.200.1 is installed"
-					},
-					{
-						"test_ref": "oval:org.opensuse.security:tst:2009942044",
-						"comment": "kernel-syms-rt-4.12.14-10.200.1 is installed"
-					},
-					{
-						"test_ref": "oval:org.opensuse.security:tst:2009942045",
-						"comment": "ocfs2-kmp-rt-4.12.14-10.200.1 is installed"
+						"test_ref": "oval:org.opensuse.security:tst:2009942723",
+						"comment": "kernel-default-extra-4.12.14-122.228.1 is installed"
 					}
 				]
-			}
-		],
-		"criterions": [
+			},
 			{
-				"test_ref": "oval:org.opensuse.security:tst:2009279486",
-				"comment": "SUSE Linux Enterprise Real Time 12 SP5 is installed"
+				"operator": "AND",
+				"criterias": [
+					{
+						"operator": "OR",
+						"criterions": [
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009942034",
+								"comment": "cluster-md-kmp-rt-4.12.14-10.200.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009942035",
+								"comment": "dlm-kmp-rt-4.12.14-10.200.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009942036",
+								"comment": "gfs2-kmp-rt-4.12.14-10.200.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009942037",
+								"comment": "kernel-devel-rt-4.12.14-10.200.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009942038",
+								"comment": "kernel-rt-4.12.14-10.200.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009942039",
+								"comment": "kernel-rt-base-4.12.14-10.200.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009942040",
+								"comment": "kernel-rt-devel-4.12.14-10.200.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009942041",
+								"comment": "kernel-rt_debug-4.12.14-10.200.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009942042",
+								"comment": "kernel-rt_debug-devel-4.12.14-10.200.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009942043",
+								"comment": "kernel-source-rt-4.12.14-10.200.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009942044",
+								"comment": "kernel-syms-rt-4.12.14-10.200.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009942045",
+								"comment": "ocfs2-kmp-rt-4.12.14-10.200.1 is installed"
+							}
+						]
+					}
+				],
+				"criterions": [
+					{
+						"test_ref": "oval:org.opensuse.security:tst:2009279486",
+						"comment": "SUSE Linux Enterprise Real Time 12 SP5 is installed"
+					}
+				]
+			},
+			{
+				"operator": "AND",
+				"criterias": [
+					{
+						"operator": "OR",
+						"criterions": [
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009942704",
+								"comment": "kernel-default-kgraft-4.12.14-122.228.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009942705",
+								"comment": "kernel-default-kgraft-devel-4.12.14-122.228.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009942706",
+								"comment": "kgraft-patch-4_12_14-122_228-default-1-8.3.1 is installed"
+							}
+						]
+					}
+				],
+				"criterions": [
+					{
+						"test_ref": "oval:org.opensuse.security:tst:2009273148",
+						"comment": "SUSE Linux Enterprise Live Patching 12 SP5 is installed"
+					}
+				]
+			},
+			{
+				"operator": "AND",
+				"criterias": [
+					{
+						"operator": "OR",
+						"criterions": [
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009258033",
+								"comment": "SUSE Linux Enterprise Server 12 SP5 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009258806",
+								"comment": "SUSE Linux Enterprise Server for SAP Applications 12 SP5 is installed"
+							}
+						]
+					},
+					{
+						"operator": "OR",
+						"criterions": [
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009942717",
+								"comment": "kernel-azure-4.12.14-16.197.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009942718",
+								"comment": "kernel-azure-base-4.12.14-16.197.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009942719",
+								"comment": "kernel-azure-devel-4.12.14-16.197.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009942709",
+								"comment": "kernel-default-4.12.14-122.228.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009942710",
+								"comment": "kernel-default-base-4.12.14-122.228.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009942711",
+								"comment": "kernel-default-devel-4.12.14-122.228.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009942712",
+								"comment": "kernel-default-man-4.12.14-122.228.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009942713",
+								"comment": "kernel-devel-4.12.14-122.228.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009942720",
+								"comment": "kernel-devel-azure-4.12.14-16.197.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009942714",
+								"comment": "kernel-macros-4.12.14-122.228.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009942715",
+								"comment": "kernel-source-4.12.14-122.228.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009942721",
+								"comment": "kernel-source-azure-4.12.14-16.197.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009942716",
+								"comment": "kernel-syms-4.12.14-122.228.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009942722",
+								"comment": "kernel-syms-azure-4.12.14-16.197.1 is installed"
+							}
+						]
+					}
+				]
 			}
 		]
 	}
