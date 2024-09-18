@@ -1,0 +1,228 @@
+{
+	"id": "oval:org.opensuse.security:def:202446706",
+	"version": "1",
+	"class": "vulnerability",
+	"metadata": {
+		"title": "CVE-2024-46706",
+		"affected": {
+			"family": "unix",
+			"platform": [
+				"SUSE Linux Enterprise Real Time 12 SP5",
+				"SUSE Linux Enterprise Server 12 SP2-LTSS",
+				"SUSE Linux Enterprise Server 12 SP4-LTSS",
+				"SUSE Linux Enterprise Server 12 SP5",
+				"SUSE Linux Enterprise Server for SAP Applications 12 SP5"
+			]
+		},
+		"reference": [
+			{
+				"ref_id": "Mitre CVE-2024-46706",
+				"ref_url": "https://cve.mitre.org/cgi-bin/cvename.cgi?name=CVE-2024-46706",
+				"source": "CVE"
+			},
+			{
+				"ref_id": "SUSE CVE-2024-46706",
+				"ref_url": "https://www.suse.com/security/cve/CVE-2024-46706",
+				"source": "SUSE CVE"
+			}
+		],
+		"description": "\n    In the Linux kernel, the following vulnerability has been resolved:\n\ntty: serial: fsl_lpuart: mark last busy before uart_add_one_port\n\nWith \"earlycon initcall_debug=1 loglevel=8\" in bootargs, kernel\nsometimes boot hang. It is because normal console still is not ready,\nbut runtime suspend is called, so early console putchar will hang\nin waiting TRDE set in UARTSTAT.\n\nThe lpuart driver has auto suspend delay set to 3000ms, but during\nuart_add_one_port, a child device serial ctrl will added and probed with\nits pm runtime enabled(see serial_ctrl.c).\nThe runtime suspend call path is:\ndevice_add\n     |-> bus_probe_device\n           |->device_initial_probe\n\t           |->__device_attach\n                         |-> pm_runtime_get_sync(dev->parent);\n\t\t\t |-> pm_request_idle(dev);\n\t\t\t |-> pm_runtime_put(dev->parent);\n\nSo in the end, before normal console ready, the lpuart get runtime\nsuspended. And earlycon putchar will hang.\n\nTo address the issue, mark last busy just after pm_runtime_enable,\nthree seconds is long enough to switch from bootconsole to normal\nconsole.\n    ",
+		"advisory": {
+			"from": "security@suse.de",
+			"severity": "Low",
+			"cve": [
+				{
+					"text": "CVE-2024-46706 at SUSE",
+					"href": "https://www.suse.com/security/cve/CVE-2024-46706/",
+					"impact": "medium",
+					"cvss3": "4/CVSS:3.1/AV:P/AC:H/PR:L/UI:N/S:U/C:N/I:N/A:H"
+				},
+				{
+					"text": "CVE-2024-46706 at NVD",
+					"href": "https://nvd.nist.gov/vuln/detail/CVE-2024-46706"
+				}
+			],
+			"bugzilla": [
+				{
+					"text": "SUSE bug 1230580",
+					"href": "https://bugzilla.suse.com/1230580"
+				}
+			],
+			"issued": {
+				"date": "2024-09-18"
+			},
+			"updated": {
+				"date": "2024-09-18"
+			},
+			"affected_cpe_list": {
+				"cpe": [
+					"cpe:/o:suse:sles-ltss:12:sp2",
+					"cpe:/o:suse:sles-ltss:12:sp4",
+					"cpe:/o:suse:sles:12:sp5",
+					"cpe:/o:suse:sles_sap:12:sp5",
+					"cpe:/o:suse:suse-linux-enterprise-rt:12:sp5"
+				]
+			}
+		}
+	},
+	"criteria": {
+		"operator": "OR",
+		"criterias": [
+			{
+				"operator": "AND",
+				"criterias": [
+					{
+						"operator": "OR",
+						"criterions": [
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009334017",
+								"comment": "kernel-default is not affected"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009333928",
+								"comment": "kernel-source is not affected"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009340305",
+								"comment": "kernel-source-azure is not affected"
+							}
+						]
+					}
+				],
+				"criterions": [
+					{
+						"test_ref": "oval:org.opensuse.security:tst:2009258806",
+						"comment": "SUSE Linux Enterprise Server for SAP Applications 12 SP5 is installed"
+					}
+				]
+			},
+			{
+				"operator": "AND",
+				"criterias": [
+					{
+						"operator": "OR",
+						"criterions": [
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009334017",
+								"comment": "kernel-default is not affected"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009335425",
+								"comment": "kernel-default-base is not affected"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009335423",
+								"comment": "kernel-default-devel is not affected"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009335426",
+								"comment": "kernel-default-man is not affected"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009334791",
+								"comment": "kernel-devel is not affected"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009334792",
+								"comment": "kernel-macros is not affected"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009333928",
+								"comment": "kernel-source is not affected"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009340306",
+								"comment": "kernel-devel-azure is not affected"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009340305",
+								"comment": "kernel-source-azure is not affected"
+							}
+						]
+					}
+				],
+				"criterions": [
+					{
+						"test_ref": "oval:org.opensuse.security:tst:2009258033",
+						"comment": "SUSE Linux Enterprise Server 12 SP5 is installed"
+					}
+				]
+			},
+			{
+				"operator": "AND",
+				"criterias": [
+					{
+						"operator": "OR",
+						"criterions": [
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009128018",
+								"comment": "SUSE Linux Enterprise Server 12 SP2-LTSS is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009240280",
+								"comment": "SUSE Linux Enterprise Server 12 SP4-LTSS is installed"
+							}
+						]
+					},
+					{
+						"operator": "OR",
+						"criterions": [
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009334017",
+								"comment": "kernel-default is not affected"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009335425",
+								"comment": "kernel-default-base is not affected"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009335423",
+								"comment": "kernel-default-devel is not affected"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009335426",
+								"comment": "kernel-default-man is not affected"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009334791",
+								"comment": "kernel-devel is not affected"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009334792",
+								"comment": "kernel-macros is not affected"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009333928",
+								"comment": "kernel-source is not affected"
+							}
+						]
+					}
+				]
+			},
+			{
+				"operator": "AND",
+				"criterias": [
+					{
+						"operator": "OR",
+						"criterions": [
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009728711",
+								"comment": "kernel-devel-rt is not affected"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009728712",
+								"comment": "kernel-source-rt is not affected"
+							}
+						]
+					}
+				],
+				"criterions": [
+					{
+						"test_ref": "oval:org.opensuse.security:tst:2009279486",
+						"comment": "SUSE Linux Enterprise Real Time 12 SP5 is installed"
+					}
+				]
+			}
+		]
+	}
+}
