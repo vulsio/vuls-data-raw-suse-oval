@@ -7,16 +7,21 @@
 		"affected": {
 			"family": "unix",
 			"platform": [
+				"SUSE Linux Enterprise Desktop 15 SP6",
 				"SUSE Linux Enterprise High Performance Computing 15 SP5",
 				"SUSE Linux Enterprise High Performance Computing 15 SP6",
 				"SUSE Linux Enterprise Live Patching 15 SP5",
 				"SUSE Linux Enterprise Live Patching 15 SP6",
+				"SUSE Linux Enterprise Module for Basesystem 15 SP6",
+				"SUSE Linux Enterprise Module for Development Tools 15 SP6",
+				"SUSE Linux Enterprise Module for Legacy 15 SP6",
 				"SUSE Linux Enterprise Module for Public Cloud 15 SP5",
 				"SUSE Linux Enterprise Module for Public Cloud 15 SP6",
 				"SUSE Linux Enterprise Server 15 SP5",
 				"SUSE Linux Enterprise Server 15 SP6",
 				"SUSE Linux Enterprise Server for SAP Applications 15 SP5",
-				"SUSE Linux Enterprise Server for SAP Applications 15 SP6"
+				"SUSE Linux Enterprise Server for SAP Applications 15 SP6",
+				"SUSE Linux Enterprise Workstation Extension 15 SP6"
 			]
 		},
 		"reference": [
@@ -64,6 +69,11 @@
 				"ref_id": "SUSE-SU-2024:3252-1",
 				"ref_url": "https://lists.suse.com/pipermail/sle-updates/2024-September/036896.html",
 				"source": "SUSE-SU"
+			},
+			{
+				"ref_id": "SUSE-SU-2024:3383-1",
+				"ref_url": "https://lists.suse.com/pipermail/sle-security-updates/2024-September/019497.html",
+				"source": "SUSE-SU"
 			}
 		],
 		"description": "\n    In the Linux kernel, the following vulnerability has been resolved:\n\nbnx2x: Fix multiple UBSAN array-index-out-of-bounds\n\nFix UBSAN warnings that occur when using a system with 32 physical\ncpu cores or more, or when the user defines a number of Ethernet\nqueues greater than or equal to FP_SB_MAX_E1x using the num_queues\nmodule parameter.\n\nCurrently there is a read/write out of bounds that occurs on the array\n\"struct stats_query_entry query\" present inside the \"bnx2x_fw_stats_req\"\nstruct in \"drivers/net/ethernet/broadcom/bnx2x/bnx2x.h\".\nLooking at the definition of the \"struct stats_query_entry query\" array:\n\nstruct stats_query_entry query[FP_SB_MAX_E1x+\n         BNX2X_FIRST_QUEUE_QUERY_IDX];\n\nFP_SB_MAX_E1x is defined as the maximum number of fast path interrupts and\nhas a value of 16, while BNX2X_FIRST_QUEUE_QUERY_IDX has a value of 3\nmeaning the array has a total size of 19.\nSince accesses to \"struct stats_query_entry query\" are offset-ted by\nBNX2X_FIRST_QUEUE_QUERY_IDX, that means that the total number of Ethernet\nqueues should not exceed FP_SB_MAX_E1x (16). However one of these queues\nis reserved for FCOE and thus the number of Ethernet queues should be set\nto [FP_SB_MAX_E1x -1] (15) if FCOE is enabled or [FP_SB_MAX_E1x] (16) if\nit is not.\n\nThis is also described in a comment in the source code in\ndrivers/net/ethernet/broadcom/bnx2x/bnx2x.h just above the Macro definition\nof FP_SB_MAX_E1x. Below is the part of this explanation that it important\nfor this patch\n\n/*\n  * The total number of L2 queues, MSIX vectors and HW contexts (CIDs) is\n  * control by the number of fast-path status blocks supported by the\n  * device (HW/FW). Each fast-path status block (FP-SB) aka non-default\n  * status block represents an independent interrupts context that can\n  * serve a regular L2 networking queue. However special L2 queues such\n  * as the FCoE queue do not require a FP-SB and other components like\n  * the CNIC may consume FP-SB reducing the number of possible L2 queues\n  *\n  * If the maximum number of FP-SB available is X then:\n  * a. If CNIC is supported it consumes 1 FP-SB thus the max number of\n  *    regular L2 queues is Y=X-1\n  * b. In MF mode the actual number of L2 queues is Y= (X-1/MF_factor)\n  * c. If the FCoE L2 queue is supported the actual number of L2 queues\n  *    is Y+1\n  * d. The number of irqs (MSIX vectors) is either Y+1 (one extra for\n  *    slow-path interrupts) or Y+2 if CNIC is supported (one additional\n  *    FP interrupt context for the CNIC).\n  * e. The number of HW context (CID count) is always X or X+1 if FCoE\n  *    L2 queue is supported. The cid for the FCoE L2 queue is always X.\n  */\n\nHowever this driver also supports NICs that use the E2 controller which can\nhandle more queues due to having more FP-SB represented by FP_SB_MAX_E2.\nLooking at the commits when the E2 support was added, it was originally\nusing the E1x parameters: commit f2e0899f0f27 (\"bnx2x: Add 57712 support\").\nBack then FP_SB_MAX_E2 was set to 16 the same as E1x. However the driver\nwas later updated to take full advantage of the E2 instead of having it be\nlimited to the capabilities of the E1x. But as far as we can tell, the\narray \"stats_query_entry query\" was still limited to using the FP-SB\navailable to the E1x cards as part of an oversignt when the driver was\nupdated to take full advantage of the E2, and now with the driver being\naware of the greater queue size supported by E2 NICs, it causes the UBSAN\nwarnings seen in the stack traces below.\n\nThis patch increases the size of the \"stats_query_entry query\" array by\nreplacing FP_SB_MAX_E1x with FP_SB_MAX_E2 to be large enough to handle\nboth types of NICs.\n\nStack traces:\n\nUBSAN: array-index-out-of-bounds in\n       drivers/net/ethernet/broadcom/bnx2x/bnx2x_stats.c:1529:11\nindex 20 is out of range for type 'stats_query_entry [19]'\nCPU: 12 PID: 858 Comm: systemd-network Not tainted 6.9.0-060900rc7-generic\n\t     #202405052133\nHardware name: HP ProLiant DL360 Gen9/ProLiant DL360 \n---truncated---\n    ",
@@ -94,14 +104,18 @@
 				"date": "2024-09-11"
 			},
 			"updated": {
-				"date": "2024-09-17"
+				"date": "2024-09-24"
 			},
 			"affected_cpe_list": {
 				"cpe": [
+					"cpe:/o:suse:sle-module-basesystem:15:sp6",
+					"cpe:/o:suse:sle-module-development-tools:15:sp6",
+					"cpe:/o:suse:sle-module-legacy:15:sp6",
 					"cpe:/o:suse:sle-module-live-patching:15:sp5",
 					"cpe:/o:suse:sle-module-live-patching:15:sp6",
 					"cpe:/o:suse:sle-module-public-cloud:15:sp5",
 					"cpe:/o:suse:sle-module-public-cloud:15:sp6",
+					"cpe:/o:suse:sle-we:15:sp6",
 					"cpe:/o:suse:sle_hpc:15:sp5",
 					"cpe:/o:suse:sles:15:sp5",
 					"cpe:/o:suse:sles_sap:15:sp5"
@@ -116,25 +130,76 @@
 				"operator": "AND",
 				"criterions": [
 					{
-						"test_ref": "oval:org.opensuse.security:tst:2009857543",
-						"comment": "SUSE Linux Enterprise Live Patching 15 SP6 is installed"
-					},
-					{
-						"test_ref": "oval:org.opensuse.security:tst:2009942033",
-						"comment": "kernel-livepatch-6_4_0-150600_10_8-rt-1-150600.1.3.2 is installed"
-					}
-				]
-			},
-			{
-				"operator": "AND",
-				"criterions": [
-					{
 						"test_ref": "oval:org.opensuse.security:tst:2009764853",
 						"comment": "SUSE Linux Enterprise Live Patching 15 SP5 is installed"
 					},
 					{
 						"test_ref": "oval:org.opensuse.security:tst:2009942378",
 						"comment": "kernel-livepatch-5_14_21-150500_13_67-rt-1-150500.11.3.2 is installed"
+					}
+				]
+			},
+			{
+				"operator": "AND",
+				"criterias": [
+					{
+						"operator": "OR",
+						"criterions": [
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009856172",
+								"comment": "SUSE Linux Enterprise High Performance Computing 15 SP6 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009856282",
+								"comment": "SUSE Linux Enterprise Module for Legacy 15 SP6 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009856174",
+								"comment": "SUSE Linux Enterprise Server 15 SP6 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009856175",
+								"comment": "SUSE Linux Enterprise Server for SAP Applications 15 SP6 is installed"
+							}
+						]
+					}
+				],
+				"criterions": [
+					{
+						"test_ref": "oval:org.opensuse.security:tst:2009944195",
+						"comment": "reiserfs-kmp-default-6.4.0-150600.23.22.1 is installed"
+					}
+				]
+			},
+			{
+				"operator": "AND",
+				"criterias": [
+					{
+						"operator": "OR",
+						"criterions": [
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009856171",
+								"comment": "SUSE Linux Enterprise Desktop 15 SP6 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009856174",
+								"comment": "SUSE Linux Enterprise Server 15 SP6 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009856175",
+								"comment": "SUSE Linux Enterprise Server for SAP Applications 15 SP6 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009856347",
+								"comment": "SUSE Linux Enterprise Workstation Extension 15 SP6 is installed"
+							}
+						]
+					}
+				],
+				"criterions": [
+					{
+						"test_ref": "oval:org.opensuse.security:tst:2009944332",
+						"comment": "kernel-default-extra-6.4.0-150600.23.22.1 is installed"
 					}
 				]
 			},
@@ -237,6 +302,156 @@
 								"comment": "kernel-syms-azure-6.4.0-150600.8.11.1 is installed"
 							}
 						]
+					}
+				]
+			},
+			{
+				"operator": "AND",
+				"criterias": [
+					{
+						"operator": "OR",
+						"criterions": [
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009856171",
+								"comment": "SUSE Linux Enterprise Desktop 15 SP6 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009856172",
+								"comment": "SUSE Linux Enterprise High Performance Computing 15 SP6 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009856173",
+								"comment": "SUSE Linux Enterprise Module for Basesystem 15 SP6 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009856174",
+								"comment": "SUSE Linux Enterprise Server 15 SP6 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009856175",
+								"comment": "SUSE Linux Enterprise Server for SAP Applications 15 SP6 is installed"
+							}
+						]
+					},
+					{
+						"operator": "OR",
+						"criterions": [
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009944158",
+								"comment": "kernel-64kb-6.4.0-150600.23.22.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009944159",
+								"comment": "kernel-64kb-devel-6.4.0-150600.23.22.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009944167",
+								"comment": "kernel-default-6.4.0-150600.23.22.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009944168",
+								"comment": "kernel-default-base-6.4.0-150600.23.22.1.150600.12.8.3 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009944170",
+								"comment": "kernel-default-devel-6.4.0-150600.23.22.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009944176",
+								"comment": "kernel-devel-6.4.0-150600.23.22.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009944183",
+								"comment": "kernel-macros-6.4.0-150600.23.22.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009944189",
+								"comment": "kernel-zfcpdump-6.4.0-150600.23.22.1 is installed"
+							}
+						]
+					}
+				]
+			},
+			{
+				"operator": "AND",
+				"criterias": [
+					{
+						"operator": "OR",
+						"criterions": [
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009856171",
+								"comment": "SUSE Linux Enterprise Desktop 15 SP6 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009856172",
+								"comment": "SUSE Linux Enterprise High Performance Computing 15 SP6 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009856253",
+								"comment": "SUSE Linux Enterprise Module for Development Tools 15 SP6 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009856174",
+								"comment": "SUSE Linux Enterprise Server 15 SP6 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009856175",
+								"comment": "SUSE Linux Enterprise Server for SAP Applications 15 SP6 is installed"
+							}
+						]
+					},
+					{
+						"operator": "OR",
+						"criterions": [
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009944177",
+								"comment": "kernel-docs-6.4.0-150600.23.22.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009944184",
+								"comment": "kernel-obs-build-6.4.0-150600.23.22.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009944186",
+								"comment": "kernel-source-6.4.0-150600.23.22.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009944188",
+								"comment": "kernel-syms-6.4.0-150600.23.22.1 is installed"
+							}
+						]
+					}
+				]
+			},
+			{
+				"operator": "AND",
+				"criterias": [
+					{
+						"operator": "OR",
+						"criterions": [
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009944323",
+								"comment": "kernel-default-livepatch-6.4.0-150600.23.22.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009944324",
+								"comment": "kernel-default-livepatch-devel-6.4.0-150600.23.22.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009942033",
+								"comment": "kernel-livepatch-6_4_0-150600_10_8-rt-1-150600.1.3.2 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009944325",
+								"comment": "kernel-livepatch-6_4_0-150600_23_22-default-1-150600.13.3.3 is installed"
+							}
+						]
+					}
+				],
+				"criterions": [
+					{
+						"test_ref": "oval:org.opensuse.security:tst:2009857543",
+						"comment": "SUSE Linux Enterprise Live Patching 15 SP6 is installed"
 					}
 				]
 			}

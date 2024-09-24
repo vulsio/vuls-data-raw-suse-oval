@@ -8,20 +8,25 @@
 			"family": "unix",
 			"platform": [
 				"SUSE Linux Enterprise Desktop 15 SP5",
+				"SUSE Linux Enterprise Desktop 15 SP6",
 				"SUSE Linux Enterprise High Performance Computing 15 SP5",
 				"SUSE Linux Enterprise High Performance Computing 15 SP6",
 				"SUSE Linux Enterprise Live Patching 15 SP5",
 				"SUSE Linux Enterprise Live Patching 15 SP6",
 				"SUSE Linux Enterprise Module for Basesystem 15 SP5",
+				"SUSE Linux Enterprise Module for Basesystem 15 SP6",
 				"SUSE Linux Enterprise Module for Development Tools 15 SP5",
+				"SUSE Linux Enterprise Module for Development Tools 15 SP6",
 				"SUSE Linux Enterprise Module for Legacy 15 SP5",
+				"SUSE Linux Enterprise Module for Legacy 15 SP6",
 				"SUSE Linux Enterprise Module for Public Cloud 15 SP5",
 				"SUSE Linux Enterprise Module for Public Cloud 15 SP6",
 				"SUSE Linux Enterprise Server 15 SP5",
 				"SUSE Linux Enterprise Server 15 SP6",
 				"SUSE Linux Enterprise Server for SAP Applications 15 SP5",
 				"SUSE Linux Enterprise Server for SAP Applications 15 SP6",
-				"SUSE Linux Enterprise Workstation Extension 15 SP5"
+				"SUSE Linux Enterprise Workstation Extension 15 SP5",
+				"SUSE Linux Enterprise Workstation Extension 15 SP6"
 			]
 		},
 		"reference": [
@@ -74,6 +79,11 @@
 				"ref_id": "SUSE-SU-2024:3195-1",
 				"ref_url": "https://lists.suse.com/pipermail/sle-updates/2024-September/036842.html",
 				"source": "SUSE-SU"
+			},
+			{
+				"ref_id": "SUSE-SU-2024:3383-1",
+				"ref_url": "https://lists.suse.com/pipermail/sle-security-updates/2024-September/019497.html",
+				"source": "SUSE-SU"
 			}
 		],
 		"description": "\n    In the Linux kernel, the following vulnerability has been resolved:\n\nocfs2: fix races between hole punching and AIO+DIO\n\nAfter commit \"ocfs2: return real error code in ocfs2_dio_wr_get_block\",\nfstests/generic/300 become from always failed to sometimes failed:\n\n========================================================================\n[  473.293420 ] run fstests generic/300\n\n[  475.296983 ] JBD2: Ignoring recovery information on journal\n[  475.302473 ] ocfs2: Mounting device (253,1) on (node local, slot 0) with ordered data mode.\n[  494.290998 ] OCFS2: ERROR (device dm-1): ocfs2_change_extent_flag: Owner 5668 has an extent at cpos 78723 which can no longer be found\n[  494.291609 ] On-disk corruption discovered. Please run fsck.ocfs2 once the filesystem is unmounted.\n[  494.292018 ] OCFS2: File system is now read-only.\n[  494.292224 ] (kworker/19:11,2628,19):ocfs2_mark_extent_written:5272 ERROR: status = -30\n[  494.292602 ] (kworker/19:11,2628,19):ocfs2_dio_end_io_write:2374 ERROR: status = -3\nfio: io_u error on file /mnt/scratch/racer: Read-only file system: write offset=460849152, buflen=131072\n=========================================================================\n\nIn __blockdev_direct_IO, ocfs2_dio_wr_get_block is called to add unwritten\nextents to a list.  extents are also inserted into extent tree in\nocfs2_write_begin_nolock.  Then another thread call fallocate to puch a\nhole at one of the unwritten extent.  The extent at cpos was removed by\nocfs2_remove_extent().  At end io worker thread, ocfs2_search_extent_list\nfound there is no such extent at the cpos.\n\n    T1                        T2                T3\n                              inode lock\n                                ...\n                                insert extents\n                                ...\n                              inode unlock\nocfs2_fallocate\n __ocfs2_change_file_space\n  inode lock\n  lock ip_alloc_sem\n  ocfs2_remove_inode_range inode\n   ocfs2_remove_btree_range\n    ocfs2_remove_extent\n    ^---remove the extent at cpos 78723\n  ...\n  unlock ip_alloc_sem\n  inode unlock\n                                       ocfs2_dio_end_io\n                                        ocfs2_dio_end_io_write\n                                         lock ip_alloc_sem\n                                         ocfs2_mark_extent_written\n                                          ocfs2_change_extent_flag\n                                           ocfs2_search_extent_list\n                                           ^---failed to find extent\n                                          ...\n                                          unlock ip_alloc_sem\n\nIn most filesystems, fallocate is not compatible with racing with AIO+DIO,\nso fix it by adding to wait for all dio before fallocate/punch_hole like\next4.\n    ",
@@ -102,18 +112,22 @@
 				"date": "2024-08-14"
 			},
 			"updated": {
-				"date": "2024-09-11"
+				"date": "2024-09-24"
 			},
 			"affected_cpe_list": {
 				"cpe": [
 					"cpe:/o:suse:sle-module-basesystem:15:sp5",
+					"cpe:/o:suse:sle-module-basesystem:15:sp6",
 					"cpe:/o:suse:sle-module-development-tools:15:sp5",
+					"cpe:/o:suse:sle-module-development-tools:15:sp6",
 					"cpe:/o:suse:sle-module-legacy:15:sp5",
+					"cpe:/o:suse:sle-module-legacy:15:sp6",
 					"cpe:/o:suse:sle-module-live-patching:15:sp5",
 					"cpe:/o:suse:sle-module-live-patching:15:sp6",
 					"cpe:/o:suse:sle-module-public-cloud:15:sp5",
 					"cpe:/o:suse:sle-module-public-cloud:15:sp6",
 					"cpe:/o:suse:sle-we:15:sp5",
+					"cpe:/o:suse:sle-we:15:sp6",
 					"cpe:/o:suse:sle_hpc:15:sp5",
 					"cpe:/o:suse:sled:15:sp5",
 					"cpe:/o:suse:sles:15:sp5",
@@ -191,14 +205,65 @@
 			},
 			{
 				"operator": "AND",
+				"criterias": [
+					{
+						"operator": "OR",
+						"criterions": [
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009856172",
+								"comment": "SUSE Linux Enterprise High Performance Computing 15 SP6 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009856282",
+								"comment": "SUSE Linux Enterprise Module for Legacy 15 SP6 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009856174",
+								"comment": "SUSE Linux Enterprise Server 15 SP6 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009856175",
+								"comment": "SUSE Linux Enterprise Server for SAP Applications 15 SP6 is installed"
+							}
+						]
+					}
+				],
 				"criterions": [
 					{
-						"test_ref": "oval:org.opensuse.security:tst:2009857543",
-						"comment": "SUSE Linux Enterprise Live Patching 15 SP6 is installed"
-					},
+						"test_ref": "oval:org.opensuse.security:tst:2009944195",
+						"comment": "reiserfs-kmp-default-6.4.0-150600.23.22.1 is installed"
+					}
+				]
+			},
+			{
+				"operator": "AND",
+				"criterias": [
 					{
-						"test_ref": "oval:org.opensuse.security:tst:2009942033",
-						"comment": "kernel-livepatch-6_4_0-150600_10_8-rt-1-150600.1.3.2 is installed"
+						"operator": "OR",
+						"criterions": [
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009856171",
+								"comment": "SUSE Linux Enterprise Desktop 15 SP6 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009856174",
+								"comment": "SUSE Linux Enterprise Server 15 SP6 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009856175",
+								"comment": "SUSE Linux Enterprise Server for SAP Applications 15 SP6 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009856347",
+								"comment": "SUSE Linux Enterprise Workstation Extension 15 SP6 is installed"
+							}
+						]
+					}
+				],
+				"criterions": [
+					{
+						"test_ref": "oval:org.opensuse.security:tst:2009944332",
+						"comment": "kernel-default-extra-6.4.0-150600.23.22.1 is installed"
 					}
 				]
 			},
@@ -451,6 +516,156 @@
 								"comment": "kernel-syms-azure-6.4.0-150600.8.11.1 is installed"
 							}
 						]
+					}
+				]
+			},
+			{
+				"operator": "AND",
+				"criterias": [
+					{
+						"operator": "OR",
+						"criterions": [
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009856171",
+								"comment": "SUSE Linux Enterprise Desktop 15 SP6 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009856172",
+								"comment": "SUSE Linux Enterprise High Performance Computing 15 SP6 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009856173",
+								"comment": "SUSE Linux Enterprise Module for Basesystem 15 SP6 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009856174",
+								"comment": "SUSE Linux Enterprise Server 15 SP6 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009856175",
+								"comment": "SUSE Linux Enterprise Server for SAP Applications 15 SP6 is installed"
+							}
+						]
+					},
+					{
+						"operator": "OR",
+						"criterions": [
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009944158",
+								"comment": "kernel-64kb-6.4.0-150600.23.22.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009944159",
+								"comment": "kernel-64kb-devel-6.4.0-150600.23.22.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009944167",
+								"comment": "kernel-default-6.4.0-150600.23.22.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009944168",
+								"comment": "kernel-default-base-6.4.0-150600.23.22.1.150600.12.8.3 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009944170",
+								"comment": "kernel-default-devel-6.4.0-150600.23.22.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009944176",
+								"comment": "kernel-devel-6.4.0-150600.23.22.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009944183",
+								"comment": "kernel-macros-6.4.0-150600.23.22.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009944189",
+								"comment": "kernel-zfcpdump-6.4.0-150600.23.22.1 is installed"
+							}
+						]
+					}
+				]
+			},
+			{
+				"operator": "AND",
+				"criterias": [
+					{
+						"operator": "OR",
+						"criterions": [
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009856171",
+								"comment": "SUSE Linux Enterprise Desktop 15 SP6 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009856172",
+								"comment": "SUSE Linux Enterprise High Performance Computing 15 SP6 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009856253",
+								"comment": "SUSE Linux Enterprise Module for Development Tools 15 SP6 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009856174",
+								"comment": "SUSE Linux Enterprise Server 15 SP6 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009856175",
+								"comment": "SUSE Linux Enterprise Server for SAP Applications 15 SP6 is installed"
+							}
+						]
+					},
+					{
+						"operator": "OR",
+						"criterions": [
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009944177",
+								"comment": "kernel-docs-6.4.0-150600.23.22.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009944184",
+								"comment": "kernel-obs-build-6.4.0-150600.23.22.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009944186",
+								"comment": "kernel-source-6.4.0-150600.23.22.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009944188",
+								"comment": "kernel-syms-6.4.0-150600.23.22.1 is installed"
+							}
+						]
+					}
+				]
+			},
+			{
+				"operator": "AND",
+				"criterias": [
+					{
+						"operator": "OR",
+						"criterions": [
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009944323",
+								"comment": "kernel-default-livepatch-6.4.0-150600.23.22.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009944324",
+								"comment": "kernel-default-livepatch-devel-6.4.0-150600.23.22.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009942033",
+								"comment": "kernel-livepatch-6_4_0-150600_10_8-rt-1-150600.1.3.2 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009944325",
+								"comment": "kernel-livepatch-6_4_0-150600_23_22-default-1-150600.13.3.3 is installed"
+							}
+						]
+					}
+				],
+				"criterions": [
+					{
+						"test_ref": "oval:org.opensuse.security:tst:2009857543",
+						"comment": "SUSE Linux Enterprise Live Patching 15 SP6 is installed"
 					}
 				]
 			}

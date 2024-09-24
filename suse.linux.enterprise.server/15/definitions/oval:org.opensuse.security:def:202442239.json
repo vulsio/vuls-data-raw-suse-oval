@@ -7,10 +7,14 @@
 		"affected": {
 			"family": "unix",
 			"platform": [
+				"SUSE Linux Enterprise Desktop 15 SP6",
 				"SUSE Linux Enterprise High Performance Computing 15 SP5",
 				"SUSE Linux Enterprise High Performance Computing 15 SP6",
 				"SUSE Linux Enterprise Live Patching 15 SP5",
 				"SUSE Linux Enterprise Live Patching 15 SP6",
+				"SUSE Linux Enterprise Module for Basesystem 15 SP6",
+				"SUSE Linux Enterprise Module for Development Tools 15 SP6",
+				"SUSE Linux Enterprise Module for Legacy 15 SP6",
 				"SUSE Linux Enterprise Module for Public Cloud 15 SP5",
 				"SUSE Linux Enterprise Module for Public Cloud 15 SP6",
 				"SUSE Linux Enterprise Server 15 SP1-LTSS",
@@ -24,7 +28,8 @@
 				"SUSE Linux Enterprise Server for SAP Applications 15 SP3",
 				"SUSE Linux Enterprise Server for SAP Applications 15 SP4",
 				"SUSE Linux Enterprise Server for SAP Applications 15 SP5",
-				"SUSE Linux Enterprise Server for SAP Applications 15 SP6"
+				"SUSE Linux Enterprise Server for SAP Applications 15 SP6",
+				"SUSE Linux Enterprise Workstation Extension 15 SP6"
 			]
 		},
 		"reference": [
@@ -57,6 +62,11 @@
 				"ref_id": "SUSE-SU-2024:3209-1",
 				"ref_url": "https://lists.suse.com/pipermail/sle-updates/2024-September/036854.html",
 				"source": "SUSE-SU"
+			},
+			{
+				"ref_id": "SUSE-SU-2024:3383-1",
+				"ref_url": "https://lists.suse.com/pipermail/sle-security-updates/2024-September/019497.html",
+				"source": "SUSE-SU"
 			}
 		],
 		"description": "\n    In the Linux kernel, the following vulnerability has been resolved:\n\nbpf: Fail bpf_timer_cancel when callback is being cancelled\n\nGiven a schedule:\n\ntimer1 cb\t\t\ttimer2 cb\n\nbpf_timer_cancel(timer2);\tbpf_timer_cancel(timer1);\n\nBoth bpf_timer_cancel calls would wait for the other callback to finish\nexecuting, introducing a lockup.\n\nAdd an atomic_t count named 'cancelling' in bpf_hrtimer. This keeps\ntrack of all in-flight cancellation requests for a given BPF timer.\nWhenever cancelling a BPF timer, we must check if we have outstanding\ncancellation requests, and if so, we must fail the operation with an\nerror (-EDEADLK) since cancellation is synchronous and waits for the\ncallback to finish executing. This implies that we can enter a deadlock\nsituation involving two or more timer callbacks executing in parallel\nand attempting to cancel one another.\n\nNote that we avoid incrementing the cancelling counter for the target\ntimer (the one being cancelled) if bpf_timer_cancel is not invoked from\na callback, to avoid spurious errors. The whole point of detecting\ncur->cancelling and returning -EDEADLK is to not enter a busy wait loop\n(which may or may not lead to a lockup). This does not apply in case the\ncaller is in a non-callback context, the other side can continue to\ncancel as it sees fit without running into errors.\n\nBackground on prior attempts:\n\nEarlier versions of this patch used a bool 'cancelling' bit and used the\nfollowing pattern under timer->lock to publish cancellation status.\n\nlock(t->lock);\nt->cancelling = true;\nmb();\nif (cur->cancelling)\n\treturn -EDEADLK;\nunlock(t->lock);\nhrtimer_cancel(t->timer);\nt->cancelling = false;\n\nThe store outside the critical section could overwrite a parallel\nrequests t->cancelling assignment to true, to ensure the parallely\nexecuting callback observes its cancellation status.\n\nIt would be necessary to clear this cancelling bit once hrtimer_cancel\nis done, but lack of serialization introduced races. Another option was\nexplored where bpf_timer_start would clear the bit when (re)starting the\ntimer under timer->lock. This would ensure serialized access to the\ncancelling bit, but may allow it to be cleared before in-flight\nhrtimer_cancel has finished executing, such that lockups can occur\nagain.\n\nThus, we choose an atomic counter to keep track of all outstanding\ncancellation requests and use it to prevent lockups in case callbacks\nattempt to cancel each other while executing in parallel.\n    ",
@@ -87,14 +97,18 @@
 				"date": "2024-08-09"
 			},
 			"updated": {
-				"date": "2024-09-12"
+				"date": "2024-09-24"
 			},
 			"affected_cpe_list": {
 				"cpe": [
+					"cpe:/o:suse:sle-module-basesystem:15:sp6",
+					"cpe:/o:suse:sle-module-development-tools:15:sp6",
+					"cpe:/o:suse:sle-module-legacy:15:sp6",
 					"cpe:/o:suse:sle-module-live-patching:15:sp5",
 					"cpe:/o:suse:sle-module-live-patching:15:sp6",
 					"cpe:/o:suse:sle-module-public-cloud:15:sp5",
 					"cpe:/o:suse:sle-module-public-cloud:15:sp6",
+					"cpe:/o:suse:sle-we:15:sp6",
 					"cpe:/o:suse:sle_hpc:15:sp5",
 					"cpe:/o:suse:sles-ltss:15",
 					"cpe:/o:suse:sles-ltss:15:sp1",
@@ -117,25 +131,76 @@
 				"operator": "AND",
 				"criterions": [
 					{
-						"test_ref": "oval:org.opensuse.security:tst:2009857543",
-						"comment": "SUSE Linux Enterprise Live Patching 15 SP6 is installed"
-					},
-					{
-						"test_ref": "oval:org.opensuse.security:tst:2009942033",
-						"comment": "kernel-livepatch-6_4_0-150600_10_8-rt-1-150600.1.3.2 is installed"
-					}
-				]
-			},
-			{
-				"operator": "AND",
-				"criterions": [
-					{
 						"test_ref": "oval:org.opensuse.security:tst:2009764853",
 						"comment": "SUSE Linux Enterprise Live Patching 15 SP5 is installed"
 					},
 					{
 						"test_ref": "oval:org.opensuse.security:tst:2009942378",
 						"comment": "kernel-livepatch-5_14_21-150500_13_67-rt-1-150500.11.3.2 is installed"
+					}
+				]
+			},
+			{
+				"operator": "AND",
+				"criterias": [
+					{
+						"operator": "OR",
+						"criterions": [
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009856172",
+								"comment": "SUSE Linux Enterprise High Performance Computing 15 SP6 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009856282",
+								"comment": "SUSE Linux Enterprise Module for Legacy 15 SP6 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009856174",
+								"comment": "SUSE Linux Enterprise Server 15 SP6 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009856175",
+								"comment": "SUSE Linux Enterprise Server for SAP Applications 15 SP6 is installed"
+							}
+						]
+					}
+				],
+				"criterions": [
+					{
+						"test_ref": "oval:org.opensuse.security:tst:2009944195",
+						"comment": "reiserfs-kmp-default-6.4.0-150600.23.22.1 is installed"
+					}
+				]
+			},
+			{
+				"operator": "AND",
+				"criterias": [
+					{
+						"operator": "OR",
+						"criterions": [
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009856171",
+								"comment": "SUSE Linux Enterprise Desktop 15 SP6 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009856174",
+								"comment": "SUSE Linux Enterprise Server 15 SP6 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009856175",
+								"comment": "SUSE Linux Enterprise Server for SAP Applications 15 SP6 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009856347",
+								"comment": "SUSE Linux Enterprise Workstation Extension 15 SP6 is installed"
+							}
+						]
+					}
+				],
+				"criterions": [
+					{
+						"test_ref": "oval:org.opensuse.security:tst:2009944332",
+						"comment": "kernel-default-extra-6.4.0-150600.23.22.1 is installed"
 					}
 				]
 			},
@@ -356,6 +421,156 @@
 								"comment": "kernel-syms-azure-6.4.0-150600.8.11.1 is installed"
 							}
 						]
+					}
+				]
+			},
+			{
+				"operator": "AND",
+				"criterias": [
+					{
+						"operator": "OR",
+						"criterions": [
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009856171",
+								"comment": "SUSE Linux Enterprise Desktop 15 SP6 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009856172",
+								"comment": "SUSE Linux Enterprise High Performance Computing 15 SP6 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009856173",
+								"comment": "SUSE Linux Enterprise Module for Basesystem 15 SP6 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009856174",
+								"comment": "SUSE Linux Enterprise Server 15 SP6 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009856175",
+								"comment": "SUSE Linux Enterprise Server for SAP Applications 15 SP6 is installed"
+							}
+						]
+					},
+					{
+						"operator": "OR",
+						"criterions": [
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009944158",
+								"comment": "kernel-64kb-6.4.0-150600.23.22.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009944159",
+								"comment": "kernel-64kb-devel-6.4.0-150600.23.22.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009944167",
+								"comment": "kernel-default-6.4.0-150600.23.22.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009944168",
+								"comment": "kernel-default-base-6.4.0-150600.23.22.1.150600.12.8.3 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009944170",
+								"comment": "kernel-default-devel-6.4.0-150600.23.22.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009944176",
+								"comment": "kernel-devel-6.4.0-150600.23.22.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009944183",
+								"comment": "kernel-macros-6.4.0-150600.23.22.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009944189",
+								"comment": "kernel-zfcpdump-6.4.0-150600.23.22.1 is installed"
+							}
+						]
+					}
+				]
+			},
+			{
+				"operator": "AND",
+				"criterias": [
+					{
+						"operator": "OR",
+						"criterions": [
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009856171",
+								"comment": "SUSE Linux Enterprise Desktop 15 SP6 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009856172",
+								"comment": "SUSE Linux Enterprise High Performance Computing 15 SP6 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009856253",
+								"comment": "SUSE Linux Enterprise Module for Development Tools 15 SP6 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009856174",
+								"comment": "SUSE Linux Enterprise Server 15 SP6 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009856175",
+								"comment": "SUSE Linux Enterprise Server for SAP Applications 15 SP6 is installed"
+							}
+						]
+					},
+					{
+						"operator": "OR",
+						"criterions": [
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009944177",
+								"comment": "kernel-docs-6.4.0-150600.23.22.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009944184",
+								"comment": "kernel-obs-build-6.4.0-150600.23.22.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009944186",
+								"comment": "kernel-source-6.4.0-150600.23.22.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009944188",
+								"comment": "kernel-syms-6.4.0-150600.23.22.1 is installed"
+							}
+						]
+					}
+				]
+			},
+			{
+				"operator": "AND",
+				"criterias": [
+					{
+						"operator": "OR",
+						"criterions": [
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009944323",
+								"comment": "kernel-default-livepatch-6.4.0-150600.23.22.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009944324",
+								"comment": "kernel-default-livepatch-devel-6.4.0-150600.23.22.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009942033",
+								"comment": "kernel-livepatch-6_4_0-150600_10_8-rt-1-150600.1.3.2 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009944325",
+								"comment": "kernel-livepatch-6_4_0-150600_23_22-default-1-150600.13.3.3 is installed"
+							}
+						]
+					}
+				],
+				"criterions": [
+					{
+						"test_ref": "oval:org.opensuse.security:tst:2009857543",
+						"comment": "SUSE Linux Enterprise Live Patching 15 SP6 is installed"
 					}
 				]
 			}
