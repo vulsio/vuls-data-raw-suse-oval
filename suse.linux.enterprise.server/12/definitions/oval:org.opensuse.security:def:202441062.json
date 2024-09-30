@@ -84,12 +84,17 @@
 				"ref_id": "SUSE-SU-2024:3408-1",
 				"ref_url": "https://lists.suse.com/pipermail/sle-updates/2024-September/037033.html",
 				"source": "SUSE-SU"
+			},
+			{
+				"ref_id": "SUSE-SU-2024:3483-1",
+				"ref_url": "https://lists.suse.com/pipermail/sle-updates/2024-September/037089.html",
+				"source": "SUSE-SU"
 			}
 		],
 		"description": "\n    In the Linux kernel, the following vulnerability has been resolved:\n\nbluetooth/l2cap: sync sock recv cb and release\n\nThe problem occurs between the system call to close the sock and hci_rx_work,\nwhere the former releases the sock and the latter accesses it without lock protection.\n\n           CPU0                       CPU1\n           ----                       ----\n           sock_close                 hci_rx_work\n\t   l2cap_sock_release         hci_acldata_packet\n\t   l2cap_sock_kill            l2cap_recv_frame\n\t   sk_free                    l2cap_conless_channel\n\t                              l2cap_sock_recv_cb\n\nIf hci_rx_work processes the data that needs to be received before the sock is\nclosed, then everything is normal; Otherwise, the work thread may access the\nreleased sock when receiving data.\n\nAdd a chan mutex in the rx callback of the sock to achieve synchronization between\nthe sock release and recv cb.\n\nSock is dead, so set chan data to NULL, avoid others use invalid sock pointer.\n    ",
 		"advisory": {
 			"from": "security@suse.de",
-			"severity": "Moderate",
+			"severity": "Important",
 			"cve": [
 				{
 					"text": "CVE-2024-41062 at SUSE",
@@ -116,7 +121,7 @@
 				"date": "2024-09-11"
 			},
 			"updated": {
-				"date": "2024-09-25"
+				"date": "2024-09-30"
 			},
 			"affected_cpe_list": {
 				"cpe": [

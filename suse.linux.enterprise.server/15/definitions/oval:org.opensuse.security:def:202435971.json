@@ -7,13 +7,17 @@
 		"affected": {
 			"family": "unix",
 			"platform": [
+				"SUSE Linux Enterprise Desktop 15 SP5",
 				"SUSE Linux Enterprise Desktop 15 SP6",
 				"SUSE Linux Enterprise High Performance Computing 15 SP5",
 				"SUSE Linux Enterprise High Performance Computing 15 SP6",
 				"SUSE Linux Enterprise Live Patching 15 SP5",
 				"SUSE Linux Enterprise Live Patching 15 SP6",
+				"SUSE Linux Enterprise Module for Basesystem 15 SP5",
 				"SUSE Linux Enterprise Module for Basesystem 15 SP6",
+				"SUSE Linux Enterprise Module for Development Tools 15 SP5",
 				"SUSE Linux Enterprise Module for Development Tools 15 SP6",
+				"SUSE Linux Enterprise Module for Legacy 15 SP5",
 				"SUSE Linux Enterprise Module for Legacy 15 SP6",
 				"SUSE Linux Enterprise Module for Public Cloud 15 SP5",
 				"SUSE Linux Enterprise Module for Public Cloud 15 SP6",
@@ -27,6 +31,7 @@
 				"SUSE Linux Enterprise Server for SAP Applications 15 SP3",
 				"SUSE Linux Enterprise Server for SAP Applications 15 SP5",
 				"SUSE Linux Enterprise Server for SAP Applications 15 SP6",
+				"SUSE Linux Enterprise Workstation Extension 15 SP5",
 				"SUSE Linux Enterprise Workstation Extension 15 SP6"
 			]
 		},
@@ -65,6 +70,11 @@
 				"ref_id": "SUSE-SU-2024:3209-1",
 				"ref_url": "https://lists.suse.com/pipermail/sle-updates/2024-September/036854.html",
 				"source": "SUSE-SU"
+			},
+			{
+				"ref_id": "SUSE-SU-2024:3483-1",
+				"ref_url": "https://lists.suse.com/pipermail/sle-updates/2024-September/037089.html",
+				"source": "SUSE-SU"
 			}
 		],
 		"description": "\n    In the Linux kernel, the following vulnerability has been resolved:\n\nnet: ks8851: Handle softirqs at the end of IRQ thread to fix hang\n\nThe ks8851_irq() thread may call ks8851_rx_pkts() in case there are\nany packets in the MAC FIFO, which calls netif_rx(). This netif_rx()\nimplementation is guarded by local_bh_disable() and local_bh_enable().\nThe local_bh_enable() may call do_softirq() to run softirqs in case\nany are pending. One of the softirqs is net_rx_action, which ultimately\nreaches the driver .start_xmit callback. If that happens, the system\nhangs. The entire call chain is below:\n\nks8851_start_xmit_par from netdev_start_xmit\nnetdev_start_xmit from dev_hard_start_xmit\ndev_hard_start_xmit from sch_direct_xmit\nsch_direct_xmit from __dev_queue_xmit\n__dev_queue_xmit from __neigh_update\n__neigh_update from neigh_update\nneigh_update from arp_process.constprop.0\narp_process.constprop.0 from __netif_receive_skb_one_core\n__netif_receive_skb_one_core from process_backlog\nprocess_backlog from __napi_poll.constprop.0\n__napi_poll.constprop.0 from net_rx_action\nnet_rx_action from __do_softirq\n__do_softirq from call_with_stack\ncall_with_stack from do_softirq\ndo_softirq from __local_bh_enable_ip\n__local_bh_enable_ip from netif_rx\nnetif_rx from ks8851_irq\nks8851_irq from irq_thread_fn\nirq_thread_fn from irq_thread\nirq_thread from kthread\nkthread from ret_from_fork\n\nThe hang happens because ks8851_irq() first locks a spinlock in\nks8851_par.c ks8851_lock_par() spin_lock_irqsave(&ksp->lock, ...)\nand with that spinlock locked, calls netif_rx(). Once the execution\nreaches ks8851_start_xmit_par(), it calls ks8851_lock_par() again\nwhich attempts to claim the already locked spinlock again, and the\nhang happens.\n\nMove the do_softirq() call outside of the spinlock protected section\nof ks8851_irq() by disabling BHs around the entire spinlock protected\nsection of ks8851_irq() handler. Place local_bh_enable() outside of\nthe spinlock protected section, so that it can trigger do_softirq()\nwithout the ks8851_par.c ks8851_lock_par() spinlock being held, and\nsafely call ks8851_start_xmit_par() without attempting to lock the\nalready locked spinlock.\n\nSince ks8851_irq() is protected by local_bh_disable()/local_bh_enable()\nnow, replace netif_rx() with __netif_rx() which is not duplicating the\nlocal_bh_disable()/local_bh_enable() calls.\n    ",
@@ -93,19 +103,24 @@
 				"date": "2024-05-21"
 			},
 			"updated": {
-				"date": "2024-09-12"
+				"date": "2024-09-30"
 			},
 			"affected_cpe_list": {
 				"cpe": [
+					"cpe:/o:suse:sle-module-basesystem:15:sp5",
 					"cpe:/o:suse:sle-module-basesystem:15:sp6",
+					"cpe:/o:suse:sle-module-development-tools:15:sp5",
 					"cpe:/o:suse:sle-module-development-tools:15:sp6",
+					"cpe:/o:suse:sle-module-legacy:15:sp5",
 					"cpe:/o:suse:sle-module-legacy:15:sp6",
 					"cpe:/o:suse:sle-module-live-patching:15:sp5",
 					"cpe:/o:suse:sle-module-live-patching:15:sp6",
 					"cpe:/o:suse:sle-module-public-cloud:15:sp5",
 					"cpe:/o:suse:sle-module-public-cloud:15:sp6",
+					"cpe:/o:suse:sle-we:15:sp5",
 					"cpe:/o:suse:sle-we:15:sp6",
 					"cpe:/o:suse:sle_hpc:15:sp5",
+					"cpe:/o:suse:sled:15:sp5",
 					"cpe:/o:suse:sles-ltss:15",
 					"cpe:/o:suse:sles-ltss:15:sp1",
 					"cpe:/o:suse:sles-ltss:15:sp2",
@@ -187,14 +202,65 @@
 			},
 			{
 				"operator": "AND",
+				"criterias": [
+					{
+						"operator": "OR",
+						"criterions": [
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009759899",
+								"comment": "SUSE Linux Enterprise High Performance Computing 15 SP5 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009760608",
+								"comment": "SUSE Linux Enterprise Module for Legacy 15 SP5 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009759901",
+								"comment": "SUSE Linux Enterprise Server 15 SP5 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009759902",
+								"comment": "SUSE Linux Enterprise Server for SAP Applications 15 SP5 is installed"
+							}
+						]
+					}
+				],
 				"criterions": [
 					{
-						"test_ref": "oval:org.opensuse.security:tst:2009764853",
-						"comment": "SUSE Linux Enterprise Live Patching 15 SP5 is installed"
-					},
+						"test_ref": "oval:org.opensuse.security:tst:2009945096",
+						"comment": "reiserfs-kmp-default-5.14.21-150500.55.80.2 is installed"
+					}
+				]
+			},
+			{
+				"operator": "AND",
+				"criterias": [
 					{
-						"test_ref": "oval:org.opensuse.security:tst:2009942378",
-						"comment": "kernel-livepatch-5_14_21-150500_13_67-rt-1-150500.11.3.2 is installed"
+						"operator": "OR",
+						"criterions": [
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009759898",
+								"comment": "SUSE Linux Enterprise Desktop 15 SP5 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009759901",
+								"comment": "SUSE Linux Enterprise Server 15 SP5 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009759902",
+								"comment": "SUSE Linux Enterprise Server for SAP Applications 15 SP5 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009766857",
+								"comment": "SUSE Linux Enterprise Workstation Extension 15 SP5 is installed"
+							}
+						]
+					}
+				],
+				"criterions": [
+					{
+						"test_ref": "oval:org.opensuse.security:tst:2009945155",
+						"comment": "kernel-default-extra-5.14.21-150500.55.80.2 is installed"
 					}
 				]
 			},
@@ -557,6 +623,156 @@
 								"comment": "kernel-syms-azure-5.14.21-150500.33.66.1 is installed"
 							}
 						]
+					}
+				]
+			},
+			{
+				"operator": "AND",
+				"criterias": [
+					{
+						"operator": "OR",
+						"criterions": [
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009759898",
+								"comment": "SUSE Linux Enterprise Desktop 15 SP5 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009759899",
+								"comment": "SUSE Linux Enterprise High Performance Computing 15 SP5 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009759900",
+								"comment": "SUSE Linux Enterprise Module for Basesystem 15 SP5 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009759901",
+								"comment": "SUSE Linux Enterprise Server 15 SP5 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009759902",
+								"comment": "SUSE Linux Enterprise Server for SAP Applications 15 SP5 is installed"
+							}
+						]
+					},
+					{
+						"operator": "OR",
+						"criterions": [
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009945059",
+								"comment": "kernel-64kb-5.14.21-150500.55.80.2 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009945060",
+								"comment": "kernel-64kb-devel-5.14.21-150500.55.80.2 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009945068",
+								"comment": "kernel-default-5.14.21-150500.55.80.2 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009945069",
+								"comment": "kernel-default-base-5.14.21-150500.55.80.2.150500.6.35.6 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009945071",
+								"comment": "kernel-default-devel-5.14.21-150500.55.80.2 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009945077",
+								"comment": "kernel-devel-5.14.21-150500.55.80.2 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009945084",
+								"comment": "kernel-macros-5.14.21-150500.55.80.2 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009945090",
+								"comment": "kernel-zfcpdump-5.14.21-150500.55.80.2 is installed"
+							}
+						]
+					}
+				]
+			},
+			{
+				"operator": "AND",
+				"criterias": [
+					{
+						"operator": "OR",
+						"criterions": [
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009759898",
+								"comment": "SUSE Linux Enterprise Desktop 15 SP5 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009759899",
+								"comment": "SUSE Linux Enterprise High Performance Computing 15 SP5 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009760583",
+								"comment": "SUSE Linux Enterprise Module for Development Tools 15 SP5 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009759901",
+								"comment": "SUSE Linux Enterprise Server 15 SP5 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009759902",
+								"comment": "SUSE Linux Enterprise Server for SAP Applications 15 SP5 is installed"
+							}
+						]
+					},
+					{
+						"operator": "OR",
+						"criterions": [
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009945078",
+								"comment": "kernel-docs-5.14.21-150500.55.80.2 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009945085",
+								"comment": "kernel-obs-build-5.14.21-150500.55.80.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009945087",
+								"comment": "kernel-source-5.14.21-150500.55.80.2 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009945089",
+								"comment": "kernel-syms-5.14.21-150500.55.80.1 is installed"
+							}
+						]
+					}
+				]
+			},
+			{
+				"operator": "AND",
+				"criterias": [
+					{
+						"operator": "OR",
+						"criterions": [
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009945152",
+								"comment": "kernel-default-livepatch-5.14.21-150500.55.80.2 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009945153",
+								"comment": "kernel-default-livepatch-devel-5.14.21-150500.55.80.2 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009942378",
+								"comment": "kernel-livepatch-5_14_21-150500_13_67-rt-1-150500.11.3.2 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009945154",
+								"comment": "kernel-livepatch-5_14_21-150500_55_80-default-1-150500.11.3.2 is installed"
+							}
+						]
+					}
+				],
+				"criterions": [
+					{
+						"test_ref": "oval:org.opensuse.security:tst:2009764853",
+						"comment": "SUSE Linux Enterprise Live Patching 15 SP5 is installed"
 					}
 				]
 			}

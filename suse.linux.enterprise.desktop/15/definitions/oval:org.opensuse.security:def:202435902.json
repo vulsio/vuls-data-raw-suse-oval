@@ -56,6 +56,11 @@
 				"ref_id": "SUSE-SU-2024:3383-1",
 				"ref_url": "https://lists.suse.com/pipermail/sle-security-updates/2024-September/019497.html",
 				"source": "SUSE-SU"
+			},
+			{
+				"ref_id": "SUSE-SU-2024:3483-1",
+				"ref_url": "https://lists.suse.com/pipermail/sle-updates/2024-September/037089.html",
+				"source": "SUSE-SU"
 			}
 		],
 		"description": "\n    In the Linux kernel, the following vulnerability has been resolved:\n\nnet/rds: fix possible cp null dereference\n\ncp might be null, calling cp->cp_conn would produce null dereference\n\n[Simon Horman adds:]\n\nAnalysis:\n\n* cp is a parameter of __rds_rdma_map and is not reassigned.\n\n* The following call-sites pass a NULL cp argument to __rds_rdma_map()\n\n  - rds_get_mr()\n  - rds_get_mr_for_dest\n\n* Prior to the code above, the following assumes that cp may be NULL\n  (which is indicative, but could itself be unnecessary)\n\n\ttrans_private = rs->rs_transport->get_mr(\n\t\tsg, nents, rs, &mr->r_key, cp ? cp->cp_conn : NULL,\n\t\targs->vec.addr, args->vec.bytes,\n\t\tneed_odp ? ODP_ZEROBASED : ODP_NOT_NEEDED);\n\n* The code modified by this patch is guarded by IS_ERR(trans_private),\n  where trans_private is assigned as per the previous point in this analysis.\n\n  The only implementation of get_mr that I could locate is rds_ib_get_mr()\n  which can return an ERR_PTR if the conn (4th) argument is NULL.\n\n* ret is set to PTR_ERR(trans_private).\n  rds_ib_get_mr can return ERR_PTR(-ENODEV) if the conn (4th) argument is NULL.\n  Thus ret may be -ENODEV in which case the code in question will execute.\n\nConclusion:\n* cp may be NULL at the point where this patch adds a check;\n  this patch does seem to address a possible bug\n    ",
@@ -82,7 +87,7 @@
 				"date": "2024-05-21"
 			},
 			"updated": {
-				"date": "2024-09-24"
+				"date": "2024-09-30"
 			},
 			"affected_cpe_list": {
 				"cpe": [
@@ -101,100 +106,6 @@
 	"criteria": {
 		"operator": "OR",
 		"criterias": [
-			{
-				"operator": "AND",
-				"criterias": [
-					{
-						"operator": "OR",
-						"criterions": [
-							{
-								"test_ref": "oval:org.opensuse.security:tst:2009759898",
-								"comment": "SUSE Linux Enterprise Desktop 15 SP5 is installed"
-							},
-							{
-								"test_ref": "oval:org.opensuse.security:tst:2009759899",
-								"comment": "SUSE Linux Enterprise High Performance Computing 15 SP5 is installed"
-							},
-							{
-								"test_ref": "oval:org.opensuse.security:tst:2009760583",
-								"comment": "SUSE Linux Enterprise Module for Development Tools 15 SP5 is installed"
-							},
-							{
-								"test_ref": "oval:org.opensuse.security:tst:2009759901",
-								"comment": "SUSE Linux Enterprise Server 15 SP5 is installed"
-							},
-							{
-								"test_ref": "oval:org.opensuse.security:tst:2009759902",
-								"comment": "SUSE Linux Enterprise Server for SAP Applications 15 SP5 is installed"
-							}
-						]
-					},
-					{
-						"operator": "OR",
-						"criterions": [
-							{
-								"test_ref": "oval:org.opensuse.security:tst:2009334017",
-								"comment": "kernel-default is not affected"
-							},
-							{
-								"test_ref": "oval:org.opensuse.security:tst:2009333928",
-								"comment": "kernel-source is not affected"
-							}
-						]
-					}
-				]
-			},
-			{
-				"operator": "AND",
-				"criterias": [
-					{
-						"operator": "OR",
-						"criterions": [
-							{
-								"test_ref": "oval:org.opensuse.security:tst:2009759898",
-								"comment": "SUSE Linux Enterprise Desktop 15 SP5 is installed"
-							},
-							{
-								"test_ref": "oval:org.opensuse.security:tst:2009759899",
-								"comment": "SUSE Linux Enterprise High Performance Computing 15 SP5 is installed"
-							},
-							{
-								"test_ref": "oval:org.opensuse.security:tst:2009759900",
-								"comment": "SUSE Linux Enterprise Module for Basesystem 15 SP5 is installed"
-							},
-							{
-								"test_ref": "oval:org.opensuse.security:tst:2009759901",
-								"comment": "SUSE Linux Enterprise Server 15 SP5 is installed"
-							},
-							{
-								"test_ref": "oval:org.opensuse.security:tst:2009759902",
-								"comment": "SUSE Linux Enterprise Server for SAP Applications 15 SP5 is installed"
-							}
-						]
-					},
-					{
-						"operator": "OR",
-						"criterions": [
-							{
-								"test_ref": "oval:org.opensuse.security:tst:2009334017",
-								"comment": "kernel-default is not affected"
-							},
-							{
-								"test_ref": "oval:org.opensuse.security:tst:2009335423",
-								"comment": "kernel-default-devel is not affected"
-							},
-							{
-								"test_ref": "oval:org.opensuse.security:tst:2009334791",
-								"comment": "kernel-devel is not affected"
-							},
-							{
-								"test_ref": "oval:org.opensuse.security:tst:2009334792",
-								"comment": "kernel-macros is not affected"
-							}
-						]
-					}
-				]
-			},
 			{
 				"operator": "AND",
 				"criterias": [
@@ -308,6 +219,124 @@
 							{
 								"test_ref": "oval:org.opensuse.security:tst:2009944188",
 								"comment": "kernel-syms-6.4.0-150600.23.22.1 is installed"
+							}
+						]
+					}
+				]
+			},
+			{
+				"operator": "AND",
+				"criterias": [
+					{
+						"operator": "OR",
+						"criterions": [
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009759898",
+								"comment": "SUSE Linux Enterprise Desktop 15 SP5 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009759899",
+								"comment": "SUSE Linux Enterprise High Performance Computing 15 SP5 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009759900",
+								"comment": "SUSE Linux Enterprise Module for Basesystem 15 SP5 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009759901",
+								"comment": "SUSE Linux Enterprise Server 15 SP5 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009759902",
+								"comment": "SUSE Linux Enterprise Server for SAP Applications 15 SP5 is installed"
+							}
+						]
+					},
+					{
+						"operator": "OR",
+						"criterions": [
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009945059",
+								"comment": "kernel-64kb-5.14.21-150500.55.80.2 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009945060",
+								"comment": "kernel-64kb-devel-5.14.21-150500.55.80.2 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009945068",
+								"comment": "kernel-default-5.14.21-150500.55.80.2 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009945069",
+								"comment": "kernel-default-base-5.14.21-150500.55.80.2.150500.6.35.6 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009945071",
+								"comment": "kernel-default-devel-5.14.21-150500.55.80.2 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009945077",
+								"comment": "kernel-devel-5.14.21-150500.55.80.2 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009945084",
+								"comment": "kernel-macros-5.14.21-150500.55.80.2 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009945090",
+								"comment": "kernel-zfcpdump-5.14.21-150500.55.80.2 is installed"
+							}
+						]
+					}
+				]
+			},
+			{
+				"operator": "AND",
+				"criterias": [
+					{
+						"operator": "OR",
+						"criterions": [
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009759898",
+								"comment": "SUSE Linux Enterprise Desktop 15 SP5 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009759899",
+								"comment": "SUSE Linux Enterprise High Performance Computing 15 SP5 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009760583",
+								"comment": "SUSE Linux Enterprise Module for Development Tools 15 SP5 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009759901",
+								"comment": "SUSE Linux Enterprise Server 15 SP5 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009759902",
+								"comment": "SUSE Linux Enterprise Server for SAP Applications 15 SP5 is installed"
+							}
+						]
+					},
+					{
+						"operator": "OR",
+						"criterions": [
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009945078",
+								"comment": "kernel-docs-5.14.21-150500.55.80.2 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009945085",
+								"comment": "kernel-obs-build-5.14.21-150500.55.80.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009945087",
+								"comment": "kernel-source-5.14.21-150500.55.80.2 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009945089",
+								"comment": "kernel-syms-5.14.21-150500.55.80.1 is installed"
 							}
 						]
 					}

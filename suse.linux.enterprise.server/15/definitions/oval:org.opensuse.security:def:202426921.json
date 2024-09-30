@@ -7,13 +7,8 @@
 		"affected": {
 			"family": "unix",
 			"platform": [
-				"SUSE Enterprise Storage 7",
-				"SUSE Enterprise Storage 7.1",
 				"SUSE Linux Enterprise Desktop 15 SP5",
 				"SUSE Linux Enterprise Desktop 15 SP6",
-				"SUSE Linux Enterprise High Performance Computing 15 SP2",
-				"SUSE Linux Enterprise High Performance Computing 15 SP3",
-				"SUSE Linux Enterprise High Performance Computing 15 SP4",
 				"SUSE Linux Enterprise High Performance Computing 15 SP5",
 				"SUSE Linux Enterprise High Performance Computing 15 SP6",
 				"SUSE Linux Enterprise Live Patching 15 SP2",
@@ -27,38 +22,21 @@
 				"SUSE Linux Enterprise Module for Development Tools 15 SP6",
 				"SUSE Linux Enterprise Module for Legacy 15 SP5",
 				"SUSE Linux Enterprise Module for Legacy 15 SP6",
-				"SUSE Linux Enterprise Module for Public Cloud 15 SP2",
-				"SUSE Linux Enterprise Module for Public Cloud 15 SP3",
-				"SUSE Linux Enterprise Module for Public Cloud 15 SP4",
 				"SUSE Linux Enterprise Module for Public Cloud 15 SP5",
 				"SUSE Linux Enterprise Module for Public Cloud 15 SP6",
-				"SUSE Linux Enterprise Server 15 SP1-LTSS",
-				"SUSE Linux Enterprise Server 15 SP2",
 				"SUSE Linux Enterprise Server 15 SP2-LTSS",
-				"SUSE Linux Enterprise Server 15 SP3",
 				"SUSE Linux Enterprise Server 15 SP3-LTSS",
-				"SUSE Linux Enterprise Server 15 SP4",
 				"SUSE Linux Enterprise Server 15 SP4-LTSS",
 				"SUSE Linux Enterprise Server 15 SP4-TERADATA",
 				"SUSE Linux Enterprise Server 15 SP5",
 				"SUSE Linux Enterprise Server 15 SP6",
-				"SUSE Linux Enterprise Server 15-LTSS",
 				"SUSE Linux Enterprise Server for SAP Applications 15 SP2",
 				"SUSE Linux Enterprise Server for SAP Applications 15 SP3",
 				"SUSE Linux Enterprise Server for SAP Applications 15 SP4",
 				"SUSE Linux Enterprise Server for SAP Applications 15 SP5",
 				"SUSE Linux Enterprise Server for SAP Applications 15 SP6",
 				"SUSE Linux Enterprise Workstation Extension 15 SP5",
-				"SUSE Linux Enterprise Workstation Extension 15 SP6",
-				"SUSE Manager Proxy 4.1",
-				"SUSE Manager Proxy 4.2",
-				"SUSE Manager Proxy 4.3",
-				"SUSE Manager Retail Branch Server 4.1",
-				"SUSE Manager Retail Branch Server 4.2",
-				"SUSE Manager Retail Branch Server 4.3",
-				"SUSE Manager Server 4.1",
-				"SUSE Manager Server 4.2",
-				"SUSE Manager Server 4.3"
+				"SUSE Linux Enterprise Workstation Extension 15 SP6"
 			]
 		},
 		"reference": [
@@ -146,7 +124,7 @@
 		"description": "\n    In the Linux kernel, the following vulnerability has been resolved:\n\ninet: inet_defrag: prevent sk release while still in use\n\nip_local_out() and other functions can pass skb->sk as function argument.\n\nIf the skb is a fragment and reassembly happens before such function call\nreturns, the sk must not be released.\n\nThis affects skb fragments reassembled via netfilter or similar\nmodules, e.g. openvswitch or ct_act.c, when run as part of tx pipeline.\n\nEric Dumazet made an initial analysis of this bug.  Quoting Eric:\n  Calling ip_defrag() in output path is also implying skb_orphan(),\n  which is buggy because output path relies on sk not disappearing.\n\n  A relevant old patch about the issue was :\n  8282f27449bf (\"inet: frag: Always orphan skbs inside ip_defrag()\")\n\n  [..]\n\n  net/ipv4/ip_output.c depends on skb->sk being set, and probably to an\n  inet socket, not an arbitrary one.\n\n  If we orphan the packet in ipvlan, then downstream things like FQ\n  packet scheduler will not work properly.\n\n  We need to change ip_defrag() to only use skb_orphan() when really\n  needed, ie whenever frag_list is going to be used.\n\nEric suggested to stash sk in fragment queue and made an initial patch.\nHowever there is a problem with this:\n\nIf skb is refragmented again right after, ip_do_fragment() will copy\nhead->sk to the new fragments, and sets up destructor to sock_wfree.\nIOW, we have no choice but to fix up sk_wmem accouting to reflect the\nfully reassembled skb, else wmem will underflow.\n\nThis change moves the orphan down into the core, to last possible moment.\nAs ip_defrag_offset is aliased with sk_buff->sk member, we must move the\noffset into the FRAG_CB, else skb->sk gets clobbered.\n\nThis allows to delay the orphaning long enough to learn if the skb has\nto be queued or if the skb is completing the reasm queue.\n\nIn the former case, things work as before, skb is orphaned.  This is\nsafe because skb gets queued/stolen and won't continue past reasm engine.\n\nIn the latter case, we will steal the skb->sk reference, reattach it to\nthe head skb, and fix up wmem accouting when inet_frag inflates truesize.\n    ",
 		"advisory": {
 			"from": "security@suse.de",
-			"severity": "Moderate",
+			"severity": "Important",
 			"cve": [
 				{
 					"text": "CVE-2024-26921 at SUSE",
@@ -173,12 +151,10 @@
 				"date": "2024-06-13"
 			},
 			"updated": {
-				"date": "2024-09-17"
+				"date": "2024-09-30"
 			},
 			"affected_cpe_list": {
 				"cpe": [
-					"cpe:/o:suse:ses:7",
-					"cpe:/o:suse:ses:7.1",
 					"cpe:/o:suse:sle-module-basesystem:15:sp5",
 					"cpe:/o:suse:sle-module-basesystem:15:sp6",
 					"cpe:/o:suse:sle-module-development-tools:15:sp5",
@@ -190,40 +166,20 @@
 					"cpe:/o:suse:sle-module-live-patching:15:sp4",
 					"cpe:/o:suse:sle-module-live-patching:15:sp5",
 					"cpe:/o:suse:sle-module-live-patching:15:sp6",
-					"cpe:/o:suse:sle-module-public-cloud:15:sp2",
-					"cpe:/o:suse:sle-module-public-cloud:15:sp3",
-					"cpe:/o:suse:sle-module-public-cloud:15:sp4",
 					"cpe:/o:suse:sle-module-public-cloud:15:sp5",
 					"cpe:/o:suse:sle-module-public-cloud:15:sp6",
 					"cpe:/o:suse:sle-we:15:sp5",
 					"cpe:/o:suse:sle-we:15:sp6",
-					"cpe:/o:suse:sle_hpc:15:sp2",
-					"cpe:/o:suse:sle_hpc:15:sp3",
-					"cpe:/o:suse:sle_hpc:15:sp4",
 					"cpe:/o:suse:sle_hpc:15:sp5",
 					"cpe:/o:suse:sled:15:sp5",
-					"cpe:/o:suse:sles-ltss:15",
-					"cpe:/o:suse:sles-ltss:15:sp1",
 					"cpe:/o:suse:sles-ltss:15:sp2",
 					"cpe:/o:suse:sles-ltss:15:sp3",
 					"cpe:/o:suse:sles-ltss:15:sp4",
-					"cpe:/o:suse:sles:15:sp2",
-					"cpe:/o:suse:sles:15:sp3",
-					"cpe:/o:suse:sles:15:sp4",
 					"cpe:/o:suse:sles:15:sp5",
 					"cpe:/o:suse:sles_sap:15:sp2",
 					"cpe:/o:suse:sles_sap:15:sp3",
 					"cpe:/o:suse:sles_sap:15:sp4",
-					"cpe:/o:suse:sles_sap:15:sp5",
-					"cpe:/o:suse:suse-manager-proxy:4.1",
-					"cpe:/o:suse:suse-manager-proxy:4.2",
-					"cpe:/o:suse:suse-manager-proxy:4.3",
-					"cpe:/o:suse:suse-manager-retail-branch-server:4.1",
-					"cpe:/o:suse:suse-manager-retail-branch-server:4.2",
-					"cpe:/o:suse:suse-manager-retail-branch-server:4.3",
-					"cpe:/o:suse:suse-manager-server:4.1",
-					"cpe:/o:suse:suse-manager-server:4.2",
-					"cpe:/o:suse:suse-manager-server:4.3"
+					"cpe:/o:suse:sles_sap:15:sp5"
 				]
 			}
 		}
@@ -231,114 +187,6 @@
 	"criteria": {
 		"operator": "OR",
 		"criterias": [
-			{
-				"operator": "AND",
-				"criterias": [
-					{
-						"operator": "OR",
-						"criterions": [
-							{
-								"test_ref": "oval:org.opensuse.security:tst:2009302786",
-								"comment": "SUSE Enterprise Storage 7 is installed"
-							},
-							{
-								"test_ref": "oval:org.opensuse.security:tst:2009681000",
-								"comment": "SUSE Enterprise Storage 7.1 is installed"
-							},
-							{
-								"test_ref": "oval:org.opensuse.security:tst:2009479728",
-								"comment": "SUSE Linux Enterprise High Performance Computing 15 SP2 is installed"
-							},
-							{
-								"test_ref": "oval:org.opensuse.security:tst:2009669877",
-								"comment": "SUSE Linux Enterprise High Performance Computing 15 SP3 is installed"
-							},
-							{
-								"test_ref": "oval:org.opensuse.security:tst:2009669926",
-								"comment": "SUSE Linux Enterprise High Performance Computing 15 SP4 is installed"
-							},
-							{
-								"test_ref": "oval:org.opensuse.security:tst:2009287160",
-								"comment": "SUSE Linux Enterprise Module for Public Cloud 15 SP2 is installed"
-							},
-							{
-								"test_ref": "oval:org.opensuse.security:tst:2009351817",
-								"comment": "SUSE Linux Enterprise Module for Public Cloud 15 SP3 is installed"
-							},
-							{
-								"test_ref": "oval:org.opensuse.security:tst:2009677250",
-								"comment": "SUSE Linux Enterprise Module for Public Cloud 15 SP4 is installed"
-							},
-							{
-								"test_ref": "oval:org.opensuse.security:tst:2009303870",
-								"comment": "SUSE Linux Enterprise Server 15 SP2 is installed"
-							},
-							{
-								"test_ref": "oval:org.opensuse.security:tst:2009476340",
-								"comment": "SUSE Linux Enterprise Server 15 SP3 is installed"
-							},
-							{
-								"test_ref": "oval:org.opensuse.security:tst:2009669927",
-								"comment": "SUSE Linux Enterprise Server 15 SP4 is installed"
-							},
-							{
-								"test_ref": "oval:org.opensuse.security:tst:2009659637",
-								"comment": "SUSE Linux Enterprise Server for SAP Applications 15 SP2 is installed"
-							},
-							{
-								"test_ref": "oval:org.opensuse.security:tst:2009669878",
-								"comment": "SUSE Linux Enterprise Server for SAP Applications 15 SP3 is installed"
-							},
-							{
-								"test_ref": "oval:org.opensuse.security:tst:2009669928",
-								"comment": "SUSE Linux Enterprise Server for SAP Applications 15 SP4 is installed"
-							},
-							{
-								"test_ref": "oval:org.opensuse.security:tst:2009302537",
-								"comment": "SUSE Manager Proxy 4.1 is installed"
-							},
-							{
-								"test_ref": "oval:org.opensuse.security:tst:2009669879",
-								"comment": "SUSE Manager Proxy 4.2 is installed"
-							},
-							{
-								"test_ref": "oval:org.opensuse.security:tst:2009681297",
-								"comment": "SUSE Manager Proxy 4.3 is installed"
-							},
-							{
-								"test_ref": "oval:org.opensuse.security:tst:2009346072",
-								"comment": "SUSE Manager Retail Branch Server 4.1 is installed"
-							},
-							{
-								"test_ref": "oval:org.opensuse.security:tst:2009677266",
-								"comment": "SUSE Manager Retail Branch Server 4.2 is installed"
-							},
-							{
-								"test_ref": "oval:org.opensuse.security:tst:2009681298",
-								"comment": "SUSE Manager Retail Branch Server 4.3 is installed"
-							},
-							{
-								"test_ref": "oval:org.opensuse.security:tst:2009302605",
-								"comment": "SUSE Manager Server 4.1 is installed"
-							},
-							{
-								"test_ref": "oval:org.opensuse.security:tst:2009669880",
-								"comment": "SUSE Manager Server 4.2 is installed"
-							},
-							{
-								"test_ref": "oval:org.opensuse.security:tst:2009681299",
-								"comment": "SUSE Manager Server 4.3 is installed"
-							}
-						]
-					}
-				],
-				"criterions": [
-					{
-						"test_ref": "oval:org.opensuse.security:tst:2009340305",
-						"comment": "kernel-source-azure is not affected"
-					}
-				]
-			},
 			{
 				"operator": "AND",
 				"criterias": [
@@ -464,61 +312,6 @@
 					{
 						"test_ref": "oval:org.opensuse.security:tst:2009869861",
 						"comment": "kernel-default-extra-6.4.0-150600.23.7.3 is installed"
-					}
-				]
-			},
-			{
-				"operator": "AND",
-				"criterias": [
-					{
-						"operator": "OR",
-						"criterions": [
-							{
-								"test_ref": "oval:org.opensuse.security:tst:2009341508",
-								"comment": "SUSE Linux Enterprise Server 15 SP1-LTSS is installed"
-							},
-							{
-								"test_ref": "oval:org.opensuse.security:tst:2009302033",
-								"comment": "SUSE Linux Enterprise Server 15-LTSS is installed"
-							}
-						]
-					},
-					{
-						"operator": "OR",
-						"criterions": [
-							{
-								"test_ref": "oval:org.opensuse.security:tst:2009334017",
-								"comment": "kernel-default is not affected"
-							},
-							{
-								"test_ref": "oval:org.opensuse.security:tst:2009335425",
-								"comment": "kernel-default-base is not affected"
-							},
-							{
-								"test_ref": "oval:org.opensuse.security:tst:2009335423",
-								"comment": "kernel-default-devel is not affected"
-							},
-							{
-								"test_ref": "oval:org.opensuse.security:tst:2009335426",
-								"comment": "kernel-default-man is not affected"
-							},
-							{
-								"test_ref": "oval:org.opensuse.security:tst:2009338037",
-								"comment": "reiserfs-kmp-default is not affected"
-							},
-							{
-								"test_ref": "oval:org.opensuse.security:tst:2009334791",
-								"comment": "kernel-devel is not affected"
-							},
-							{
-								"test_ref": "oval:org.opensuse.security:tst:2009334792",
-								"comment": "kernel-macros is not affected"
-							},
-							{
-								"test_ref": "oval:org.opensuse.security:tst:2009333928",
-								"comment": "kernel-source is not affected"
-							}
-						]
 					}
 				]
 			},
@@ -905,10 +698,6 @@
 							{
 								"test_ref": "oval:org.opensuse.security:tst:2009869044",
 								"comment": "kernel-syms-5.14.21-150500.55.68.1 is installed"
-							},
-							{
-								"test_ref": "oval:org.opensuse.security:tst:2009334017",
-								"comment": "kernel-default is not affected"
 							}
 						]
 					}

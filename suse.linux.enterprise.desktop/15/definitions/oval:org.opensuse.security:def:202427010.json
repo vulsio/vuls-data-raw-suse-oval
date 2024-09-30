@@ -7,11 +7,17 @@
 		"affected": {
 			"family": "unix",
 			"platform": [
+				"SUSE Linux Enterprise Desktop 15 SP5",
 				"SUSE Linux Enterprise Desktop 15 SP6",
+				"SUSE Linux Enterprise High Performance Computing 15 SP5",
 				"SUSE Linux Enterprise High Performance Computing 15 SP6",
+				"SUSE Linux Enterprise Module for Basesystem 15 SP5",
 				"SUSE Linux Enterprise Module for Basesystem 15 SP6",
+				"SUSE Linux Enterprise Module for Development Tools 15 SP5",
 				"SUSE Linux Enterprise Module for Development Tools 15 SP6",
+				"SUSE Linux Enterprise Server 15 SP5",
 				"SUSE Linux Enterprise Server 15 SP6",
+				"SUSE Linux Enterprise Server for SAP Applications 15 SP5",
 				"SUSE Linux Enterprise Server for SAP Applications 15 SP6"
 			]
 		},
@@ -50,6 +56,11 @@
 				"ref_id": "SUSE-SU-2024:3383-1",
 				"ref_url": "https://lists.suse.com/pipermail/sle-security-updates/2024-September/019497.html",
 				"source": "SUSE-SU"
+			},
+			{
+				"ref_id": "SUSE-SU-2024:3483-1",
+				"ref_url": "https://lists.suse.com/pipermail/sle-updates/2024-September/037089.html",
+				"source": "SUSE-SU"
 			}
 		],
 		"description": "\n    In the Linux kernel, the following vulnerability has been resolved:\n\nnet/sched: Fix mirred deadlock on device recursion\n\nWhen the mirred action is used on a classful egress qdisc and a packet is\nmirrored or redirected to self we hit a qdisc lock deadlock.\nSee trace below.\n\n[..... other info removed for brevity....]\n[   82.890906]\n[   82.890906] ============================================\n[   82.890906] WARNING: possible recursive locking detected\n[   82.890906] 6.8.0-05205-g77fadd89fe2d-dirty #213 Tainted: G        W\n[   82.890906] --------------------------------------------\n[   82.890906] ping/418 is trying to acquire lock:\n[   82.890906] ffff888006994110 (&sch->q.lock){+.-.}-{3:3}, at:\n__dev_queue_xmit+0x1778/0x3550\n[   82.890906]\n[   82.890906] but task is already holding lock:\n[   82.890906] ffff888006994110 (&sch->q.lock){+.-.}-{3:3}, at:\n__dev_queue_xmit+0x1778/0x3550\n[   82.890906]\n[   82.890906] other info that might help us debug this:\n[   82.890906]  Possible unsafe locking scenario:\n[   82.890906]\n[   82.890906]        CPU0\n[   82.890906]        ----\n[   82.890906]   lock(&sch->q.lock);\n[   82.890906]   lock(&sch->q.lock);\n[   82.890906]\n[   82.890906]  *** DEADLOCK ***\n[   82.890906]\n[..... other info removed for brevity....]\n\nExample setup (eth0->eth0) to recreate\ntc qdisc add dev eth0 root handle 1: htb default 30\ntc filter add dev eth0 handle 1: protocol ip prio 2 matchall \\\n     action mirred egress redirect dev eth0\n\nAnother example(eth0->eth1->eth0) to recreate\ntc qdisc add dev eth0 root handle 1: htb default 30\ntc filter add dev eth0 handle 1: protocol ip prio 2 matchall \\\n     action mirred egress redirect dev eth1\n\ntc qdisc add dev eth1 root handle 1: htb default 30\ntc filter add dev eth1 handle 1: protocol ip prio 2 matchall \\\n     action mirred egress redirect dev eth0\n\nWe fix this by adding an owner field (CPU id) to struct Qdisc set after\nroot qdisc is entered. When the softirq enters it a second time, if the\nqdisc owner is the same CPU, the packet is dropped to break the loop.\n    ",
@@ -78,12 +89,18 @@
 				"date": "2024-09-24"
 			},
 			"updated": {
-				"date": "2024-09-24"
+				"date": "2024-09-30"
 			},
 			"affected_cpe_list": {
 				"cpe": [
+					"cpe:/o:suse:sle-module-basesystem:15:sp5",
 					"cpe:/o:suse:sle-module-basesystem:15:sp6",
-					"cpe:/o:suse:sle-module-development-tools:15:sp6"
+					"cpe:/o:suse:sle-module-development-tools:15:sp5",
+					"cpe:/o:suse:sle-module-development-tools:15:sp6",
+					"cpe:/o:suse:sle_hpc:15:sp5",
+					"cpe:/o:suse:sled:15:sp5",
+					"cpe:/o:suse:sles:15:sp5",
+					"cpe:/o:suse:sles_sap:15:sp5"
 				]
 			}
 		}
@@ -204,6 +221,124 @@
 							{
 								"test_ref": "oval:org.opensuse.security:tst:2009944188",
 								"comment": "kernel-syms-6.4.0-150600.23.22.1 is installed"
+							}
+						]
+					}
+				]
+			},
+			{
+				"operator": "AND",
+				"criterias": [
+					{
+						"operator": "OR",
+						"criterions": [
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009759898",
+								"comment": "SUSE Linux Enterprise Desktop 15 SP5 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009759899",
+								"comment": "SUSE Linux Enterprise High Performance Computing 15 SP5 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009759900",
+								"comment": "SUSE Linux Enterprise Module for Basesystem 15 SP5 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009759901",
+								"comment": "SUSE Linux Enterprise Server 15 SP5 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009759902",
+								"comment": "SUSE Linux Enterprise Server for SAP Applications 15 SP5 is installed"
+							}
+						]
+					},
+					{
+						"operator": "OR",
+						"criterions": [
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009945059",
+								"comment": "kernel-64kb-5.14.21-150500.55.80.2 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009945060",
+								"comment": "kernel-64kb-devel-5.14.21-150500.55.80.2 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009945068",
+								"comment": "kernel-default-5.14.21-150500.55.80.2 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009945069",
+								"comment": "kernel-default-base-5.14.21-150500.55.80.2.150500.6.35.6 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009945071",
+								"comment": "kernel-default-devel-5.14.21-150500.55.80.2 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009945077",
+								"comment": "kernel-devel-5.14.21-150500.55.80.2 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009945084",
+								"comment": "kernel-macros-5.14.21-150500.55.80.2 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009945090",
+								"comment": "kernel-zfcpdump-5.14.21-150500.55.80.2 is installed"
+							}
+						]
+					}
+				]
+			},
+			{
+				"operator": "AND",
+				"criterias": [
+					{
+						"operator": "OR",
+						"criterions": [
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009759898",
+								"comment": "SUSE Linux Enterprise Desktop 15 SP5 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009759899",
+								"comment": "SUSE Linux Enterprise High Performance Computing 15 SP5 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009760583",
+								"comment": "SUSE Linux Enterprise Module for Development Tools 15 SP5 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009759901",
+								"comment": "SUSE Linux Enterprise Server 15 SP5 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009759902",
+								"comment": "SUSE Linux Enterprise Server for SAP Applications 15 SP5 is installed"
+							}
+						]
+					},
+					{
+						"operator": "OR",
+						"criterions": [
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009945078",
+								"comment": "kernel-docs-5.14.21-150500.55.80.2 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009945085",
+								"comment": "kernel-obs-build-5.14.21-150500.55.80.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009945087",
+								"comment": "kernel-source-5.14.21-150500.55.80.2 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009945089",
+								"comment": "kernel-syms-5.14.21-150500.55.80.1 is installed"
 							}
 						]
 					}
