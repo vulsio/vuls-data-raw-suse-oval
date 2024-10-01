@@ -11,6 +11,7 @@
 				"SUSE Linux Enterprise Desktop 15 SP6",
 				"SUSE Linux Enterprise High Performance Computing 15 SP5",
 				"SUSE Linux Enterprise High Performance Computing 15 SP6",
+				"SUSE Linux Enterprise Live Patching 15 SP2",
 				"SUSE Linux Enterprise Live Patching 15 SP3",
 				"SUSE Linux Enterprise Live Patching 15 SP4",
 				"SUSE Linux Enterprise Live Patching 15 SP5",
@@ -23,11 +24,13 @@
 				"SUSE Linux Enterprise Module for Legacy 15 SP6",
 				"SUSE Linux Enterprise Module for Public Cloud 15 SP5",
 				"SUSE Linux Enterprise Module for Public Cloud 15 SP6",
+				"SUSE Linux Enterprise Server 15 SP2-LTSS",
 				"SUSE Linux Enterprise Server 15 SP3-LTSS",
 				"SUSE Linux Enterprise Server 15 SP4-LTSS",
 				"SUSE Linux Enterprise Server 15 SP4-TERADATA",
 				"SUSE Linux Enterprise Server 15 SP5",
 				"SUSE Linux Enterprise Server 15 SP6",
+				"SUSE Linux Enterprise Server for SAP Applications 15 SP2",
 				"SUSE Linux Enterprise Server for SAP Applications 15 SP3",
 				"SUSE Linux Enterprise Server for SAP Applications 15 SP4",
 				"SUSE Linux Enterprise Server for SAP Applications 15 SP5",
@@ -116,6 +119,11 @@
 				"ref_id": "SUSE-SU-2024:3483-1",
 				"ref_url": "https://lists.suse.com/pipermail/sle-updates/2024-September/037089.html",
 				"source": "SUSE-SU"
+			},
+			{
+				"ref_id": "SUSE-SU-2024:3499-1",
+				"ref_url": "https://lists.suse.com/pipermail/sle-updates/2024-September/037117.html",
+				"source": "SUSE-SU"
 			}
 		],
 		"description": "\n    In the Linux kernel, the following vulnerability has been resolved:\n\nexec: Fix ToCToU between perm check and set-uid/gid usage\n\nWhen opening a file for exec via do_filp_open(), permission checking is\ndone against the file's metadata at that moment, and on success, a file\npointer is passed back. Much later in the execve() code path, the file\nmetadata (specifically mode, uid, and gid) is used to determine if/how\nto set the uid and gid. However, those values may have changed since the\npermissions check, meaning the execution may gain unintended privileges.\n\nFor example, if a file could change permissions from executable and not\nset-id:\n\n---------x 1 root root 16048 Aug  7 13:16 target\n\nto set-id and non-executable:\n\n---S------ 1 root root 16048 Aug  7 13:16 target\n\nit is possible to gain root privileges when execution should have been\ndisallowed.\n\nWhile this race condition is rare in real-world scenarios, it has been\nobserved (and proven exploitable) when package managers are updating\nthe setuid bits of installed programs. Such files start with being\nworld-executable but then are adjusted to be group-exec with a set-uid\nbit. For example, \"chmod o-x,u+s target\" makes \"target\" executable only\nby uid \"root\" and gid \"cdrom\", while also becoming setuid-root:\n\n-rwxr-xr-x 1 root cdrom 16048 Aug  7 13:16 target\n\nbecomes:\n\n-rwsr-xr-- 1 root cdrom 16048 Aug  7 13:16 target\n\nBut racing the chmod means users without group \"cdrom\" membership can\nget the permission to execute \"target\" just before the chmod, and when\nthe chmod finishes, the exec reaches brpm_fill_uid(), and performs the\nsetuid to root, violating the expressed authorization of \"only cdrom\ngroup members can setuid to root\".\n\nRe-check that we still have execute permissions in case the metadata\nhas changed. It would be better to keep a copy from the perm-check time,\nbut until we can do that refactoring, the least-bad option is to do a\nfull inode_permission() call (under inode lock). It is understood that\nthis is safe against dead-locks, but hardly optimal.\n    ",
@@ -150,7 +158,7 @@
 				"date": "2024-09-11"
 			},
 			"updated": {
-				"date": "2024-09-30"
+				"date": "2024-10-01"
 			},
 			"affected_cpe_list": {
 				"cpe": [
@@ -160,6 +168,7 @@
 					"cpe:/o:suse:sle-module-development-tools:15:sp6",
 					"cpe:/o:suse:sle-module-legacy:15:sp5",
 					"cpe:/o:suse:sle-module-legacy:15:sp6",
+					"cpe:/o:suse:sle-module-live-patching:15:sp2",
 					"cpe:/o:suse:sle-module-live-patching:15:sp3",
 					"cpe:/o:suse:sle-module-live-patching:15:sp4",
 					"cpe:/o:suse:sle-module-live-patching:15:sp5",
@@ -170,9 +179,11 @@
 					"cpe:/o:suse:sle-we:15:sp6",
 					"cpe:/o:suse:sle_hpc:15:sp5",
 					"cpe:/o:suse:sled:15:sp5",
+					"cpe:/o:suse:sles-ltss:15:sp2",
 					"cpe:/o:suse:sles-ltss:15:sp3",
 					"cpe:/o:suse:sles-ltss:15:sp4",
 					"cpe:/o:suse:sles:15:sp5",
+					"cpe:/o:suse:sles_sap:15:sp2",
 					"cpe:/o:suse:sles_sap:15:sp3",
 					"cpe:/o:suse:sles_sap:15:sp4",
 					"cpe:/o:suse:sles_sap:15:sp5"
@@ -1086,6 +1097,162 @@
 					{
 						"test_ref": "oval:org.opensuse.security:tst:2009764853",
 						"comment": "SUSE Linux Enterprise Live Patching 15 SP5 is installed"
+					}
+				]
+			},
+			{
+				"operator": "AND",
+				"criterias": [
+					{
+						"operator": "OR",
+						"criterions": [
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009945313",
+								"comment": "kernel-default-livepatch-5.3.18-150200.24.203.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009945314",
+								"comment": "kernel-default-livepatch-devel-5.3.18-150200.24.203.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009945315",
+								"comment": "kernel-livepatch-5_3_18-150200_24_203-default-1-150200.5.3.1 is installed"
+							}
+						]
+					}
+				],
+				"criterions": [
+					{
+						"test_ref": "oval:org.opensuse.security:tst:2009288462",
+						"comment": "SUSE Linux Enterprise Live Patching 15 SP2 is installed"
+					}
+				]
+			},
+			{
+				"operator": "AND",
+				"criterias": [
+					{
+						"operator": "OR",
+						"criterions": [
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009945331",
+								"comment": "kernel-default-5.3.18-150200.24.203.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009945332",
+								"comment": "kernel-default-base-5.3.18-150200.24.203.1.150200.9.105.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009945333",
+								"comment": "kernel-default-devel-5.3.18-150200.24.203.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009945323",
+								"comment": "kernel-devel-5.3.18-150200.24.203.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009945324",
+								"comment": "kernel-docs-5.3.18-150200.24.203.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009945325",
+								"comment": "kernel-macros-5.3.18-150200.24.203.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009945334",
+								"comment": "kernel-obs-build-5.3.18-150200.24.203.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009945327",
+								"comment": "kernel-preempt-5.3.18-150200.24.203.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009945328",
+								"comment": "kernel-preempt-devel-5.3.18-150200.24.203.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009945329",
+								"comment": "kernel-source-5.3.18-150200.24.203.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009945335",
+								"comment": "kernel-syms-5.3.18-150200.24.203.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009945336",
+								"comment": "reiserfs-kmp-default-5.3.18-150200.24.203.1 is installed"
+							}
+						]
+					}
+				],
+				"criterions": [
+					{
+						"test_ref": "oval:org.opensuse.security:tst:2009660213",
+						"comment": "SUSE Linux Enterprise Server 15 SP2-LTSS is installed"
+					}
+				]
+			},
+			{
+				"operator": "AND",
+				"criterias": [
+					{
+						"operator": "OR",
+						"criterions": [
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009945337",
+								"comment": "kernel-default-5.3.18-150200.24.203.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009945338",
+								"comment": "kernel-default-base-5.3.18-150200.24.203.1.150200.9.105.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009945339",
+								"comment": "kernel-default-devel-5.3.18-150200.24.203.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009945323",
+								"comment": "kernel-devel-5.3.18-150200.24.203.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009945324",
+								"comment": "kernel-docs-5.3.18-150200.24.203.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009945325",
+								"comment": "kernel-macros-5.3.18-150200.24.203.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009945340",
+								"comment": "kernel-obs-build-5.3.18-150200.24.203.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009945341",
+								"comment": "kernel-preempt-5.3.18-150200.24.203.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009945342",
+								"comment": "kernel-preempt-devel-5.3.18-150200.24.203.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009945329",
+								"comment": "kernel-source-5.3.18-150200.24.203.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009945343",
+								"comment": "kernel-syms-5.3.18-150200.24.203.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009945344",
+								"comment": "reiserfs-kmp-default-5.3.18-150200.24.203.1 is installed"
+							}
+						]
+					}
+				],
+				"criterions": [
+					{
+						"test_ref": "oval:org.opensuse.security:tst:2009659637",
+						"comment": "SUSE Linux Enterprise Server for SAP Applications 15 SP2 is installed"
 					}
 				]
 			}

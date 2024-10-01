@@ -9,6 +9,7 @@
 			"platform": [
 				"SUSE Linux Enterprise Desktop 15 SP5",
 				"SUSE Linux Enterprise High Performance Computing 15 SP5",
+				"SUSE Linux Enterprise Live Patching 15 SP2",
 				"SUSE Linux Enterprise Live Patching 15 SP3",
 				"SUSE Linux Enterprise Live Patching 15 SP4",
 				"SUSE Linux Enterprise Live Patching 15 SP5",
@@ -16,10 +17,12 @@
 				"SUSE Linux Enterprise Module for Development Tools 15 SP5",
 				"SUSE Linux Enterprise Module for Legacy 15 SP5",
 				"SUSE Linux Enterprise Module for Public Cloud 15 SP5",
+				"SUSE Linux Enterprise Server 15 SP2-LTSS",
 				"SUSE Linux Enterprise Server 15 SP3-LTSS",
 				"SUSE Linux Enterprise Server 15 SP4-LTSS",
 				"SUSE Linux Enterprise Server 15 SP4-TERADATA",
 				"SUSE Linux Enterprise Server 15 SP5",
+				"SUSE Linux Enterprise Server for SAP Applications 15 SP2",
 				"SUSE Linux Enterprise Server for SAP Applications 15 SP3",
 				"SUSE Linux Enterprise Server for SAP Applications 15 SP4",
 				"SUSE Linux Enterprise Server for SAP Applications 15 SP5",
@@ -71,6 +74,11 @@
 				"ref_id": "SUSE-SU-2024:3249-1",
 				"ref_url": "https://lists.suse.com/pipermail/sle-updates/2024-September/036898.html",
 				"source": "SUSE-SU"
+			},
+			{
+				"ref_id": "SUSE-SU-2024:3499-1",
+				"ref_url": "https://lists.suse.com/pipermail/sle-updates/2024-September/037117.html",
+				"source": "SUSE-SU"
 			}
 		],
 		"description": "\n    In the Linux kernel, the following vulnerability has been resolved:\n\nfs/proc: task_mmu.c: don't read mapcount for migration entry\n\nThe syzbot reported the below BUG:\n\n  kernel BUG at include/linux/page-flags.h:785!\n  invalid opcode: 0000 [#1] PREEMPT SMP KASAN\n  CPU: 1 PID: 4392 Comm: syz-executor560 Not tainted 5.16.0-rc6-syzkaller #0\n  Hardware name: Google Google Compute Engine/Google Compute Engine, BIOS Google 01/01/2011\n  RIP: 0010:PageDoubleMap include/linux/page-flags.h:785 [inline]\n  RIP: 0010:__page_mapcount+0x2d2/0x350 mm/util.c:744\n  Call Trace:\n    page_mapcount include/linux/mm.h:837 [inline]\n    smaps_account+0x470/0xb10 fs/proc/task_mmu.c:466\n    smaps_pte_entry fs/proc/task_mmu.c:538 [inline]\n    smaps_pte_range+0x611/0x1250 fs/proc/task_mmu.c:601\n    walk_pmd_range mm/pagewalk.c:128 [inline]\n    walk_pud_range mm/pagewalk.c:205 [inline]\n    walk_p4d_range mm/pagewalk.c:240 [inline]\n    walk_pgd_range mm/pagewalk.c:277 [inline]\n    __walk_page_range+0xe23/0x1ea0 mm/pagewalk.c:379\n    walk_page_vma+0x277/0x350 mm/pagewalk.c:530\n    smap_gather_stats.part.0+0x148/0x260 fs/proc/task_mmu.c:768\n    smap_gather_stats fs/proc/task_mmu.c:741 [inline]\n    show_smap+0xc6/0x440 fs/proc/task_mmu.c:822\n    seq_read_iter+0xbb0/0x1240 fs/seq_file.c:272\n    seq_read+0x3e0/0x5b0 fs/seq_file.c:162\n    vfs_read+0x1b5/0x600 fs/read_write.c:479\n    ksys_read+0x12d/0x250 fs/read_write.c:619\n    do_syscall_x64 arch/x86/entry/common.c:50 [inline]\n    do_syscall_64+0x35/0xb0 arch/x86/entry/common.c:80\n    entry_SYSCALL_64_after_hwframe+0x44/0xae\n\nThe reproducer was trying to read /proc/$PID/smaps when calling\nMADV_FREE at the mean time.  MADV_FREE may split THPs if it is called\nfor partial THP.  It may trigger the below race:\n\n           CPU A                         CPU B\n           -----                         -----\n  smaps walk:                      MADV_FREE:\n  page_mapcount()\n    PageCompound()\n                                   split_huge_page()\n    page = compound_head(page)\n    PageDoubleMap(page)\n\nWhen calling PageDoubleMap() this page is not a tail page of THP anymore\nso the BUG is triggered.\n\nThis could be fixed by elevated refcount of the page before calling\nmapcount, but that would prevent it from counting migration entries, and\nit seems overkilling because the race just could happen when PMD is\nsplit so all PTE entries of tail pages are actually migration entries,\nand smaps_account() does treat migration entries as mapcount == 1 as\nKirill pointed out.\n\nAdd a new parameter for smaps_account() to tell this entry is migration\nentry then skip calling page_mapcount().  Don't skip getting mapcount\nfor device private entries since they do track references with mapcount.\n\nPagemap also has the similar issue although it was not reported.  Fixed\nit as well.\n\n[shy828301@gmail.com: v4]\n  Link: https://lkml.kernel.org/r/20220203182641.824731-1-shy828301@gmail.com\n[nathan@kernel.org: avoid unused variable warning in pagemap_pmd_range()]\n  Link: https://lkml.kernel.org/r/20220207171049.1102239-1-nathan@kernel.org\n    ",
@@ -99,13 +107,14 @@
 				"date": "2024-08-14"
 			},
 			"updated": {
-				"date": "2024-09-17"
+				"date": "2024-10-01"
 			},
 			"affected_cpe_list": {
 				"cpe": [
 					"cpe:/o:suse:sle-module-basesystem:15:sp5",
 					"cpe:/o:suse:sle-module-development-tools:15:sp5",
 					"cpe:/o:suse:sle-module-legacy:15:sp5",
+					"cpe:/o:suse:sle-module-live-patching:15:sp2",
 					"cpe:/o:suse:sle-module-live-patching:15:sp3",
 					"cpe:/o:suse:sle-module-live-patching:15:sp4",
 					"cpe:/o:suse:sle-module-live-patching:15:sp5",
@@ -113,9 +122,11 @@
 					"cpe:/o:suse:sle-we:15:sp5",
 					"cpe:/o:suse:sle_hpc:15:sp5",
 					"cpe:/o:suse:sled:15:sp5",
+					"cpe:/o:suse:sles-ltss:15:sp2",
 					"cpe:/o:suse:sles-ltss:15:sp3",
 					"cpe:/o:suse:sles-ltss:15:sp4",
 					"cpe:/o:suse:sles:15:sp5",
+					"cpe:/o:suse:sles_sap:15:sp2",
 					"cpe:/o:suse:sles_sap:15:sp3",
 					"cpe:/o:suse:sles_sap:15:sp4",
 					"cpe:/o:suse:sles_sap:15:sp5"
@@ -764,6 +775,162 @@
 					{
 						"test_ref": "oval:org.opensuse.security:tst:2009669878",
 						"comment": "SUSE Linux Enterprise Server for SAP Applications 15 SP3 is installed"
+					}
+				]
+			},
+			{
+				"operator": "AND",
+				"criterias": [
+					{
+						"operator": "OR",
+						"criterions": [
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009945313",
+								"comment": "kernel-default-livepatch-5.3.18-150200.24.203.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009945314",
+								"comment": "kernel-default-livepatch-devel-5.3.18-150200.24.203.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009945315",
+								"comment": "kernel-livepatch-5_3_18-150200_24_203-default-1-150200.5.3.1 is installed"
+							}
+						]
+					}
+				],
+				"criterions": [
+					{
+						"test_ref": "oval:org.opensuse.security:tst:2009288462",
+						"comment": "SUSE Linux Enterprise Live Patching 15 SP2 is installed"
+					}
+				]
+			},
+			{
+				"operator": "AND",
+				"criterias": [
+					{
+						"operator": "OR",
+						"criterions": [
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009945331",
+								"comment": "kernel-default-5.3.18-150200.24.203.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009945332",
+								"comment": "kernel-default-base-5.3.18-150200.24.203.1.150200.9.105.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009945333",
+								"comment": "kernel-default-devel-5.3.18-150200.24.203.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009945323",
+								"comment": "kernel-devel-5.3.18-150200.24.203.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009945324",
+								"comment": "kernel-docs-5.3.18-150200.24.203.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009945325",
+								"comment": "kernel-macros-5.3.18-150200.24.203.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009945334",
+								"comment": "kernel-obs-build-5.3.18-150200.24.203.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009945327",
+								"comment": "kernel-preempt-5.3.18-150200.24.203.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009945328",
+								"comment": "kernel-preempt-devel-5.3.18-150200.24.203.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009945329",
+								"comment": "kernel-source-5.3.18-150200.24.203.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009945335",
+								"comment": "kernel-syms-5.3.18-150200.24.203.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009945336",
+								"comment": "reiserfs-kmp-default-5.3.18-150200.24.203.1 is installed"
+							}
+						]
+					}
+				],
+				"criterions": [
+					{
+						"test_ref": "oval:org.opensuse.security:tst:2009660213",
+						"comment": "SUSE Linux Enterprise Server 15 SP2-LTSS is installed"
+					}
+				]
+			},
+			{
+				"operator": "AND",
+				"criterias": [
+					{
+						"operator": "OR",
+						"criterions": [
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009945337",
+								"comment": "kernel-default-5.3.18-150200.24.203.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009945338",
+								"comment": "kernel-default-base-5.3.18-150200.24.203.1.150200.9.105.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009945339",
+								"comment": "kernel-default-devel-5.3.18-150200.24.203.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009945323",
+								"comment": "kernel-devel-5.3.18-150200.24.203.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009945324",
+								"comment": "kernel-docs-5.3.18-150200.24.203.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009945325",
+								"comment": "kernel-macros-5.3.18-150200.24.203.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009945340",
+								"comment": "kernel-obs-build-5.3.18-150200.24.203.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009945341",
+								"comment": "kernel-preempt-5.3.18-150200.24.203.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009945342",
+								"comment": "kernel-preempt-devel-5.3.18-150200.24.203.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009945329",
+								"comment": "kernel-source-5.3.18-150200.24.203.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009945343",
+								"comment": "kernel-syms-5.3.18-150200.24.203.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009945344",
+								"comment": "reiserfs-kmp-default-5.3.18-150200.24.203.1 is installed"
+							}
+						]
+					}
+				],
+				"criterions": [
+					{
+						"test_ref": "oval:org.opensuse.security:tst:2009659637",
+						"comment": "SUSE Linux Enterprise Server for SAP Applications 15 SP2 is installed"
 					}
 				]
 			}

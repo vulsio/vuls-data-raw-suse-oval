@@ -11,6 +11,7 @@
 				"SUSE Linux Enterprise Desktop 15 SP6",
 				"SUSE Linux Enterprise High Performance Computing 15 SP5",
 				"SUSE Linux Enterprise High Performance Computing 15 SP6",
+				"SUSE Linux Enterprise Live Patching 15 SP2",
 				"SUSE Linux Enterprise Live Patching 15 SP3",
 				"SUSE Linux Enterprise Live Patching 15 SP4",
 				"SUSE Linux Enterprise Live Patching 15 SP5",
@@ -23,12 +24,14 @@
 				"SUSE Linux Enterprise Module for Legacy 15 SP6",
 				"SUSE Linux Enterprise Module for Public Cloud 15 SP5",
 				"SUSE Linux Enterprise Module for Public Cloud 15 SP6",
+				"SUSE Linux Enterprise Server 15 SP2-LTSS",
 				"SUSE Linux Enterprise Server 15 SP3-LTSS",
 				"SUSE Linux Enterprise Server 15 SP4-LTSS",
 				"SUSE Linux Enterprise Server 15 SP4-TERADATA",
 				"SUSE Linux Enterprise Server 15 SP5",
 				"SUSE Linux Enterprise Server 15 SP6",
 				"SUSE Linux Enterprise Server 15-LTSS",
+				"SUSE Linux Enterprise Server for SAP Applications 15 SP2",
 				"SUSE Linux Enterprise Server for SAP Applications 15 SP3",
 				"SUSE Linux Enterprise Server for SAP Applications 15 SP4",
 				"SUSE Linux Enterprise Server for SAP Applications 15 SP5",
@@ -97,6 +100,11 @@
 				"ref_id": "SUSE-SU-2024:3249-1",
 				"ref_url": "https://lists.suse.com/pipermail/sle-updates/2024-September/036898.html",
 				"source": "SUSE-SU"
+			},
+			{
+				"ref_id": "SUSE-SU-2024:3499-1",
+				"ref_url": "https://lists.suse.com/pipermail/sle-updates/2024-September/037117.html",
+				"source": "SUSE-SU"
 			}
 		],
 		"description": "\n    In the Linux kernel, the following vulnerability has been resolved:\n\npadata: Fix refcnt handling in padata_free_shell()\n\nIn a high-load arm64 environment, the pcrypt_aead01 test in LTP can lead\nto system UAF (Use-After-Free) issues. Due to the lengthy analysis of\nthe pcrypt_aead01 function call, I'll describe the problem scenario\nusing a simplified model:\n\nSuppose there's a user of padata named `user_function` that adheres to\nthe padata requirement of calling `padata_free_shell` after `serial()`\nhas been invoked, as demonstrated in the following code:\n\n```c\nstruct request {\n    struct padata_priv padata;\n    struct completion *done;\n};\n\nvoid parallel(struct padata_priv *padata) {\n    do_something();\n}\n\nvoid serial(struct padata_priv *padata) {\n    struct request *request = container_of(padata,\n    \t\t\t\tstruct request,\n\t\t\t\tpadata);\n    complete(request->done);\n}\n\nvoid user_function() {\n    DECLARE_COMPLETION(done)\n    padata->parallel = parallel;\n    padata->serial = serial;\n    padata_do_parallel();\n    wait_for_completion(&done);\n    padata_free_shell();\n}\n```\n\nIn the corresponding padata.c file, there's the following code:\n\n```c\nstatic void padata_serial_worker(struct work_struct *serial_work) {\n    ...\n    cnt = 0;\n\n    while (!list_empty(&local_list)) {\n        ...\n        padata->serial(padata);\n        cnt++;\n    }\n\n    local_bh_enable();\n\n    if (refcount_sub_and_test(cnt, &pd->refcnt))\n        padata_free_pd(pd);\n}\n```\n\nBecause of the high system load and the accumulation of unexecuted\nsoftirq at this moment, `local_bh_enable()` in padata takes longer\nto execute than usual. Subsequently, when accessing `pd->refcnt`,\n`pd` has already been released by `padata_free_shell()`, resulting\nin a UAF issue with `pd->refcnt`.\n\nThe fix is straightforward: add `refcount_dec_and_test` before calling\n`padata_free_pd` in `padata_free_shell`.\n    ",
@@ -125,7 +133,7 @@
 				"date": "2024-05-30"
 			},
 			"updated": {
-				"date": "2024-09-17"
+				"date": "2024-10-01"
 			},
 			"affected_cpe_list": {
 				"cpe": [
@@ -135,6 +143,7 @@
 					"cpe:/o:suse:sle-module-development-tools:15:sp6",
 					"cpe:/o:suse:sle-module-legacy:15:sp5",
 					"cpe:/o:suse:sle-module-legacy:15:sp6",
+					"cpe:/o:suse:sle-module-live-patching:15:sp2",
 					"cpe:/o:suse:sle-module-live-patching:15:sp3",
 					"cpe:/o:suse:sle-module-live-patching:15:sp4",
 					"cpe:/o:suse:sle-module-live-patching:15:sp5",
@@ -146,9 +155,11 @@
 					"cpe:/o:suse:sle_hpc:15:sp5",
 					"cpe:/o:suse:sled:15:sp5",
 					"cpe:/o:suse:sles-ltss:15",
+					"cpe:/o:suse:sles-ltss:15:sp2",
 					"cpe:/o:suse:sles-ltss:15:sp3",
 					"cpe:/o:suse:sles-ltss:15:sp4",
 					"cpe:/o:suse:sles:15:sp5",
+					"cpe:/o:suse:sles_sap:15:sp2",
 					"cpe:/o:suse:sles_sap:15:sp3",
 					"cpe:/o:suse:sles_sap:15:sp4",
 					"cpe:/o:suse:sles_sap:15:sp5"
@@ -1110,6 +1121,162 @@
 					{
 						"test_ref": "oval:org.opensuse.security:tst:2009669878",
 						"comment": "SUSE Linux Enterprise Server for SAP Applications 15 SP3 is installed"
+					}
+				]
+			},
+			{
+				"operator": "AND",
+				"criterias": [
+					{
+						"operator": "OR",
+						"criterions": [
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009945313",
+								"comment": "kernel-default-livepatch-5.3.18-150200.24.203.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009945314",
+								"comment": "kernel-default-livepatch-devel-5.3.18-150200.24.203.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009945315",
+								"comment": "kernel-livepatch-5_3_18-150200_24_203-default-1-150200.5.3.1 is installed"
+							}
+						]
+					}
+				],
+				"criterions": [
+					{
+						"test_ref": "oval:org.opensuse.security:tst:2009288462",
+						"comment": "SUSE Linux Enterprise Live Patching 15 SP2 is installed"
+					}
+				]
+			},
+			{
+				"operator": "AND",
+				"criterias": [
+					{
+						"operator": "OR",
+						"criterions": [
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009945331",
+								"comment": "kernel-default-5.3.18-150200.24.203.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009945332",
+								"comment": "kernel-default-base-5.3.18-150200.24.203.1.150200.9.105.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009945333",
+								"comment": "kernel-default-devel-5.3.18-150200.24.203.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009945323",
+								"comment": "kernel-devel-5.3.18-150200.24.203.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009945324",
+								"comment": "kernel-docs-5.3.18-150200.24.203.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009945325",
+								"comment": "kernel-macros-5.3.18-150200.24.203.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009945334",
+								"comment": "kernel-obs-build-5.3.18-150200.24.203.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009945327",
+								"comment": "kernel-preempt-5.3.18-150200.24.203.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009945328",
+								"comment": "kernel-preempt-devel-5.3.18-150200.24.203.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009945329",
+								"comment": "kernel-source-5.3.18-150200.24.203.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009945335",
+								"comment": "kernel-syms-5.3.18-150200.24.203.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009945336",
+								"comment": "reiserfs-kmp-default-5.3.18-150200.24.203.1 is installed"
+							}
+						]
+					}
+				],
+				"criterions": [
+					{
+						"test_ref": "oval:org.opensuse.security:tst:2009660213",
+						"comment": "SUSE Linux Enterprise Server 15 SP2-LTSS is installed"
+					}
+				]
+			},
+			{
+				"operator": "AND",
+				"criterias": [
+					{
+						"operator": "OR",
+						"criterions": [
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009945337",
+								"comment": "kernel-default-5.3.18-150200.24.203.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009945338",
+								"comment": "kernel-default-base-5.3.18-150200.24.203.1.150200.9.105.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009945339",
+								"comment": "kernel-default-devel-5.3.18-150200.24.203.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009945323",
+								"comment": "kernel-devel-5.3.18-150200.24.203.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009945324",
+								"comment": "kernel-docs-5.3.18-150200.24.203.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009945325",
+								"comment": "kernel-macros-5.3.18-150200.24.203.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009945340",
+								"comment": "kernel-obs-build-5.3.18-150200.24.203.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009945341",
+								"comment": "kernel-preempt-5.3.18-150200.24.203.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009945342",
+								"comment": "kernel-preempt-devel-5.3.18-150200.24.203.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009945329",
+								"comment": "kernel-source-5.3.18-150200.24.203.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009945343",
+								"comment": "kernel-syms-5.3.18-150200.24.203.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009945344",
+								"comment": "reiserfs-kmp-default-5.3.18-150200.24.203.1 is installed"
+							}
+						]
+					}
+				],
+				"criterions": [
+					{
+						"test_ref": "oval:org.opensuse.security:tst:2009659637",
+						"comment": "SUSE Linux Enterprise Server for SAP Applications 15 SP2 is installed"
 					}
 				]
 			}

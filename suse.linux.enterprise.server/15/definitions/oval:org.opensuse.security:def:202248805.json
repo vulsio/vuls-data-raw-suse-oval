@@ -9,6 +9,7 @@
 			"platform": [
 				"SUSE Linux Enterprise Desktop 15 SP5",
 				"SUSE Linux Enterprise High Performance Computing 15 SP5",
+				"SUSE Linux Enterprise Live Patching 15 SP2",
 				"SUSE Linux Enterprise Live Patching 15 SP3",
 				"SUSE Linux Enterprise Live Patching 15 SP4",
 				"SUSE Linux Enterprise Live Patching 15 SP5",
@@ -16,10 +17,12 @@
 				"SUSE Linux Enterprise Module for Development Tools 15 SP5",
 				"SUSE Linux Enterprise Module for Legacy 15 SP5",
 				"SUSE Linux Enterprise Module for Public Cloud 15 SP5",
+				"SUSE Linux Enterprise Server 15 SP2-LTSS",
 				"SUSE Linux Enterprise Server 15 SP3-LTSS",
 				"SUSE Linux Enterprise Server 15 SP4-LTSS",
 				"SUSE Linux Enterprise Server 15 SP4-TERADATA",
 				"SUSE Linux Enterprise Server 15 SP5",
+				"SUSE Linux Enterprise Server for SAP Applications 15 SP2",
 				"SUSE Linux Enterprise Server for SAP Applications 15 SP3",
 				"SUSE Linux Enterprise Server for SAP Applications 15 SP4",
 				"SUSE Linux Enterprise Server for SAP Applications 15 SP5",
@@ -86,6 +89,11 @@
 				"ref_id": "SUSE-SU-2024:3249-1",
 				"ref_url": "https://lists.suse.com/pipermail/sle-updates/2024-September/036898.html",
 				"source": "SUSE-SU"
+			},
+			{
+				"ref_id": "SUSE-SU-2024:3499-1",
+				"ref_url": "https://lists.suse.com/pipermail/sle-updates/2024-September/037117.html",
+				"source": "SUSE-SU"
 			}
 		],
 		"description": "\n    In the Linux kernel, the following vulnerability has been resolved:\n\nnet: usb: ax88179_178a: Fix out-of-bounds accesses in RX fixup\n\nax88179_rx_fixup() contains several out-of-bounds accesses that can be\ntriggered by a malicious (or defective) USB device, in particular:\n\n - The metadata array (hdr_off..hdr_off+2*pkt_cnt) can be out of bounds,\n   causing OOB reads and (on big-endian systems) OOB endianness flips.\n - A packet can overlap the metadata array, causing a later OOB\n   endianness flip to corrupt data used by a cloned SKB that has already\n   been handed off into the network stack.\n - A packet SKB can be constructed whose tail is far beyond its end,\n   causing out-of-bounds heap data to be considered part of the SKB's\n   data.\n\nI have tested that this can be used by a malicious USB device to send a\nbogus ICMPv6 Echo Request and receive an ICMPv6 Echo Reply in response\nthat contains random kernel heap data.\nIt's probably also possible to get OOB writes from this on a\nlittle-endian system somehow - maybe by triggering skb_cow() via IP\noptions processing -, but I haven't tested that.\n    ",
@@ -114,13 +122,14 @@
 				"date": "2024-08-14"
 			},
 			"updated": {
-				"date": "2024-09-17"
+				"date": "2024-10-01"
 			},
 			"affected_cpe_list": {
 				"cpe": [
 					"cpe:/o:suse:sle-module-basesystem:15:sp5",
 					"cpe:/o:suse:sle-module-development-tools:15:sp5",
 					"cpe:/o:suse:sle-module-legacy:15:sp5",
+					"cpe:/o:suse:sle-module-live-patching:15:sp2",
 					"cpe:/o:suse:sle-module-live-patching:15:sp3",
 					"cpe:/o:suse:sle-module-live-patching:15:sp4",
 					"cpe:/o:suse:sle-module-live-patching:15:sp5",
@@ -128,9 +137,11 @@
 					"cpe:/o:suse:sle-we:15:sp5",
 					"cpe:/o:suse:sle_hpc:15:sp5",
 					"cpe:/o:suse:sled:15:sp5",
+					"cpe:/o:suse:sles-ltss:15:sp2",
 					"cpe:/o:suse:sles-ltss:15:sp3",
 					"cpe:/o:suse:sles-ltss:15:sp4",
 					"cpe:/o:suse:sles:15:sp5",
+					"cpe:/o:suse:sles_sap:15:sp2",
 					"cpe:/o:suse:sles_sap:15:sp3",
 					"cpe:/o:suse:sles_sap:15:sp4",
 					"cpe:/o:suse:sles_sap:15:sp5"
@@ -779,6 +790,162 @@
 					{
 						"test_ref": "oval:org.opensuse.security:tst:2009669878",
 						"comment": "SUSE Linux Enterprise Server for SAP Applications 15 SP3 is installed"
+					}
+				]
+			},
+			{
+				"operator": "AND",
+				"criterias": [
+					{
+						"operator": "OR",
+						"criterions": [
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009945313",
+								"comment": "kernel-default-livepatch-5.3.18-150200.24.203.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009945314",
+								"comment": "kernel-default-livepatch-devel-5.3.18-150200.24.203.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009945315",
+								"comment": "kernel-livepatch-5_3_18-150200_24_203-default-1-150200.5.3.1 is installed"
+							}
+						]
+					}
+				],
+				"criterions": [
+					{
+						"test_ref": "oval:org.opensuse.security:tst:2009288462",
+						"comment": "SUSE Linux Enterprise Live Patching 15 SP2 is installed"
+					}
+				]
+			},
+			{
+				"operator": "AND",
+				"criterias": [
+					{
+						"operator": "OR",
+						"criterions": [
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009945331",
+								"comment": "kernel-default-5.3.18-150200.24.203.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009945332",
+								"comment": "kernel-default-base-5.3.18-150200.24.203.1.150200.9.105.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009945333",
+								"comment": "kernel-default-devel-5.3.18-150200.24.203.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009945323",
+								"comment": "kernel-devel-5.3.18-150200.24.203.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009945324",
+								"comment": "kernel-docs-5.3.18-150200.24.203.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009945325",
+								"comment": "kernel-macros-5.3.18-150200.24.203.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009945334",
+								"comment": "kernel-obs-build-5.3.18-150200.24.203.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009945327",
+								"comment": "kernel-preempt-5.3.18-150200.24.203.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009945328",
+								"comment": "kernel-preempt-devel-5.3.18-150200.24.203.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009945329",
+								"comment": "kernel-source-5.3.18-150200.24.203.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009945335",
+								"comment": "kernel-syms-5.3.18-150200.24.203.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009945336",
+								"comment": "reiserfs-kmp-default-5.3.18-150200.24.203.1 is installed"
+							}
+						]
+					}
+				],
+				"criterions": [
+					{
+						"test_ref": "oval:org.opensuse.security:tst:2009660213",
+						"comment": "SUSE Linux Enterprise Server 15 SP2-LTSS is installed"
+					}
+				]
+			},
+			{
+				"operator": "AND",
+				"criterias": [
+					{
+						"operator": "OR",
+						"criterions": [
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009945337",
+								"comment": "kernel-default-5.3.18-150200.24.203.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009945338",
+								"comment": "kernel-default-base-5.3.18-150200.24.203.1.150200.9.105.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009945339",
+								"comment": "kernel-default-devel-5.3.18-150200.24.203.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009945323",
+								"comment": "kernel-devel-5.3.18-150200.24.203.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009945324",
+								"comment": "kernel-docs-5.3.18-150200.24.203.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009945325",
+								"comment": "kernel-macros-5.3.18-150200.24.203.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009945340",
+								"comment": "kernel-obs-build-5.3.18-150200.24.203.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009945341",
+								"comment": "kernel-preempt-5.3.18-150200.24.203.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009945342",
+								"comment": "kernel-preempt-devel-5.3.18-150200.24.203.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009945329",
+								"comment": "kernel-source-5.3.18-150200.24.203.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009945343",
+								"comment": "kernel-syms-5.3.18-150200.24.203.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009945344",
+								"comment": "reiserfs-kmp-default-5.3.18-150200.24.203.1 is installed"
+							}
+						]
+					}
+				],
+				"criterions": [
+					{
+						"test_ref": "oval:org.opensuse.security:tst:2009659637",
+						"comment": "SUSE Linux Enterprise Server for SAP Applications 15 SP2 is installed"
 					}
 				]
 			}
