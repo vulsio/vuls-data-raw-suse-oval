@@ -7,8 +7,12 @@
 		"affected": {
 			"family": "unix",
 			"platform": [
+				"SUSE Linux Enterprise High Performance Computing 15 SP6",
+				"SUSE Linux Enterprise Module for Public Cloud 15 SP6",
 				"SUSE Linux Enterprise Server 15 SP1-LTSS",
-				"SUSE Linux Enterprise Server 15-LTSS"
+				"SUSE Linux Enterprise Server 15 SP6",
+				"SUSE Linux Enterprise Server 15-LTSS",
+				"SUSE Linux Enterprise Server for SAP Applications 15 SP6"
 			]
 		},
 		"reference": [
@@ -21,6 +25,11 @@
 				"ref_id": "SUSE CVE-2024-26640",
 				"ref_url": "https://www.suse.com/security/cve/CVE-2024-26640",
 				"source": "SUSE CVE"
+			},
+			{
+				"ref_id": "SUSE-SU-2024:3551-1",
+				"ref_url": "https://lists.suse.com/pipermail/sle-updates/2024-October/037163.html",
+				"source": "SUSE-SU"
 			}
 		],
 		"description": "\n    In the Linux kernel, the following vulnerability has been resolved:\n\ntcp: add sanity checks to rx zerocopy\n\nTCP rx zerocopy intent is to map pages initially allocated\nfrom NIC drivers, not pages owned by a fs.\n\nThis patch adds to can_map_frag() these additional checks:\n\n- Page must not be a compound one.\n- page->mapping must be NULL.\n\nThis fixes the panic reported by ZhangPeng.\n\nsyzbot was able to loopback packets built with sendfile(),\nmapping pages owned by an ext4 file to TCP rx zerocopy.\n\nr3 = socket$inet_tcp(0x2, 0x1, 0x0)\nmmap(&(0x7f0000ff9000/0x4000)=nil, 0x4000, 0x0, 0x12, r3, 0x0)\nr4 = socket$inet_tcp(0x2, 0x1, 0x0)\nbind$inet(r4, &(0x7f0000000000)={0x2, 0x4e24, @multicast1}, 0x10)\nconnect$inet(r4, &(0x7f00000006c0)={0x2, 0x4e24, @empty}, 0x10)\nr5 = openat$dir(0xffffffffffffff9c, &(0x7f00000000c0)='./file0\\x00',\n    0x181e42, 0x0)\nfallocate(r5, 0x0, 0x0, 0x85b8)\nsendfile(r4, r5, 0x0, 0x8ba0)\ngetsockopt$inet_tcp_TCP_ZEROCOPY_RECEIVE(r4, 0x6, 0x23,\n    &(0x7f00000001c0)={&(0x7f0000ffb000/0x3000)=nil, 0x3000, 0x0, 0x0, 0x0,\n    0x0, 0x0, 0x0, 0x0}, &(0x7f0000000440)=0x40)\nr6 = openat$dir(0xffffffffffffff9c, &(0x7f00000000c0)='./file0\\x00',\n    0x181e42, 0x0)\n    ",
@@ -49,10 +58,11 @@
 				"date": "2024-03-20"
 			},
 			"updated": {
-				"date": "2024-04-26"
+				"date": "2024-10-09"
 			},
 			"affected_cpe_list": {
 				"cpe": [
+					"cpe:/o:suse:sle-module-public-cloud:15:sp6",
 					"cpe:/o:suse:sles-ltss:15",
 					"cpe:/o:suse:sles-ltss:15:sp1"
 				]
@@ -60,55 +70,111 @@
 		}
 	},
 	"criteria": {
-		"operator": "AND",
+		"operator": "OR",
 		"criterias": [
 			{
-				"operator": "OR",
-				"criterions": [
+				"operator": "AND",
+				"criterias": [
 					{
-						"test_ref": "oval:org.opensuse.security:tst:2009341508",
-						"comment": "SUSE Linux Enterprise Server 15 SP1-LTSS is installed"
+						"operator": "OR",
+						"criterions": [
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009341508",
+								"comment": "SUSE Linux Enterprise Server 15 SP1-LTSS is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009302033",
+								"comment": "SUSE Linux Enterprise Server 15-LTSS is installed"
+							}
+						]
 					},
 					{
-						"test_ref": "oval:org.opensuse.security:tst:2009302033",
-						"comment": "SUSE Linux Enterprise Server 15-LTSS is installed"
+						"operator": "OR",
+						"criterions": [
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009334017",
+								"comment": "kernel-default is not affected"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009335425",
+								"comment": "kernel-default-base is not affected"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009335423",
+								"comment": "kernel-default-devel is not affected"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009335426",
+								"comment": "kernel-default-man is not affected"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009338037",
+								"comment": "reiserfs-kmp-default is not affected"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009334791",
+								"comment": "kernel-devel is not affected"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009334792",
+								"comment": "kernel-macros is not affected"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009333928",
+								"comment": "kernel-source is not affected"
+							}
+						]
 					}
 				]
 			},
 			{
-				"operator": "OR",
-				"criterions": [
+				"operator": "AND",
+				"criterias": [
 					{
-						"test_ref": "oval:org.opensuse.security:tst:2009334017",
-						"comment": "kernel-default is not affected"
+						"operator": "OR",
+						"criterions": [
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009856172",
+								"comment": "SUSE Linux Enterprise High Performance Computing 15 SP6 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009856320",
+								"comment": "SUSE Linux Enterprise Module for Public Cloud 15 SP6 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009856174",
+								"comment": "SUSE Linux Enterprise Server 15 SP6 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009856175",
+								"comment": "SUSE Linux Enterprise Server for SAP Applications 15 SP6 is installed"
+							}
+						]
 					},
 					{
-						"test_ref": "oval:org.opensuse.security:tst:2009335425",
-						"comment": "kernel-default-base is not affected"
-					},
-					{
-						"test_ref": "oval:org.opensuse.security:tst:2009335423",
-						"comment": "kernel-default-devel is not affected"
-					},
-					{
-						"test_ref": "oval:org.opensuse.security:tst:2009335426",
-						"comment": "kernel-default-man is not affected"
-					},
-					{
-						"test_ref": "oval:org.opensuse.security:tst:2009338037",
-						"comment": "reiserfs-kmp-default is not affected"
-					},
-					{
-						"test_ref": "oval:org.opensuse.security:tst:2009334791",
-						"comment": "kernel-devel is not affected"
-					},
-					{
-						"test_ref": "oval:org.opensuse.security:tst:2009334792",
-						"comment": "kernel-macros is not affected"
-					},
-					{
-						"test_ref": "oval:org.opensuse.security:tst:2009333928",
-						"comment": "kernel-source is not affected"
+						"operator": "OR",
+						"criterions": [
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009945998",
+								"comment": "kernel-azure-6.4.0-150600.8.14.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009945999",
+								"comment": "kernel-azure-devel-6.4.0-150600.8.14.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009946004",
+								"comment": "kernel-devel-azure-6.4.0-150600.8.14.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009946005",
+								"comment": "kernel-source-azure-6.4.0-150600.8.14.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009946006",
+								"comment": "kernel-syms-azure-6.4.0-150600.8.14.1 is installed"
+							}
+						]
 					}
 				]
 			}

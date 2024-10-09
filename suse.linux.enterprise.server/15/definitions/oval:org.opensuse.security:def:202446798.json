@@ -7,12 +7,17 @@
 		"affected": {
 			"family": "unix",
 			"platform": [
+				"SUSE Linux Enterprise High Performance Computing 15 SP6",
+				"SUSE Linux Enterprise Module for Confidential Computing Technical Preview 15 SP6",
+				"SUSE Linux Enterprise Module for Public Cloud 15 SP6",
 				"SUSE Linux Enterprise Server 15 SP1-LTSS",
 				"SUSE Linux Enterprise Server 15 SP2-LTSS",
 				"SUSE Linux Enterprise Server 15 SP3-LTSS",
+				"SUSE Linux Enterprise Server 15 SP6",
 				"SUSE Linux Enterprise Server 15-LTSS",
 				"SUSE Linux Enterprise Server for SAP Applications 15 SP2",
-				"SUSE Linux Enterprise Server for SAP Applications 15 SP3"
+				"SUSE Linux Enterprise Server for SAP Applications 15 SP3",
+				"SUSE Linux Enterprise Server for SAP Applications 15 SP6"
 			]
 		},
 		"reference": [
@@ -25,6 +30,16 @@
 				"ref_id": "SUSE CVE-2024-46798",
 				"ref_url": "https://www.suse.com/security/cve/CVE-2024-46798",
 				"source": "SUSE CVE"
+			},
+			{
+				"ref_id": "SUSE-SU-2024:3551-1",
+				"ref_url": "https://lists.suse.com/pipermail/sle-updates/2024-October/037163.html",
+				"source": "SUSE-SU"
+			},
+			{
+				"ref_id": "SUSE-SU-2024:3553-1",
+				"ref_url": "https://lists.suse.com/pipermail/sle-updates/2024-October/037161.html",
+				"source": "SUSE-SU"
 			}
 		],
 		"description": "\n    In the Linux kernel, the following vulnerability has been resolved:\n\nASoC: dapm: Fix UAF for snd_soc_pcm_runtime object\n\nWhen using kernel with the following extra config,\n\n  - CONFIG_KASAN=y\n  - CONFIG_KASAN_GENERIC=y\n  - CONFIG_KASAN_INLINE=y\n  - CONFIG_KASAN_VMALLOC=y\n  - CONFIG_FRAME_WARN=4096\n\nkernel detects that snd_pcm_suspend_all() access a freed\n'snd_soc_pcm_runtime' object when the system is suspended, which\nleads to a use-after-free bug:\n\n[   52.047746] BUG: KASAN: use-after-free in snd_pcm_suspend_all+0x1a8/0x270\n[   52.047765] Read of size 1 at addr ffff0000b9434d50 by task systemd-sleep/2330\n\n[   52.047785] Call trace:\n[   52.047787]  dump_backtrace+0x0/0x3c0\n[   52.047794]  show_stack+0x34/0x50\n[   52.047797]  dump_stack_lvl+0x68/0x8c\n[   52.047802]  print_address_description.constprop.0+0x74/0x2c0\n[   52.047809]  kasan_report+0x210/0x230\n[   52.047815]  __asan_report_load1_noabort+0x3c/0x50\n[   52.047820]  snd_pcm_suspend_all+0x1a8/0x270\n[   52.047824]  snd_soc_suspend+0x19c/0x4e0\n\nThe snd_pcm_sync_stop() has a NULL check on 'substream->runtime' before\nmaking any access. So we need to always set 'substream->runtime' to NULL\neverytime we kfree() it.\n    ",
@@ -55,10 +70,11 @@
 				"date": "2024-09-20"
 			},
 			"updated": {
-				"date": "2024-09-22"
+				"date": "2024-10-09"
 			},
 			"affected_cpe_list": {
 				"cpe": [
+					"cpe:/o:suse:sle-module-public-cloud:15:sp6",
 					"cpe:/o:suse:sles-ltss:15",
 					"cpe:/o:suse:sles-ltss:15:sp1",
 					"cpe:/o:suse:sles-ltss:15:sp2",
@@ -179,6 +195,105 @@
 								"comment": "kernel-source is not affected"
 							}
 						]
+					}
+				]
+			},
+			{
+				"operator": "AND",
+				"criterias": [
+					{
+						"operator": "OR",
+						"criterions": [
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009856172",
+								"comment": "SUSE Linux Enterprise High Performance Computing 15 SP6 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009856320",
+								"comment": "SUSE Linux Enterprise Module for Public Cloud 15 SP6 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009856174",
+								"comment": "SUSE Linux Enterprise Server 15 SP6 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009856175",
+								"comment": "SUSE Linux Enterprise Server for SAP Applications 15 SP6 is installed"
+							}
+						]
+					},
+					{
+						"operator": "OR",
+						"criterions": [
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009945998",
+								"comment": "kernel-azure-6.4.0-150600.8.14.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009945999",
+								"comment": "kernel-azure-devel-6.4.0-150600.8.14.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009946004",
+								"comment": "kernel-devel-azure-6.4.0-150600.8.14.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009946005",
+								"comment": "kernel-source-azure-6.4.0-150600.8.14.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009946006",
+								"comment": "kernel-syms-azure-6.4.0-150600.8.14.1 is installed"
+							}
+						]
+					}
+				]
+			},
+			{
+				"operator": "AND",
+				"criterias": [
+					{
+						"operator": "OR",
+						"criterions": [
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009946096",
+								"comment": "kernel-coco-6.4.0-15061.6.coco15sp6.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009946097",
+								"comment": "kernel-coco-devel-6.4.0-15061.6.coco15sp6.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009946098",
+								"comment": "kernel-coco_debug-6.4.0-15061.6.coco15sp6.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009946099",
+								"comment": "kernel-coco_debug-devel-6.4.0-15061.6.coco15sp6.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009946100",
+								"comment": "kernel-devel-coco-6.4.0-15061.6.coco15sp6.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009946101",
+								"comment": "kernel-source-coco-6.4.0-15061.6.coco15sp6.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009946102",
+								"comment": "kernel-syms-coco-6.4.0-15061.6.coco15sp6.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009946103",
+								"comment": "reiserfs-kmp-coco-6.4.0-15061.6.coco15sp6.1 is installed"
+							}
+						]
+					}
+				],
+				"criterions": [
+					{
+						"test_ref": "oval:org.opensuse.security:tst:2009945160",
+						"comment": "SUSE Linux Enterprise Module for Confidential Computing Technical Preview 15 SP6 is installed"
 					}
 				]
 			}

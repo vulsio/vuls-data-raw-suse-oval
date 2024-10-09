@@ -1,0 +1,180 @@
+{
+	"id": "oval:org.opensuse.security:def:202446676",
+	"version": "1",
+	"class": "vulnerability",
+	"metadata": {
+		"title": "CVE-2024-46676",
+		"affected": {
+			"family": "unix",
+			"platform": [
+				"SUSE Linux Enterprise High Performance Computing 15 SP6",
+				"SUSE Linux Enterprise Module for Confidential Computing Technical Preview 15 SP6",
+				"SUSE Linux Enterprise Module for Public Cloud 15 SP6",
+				"SUSE Linux Enterprise Server 15 SP6",
+				"SUSE Linux Enterprise Server for SAP Applications 15 SP6"
+			]
+		},
+		"reference": [
+			{
+				"ref_id": "Mitre CVE-2024-46676",
+				"ref_url": "https://cve.mitre.org/cgi-bin/cvename.cgi?name=CVE-2024-46676",
+				"source": "CVE"
+			},
+			{
+				"ref_id": "SUSE CVE-2024-46676",
+				"ref_url": "https://www.suse.com/security/cve/CVE-2024-46676",
+				"source": "SUSE CVE"
+			},
+			{
+				"ref_id": "SUSE-SU-2024:3551-1",
+				"ref_url": "https://lists.suse.com/pipermail/sle-updates/2024-October/037163.html",
+				"source": "SUSE-SU"
+			},
+			{
+				"ref_id": "SUSE-SU-2024:3553-1",
+				"ref_url": "https://lists.suse.com/pipermail/sle-updates/2024-October/037161.html",
+				"source": "SUSE-SU"
+			}
+		],
+		"description": "\n    In the Linux kernel, the following vulnerability has been resolved:\n\nnfc: pn533: Add poll mod list filling check\n\nIn case of im_protocols value is 1 and tm_protocols value is 0 this\ncombination successfully passes the check\n'if (!im_protocols && !tm_protocols)' in the nfc_start_poll().\nBut then after pn533_poll_create_mod_list() call in pn533_start_poll()\npoll mod list will remain empty and dev->poll_mod_count will remain 0\nwhich lead to division by zero.\n\nNormally no im protocol has value 1 in the mask, so this combination is\nnot expected by driver. But these protocol values actually come from\nuserspace via Netlink interface (NFC_CMD_START_POLL operation). So a\nbroken or malicious program may pass a message containing a \"bad\"\ncombination of protocol parameter values so that dev->poll_mod_count\nis not incremented inside pn533_poll_create_mod_list(), thus leading\nto division by zero.\nCall trace looks like:\nnfc_genl_start_poll()\n  nfc_start_poll()\n    ->start_poll()\n    pn533_start_poll()\n\nAdd poll mod list filling check.\n\nFound by Linux Verification Center (linuxtesting.org) with SVACE.\n    ",
+		"advisory": {
+			"from": "security@suse.de",
+			"severity": "Moderate",
+			"cve": [
+				{
+					"text": "CVE-2024-46676 at SUSE",
+					"href": "https://www.suse.com/security/cve/CVE-2024-46676/",
+					"impact": "medium",
+					"cvss3": "4.3/CVSS:3.1/AV:P/AC:L/PR:N/UI:N/S:U/C:L/I:L/A:L"
+				},
+				{
+					"text": "CVE-2024-46676 at NVD",
+					"href": "https://nvd.nist.gov/vuln/detail/CVE-2024-46676",
+					"impact": "medium",
+					"cvss3": "5.5/CVSS:3.1/AV:L/AC:L/PR:L/UI:N/S:U/C:N/I:N/A:H"
+				}
+			],
+			"bugzilla": [
+				{
+					"text": "SUSE bug 1230535",
+					"href": "https://bugzilla.suse.com/1230535"
+				}
+			],
+			"issued": {
+				"date": "2024-10-09"
+			},
+			"updated": {
+				"date": "2024-10-09"
+			},
+			"affected_cpe_list": {
+				"cpe": [
+					"cpe:/o:suse:sle-module-public-cloud:15:sp6"
+				]
+			}
+		}
+	},
+	"criteria": {
+		"operator": "OR",
+		"criterias": [
+			{
+				"operator": "AND",
+				"criterias": [
+					{
+						"operator": "OR",
+						"criterions": [
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009856172",
+								"comment": "SUSE Linux Enterprise High Performance Computing 15 SP6 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009856320",
+								"comment": "SUSE Linux Enterprise Module for Public Cloud 15 SP6 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009856174",
+								"comment": "SUSE Linux Enterprise Server 15 SP6 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009856175",
+								"comment": "SUSE Linux Enterprise Server for SAP Applications 15 SP6 is installed"
+							}
+						]
+					},
+					{
+						"operator": "OR",
+						"criterions": [
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009945998",
+								"comment": "kernel-azure-6.4.0-150600.8.14.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009945999",
+								"comment": "kernel-azure-devel-6.4.0-150600.8.14.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009946004",
+								"comment": "kernel-devel-azure-6.4.0-150600.8.14.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009946005",
+								"comment": "kernel-source-azure-6.4.0-150600.8.14.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009946006",
+								"comment": "kernel-syms-azure-6.4.0-150600.8.14.1 is installed"
+							}
+						]
+					}
+				]
+			},
+			{
+				"operator": "AND",
+				"criterias": [
+					{
+						"operator": "OR",
+						"criterions": [
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009946096",
+								"comment": "kernel-coco-6.4.0-15061.6.coco15sp6.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009946097",
+								"comment": "kernel-coco-devel-6.4.0-15061.6.coco15sp6.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009946098",
+								"comment": "kernel-coco_debug-6.4.0-15061.6.coco15sp6.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009946099",
+								"comment": "kernel-coco_debug-devel-6.4.0-15061.6.coco15sp6.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009946100",
+								"comment": "kernel-devel-coco-6.4.0-15061.6.coco15sp6.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009946101",
+								"comment": "kernel-source-coco-6.4.0-15061.6.coco15sp6.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009946102",
+								"comment": "kernel-syms-coco-6.4.0-15061.6.coco15sp6.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009946103",
+								"comment": "reiserfs-kmp-coco-6.4.0-15061.6.coco15sp6.1 is installed"
+							}
+						]
+					}
+				],
+				"criterions": [
+					{
+						"test_ref": "oval:org.opensuse.security:tst:2009945160",
+						"comment": "SUSE Linux Enterprise Module for Confidential Computing Technical Preview 15 SP6 is installed"
+					}
+				]
+			}
+		]
+	}
+}

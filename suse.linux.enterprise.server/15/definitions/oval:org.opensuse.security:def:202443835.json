@@ -7,7 +7,12 @@
 		"affected": {
 			"family": "unix",
 			"platform": [
-				"SUSE Linux Enterprise Server 15-LTSS"
+				"SUSE Linux Enterprise High Performance Computing 15 SP6",
+				"SUSE Linux Enterprise Module for Confidential Computing Technical Preview 15 SP6",
+				"SUSE Linux Enterprise Module for Public Cloud 15 SP6",
+				"SUSE Linux Enterprise Server 15 SP6",
+				"SUSE Linux Enterprise Server 15-LTSS",
+				"SUSE Linux Enterprise Server for SAP Applications 15 SP6"
 			]
 		},
 		"reference": [
@@ -20,6 +25,16 @@
 				"ref_id": "SUSE CVE-2024-43835",
 				"ref_url": "https://www.suse.com/security/cve/CVE-2024-43835",
 				"source": "SUSE CVE"
+			},
+			{
+				"ref_id": "SUSE-SU-2024:3551-1",
+				"ref_url": "https://lists.suse.com/pipermail/sle-updates/2024-October/037163.html",
+				"source": "SUSE-SU"
+			},
+			{
+				"ref_id": "SUSE-SU-2024:3553-1",
+				"ref_url": "https://lists.suse.com/pipermail/sle-updates/2024-October/037161.html",
+				"source": "SUSE-SU"
 			}
 		],
 		"description": "\n    In the Linux kernel, the following vulnerability has been resolved:\n\nvirtio_net: Fix napi_skb_cache_put warning\n\nAfter the commit bdacf3e34945 (\"net: Use nested-BH locking for\nnapi_alloc_cache.\") was merged, the following warning began to appear:\n\n\t WARNING: CPU: 5 PID: 1 at net/core/skbuff.c:1451 napi_skb_cache_put+0x82/0x4b0\n\n\t  __warn+0x12f/0x340\n\t  napi_skb_cache_put+0x82/0x4b0\n\t  napi_skb_cache_put+0x82/0x4b0\n\t  report_bug+0x165/0x370\n\t  handle_bug+0x3d/0x80\n\t  exc_invalid_op+0x1a/0x50\n\t  asm_exc_invalid_op+0x1a/0x20\n\t  __free_old_xmit+0x1c8/0x510\n\t  napi_skb_cache_put+0x82/0x4b0\n\t  __free_old_xmit+0x1c8/0x510\n\t  __free_old_xmit+0x1c8/0x510\n\t  __pfx___free_old_xmit+0x10/0x10\n\nThe issue arises because virtio is assuming it's running in NAPI context\neven when it's not, such as in the netpoll case.\n\nTo resolve this, modify virtnet_poll_tx() to only set NAPI when budget\nis available. Same for virtnet_poll_cleantx(), which always assumed that\nit was in a NAPI context.\n    ",
@@ -48,60 +63,165 @@
 				"date": "2024-08-21"
 			},
 			"updated": {
-				"date": "2024-09-09"
+				"date": "2024-10-09"
 			},
 			"affected_cpe_list": {
 				"cpe": [
+					"cpe:/o:suse:sle-module-public-cloud:15:sp6",
 					"cpe:/o:suse:sles-ltss:15"
 				]
 			}
 		}
 	},
 	"criteria": {
-		"operator": "AND",
+		"operator": "OR",
 		"criterias": [
 			{
-				"operator": "OR",
+				"operator": "AND",
+				"criterias": [
+					{
+						"operator": "OR",
+						"criterions": [
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009334017",
+								"comment": "kernel-default is not affected"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009335425",
+								"comment": "kernel-default-base is not affected"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009335423",
+								"comment": "kernel-default-devel is not affected"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009335426",
+								"comment": "kernel-default-man is not affected"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009338037",
+								"comment": "reiserfs-kmp-default is not affected"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009334791",
+								"comment": "kernel-devel is not affected"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009334792",
+								"comment": "kernel-macros is not affected"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009333928",
+								"comment": "kernel-source is not affected"
+							}
+						]
+					}
+				],
 				"criterions": [
 					{
-						"test_ref": "oval:org.opensuse.security:tst:2009334017",
-						"comment": "kernel-default is not affected"
-					},
-					{
-						"test_ref": "oval:org.opensuse.security:tst:2009335425",
-						"comment": "kernel-default-base is not affected"
-					},
-					{
-						"test_ref": "oval:org.opensuse.security:tst:2009335423",
-						"comment": "kernel-default-devel is not affected"
-					},
-					{
-						"test_ref": "oval:org.opensuse.security:tst:2009335426",
-						"comment": "kernel-default-man is not affected"
-					},
-					{
-						"test_ref": "oval:org.opensuse.security:tst:2009338037",
-						"comment": "reiserfs-kmp-default is not affected"
-					},
-					{
-						"test_ref": "oval:org.opensuse.security:tst:2009334791",
-						"comment": "kernel-devel is not affected"
-					},
-					{
-						"test_ref": "oval:org.opensuse.security:tst:2009334792",
-						"comment": "kernel-macros is not affected"
-					},
-					{
-						"test_ref": "oval:org.opensuse.security:tst:2009333928",
-						"comment": "kernel-source is not affected"
+						"test_ref": "oval:org.opensuse.security:tst:2009302033",
+						"comment": "SUSE Linux Enterprise Server 15-LTSS is installed"
 					}
 				]
-			}
-		],
-		"criterions": [
+			},
 			{
-				"test_ref": "oval:org.opensuse.security:tst:2009302033",
-				"comment": "SUSE Linux Enterprise Server 15-LTSS is installed"
+				"operator": "AND",
+				"criterias": [
+					{
+						"operator": "OR",
+						"criterions": [
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009856172",
+								"comment": "SUSE Linux Enterprise High Performance Computing 15 SP6 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009856320",
+								"comment": "SUSE Linux Enterprise Module for Public Cloud 15 SP6 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009856174",
+								"comment": "SUSE Linux Enterprise Server 15 SP6 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009856175",
+								"comment": "SUSE Linux Enterprise Server for SAP Applications 15 SP6 is installed"
+							}
+						]
+					},
+					{
+						"operator": "OR",
+						"criterions": [
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009945998",
+								"comment": "kernel-azure-6.4.0-150600.8.14.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009945999",
+								"comment": "kernel-azure-devel-6.4.0-150600.8.14.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009946004",
+								"comment": "kernel-devel-azure-6.4.0-150600.8.14.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009946005",
+								"comment": "kernel-source-azure-6.4.0-150600.8.14.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009946006",
+								"comment": "kernel-syms-azure-6.4.0-150600.8.14.1 is installed"
+							}
+						]
+					}
+				]
+			},
+			{
+				"operator": "AND",
+				"criterias": [
+					{
+						"operator": "OR",
+						"criterions": [
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009946096",
+								"comment": "kernel-coco-6.4.0-15061.6.coco15sp6.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009946097",
+								"comment": "kernel-coco-devel-6.4.0-15061.6.coco15sp6.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009946098",
+								"comment": "kernel-coco_debug-6.4.0-15061.6.coco15sp6.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009946099",
+								"comment": "kernel-coco_debug-devel-6.4.0-15061.6.coco15sp6.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009946100",
+								"comment": "kernel-devel-coco-6.4.0-15061.6.coco15sp6.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009946101",
+								"comment": "kernel-source-coco-6.4.0-15061.6.coco15sp6.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009946102",
+								"comment": "kernel-syms-coco-6.4.0-15061.6.coco15sp6.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009946103",
+								"comment": "reiserfs-kmp-coco-6.4.0-15061.6.coco15sp6.1 is installed"
+							}
+						]
+					}
+				],
+				"criterions": [
+					{
+						"test_ref": "oval:org.opensuse.security:tst:2009945160",
+						"comment": "SUSE Linux Enterprise Module for Confidential Computing Technical Preview 15 SP6 is installed"
+					}
+				]
 			}
 		]
 	}

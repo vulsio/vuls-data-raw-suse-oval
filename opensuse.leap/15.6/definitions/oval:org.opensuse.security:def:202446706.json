@@ -20,6 +20,16 @@
 				"ref_id": "SUSE CVE-2024-46706",
 				"ref_url": "https://www.suse.com/security/cve/CVE-2024-46706",
 				"source": "SUSE CVE"
+			},
+			{
+				"ref_id": "SUSE-SU-2024:3551-1",
+				"ref_url": "https://lists.suse.com/pipermail/sle-updates/2024-October/037163.html",
+				"source": "SUSE-SU"
+			},
+			{
+				"ref_id": "SUSE-SU-2024:3553-1",
+				"ref_url": "https://lists.suse.com/pipermail/sle-updates/2024-October/037161.html",
+				"source": "SUSE-SU"
 			}
 		],
 		"description": "\n    In the Linux kernel, the following vulnerability has been resolved:\n\ntty: serial: fsl_lpuart: mark last busy before uart_add_one_port\n\nWith \"earlycon initcall_debug=1 loglevel=8\" in bootargs, kernel\nsometimes boot hang. It is because normal console still is not ready,\nbut runtime suspend is called, so early console putchar will hang\nin waiting TRDE set in UARTSTAT.\n\nThe lpuart driver has auto suspend delay set to 3000ms, but during\nuart_add_one_port, a child device serial ctrl will added and probed with\nits pm runtime enabled(see serial_ctrl.c).\nThe runtime suspend call path is:\ndevice_add\n     |-> bus_probe_device\n           |->device_initial_probe\n\t           |->__device_attach\n                         |-> pm_runtime_get_sync(dev->parent);\n\t\t\t |-> pm_request_idle(dev);\n\t\t\t |-> pm_runtime_put(dev->parent);\n\nSo in the end, before normal console ready, the lpuart get runtime\nsuspended. And earlycon putchar will hang.\n\nTo address the issue, mark last busy just after pm_runtime_enable,\nthree seconds is long enough to switch from bootconsole to normal\nconsole.\n    ",
@@ -50,7 +60,7 @@
 				"date": "2024-09-18"
 			},
 			"updated": {
-				"date": "2024-09-20"
+				"date": "2024-10-09"
 			},
 			"affected_cpe_list": {
 				"cpe": [
@@ -64,15 +74,204 @@
 		"criterias": [
 			{
 				"operator": "OR",
+				"criterias": [
+					{
+						"operator": "AND",
+						"criterions": [
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009945995",
+								"comment": "cluster-md-kmp-azure-6.4.0-150600.8.14.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009623277",
+								"comment": "cluster-md-kmp-azure is signed with openSUSE key"
+							}
+						]
+					},
+					{
+						"operator": "AND",
+						"criterions": [
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009945996",
+								"comment": "dlm-kmp-azure-6.4.0-150600.8.14.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009623279",
+								"comment": "dlm-kmp-azure is signed with openSUSE key"
+							}
+						]
+					},
+					{
+						"operator": "AND",
+						"criterions": [
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009945997",
+								"comment": "gfs2-kmp-azure-6.4.0-150600.8.14.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009623281",
+								"comment": "gfs2-kmp-azure is signed with openSUSE key"
+							}
+						]
+					},
+					{
+						"operator": "AND",
+						"criterions": [
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009945998",
+								"comment": "kernel-azure-6.4.0-150600.8.14.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009623283",
+								"comment": "kernel-azure is signed with openSUSE key"
+							}
+						]
+					},
+					{
+						"operator": "AND",
+						"criterions": [
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009945999",
+								"comment": "kernel-azure-devel-6.4.0-150600.8.14.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009623285",
+								"comment": "kernel-azure-devel is signed with openSUSE key"
+							}
+						]
+					},
+					{
+						"operator": "AND",
+						"criterions": [
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009946000",
+								"comment": "kernel-azure-extra-6.4.0-150600.8.14.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009623286",
+								"comment": "kernel-azure-extra is signed with openSUSE key"
+							}
+						]
+					},
+					{
+						"operator": "AND",
+						"criterions": [
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009946001",
+								"comment": "kernel-azure-livepatch-devel-6.4.0-150600.8.14.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009623287",
+								"comment": "kernel-azure-livepatch-devel is signed with openSUSE key"
+							}
+						]
+					},
+					{
+						"operator": "AND",
+						"criterions": [
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009946002",
+								"comment": "kernel-azure-optional-6.4.0-150600.8.14.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009623427",
+								"comment": "kernel-azure-optional is signed with openSUSE key"
+							}
+						]
+					},
+					{
+						"operator": "AND",
+						"criterions": [
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009946003",
+								"comment": "kernel-azure-vdso-6.4.0-150600.8.14.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009769740",
+								"comment": "kernel-azure-vdso is signed with openSUSE key"
+							}
+						]
+					},
+					{
+						"operator": "AND",
+						"criterions": [
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009946004",
+								"comment": "kernel-devel-azure-6.4.0-150600.8.14.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009623293",
+								"comment": "kernel-devel-azure is signed with openSUSE key"
+							}
+						]
+					},
+					{
+						"operator": "AND",
+						"criterions": [
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009946005",
+								"comment": "kernel-source-azure-6.4.0-150600.8.14.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009623300",
+								"comment": "kernel-source-azure is signed with openSUSE key"
+							}
+						]
+					},
+					{
+						"operator": "AND",
+						"criterions": [
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009946006",
+								"comment": "kernel-syms-azure-6.4.0-150600.8.14.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009623301",
+								"comment": "kernel-syms-azure is signed with openSUSE key"
+							}
+						]
+					},
+					{
+						"operator": "AND",
+						"criterions": [
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009946007",
+								"comment": "kselftests-kmp-azure-6.4.0-150600.8.14.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009623305",
+								"comment": "kselftests-kmp-azure is signed with openSUSE key"
+							}
+						]
+					},
+					{
+						"operator": "AND",
+						"criterions": [
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009946008",
+								"comment": "ocfs2-kmp-azure-6.4.0-150600.8.14.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009623306",
+								"comment": "ocfs2-kmp-azure is signed with openSUSE key"
+							}
+						]
+					},
+					{
+						"operator": "AND",
+						"criterions": [
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009946009",
+								"comment": "reiserfs-kmp-azure-6.4.0-150600.8.14.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009623308",
+								"comment": "reiserfs-kmp-azure is signed with openSUSE key"
+							}
+						]
+					}
+				],
 				"criterions": [
-					{
-						"test_ref": "oval:org.opensuse.security:tst:2009340306",
-						"comment": "kernel-devel-azure is not affected"
-					},
-					{
-						"test_ref": "oval:org.opensuse.security:tst:2009340305",
-						"comment": "kernel-source-azure is not affected"
-					},
 					{
 						"test_ref": "oval:org.opensuse.security:tst:2009728711",
 						"comment": "kernel-devel-rt is not affected"

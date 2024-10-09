@@ -24,6 +24,16 @@
 				"ref_id": "SUSE CVE-2024-46791",
 				"ref_url": "https://www.suse.com/security/cve/CVE-2024-46791",
 				"source": "SUSE CVE"
+			},
+			{
+				"ref_id": "SUSE-SU-2024:3551-1",
+				"ref_url": "https://lists.suse.com/pipermail/sle-updates/2024-October/037163.html",
+				"source": "SUSE-SU"
+			},
+			{
+				"ref_id": "SUSE-SU-2024:3553-1",
+				"ref_url": "https://lists.suse.com/pipermail/sle-updates/2024-October/037161.html",
+				"source": "SUSE-SU"
 			}
 		],
 		"description": "\n    In the Linux kernel, the following vulnerability has been resolved:\n\ncan: mcp251x: fix deadlock if an interrupt occurs during mcp251x_open\n\nThe mcp251x_hw_wake() function is called with the mpc_lock mutex held and\ndisables the interrupt handler so that no interrupts can be processed while\nwaking the device. If an interrupt has already occurred then waiting for\nthe interrupt handler to complete will deadlock because it will be trying\nto acquire the same mutex.\n\nCPU0                           CPU1\n----                           ----\nmcp251x_open()\n mutex_lock(&priv->mcp_lock)\n  request_threaded_irq()\n                               <interrupt>\n                               mcp251x_can_ist()\n                                mutex_lock(&priv->mcp_lock)\n  mcp251x_hw_wake()\n   disable_irq() <-- deadlock\n\nUse disable_irq_nosync() instead because the interrupt handler does\neverything while holding the mutex so it doesn't matter if it's still\nrunning.\n    ",
@@ -54,7 +64,7 @@
 				"date": "2024-09-20"
 			},
 			"updated": {
-				"date": "2024-10-05"
+				"date": "2024-10-09"
 			},
 			"affected_cpe_list": {
 				"cpe": [

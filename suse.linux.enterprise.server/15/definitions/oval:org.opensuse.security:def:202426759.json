@@ -1,0 +1,178 @@
+{
+	"id": "oval:org.opensuse.security:def:202426759",
+	"version": "1",
+	"class": "vulnerability",
+	"metadata": {
+		"title": "CVE-2024-26759",
+		"affected": {
+			"family": "unix",
+			"platform": [
+				"SUSE Linux Enterprise High Performance Computing 15 SP6",
+				"SUSE Linux Enterprise Module for Confidential Computing Technical Preview 15 SP6",
+				"SUSE Linux Enterprise Module for Public Cloud 15 SP6",
+				"SUSE Linux Enterprise Server 15 SP6",
+				"SUSE Linux Enterprise Server for SAP Applications 15 SP6"
+			]
+		},
+		"reference": [
+			{
+				"ref_id": "Mitre CVE-2024-26759",
+				"ref_url": "https://cve.mitre.org/cgi-bin/cvename.cgi?name=CVE-2024-26759",
+				"source": "CVE"
+			},
+			{
+				"ref_id": "SUSE CVE-2024-26759",
+				"ref_url": "https://www.suse.com/security/cve/CVE-2024-26759",
+				"source": "SUSE CVE"
+			},
+			{
+				"ref_id": "SUSE-SU-2024:3551-1",
+				"ref_url": "https://lists.suse.com/pipermail/sle-updates/2024-October/037163.html",
+				"source": "SUSE-SU"
+			},
+			{
+				"ref_id": "SUSE-SU-2024:3553-1",
+				"ref_url": "https://lists.suse.com/pipermail/sle-updates/2024-October/037161.html",
+				"source": "SUSE-SU"
+			}
+		],
+		"description": "\n    In the Linux kernel, the following vulnerability has been resolved:\n\nmm/swap: fix race when skipping swapcache\n\nWhen skipping swapcache for SWP_SYNCHRONOUS_IO, if two or more threads\nswapin the same entry at the same time, they get different pages (A, B). \nBefore one thread (T0) finishes the swapin and installs page (A) to the\nPTE, another thread (T1) could finish swapin of page (B), swap_free the\nentry, then swap out the possibly modified page reusing the same entry. \nIt breaks the pte_same check in (T0) because PTE value is unchanged,\ncausing ABA problem.  Thread (T0) will install a stalled page (A) into the\nPTE and cause data corruption.\n\nOne possible callstack is like this:\n\nCPU0                                 CPU1\n----                                 ----\ndo_swap_page()                       do_swap_page() with same entry\n<direct swapin path>                 <direct swapin path>\n<alloc page A>                       <alloc page B>\nswap_read_folio() <- read to page A  swap_read_folio() <- read to page B\n<slow on later locks or interrupt>   <finished swapin first>\n...                                  set_pte_at()\n                                     swap_free() <- entry is free\n                                     <write to page B, now page A stalled>\n                                     <swap out page B to same swap entry>\npte_same() <- Check pass, PTE seems\n              unchanged, but page A\n              is stalled!\nswap_free() <- page B content lost!\nset_pte_at() <- staled page A installed!\n\nAnd besides, for ZRAM, swap_free() allows the swap device to discard the\nentry content, so even if page (B) is not modified, if swap_read_folio()\non CPU0 happens later than swap_free() on CPU1, it may also cause data\nloss.\n\nTo fix this, reuse swapcache_prepare which will pin the swap entry using\nthe cache flag, and allow only one thread to swap it in, also prevent any\nparallel code from putting the entry in the cache.  Release the pin after\nPT unlocked.\n\nRacers just loop and wait since it's a rare and very short event.  A\nschedule_timeout_uninterruptible(1) call is added to avoid repeated page\nfaults wasting too much CPU, causing livelock or adding too much noise to\nperf statistics.  A similar livelock issue was described in commit\n029c4628b2eb (\"mm: swap: get rid of livelock in swapin readahead\")\n\nReproducer:\n\nThis race issue can be triggered easily using a well constructed\nreproducer and patched brd (with a delay in read path) [1]:\n\nWith latest 6.8 mainline, race caused data loss can be observed easily:\n$ gcc -g -lpthread test-thread-swap-race.c && ./a.out\n  Polulating 32MB of memory region...\n  Keep swapping out...\n  Starting round 0...\n  Spawning 65536 workers...\n  32746 workers spawned, wait for done...\n  Round 0: Error on 0x5aa00, expected 32746, got 32743, 3 data loss!\n  Round 0: Error on 0x395200, expected 32746, got 32743, 3 data loss!\n  Round 0: Error on 0x3fd000, expected 32746, got 32737, 9 data loss!\n  Round 0 Failed, 15 data loss!\n\nThis reproducer spawns multiple threads sharing the same memory region\nusing a small swap device.  Every two threads updates mapped pages one by\none in opposite direction trying to create a race, with one dedicated\nthread keep swapping out the data out using madvise.\n\nThe reproducer created a reproduce rate of about once every 5 minutes, so\nthe race should be totally possible in production.\n\nAfter this patch, I ran the reproducer for over a few hundred rounds and\nno data loss observed.\n\nPerformance overhead is minimal, microbenchmark swapin 10G from 32G\nzram:\n\nBefore:     10934698 us\nAfter:      11157121 us\nCached:     13155355 us (Dropping SWP_SYNCHRONOUS_IO flag)\n\n[kasong@tencent.com: v4]\n  Link: https://lkml.kernel.org/r/20240219082040.7495-1-ryncsn@gmail.com\n    ",
+		"advisory": {
+			"from": "security@suse.de",
+			"severity": "Moderate",
+			"cve": [
+				{
+					"text": "CVE-2024-26759 at SUSE",
+					"href": "https://www.suse.com/security/cve/CVE-2024-26759/",
+					"impact": "medium",
+					"cvss3": "5.5/CVSS:3.1/AV:L/AC:L/PR:L/UI:N/S:U/C:N/I:N/A:H"
+				},
+				{
+					"text": "CVE-2024-26759 at NVD",
+					"href": "https://nvd.nist.gov/vuln/detail/CVE-2024-26759"
+				}
+			],
+			"bugzilla": [
+				{
+					"text": "SUSE bug 1230340",
+					"href": "https://bugzilla.suse.com/1230340"
+				}
+			],
+			"issued": {
+				"date": "2024-10-09"
+			},
+			"updated": {
+				"date": "2024-10-09"
+			},
+			"affected_cpe_list": {
+				"cpe": [
+					"cpe:/o:suse:sle-module-public-cloud:15:sp6"
+				]
+			}
+		}
+	},
+	"criteria": {
+		"operator": "OR",
+		"criterias": [
+			{
+				"operator": "AND",
+				"criterias": [
+					{
+						"operator": "OR",
+						"criterions": [
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009856172",
+								"comment": "SUSE Linux Enterprise High Performance Computing 15 SP6 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009856320",
+								"comment": "SUSE Linux Enterprise Module for Public Cloud 15 SP6 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009856174",
+								"comment": "SUSE Linux Enterprise Server 15 SP6 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009856175",
+								"comment": "SUSE Linux Enterprise Server for SAP Applications 15 SP6 is installed"
+							}
+						]
+					},
+					{
+						"operator": "OR",
+						"criterions": [
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009945998",
+								"comment": "kernel-azure-6.4.0-150600.8.14.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009945999",
+								"comment": "kernel-azure-devel-6.4.0-150600.8.14.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009946004",
+								"comment": "kernel-devel-azure-6.4.0-150600.8.14.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009946005",
+								"comment": "kernel-source-azure-6.4.0-150600.8.14.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009946006",
+								"comment": "kernel-syms-azure-6.4.0-150600.8.14.1 is installed"
+							}
+						]
+					}
+				]
+			},
+			{
+				"operator": "AND",
+				"criterias": [
+					{
+						"operator": "OR",
+						"criterions": [
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009946096",
+								"comment": "kernel-coco-6.4.0-15061.6.coco15sp6.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009946097",
+								"comment": "kernel-coco-devel-6.4.0-15061.6.coco15sp6.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009946098",
+								"comment": "kernel-coco_debug-6.4.0-15061.6.coco15sp6.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009946099",
+								"comment": "kernel-coco_debug-devel-6.4.0-15061.6.coco15sp6.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009946100",
+								"comment": "kernel-devel-coco-6.4.0-15061.6.coco15sp6.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009946101",
+								"comment": "kernel-source-coco-6.4.0-15061.6.coco15sp6.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009946102",
+								"comment": "kernel-syms-coco-6.4.0-15061.6.coco15sp6.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009946103",
+								"comment": "reiserfs-kmp-coco-6.4.0-15061.6.coco15sp6.1 is installed"
+							}
+						]
+					}
+				],
+				"criterions": [
+					{
+						"test_ref": "oval:org.opensuse.security:tst:2009945160",
+						"comment": "SUSE Linux Enterprise Module for Confidential Computing Technical Preview 15 SP6 is installed"
+					}
+				]
+			}
+		]
+	}
+}
