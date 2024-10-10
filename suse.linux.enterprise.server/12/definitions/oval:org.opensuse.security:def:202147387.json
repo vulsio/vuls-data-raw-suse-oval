@@ -7,9 +7,11 @@
 		"affected": {
 			"family": "unix",
 			"platform": [
+				"SUSE Linux Enterprise Live Patching 12 SP5",
 				"SUSE Linux Enterprise Real Time 12 SP5",
 				"SUSE Linux Enterprise Server 12 SP5",
-				"SUSE Linux Enterprise Server for SAP Applications 12 SP5"
+				"SUSE Linux Enterprise Server for SAP Applications 12 SP5",
+				"SUSE Linux Enterprise Workstation Extension 12 SP5"
 			]
 		},
 		"reference": [
@@ -57,6 +59,16 @@
 				"ref_id": "SUSE-SU-2024:2190-1",
 				"ref_url": "https://lists.suse.com/pipermail/sle-updates/2024-June/035732.html",
 				"source": "SUSE-SU"
+			},
+			{
+				"ref_id": "SUSE-SU-2024:3559-1",
+				"ref_url": "https://lists.suse.com/pipermail/sle-updates/2024-October/037179.html",
+				"source": "SUSE-SU"
+			},
+			{
+				"ref_id": "SUSE-SU-2024:3566-1",
+				"ref_url": "https://lists.suse.com/pipermail/sle-security-updates/2024-October/019578.html",
+				"source": "SUSE-SU"
 			}
 		],
 		"description": "\n    In the Linux kernel, the following vulnerability has been resolved:\n\ncpufreq: schedutil: Use kobject release() method to free sugov_tunables\n\nThe struct sugov_tunables is protected by the kobject, so we can't free\nit directly. Otherwise we would get a call trace like this:\n  ODEBUG: free active (active state 0) object type: timer_list hint: delayed_work_timer_fn+0x0/0x30\n  WARNING: CPU: 3 PID: 720 at lib/debugobjects.c:505 debug_print_object+0xb8/0x100\n  Modules linked in:\n  CPU: 3 PID: 720 Comm: a.sh Tainted: G        W         5.14.0-rc1-next-20210715-yocto-standard+ #507\n  Hardware name: Marvell OcteonTX CN96XX board (DT)\n  pstate: 40400009 (nZcv daif +PAN -UAO -TCO BTYPE=--)\n  pc : debug_print_object+0xb8/0x100\n  lr : debug_print_object+0xb8/0x100\n  sp : ffff80001ecaf910\n  x29: ffff80001ecaf910 x28: ffff00011b10b8d0 x27: ffff800011043d80\n  x26: ffff00011a8f0000 x25: ffff800013cb3ff0 x24: 0000000000000000\n  x23: ffff80001142aa68 x22: ffff800011043d80 x21: ffff00010de46f20\n  x20: ffff800013c0c520 x19: ffff800011d8f5b0 x18: 0000000000000010\n  x17: 6e6968207473696c x16: 5f72656d6974203a x15: 6570797420746365\n  x14: 6a626f2029302065 x13: 303378302f307830 x12: 2b6e665f72656d69\n  x11: ffff8000124b1560 x10: ffff800012331520 x9 : ffff8000100ca6b0\n  x8 : 000000000017ffe8 x7 : c0000000fffeffff x6 : 0000000000000001\n  x5 : ffff800011d8c000 x4 : ffff800011d8c740 x3 : 0000000000000000\n  x2 : ffff0001108301c0 x1 : ab3c90eedf9c0f00 x0 : 0000000000000000\n  Call trace:\n   debug_print_object+0xb8/0x100\n   __debug_check_no_obj_freed+0x1c0/0x230\n   debug_check_no_obj_freed+0x20/0x88\n   slab_free_freelist_hook+0x154/0x1c8\n   kfree+0x114/0x5d0\n   sugov_exit+0xbc/0xc0\n   cpufreq_exit_governor+0x44/0x90\n   cpufreq_set_policy+0x268/0x4a8\n   store_scaling_governor+0xe0/0x128\n   store+0xc0/0xf0\n   sysfs_kf_write+0x54/0x80\n   kernfs_fop_write_iter+0x128/0x1c0\n   new_sync_write+0xf0/0x190\n   vfs_write+0x2d4/0x478\n   ksys_write+0x74/0x100\n   __arm64_sys_write+0x24/0x30\n   invoke_syscall.constprop.0+0x54/0xe0\n   do_el0_svc+0x64/0x158\n   el0_svc+0x2c/0xb0\n   el0t_64_sync_handler+0xb0/0xb8\n   el0t_64_sync+0x198/0x19c\n  irq event stamp: 5518\n  hardirqs last  enabled at (5517): [<ffff8000100cbd7c>] console_unlock+0x554/0x6c8\n  hardirqs last disabled at (5518): [<ffff800010fc0638>] el1_dbg+0x28/0xa0\n  softirqs last  enabled at (5504): [<ffff8000100106e0>] __do_softirq+0x4d0/0x6c0\n  softirqs last disabled at (5483): [<ffff800010049548>] irq_exit+0x1b0/0x1b8\n\nSo split the original sugov_tunables_free() into two functions,\nsugov_clear_global_tunables() is just used to clear the global_tunables\nand the new sugov_tunables_free() is used as kobj_type::release to\nrelease the sugov_tunables safely.\n    ",
@@ -85,10 +97,12 @@
 				"date": "2024-07-31"
 			},
 			"updated": {
-				"date": "2024-10-05"
+				"date": "2024-10-10"
 			},
 			"affected_cpe_list": {
 				"cpe": [
+					"cpe:/o:suse:sle-live-patching:12:sp5",
+					"cpe:/o:suse:sle-we:12:sp5",
 					"cpe:/o:suse:sles:12:sp5",
 					"cpe:/o:suse:sles_sap:12:sp5",
 					"cpe:/o:suse:suse-linux-enterprise-rt:12:sp5"
@@ -106,44 +120,24 @@
 						"operator": "OR",
 						"criterions": [
 							{
-								"test_ref": "oval:org.opensuse.security:tst:2009334017",
-								"comment": "kernel-default is not affected"
+								"test_ref": "oval:org.opensuse.security:tst:2009258033",
+								"comment": "SUSE Linux Enterprise Server 12 SP5 is installed"
 							},
 							{
-								"test_ref": "oval:org.opensuse.security:tst:2009335425",
-								"comment": "kernel-default-base is not affected"
+								"test_ref": "oval:org.opensuse.security:tst:2009258806",
+								"comment": "SUSE Linux Enterprise Server for SAP Applications 12 SP5 is installed"
 							},
 							{
-								"test_ref": "oval:org.opensuse.security:tst:2009335423",
-								"comment": "kernel-default-devel is not affected"
-							},
-							{
-								"test_ref": "oval:org.opensuse.security:tst:2009334791",
-								"comment": "kernel-devel is not affected"
-							},
-							{
-								"test_ref": "oval:org.opensuse.security:tst:2009334792",
-								"comment": "kernel-macros is not affected"
-							},
-							{
-								"test_ref": "oval:org.opensuse.security:tst:2009333928",
-								"comment": "kernel-source is not affected"
-							},
-							{
-								"test_ref": "oval:org.opensuse.security:tst:2009340306",
-								"comment": "kernel-devel-azure is not affected"
-							},
-							{
-								"test_ref": "oval:org.opensuse.security:tst:2009340305",
-								"comment": "kernel-source-azure is not affected"
+								"test_ref": "oval:org.opensuse.security:tst:2009258650",
+								"comment": "SUSE Linux Enterprise Workstation Extension 12 SP5 is installed"
 							}
 						]
 					}
 				],
 				"criterions": [
 					{
-						"test_ref": "oval:org.opensuse.security:tst:2009258806",
-						"comment": "SUSE Linux Enterprise Server for SAP Applications 12 SP5 is installed"
+						"test_ref": "oval:org.opensuse.security:tst:2009946372",
+						"comment": "kernel-default-extra-4.12.14-122.231.1 is installed"
 					}
 				]
 			},
@@ -154,48 +148,24 @@
 						"operator": "OR",
 						"criterions": [
 							{
-								"test_ref": "oval:org.opensuse.security:tst:2009334017",
-								"comment": "kernel-default is not affected"
+								"test_ref": "oval:org.opensuse.security:tst:2009946334",
+								"comment": "kernel-default-kgraft-4.12.14-122.231.1 is installed"
 							},
 							{
-								"test_ref": "oval:org.opensuse.security:tst:2009335425",
-								"comment": "kernel-default-base is not affected"
+								"test_ref": "oval:org.opensuse.security:tst:2009946335",
+								"comment": "kernel-default-kgraft-devel-4.12.14-122.231.1 is installed"
 							},
 							{
-								"test_ref": "oval:org.opensuse.security:tst:2009335423",
-								"comment": "kernel-default-devel is not affected"
-							},
-							{
-								"test_ref": "oval:org.opensuse.security:tst:2009335426",
-								"comment": "kernel-default-man is not affected"
-							},
-							{
-								"test_ref": "oval:org.opensuse.security:tst:2009334791",
-								"comment": "kernel-devel is not affected"
-							},
-							{
-								"test_ref": "oval:org.opensuse.security:tst:2009334792",
-								"comment": "kernel-macros is not affected"
-							},
-							{
-								"test_ref": "oval:org.opensuse.security:tst:2009333928",
-								"comment": "kernel-source is not affected"
-							},
-							{
-								"test_ref": "oval:org.opensuse.security:tst:2009340306",
-								"comment": "kernel-devel-azure is not affected"
-							},
-							{
-								"test_ref": "oval:org.opensuse.security:tst:2009340305",
-								"comment": "kernel-source-azure is not affected"
+								"test_ref": "oval:org.opensuse.security:tst:2009946336",
+								"comment": "kgraft-patch-4_12_14-122_231-default-1-8.3.1 is installed"
 							}
 						]
 					}
 				],
 				"criterions": [
 					{
-						"test_ref": "oval:org.opensuse.security:tst:2009258033",
-						"comment": "SUSE Linux Enterprise Server 12 SP5 is installed"
+						"test_ref": "oval:org.opensuse.security:tst:2009273148",
+						"comment": "SUSE Linux Enterprise Live Patching 12 SP5 is installed"
 					}
 				]
 			},
@@ -206,12 +176,52 @@
 						"operator": "OR",
 						"criterions": [
 							{
-								"test_ref": "oval:org.opensuse.security:tst:2009728711",
-								"comment": "kernel-devel-rt is not affected"
+								"test_ref": "oval:org.opensuse.security:tst:2009946337",
+								"comment": "cluster-md-kmp-rt-4.12.14-10.203.1 is installed"
 							},
 							{
-								"test_ref": "oval:org.opensuse.security:tst:2009728712",
-								"comment": "kernel-source-rt is not affected"
+								"test_ref": "oval:org.opensuse.security:tst:2009946338",
+								"comment": "dlm-kmp-rt-4.12.14-10.203.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009946339",
+								"comment": "gfs2-kmp-rt-4.12.14-10.203.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009946340",
+								"comment": "kernel-devel-rt-4.12.14-10.203.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009946341",
+								"comment": "kernel-rt-4.12.14-10.203.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009946342",
+								"comment": "kernel-rt-base-4.12.14-10.203.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009946343",
+								"comment": "kernel-rt-devel-4.12.14-10.203.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009946344",
+								"comment": "kernel-rt_debug-4.12.14-10.203.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009946345",
+								"comment": "kernel-rt_debug-devel-4.12.14-10.203.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009946346",
+								"comment": "kernel-source-rt-4.12.14-10.203.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009946347",
+								"comment": "kernel-syms-rt-4.12.14-10.203.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009946348",
+								"comment": "ocfs2-kmp-rt-4.12.14-10.203.1 is installed"
 							}
 						]
 					}
@@ -220,6 +230,69 @@
 					{
 						"test_ref": "oval:org.opensuse.security:tst:2009279486",
 						"comment": "SUSE Linux Enterprise Real Time 12 SP5 is installed"
+					}
+				]
+			},
+			{
+				"operator": "AND",
+				"criterias": [
+					{
+						"operator": "OR",
+						"criterions": [
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009258033",
+								"comment": "SUSE Linux Enterprise Server 12 SP5 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009258806",
+								"comment": "SUSE Linux Enterprise Server for SAP Applications 12 SP5 is installed"
+							}
+						]
+					},
+					{
+						"operator": "OR",
+						"criterions": [
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009946356",
+								"comment": "kernel-default-4.12.14-122.231.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009946357",
+								"comment": "kernel-default-base-4.12.14-122.231.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009946358",
+								"comment": "kernel-default-devel-4.12.14-122.231.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009946359",
+								"comment": "kernel-default-man-4.12.14-122.231.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009946360",
+								"comment": "kernel-devel-4.12.14-122.231.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009946361",
+								"comment": "kernel-macros-4.12.14-122.231.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009946362",
+								"comment": "kernel-source-4.12.14-122.231.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009946363",
+								"comment": "kernel-syms-4.12.14-122.231.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009340306",
+								"comment": "kernel-devel-azure is not affected"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009340305",
+								"comment": "kernel-source-azure is not affected"
+							}
+						]
 					}
 				]
 			}

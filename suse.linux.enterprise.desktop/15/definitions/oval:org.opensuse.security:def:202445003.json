@@ -1,0 +1,361 @@
+{
+	"id": "oval:org.opensuse.security:def:202445003",
+	"version": "1",
+	"class": "vulnerability",
+	"metadata": {
+		"title": "CVE-2024-45003",
+		"affected": {
+			"family": "unix",
+			"platform": [
+				"SUSE Linux Enterprise Desktop 15 SP5",
+				"SUSE Linux Enterprise Desktop 15 SP6",
+				"SUSE Linux Enterprise High Performance Computing 15 SP5",
+				"SUSE Linux Enterprise High Performance Computing 15 SP6",
+				"SUSE Linux Enterprise Module for Basesystem 15 SP5",
+				"SUSE Linux Enterprise Module for Basesystem 15 SP6",
+				"SUSE Linux Enterprise Module for Development Tools 15 SP5",
+				"SUSE Linux Enterprise Module for Development Tools 15 SP6",
+				"SUSE Linux Enterprise Server 15 SP5",
+				"SUSE Linux Enterprise Server 15 SP6",
+				"SUSE Linux Enterprise Server for SAP Applications 15 SP5",
+				"SUSE Linux Enterprise Server for SAP Applications 15 SP6"
+			]
+		},
+		"reference": [
+			{
+				"ref_id": "Mitre CVE-2024-45003",
+				"ref_url": "https://cve.mitre.org/cgi-bin/cvename.cgi?name=CVE-2024-45003",
+				"source": "CVE"
+			},
+			{
+				"ref_id": "SUSE CVE-2024-45003",
+				"ref_url": "https://www.suse.com/security/cve/CVE-2024-45003",
+				"source": "SUSE CVE"
+			},
+			{
+				"ref_id": "SUSE-SU-2024:3403-1",
+				"ref_url": "https://lists.suse.com/pipermail/sle-security-updates/2024-September/019501.html",
+				"source": "SUSE-SU"
+			},
+			{
+				"ref_id": "SUSE-SU-2024:3408-1",
+				"ref_url": "https://lists.suse.com/pipermail/sle-updates/2024-September/037033.html",
+				"source": "SUSE-SU"
+			},
+			{
+				"ref_id": "SUSE-SU-2024:3551-1",
+				"ref_url": "https://lists.suse.com/pipermail/sle-updates/2024-October/037163.html",
+				"source": "SUSE-SU"
+			},
+			{
+				"ref_id": "SUSE-SU-2024:3561-1",
+				"ref_url": "https://lists.suse.com/pipermail/sle-security-updates/2024-October/019580.html",
+				"source": "SUSE-SU"
+			},
+			{
+				"ref_id": "SUSE-SU-2024:3564-1",
+				"ref_url": "https://lists.suse.com/pipermail/sle-updates/2024-October/037178.html",
+				"source": "SUSE-SU"
+			},
+			{
+				"ref_id": "SUSE-SU-2024:3565-1",
+				"ref_url": "https://lists.suse.com/pipermail/sle-security-updates/2024-October/019573.html",
+				"source": "SUSE-SU"
+			},
+			{
+				"ref_id": "SUSE-SU-2024:3567-1",
+				"ref_url": "https://lists.suse.com/pipermail/sle-security-updates/2024-October/019577.html",
+				"source": "SUSE-SU"
+			},
+			{
+				"ref_id": "SUSE-SU-2024:3569-1",
+				"ref_url": "https://lists.suse.com/pipermail/sle-security-updates/2024-October/019576.html",
+				"source": "SUSE-SU"
+			}
+		],
+		"description": "\n    In the Linux kernel, the following vulnerability has been resolved:\n\nvfs: Don't evict inode under the inode lru traversing context\n\nThe inode reclaiming process(See function prune_icache_sb) collects all\nreclaimable inodes and mark them with I_FREEING flag at first, at that\ntime, other processes will be stuck if they try getting these inodes\n(See function find_inode_fast), then the reclaiming process destroy the\ninodes by function dispose_list(). Some filesystems(eg. ext4 with\nea_inode feature, ubifs with xattr) may do inode lookup in the inode\nevicting callback function, if the inode lookup is operated under the\ninode lru traversing context, deadlock problems may happen.\n\nCase 1: In function ext4_evict_inode(), the ea inode lookup could happen\n        if ea_inode feature is enabled, the lookup process will be stuck\n\tunder the evicting context like this:\n\n 1. File A has inode i_reg and an ea inode i_ea\n 2. getfattr(A, xattr_buf) // i_ea is added into lru // lru->i_ea\n 3. Then, following three processes running like this:\n\n    PA                              PB\n echo 2 > /proc/sys/vm/drop_caches\n  shrink_slab\n   prune_dcache_sb\n   // i_reg is added into lru, lru->i_ea->i_reg\n   prune_icache_sb\n    list_lru_walk_one\n     inode_lru_isolate\n      i_ea->i_state |= I_FREEING // set inode state\n     inode_lru_isolate\n      __iget(i_reg)\n      spin_unlock(&i_reg->i_lock)\n      spin_unlock(lru_lock)\n                                     rm file A\n                                      i_reg->nlink = 0\n      iput(i_reg) // i_reg->nlink is 0, do evict\n       ext4_evict_inode\n        ext4_xattr_delete_inode\n         ext4_xattr_inode_dec_ref_all\n          ext4_xattr_inode_iget\n           ext4_iget(i_ea->i_ino)\n            iget_locked\n             find_inode_fast\n              __wait_on_freeing_inode(i_ea) ----→ AA deadlock\n    dispose_list // cannot be executed by prune_icache_sb\n     wake_up_bit(&i_ea->i_state)\n\nCase 2: In deleted inode writing function ubifs_jnl_write_inode(), file\n        deleting process holds BASEHD's wbuf->io_mutex while getting the\n\txattr inode, which could race with inode reclaiming process(The\n        reclaiming process could try locking BASEHD's wbuf->io_mutex in\n\tinode evicting function), then an ABBA deadlock problem would\n\thappen as following:\n\n 1. File A has inode ia and a xattr(with inode ixa), regular file B has\n    inode ib and a xattr.\n 2. getfattr(A, xattr_buf) // ixa is added into lru // lru->ixa\n 3. Then, following three processes running like this:\n\n        PA                PB                        PC\n                echo 2 > /proc/sys/vm/drop_caches\n                 shrink_slab\n                  prune_dcache_sb\n                  // ib and ia are added into lru, lru->ixa->ib->ia\n                  prune_icache_sb\n                   list_lru_walk_one\n                    inode_lru_isolate\n                     ixa->i_state |= I_FREEING // set inode state\n                    inode_lru_isolate\n                     __iget(ib)\n                     spin_unlock(&ib->i_lock)\n                     spin_unlock(lru_lock)\n                                                   rm file B\n                                                    ib->nlink = 0\n rm file A\n  iput(ia)\n   ubifs_evict_inode(ia)\n    ubifs_jnl_delete_inode(ia)\n     ubifs_jnl_write_inode(ia)\n      make_reservation(BASEHD) // Lock wbuf->io_mutex\n      ubifs_iget(ixa->i_ino)\n       iget_locked\n        find_inode_fast\n         __wait_on_freeing_inode(ixa)\n          |          iput(ib) // ib->nlink is 0, do evict\n          |           ubifs_evict_inode\n          |            ubifs_jnl_delete_inode(ib)\n          ↓             ubifs_jnl_write_inode\n     ABBA deadlock ←-----make_reservation(BASEHD)\n                   dispose_list // cannot be executed by prune_icache_sb\n                    wake_up_bit(&ixa->i_state)\n\nFix the possible deadlock by using new inode state flag I_LRU_ISOLATING\nto pin the inode in memory while inode_lru_isolate(\n---truncated---\n    ",
+		"advisory": {
+			"from": "security@suse.de",
+			"severity": "Moderate",
+			"cve": [
+				{
+					"text": "CVE-2024-45003 at SUSE",
+					"href": "https://www.suse.com/security/cve/CVE-2024-45003/",
+					"impact": "medium",
+					"cvss3": "5.5/CVSS:3.1/AV:L/AC:L/PR:L/UI:N/S:U/C:N/I:N/A:H"
+				},
+				{
+					"text": "CVE-2024-45003 at NVD",
+					"href": "https://nvd.nist.gov/vuln/detail/CVE-2024-45003",
+					"impact": "medium",
+					"cvss3": "4.7/CVSS:3.1/AV:L/AC:H/PR:L/UI:N/S:U/C:N/I:N/A:H"
+				}
+			],
+			"bugzilla": [
+				{
+					"text": "SUSE bug 1230245",
+					"href": "https://bugzilla.suse.com/1230245"
+				}
+			],
+			"issued": {
+				"date": "2024-10-10"
+			},
+			"updated": {
+				"date": "2024-10-10"
+			},
+			"affected_cpe_list": {
+				"cpe": [
+					"cpe:/o:suse:sle-module-basesystem:15:sp5",
+					"cpe:/o:suse:sle-module-basesystem:15:sp6",
+					"cpe:/o:suse:sle-module-development-tools:15:sp5",
+					"cpe:/o:suse:sle-module-development-tools:15:sp6",
+					"cpe:/o:suse:sle_hpc:15:sp5",
+					"cpe:/o:suse:sled:15:sp5",
+					"cpe:/o:suse:sles:15:sp5",
+					"cpe:/o:suse:sles_sap:15:sp5"
+				]
+			}
+		}
+	},
+	"criteria": {
+		"operator": "OR",
+		"criterias": [
+			{
+				"operator": "AND",
+				"criterias": [
+					{
+						"operator": "OR",
+						"criterions": [
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009759898",
+								"comment": "SUSE Linux Enterprise Desktop 15 SP5 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009759899",
+								"comment": "SUSE Linux Enterprise High Performance Computing 15 SP5 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009759900",
+								"comment": "SUSE Linux Enterprise Module for Basesystem 15 SP5 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009759901",
+								"comment": "SUSE Linux Enterprise Server 15 SP5 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009759902",
+								"comment": "SUSE Linux Enterprise Server for SAP Applications 15 SP5 is installed"
+							}
+						]
+					},
+					{
+						"operator": "OR",
+						"criterions": [
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009946182",
+								"comment": "kernel-64kb-5.14.21-150500.55.83.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009946183",
+								"comment": "kernel-64kb-devel-5.14.21-150500.55.83.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009946191",
+								"comment": "kernel-default-5.14.21-150500.55.83.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009946192",
+								"comment": "kernel-default-base-5.14.21-150500.55.83.1.150500.6.37.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009946194",
+								"comment": "kernel-default-devel-5.14.21-150500.55.83.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009946200",
+								"comment": "kernel-devel-5.14.21-150500.55.83.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009946207",
+								"comment": "kernel-macros-5.14.21-150500.55.83.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009946213",
+								"comment": "kernel-zfcpdump-5.14.21-150500.55.83.1 is installed"
+							}
+						]
+					}
+				]
+			},
+			{
+				"operator": "AND",
+				"criterias": [
+					{
+						"operator": "OR",
+						"criterions": [
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009759898",
+								"comment": "SUSE Linux Enterprise Desktop 15 SP5 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009759899",
+								"comment": "SUSE Linux Enterprise High Performance Computing 15 SP5 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009760583",
+								"comment": "SUSE Linux Enterprise Module for Development Tools 15 SP5 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009759901",
+								"comment": "SUSE Linux Enterprise Server 15 SP5 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009759902",
+								"comment": "SUSE Linux Enterprise Server for SAP Applications 15 SP5 is installed"
+							}
+						]
+					},
+					{
+						"operator": "OR",
+						"criterions": [
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009946201",
+								"comment": "kernel-docs-5.14.21-150500.55.83.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009946208",
+								"comment": "kernel-obs-build-5.14.21-150500.55.83.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009946210",
+								"comment": "kernel-source-5.14.21-150500.55.83.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009946212",
+								"comment": "kernel-syms-5.14.21-150500.55.83.1 is installed"
+							}
+						]
+					}
+				]
+			},
+			{
+				"operator": "AND",
+				"criterias": [
+					{
+						"operator": "OR",
+						"criterions": [
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009856171",
+								"comment": "SUSE Linux Enterprise Desktop 15 SP6 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009856172",
+								"comment": "SUSE Linux Enterprise High Performance Computing 15 SP6 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009856173",
+								"comment": "SUSE Linux Enterprise Module for Basesystem 15 SP6 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009856174",
+								"comment": "SUSE Linux Enterprise Server 15 SP6 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009856175",
+								"comment": "SUSE Linux Enterprise Server for SAP Applications 15 SP6 is installed"
+							}
+						]
+					},
+					{
+						"operator": "OR",
+						"criterions": [
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009946256",
+								"comment": "kernel-64kb-6.4.0-150600.23.25.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009946257",
+								"comment": "kernel-64kb-devel-6.4.0-150600.23.25.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009946265",
+								"comment": "kernel-default-6.4.0-150600.23.25.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009946266",
+								"comment": "kernel-default-base-6.4.0-150600.23.25.1.150600.12.10.2 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009946268",
+								"comment": "kernel-default-devel-6.4.0-150600.23.25.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009946274",
+								"comment": "kernel-devel-6.4.0-150600.23.25.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009946281",
+								"comment": "kernel-macros-6.4.0-150600.23.25.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009946287",
+								"comment": "kernel-zfcpdump-6.4.0-150600.23.25.1 is installed"
+							}
+						]
+					}
+				]
+			},
+			{
+				"operator": "AND",
+				"criterias": [
+					{
+						"operator": "OR",
+						"criterions": [
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009856171",
+								"comment": "SUSE Linux Enterprise Desktop 15 SP6 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009856172",
+								"comment": "SUSE Linux Enterprise High Performance Computing 15 SP6 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009856253",
+								"comment": "SUSE Linux Enterprise Module for Development Tools 15 SP6 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009856174",
+								"comment": "SUSE Linux Enterprise Server 15 SP6 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009856175",
+								"comment": "SUSE Linux Enterprise Server for SAP Applications 15 SP6 is installed"
+							}
+						]
+					},
+					{
+						"operator": "OR",
+						"criterions": [
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009946275",
+								"comment": "kernel-docs-6.4.0-150600.23.25.2 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009946282",
+								"comment": "kernel-obs-build-6.4.0-150600.23.25.2 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009946284",
+								"comment": "kernel-source-6.4.0-150600.23.25.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009946286",
+								"comment": "kernel-syms-6.4.0-150600.23.25.1 is installed"
+							}
+						]
+					}
+				]
+			}
+		]
+	}
+}

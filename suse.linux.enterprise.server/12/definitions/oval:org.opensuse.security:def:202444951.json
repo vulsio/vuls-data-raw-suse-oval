@@ -7,6 +7,7 @@
 		"affected": {
 			"family": "unix",
 			"platform": [
+				"SUSE Linux Enterprise Live Patching 12 SP5",
 				"SUSE Linux Enterprise Real Time 12 SP5",
 				"SUSE Linux Enterprise Server 12 SP2-LTSS",
 				"SUSE Linux Enterprise Server 12 SP4-LTSS",
@@ -29,6 +30,16 @@
 				"ref_id": "SUSE-SU-2024:3551-1",
 				"ref_url": "https://lists.suse.com/pipermail/sle-updates/2024-October/037163.html",
 				"source": "SUSE-SU"
+			},
+			{
+				"ref_id": "SUSE-SU-2024:3561-1",
+				"ref_url": "https://lists.suse.com/pipermail/sle-security-updates/2024-October/019580.html",
+				"source": "SUSE-SU"
+			},
+			{
+				"ref_id": "SUSE-SU-2024:3564-1",
+				"ref_url": "https://lists.suse.com/pipermail/sle-updates/2024-October/037178.html",
+				"source": "SUSE-SU"
 			}
 		],
 		"description": "\n    In the Linux kernel, the following vulnerability has been resolved:\n\nserial: sc16is7xx: fix TX fifo corruption\n\nSometimes, when a packet is received on channel A at almost the same time\nas a packet is about to be transmitted on channel B, we observe with a\nlogic analyzer that the received packet on channel A is transmitted on\nchannel B. In other words, the Tx buffer data on channel B is corrupted\nwith data from channel A.\n\nThe problem appeared since commit 4409df5866b7 (\"serial: sc16is7xx: change\nEFR lock to operate on each channels\"), which changed the EFR locking to\noperate on each channel instead of chip-wise.\n\nThis commit has introduced a regression, because the EFR lock is used not\nonly to protect the EFR registers access, but also, in a very obscure and\nundocumented way, to protect access to the data buffer, which is shared by\nthe Tx and Rx handlers, but also by each channel of the IC.\n\nFix this regression first by switching to kfifo_out_linear_ptr() in\nsc16is7xx_handle_tx() to eliminate the need for a shared Rx/Tx buffer.\n\nSecondly, replace the chip-wise Rx buffer with a separate Rx buffer for\neach channel.\n    ",
@@ -44,7 +55,9 @@
 				},
 				{
 					"text": "CVE-2024-44951 at NVD",
-					"href": "https://nvd.nist.gov/vuln/detail/CVE-2024-44951"
+					"href": "https://nvd.nist.gov/vuln/detail/CVE-2024-44951",
+					"impact": "high",
+					"cvss3": "7.8/CVSS:3.1/AV:L/AC:L/PR:L/UI:N/S:U/C:H/I:H/A:H"
 				}
 			],
 			"bugzilla": [
@@ -57,10 +70,11 @@
 				"date": "2024-09-06"
 			},
 			"updated": {
-				"date": "2024-10-09"
+				"date": "2024-10-10"
 			},
 			"affected_cpe_list": {
 				"cpe": [
+					"cpe:/o:suse:sle-live-patching:12:sp5",
 					"cpe:/o:suse:sles-ltss:12:sp2",
 					"cpe:/o:suse:sles-ltss:12:sp4",
 					"cpe:/o:suse:sles:12:sp5",
@@ -221,6 +235,34 @@
 								"comment": "kernel-source is not affected"
 							}
 						]
+					}
+				]
+			},
+			{
+				"operator": "AND",
+				"criterias": [
+					{
+						"operator": "OR",
+						"criterions": [
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009338031",
+								"comment": "kernel-default-kgraft is not affected"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009696923",
+								"comment": "kernel-default-kgraft-devel is not affected"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009333928",
+								"comment": "kernel-source is not affected"
+							}
+						]
+					}
+				],
+				"criterions": [
+					{
+						"test_ref": "oval:org.opensuse.security:tst:2009273148",
+						"comment": "SUSE Linux Enterprise Live Patching 12 SP5 is installed"
 					}
 				]
 			},
