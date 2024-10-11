@@ -59,6 +59,21 @@
 				"ref_id": "SUSE-SU-2024:3569-1",
 				"ref_url": "https://lists.suse.com/pipermail/sle-security-updates/2024-October/019576.html",
 				"source": "SUSE-SU"
+			},
+			{
+				"ref_id": "SUSE-SU-2024:3587-1",
+				"ref_url": "https://lists.suse.com/pipermail/sle-security-updates/2024-October/019588.html",
+				"source": "SUSE-SU"
+			},
+			{
+				"ref_id": "SUSE-SU-2024:3591-1",
+				"ref_url": "https://lists.suse.com/pipermail/sle-security-updates/2024-October/019587.html",
+				"source": "SUSE-SU"
+			},
+			{
+				"ref_id": "SUSE-SU-2024:3592-1",
+				"ref_url": "https://lists.suse.com/pipermail/sle-updates/2024-October/037209.html",
+				"source": "SUSE-SU"
 			}
 		],
 		"description": "\n    In the Linux kernel, the following vulnerability has been resolved:\n\nPCI: Add missing bridge lock to pci_bus_lock()\n\nOne of the true positives that the cfg_access_lock lockdep effort\nidentified is this sequence:\n\n  WARNING: CPU: 14 PID: 1 at drivers/pci/pci.c:4886 pci_bridge_secondary_bus_reset+0x5d/0x70\n  RIP: 0010:pci_bridge_secondary_bus_reset+0x5d/0x70\n  Call Trace:\n   <TASK>\n   ? __warn+0x8c/0x190\n   ? pci_bridge_secondary_bus_reset+0x5d/0x70\n   ? report_bug+0x1f8/0x200\n   ? handle_bug+0x3c/0x70\n   ? exc_invalid_op+0x18/0x70\n   ? asm_exc_invalid_op+0x1a/0x20\n   ? pci_bridge_secondary_bus_reset+0x5d/0x70\n   pci_reset_bus+0x1d8/0x270\n   vmd_probe+0x778/0xa10\n   pci_device_probe+0x95/0x120\n\nWhere pci_reset_bus() users are triggering unlocked secondary bus resets.\nIronically pci_bus_reset(), several calls down from pci_reset_bus(), uses\npci_bus_lock() before issuing the reset which locks everything *but* the\nbridge itself.\n\nFor the same motivation as adding:\n\n  bridge = pci_upstream_bridge(dev);\n  if (bridge)\n    pci_dev_lock(bridge);\n\nto pci_reset_function() for the \"bus\" and \"cxl_bus\" reset cases, add\npci_dev_lock() for @bus->self to pci_bus_lock().\n\n[bhelgaas: squash in recursive locking deadlock fix from Keith Busch:\nhttps://lore.kernel.org/r/20240711193650.701834-1-kbusch@meta.com]\n    ",
@@ -89,7 +104,7 @@
 				"date": "2024-10-10"
 			},
 			"updated": {
-				"date": "2024-10-10"
+				"date": "2024-10-11"
 			},
 			"affected_cpe_list": {
 				"cpe": [
@@ -245,6 +260,18 @@
 						"operator": "OR",
 						"criterions": [
 							{
+								"test_ref": "oval:org.opensuse.security:tst:2009947186",
+								"comment": "kernel-azure-4.12.14-16.200.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009947187",
+								"comment": "kernel-azure-base-4.12.14-16.200.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009947188",
+								"comment": "kernel-azure-devel-4.12.14-16.200.1 is installed"
+							},
+							{
 								"test_ref": "oval:org.opensuse.security:tst:2009946356",
 								"comment": "kernel-default-4.12.14-122.231.1 is installed"
 							},
@@ -265,6 +292,10 @@
 								"comment": "kernel-devel-4.12.14-122.231.1 is installed"
 							},
 							{
+								"test_ref": "oval:org.opensuse.security:tst:2009947189",
+								"comment": "kernel-devel-azure-4.12.14-16.200.1 is installed"
+							},
+							{
 								"test_ref": "oval:org.opensuse.security:tst:2009946361",
 								"comment": "kernel-macros-4.12.14-122.231.1 is installed"
 							},
@@ -273,8 +304,16 @@
 								"comment": "kernel-source-4.12.14-122.231.1 is installed"
 							},
 							{
+								"test_ref": "oval:org.opensuse.security:tst:2009947190",
+								"comment": "kernel-source-azure-4.12.14-16.200.1 is installed"
+							},
+							{
 								"test_ref": "oval:org.opensuse.security:tst:2009946363",
 								"comment": "kernel-syms-4.12.14-122.231.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009947191",
+								"comment": "kernel-syms-azure-4.12.14-16.200.1 is installed"
 							}
 						]
 					}

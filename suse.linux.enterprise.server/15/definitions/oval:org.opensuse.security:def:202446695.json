@@ -10,6 +10,7 @@
 				"SUSE Linux Enterprise Desktop 15 SP6",
 				"SUSE Linux Enterprise High Performance Computing 15 SP6",
 				"SUSE Linux Enterprise Live Patching 15 SP2",
+				"SUSE Linux Enterprise Live Patching 15 SP3",
 				"SUSE Linux Enterprise Live Patching 15 SP6",
 				"SUSE Linux Enterprise Module for Basesystem 15 SP6",
 				"SUSE Linux Enterprise Module for Confidential Computing Technical Preview 15 SP6",
@@ -17,8 +18,10 @@
 				"SUSE Linux Enterprise Module for Legacy 15 SP6",
 				"SUSE Linux Enterprise Module for Public Cloud 15 SP6",
 				"SUSE Linux Enterprise Server 15 SP2-LTSS",
+				"SUSE Linux Enterprise Server 15 SP3-LTSS",
 				"SUSE Linux Enterprise Server 15 SP6",
 				"SUSE Linux Enterprise Server for SAP Applications 15 SP2",
+				"SUSE Linux Enterprise Server for SAP Applications 15 SP3",
 				"SUSE Linux Enterprise Server for SAP Applications 15 SP6",
 				"SUSE Linux Enterprise Workstation Extension 15 SP6"
 			]
@@ -63,6 +66,11 @@
 				"ref_id": "SUSE-SU-2024:3567-1",
 				"ref_url": "https://lists.suse.com/pipermail/sle-security-updates/2024-October/019577.html",
 				"source": "SUSE-SU"
+			},
+			{
+				"ref_id": "SUSE-SU-2024:3585-1",
+				"ref_url": "https://lists.suse.com/pipermail/sle-updates/2024-October/037202.html",
+				"source": "SUSE-SU"
 			}
 		],
 		"description": "\n    In the Linux kernel, the following vulnerability has been resolved:\n\nselinux,smack: don't bypass permissions check in inode_setsecctx hook\n\nMarek Gresko reports that the root user on an NFS client is able to\nchange the security labels on files on an NFS filesystem that is\nexported with root squashing enabled.\n\nThe end of the kerneldoc comment for __vfs_setxattr_noperm() states:\n\n *  This function requires the caller to lock the inode's i_mutex before it\n *  is executed. It also assumes that the caller will make the appropriate\n *  permission checks.\n\nnfsd_setattr() does do permissions checking via fh_verify() and\nnfsd_permission(), but those don't do all the same permissions checks\nthat are done by security_inode_setxattr() and its related LSM hooks do.\n\nSince nfsd_setattr() is the only consumer of security_inode_setsecctx(),\nsimplest solution appears to be to replace the call to\n__vfs_setxattr_noperm() with a call to __vfs_setxattr_locked().  This\nfixes the above issue and has the added benefit of causing nfsd to\nrecall conflicting delegations on a file when a client tries to change\nits security label.\n    ",
@@ -93,7 +101,7 @@
 				"date": "2024-10-09"
 			},
 			"updated": {
-				"date": "2024-10-10"
+				"date": "2024-10-11"
 			},
 			"affected_cpe_list": {
 				"cpe": [
@@ -101,11 +109,14 @@
 					"cpe:/o:suse:sle-module-development-tools:15:sp6",
 					"cpe:/o:suse:sle-module-legacy:15:sp6",
 					"cpe:/o:suse:sle-module-live-patching:15:sp2",
+					"cpe:/o:suse:sle-module-live-patching:15:sp3",
 					"cpe:/o:suse:sle-module-live-patching:15:sp6",
 					"cpe:/o:suse:sle-module-public-cloud:15:sp6",
 					"cpe:/o:suse:sle-we:15:sp6",
 					"cpe:/o:suse:sles-ltss:15:sp2",
-					"cpe:/o:suse:sles_sap:15:sp2"
+					"cpe:/o:suse:sles-ltss:15:sp3",
+					"cpe:/o:suse:sles_sap:15:sp2",
+					"cpe:/o:suse:sles_sap:15:sp3"
 				]
 			}
 		}
@@ -579,6 +590,174 @@
 					{
 						"test_ref": "oval:org.opensuse.security:tst:2009659637",
 						"comment": "SUSE Linux Enterprise Server for SAP Applications 15 SP2 is installed"
+					}
+				]
+			},
+			{
+				"operator": "AND",
+				"criterias": [
+					{
+						"operator": "OR",
+						"criterions": [
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009946675",
+								"comment": "kernel-default-livepatch-5.3.18-150300.59.179.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009946676",
+								"comment": "kernel-default-livepatch-devel-5.3.18-150300.59.179.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009946677",
+								"comment": "kernel-livepatch-5_3_18-150300_59_179-default-1-150300.7.3.2 is installed"
+							}
+						]
+					}
+				],
+				"criterions": [
+					{
+						"test_ref": "oval:org.opensuse.security:tst:2009478738",
+						"comment": "SUSE Linux Enterprise Live Patching 15 SP3 is installed"
+					}
+				]
+			},
+			{
+				"operator": "AND",
+				"criterias": [
+					{
+						"operator": "OR",
+						"criterions": [
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009946682",
+								"comment": "kernel-64kb-5.3.18-150300.59.179.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009946683",
+								"comment": "kernel-64kb-devel-5.3.18-150300.59.179.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009946696",
+								"comment": "kernel-default-5.3.18-150300.59.179.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009946697",
+								"comment": "kernel-default-base-5.3.18-150300.59.179.1.150300.18.105.2 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009946698",
+								"comment": "kernel-default-devel-5.3.18-150300.59.179.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009946687",
+								"comment": "kernel-devel-5.3.18-150300.59.179.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009946688",
+								"comment": "kernel-docs-5.3.18-150300.59.179.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009946689",
+								"comment": "kernel-macros-5.3.18-150300.59.179.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009946699",
+								"comment": "kernel-obs-build-5.3.18-150300.59.179.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009946691",
+								"comment": "kernel-preempt-5.3.18-150300.59.179.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009946692",
+								"comment": "kernel-preempt-devel-5.3.18-150300.59.179.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009946693",
+								"comment": "kernel-source-5.3.18-150300.59.179.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009946700",
+								"comment": "kernel-syms-5.3.18-150300.59.179.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009946701",
+								"comment": "kernel-zfcpdump-5.3.18-150300.59.179.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009946702",
+								"comment": "reiserfs-kmp-default-5.3.18-150300.59.179.1 is installed"
+							}
+						]
+					}
+				],
+				"criterions": [
+					{
+						"test_ref": "oval:org.opensuse.security:tst:2009729178",
+						"comment": "SUSE Linux Enterprise Server 15 SP3-LTSS is installed"
+					}
+				]
+			},
+			{
+				"operator": "AND",
+				"criterias": [
+					{
+						"operator": "OR",
+						"criterions": [
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009946703",
+								"comment": "kernel-default-5.3.18-150300.59.179.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009946704",
+								"comment": "kernel-default-base-5.3.18-150300.59.179.1.150300.18.105.2 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009946705",
+								"comment": "kernel-default-devel-5.3.18-150300.59.179.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009946687",
+								"comment": "kernel-devel-5.3.18-150300.59.179.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009946688",
+								"comment": "kernel-docs-5.3.18-150300.59.179.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009946689",
+								"comment": "kernel-macros-5.3.18-150300.59.179.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009946706",
+								"comment": "kernel-obs-build-5.3.18-150300.59.179.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009946707",
+								"comment": "kernel-preempt-5.3.18-150300.59.179.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009946708",
+								"comment": "kernel-preempt-devel-5.3.18-150300.59.179.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009946693",
+								"comment": "kernel-source-5.3.18-150300.59.179.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009946709",
+								"comment": "kernel-syms-5.3.18-150300.59.179.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009946710",
+								"comment": "reiserfs-kmp-default-5.3.18-150300.59.179.1 is installed"
+							}
+						]
+					}
+				],
+				"criterions": [
+					{
+						"test_ref": "oval:org.opensuse.security:tst:2009669878",
+						"comment": "SUSE Linux Enterprise Server for SAP Applications 15 SP3 is installed"
 					}
 				]
 			}

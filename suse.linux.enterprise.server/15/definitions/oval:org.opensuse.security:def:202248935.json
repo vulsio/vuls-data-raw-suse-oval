@@ -15,6 +15,7 @@
 				"SUSE Linux Enterprise Module for Basesystem 15 SP5",
 				"SUSE Linux Enterprise Module for Development Tools 15 SP5",
 				"SUSE Linux Enterprise Module for Legacy 15 SP5",
+				"SUSE Linux Enterprise Module for Public Cloud 15 SP5",
 				"SUSE Linux Enterprise Server 15 SP1-LTSS",
 				"SUSE Linux Enterprise Server 15 SP2-LTSS",
 				"SUSE Linux Enterprise Server 15 SP4-LTSS",
@@ -52,6 +53,16 @@
 				"ref_id": "SUSE-SU-2024:3569-1",
 				"ref_url": "https://lists.suse.com/pipermail/sle-security-updates/2024-October/019576.html",
 				"source": "SUSE-SU"
+			},
+			{
+				"ref_id": "SUSE-SU-2024:3587-1",
+				"ref_url": "https://lists.suse.com/pipermail/sle-security-updates/2024-October/019588.html",
+				"source": "SUSE-SU"
+			},
+			{
+				"ref_id": "SUSE-SU-2024:3592-1",
+				"ref_url": "https://lists.suse.com/pipermail/sle-updates/2024-October/037209.html",
+				"source": "SUSE-SU"
 			}
 		],
 		"description": "\n    In the Linux kernel, the following vulnerability has been resolved:\n\nnetfilter: nf_tables: unregister flowtable hooks on netns exit\n\nUnregister flowtable hooks before they are releases via\nnf_tables_flowtable_destroy() otherwise hook core reports UAF.\n\nBUG: KASAN: use-after-free in nf_hook_entries_grow+0x5a7/0x700 net/netfilter/core.c:142 net/netfilter/core.c:142\nRead of size 4 at addr ffff8880736f7438 by task syz-executor579/3666\n\nCPU: 0 PID: 3666 Comm: syz-executor579 Not tainted 5.16.0-rc5-syzkaller #0\nHardware name: Google Google Compute Engine/Google Compute Engine, BIOS Google 01/01/2011\nCall Trace:\n <TASK>\n __dump_stack lib/dump_stack.c:88 [inline]\n __dump_stack lib/dump_stack.c:88 [inline] lib/dump_stack.c:106\n dump_stack_lvl+0x1dc/0x2d8 lib/dump_stack.c:106 lib/dump_stack.c:106\n print_address_description+0x65/0x380 mm/kasan/report.c:247 mm/kasan/report.c:247\n __kasan_report mm/kasan/report.c:433 [inline]\n __kasan_report mm/kasan/report.c:433 [inline] mm/kasan/report.c:450\n kasan_report+0x19a/0x1f0 mm/kasan/report.c:450 mm/kasan/report.c:450\n nf_hook_entries_grow+0x5a7/0x700 net/netfilter/core.c:142 net/netfilter/core.c:142\n __nf_register_net_hook+0x27e/0x8d0 net/netfilter/core.c:429 net/netfilter/core.c:429\n nf_register_net_hook+0xaa/0x180 net/netfilter/core.c:571 net/netfilter/core.c:571\n nft_register_flowtable_net_hooks+0x3c5/0x730 net/netfilter/nf_tables_api.c:7232 net/netfilter/nf_tables_api.c:7232\n nf_tables_newflowtable+0x2022/0x2cf0 net/netfilter/nf_tables_api.c:7430 net/netfilter/nf_tables_api.c:7430\n nfnetlink_rcv_batch net/netfilter/nfnetlink.c:513 [inline]\n nfnetlink_rcv_skb_batch net/netfilter/nfnetlink.c:634 [inline]\n nfnetlink_rcv_batch net/netfilter/nfnetlink.c:513 [inline] net/netfilter/nfnetlink.c:652\n nfnetlink_rcv_skb_batch net/netfilter/nfnetlink.c:634 [inline] net/netfilter/nfnetlink.c:652\n nfnetlink_rcv+0x10e6/0x2550 net/netfilter/nfnetlink.c:652 net/netfilter/nfnetlink.c:652\n\n__nft_release_hook() calls nft_unregister_flowtable_net_hooks() which\nonly unregisters the hooks, then after RCU grace period, it is\nguaranteed that no packets add new entries to the flowtable (no flow\noffload rules and flowtable hooks are reachable from packet path), so it\nis safe to call nf_flow_table_free() which cleans up the remaining\nentries from the flowtable (both software and hardware) and it unbinds\nthe flow_block.\n    ",
@@ -82,7 +93,7 @@
 				"date": "2024-08-25"
 			},
 			"updated": {
-				"date": "2024-10-10"
+				"date": "2024-10-11"
 			},
 			"affected_cpe_list": {
 				"cpe": [
@@ -92,6 +103,7 @@
 					"cpe:/o:suse:sle-module-live-patching:15:sp2",
 					"cpe:/o:suse:sle-module-live-patching:15:sp4",
 					"cpe:/o:suse:sle-module-live-patching:15:sp5",
+					"cpe:/o:suse:sle-module-public-cloud:15:sp5",
 					"cpe:/o:suse:sle-we:15:sp5",
 					"cpe:/o:suse:sle_hpc:15:sp5",
 					"cpe:/o:suse:sled:15:sp5",
@@ -645,6 +657,10 @@
 								"comment": "kernel-default-livepatch-devel-5.14.21-150500.55.83.1 is installed"
 							},
 							{
+								"test_ref": "oval:org.opensuse.security:tst:2009946711",
+								"comment": "kernel-livepatch-5_14_21-150500_13_73-rt-1-150500.11.3.1 is installed"
+							},
+							{
 								"test_ref": "oval:org.opensuse.security:tst:2009946322",
 								"comment": "kernel-livepatch-5_14_21-150500_55_83-default-1-150500.11.3.1 is installed"
 							}
@@ -655,6 +671,57 @@
 					{
 						"test_ref": "oval:org.opensuse.security:tst:2009764853",
 						"comment": "SUSE Linux Enterprise Live Patching 15 SP5 is installed"
+					}
+				]
+			},
+			{
+				"operator": "AND",
+				"criterias": [
+					{
+						"operator": "OR",
+						"criterions": [
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009759899",
+								"comment": "SUSE Linux Enterprise High Performance Computing 15 SP5 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009762868",
+								"comment": "SUSE Linux Enterprise Module for Public Cloud 15 SP5 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009759901",
+								"comment": "SUSE Linux Enterprise Server 15 SP5 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009759902",
+								"comment": "SUSE Linux Enterprise Server for SAP Applications 15 SP5 is installed"
+							}
+						]
+					},
+					{
+						"operator": "OR",
+						"criterions": [
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009946620",
+								"comment": "kernel-azure-5.14.21-150500.33.69.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009946621",
+								"comment": "kernel-azure-devel-5.14.21-150500.33.69.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009946626",
+								"comment": "kernel-devel-azure-5.14.21-150500.33.69.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009946627",
+								"comment": "kernel-source-azure-5.14.21-150500.33.69.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009946628",
+								"comment": "kernel-syms-azure-5.14.21-150500.33.69.1 is installed"
+							}
+						]
 					}
 				]
 			}

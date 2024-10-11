@@ -40,6 +40,16 @@
 				"ref_id": "SUSE-SU-2024:3569-1",
 				"ref_url": "https://lists.suse.com/pipermail/sle-security-updates/2024-October/019576.html",
 				"source": "SUSE-SU"
+			},
+			{
+				"ref_id": "SUSE-SU-2024:3587-1",
+				"ref_url": "https://lists.suse.com/pipermail/sle-security-updates/2024-October/019588.html",
+				"source": "SUSE-SU"
+			},
+			{
+				"ref_id": "SUSE-SU-2024:3592-1",
+				"ref_url": "https://lists.suse.com/pipermail/sle-updates/2024-October/037209.html",
+				"source": "SUSE-SU"
 			}
 		],
 		"description": "\n    In the Linux kernel, the following vulnerability has been resolved:\n\nbtrfs: do not start relocation until in progress drops are done\n\nWe hit a bug with a recovering relocation on mount for one of our file\nsystems in production.  I reproduced this locally by injecting errors\ninto snapshot delete with balance running at the same time.  This\npresented as an error while looking up an extent item\n\n  WARNING: CPU: 5 PID: 1501 at fs/btrfs/extent-tree.c:866 lookup_inline_extent_backref+0x647/0x680\n  CPU: 5 PID: 1501 Comm: btrfs-balance Not tainted 5.16.0-rc8+ #8\n  RIP: 0010:lookup_inline_extent_backref+0x647/0x680\n  RSP: 0018:ffffae0a023ab960 EFLAGS: 00010202\n  RAX: 0000000000000001 RBX: 0000000000000000 RCX: 0000000000000000\n  RDX: 0000000000000000 RSI: 000000000000000c RDI: 0000000000000000\n  RBP: ffff943fd2a39b60 R08: 0000000000000000 R09: 0000000000000001\n  R10: 0001434088152de0 R11: 0000000000000000 R12: 0000000001d05000\n  R13: ffff943fd2a39b60 R14: ffff943fdb96f2a0 R15: ffff9442fc923000\n  FS:  0000000000000000(0000) GS:ffff944e9eb40000(0000) knlGS:0000000000000000\n  CS:  0010 DS: 0000 ES: 0000 CR0: 0000000080050033\n  CR2: 00007f1157b1fca8 CR3: 000000010f092000 CR4: 0000000000350ee0\n  Call Trace:\n   <TASK>\n   insert_inline_extent_backref+0x46/0xd0\n   __btrfs_inc_extent_ref.isra.0+0x5f/0x200\n   ? btrfs_merge_delayed_refs+0x164/0x190\n   __btrfs_run_delayed_refs+0x561/0xfa0\n   ? btrfs_search_slot+0x7b4/0xb30\n   ? btrfs_update_root+0x1a9/0x2c0\n   btrfs_run_delayed_refs+0x73/0x1f0\n   ? btrfs_update_root+0x1a9/0x2c0\n   btrfs_commit_transaction+0x50/0xa50\n   ? btrfs_update_reloc_root+0x122/0x220\n   prepare_to_merge+0x29f/0x320\n   relocate_block_group+0x2b8/0x550\n   btrfs_relocate_block_group+0x1a6/0x350\n   btrfs_relocate_chunk+0x27/0xe0\n   btrfs_balance+0x777/0xe60\n   balance_kthread+0x35/0x50\n   ? btrfs_balance+0xe60/0xe60\n   kthread+0x16b/0x190\n   ? set_kthread_struct+0x40/0x40\n   ret_from_fork+0x22/0x30\n   </TASK>\n\nNormally snapshot deletion and relocation are excluded from running at\nthe same time by the fs_info->cleaner_mutex.  However if we had a\npending balance waiting to get the ->cleaner_mutex, and a snapshot\ndeletion was running, and then the box crashed, we would come up in a\nstate where we have a half deleted snapshot.\n\nAgain, in the normal case the snapshot deletion needs to complete before\nrelocation can start, but in this case relocation could very well start\nbefore the snapshot deletion completes, as we simply add the root to the\ndead roots list and wait for the next time the cleaner runs to clean up\nthe snapshot.\n\nFix this by setting a bit on the fs_info if we have any DEAD_ROOT's that\nhad a pending drop_progress key.  If they do then we know we were in the\nmiddle of the drop operation and set a flag on the fs_info.  Then\nbalance can wait until this flag is cleared to start up again.\n\nIf there are DEAD_ROOT's that don't have a drop_progress set then we're\nsafe to start balance right away as we'll be properly protected by the\ncleaner_mutex.\n    ",
@@ -70,7 +80,7 @@
 				"date": "2024-10-10"
 			},
 			"updated": {
-				"date": "2024-10-10"
+				"date": "2024-10-11"
 			},
 			"affected_cpe_list": {
 				"cpe": [
@@ -102,12 +112,38 @@
 						"operator": "AND",
 						"criterions": [
 							{
+								"test_ref": "oval:org.opensuse.security:tst:2009946617",
+								"comment": "cluster-md-kmp-azure-5.14.21-150500.33.69.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009623277",
+								"comment": "cluster-md-kmp-azure is signed with openSUSE key"
+							}
+						]
+					},
+					{
+						"operator": "AND",
+						"criterions": [
+							{
 								"test_ref": "oval:org.opensuse.security:tst:2009946154",
 								"comment": "cluster-md-kmp-default-5.14.21-150500.55.83.1 is installed"
 							},
 							{
 								"test_ref": "oval:org.opensuse.security:tst:2009623278",
 								"comment": "cluster-md-kmp-default is signed with openSUSE key"
+							}
+						]
+					},
+					{
+						"operator": "AND",
+						"criterions": [
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009946632",
+								"comment": "cluster-md-kmp-rt-5.14.21-150500.13.73.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009342853",
+								"comment": "cluster-md-kmp-rt is signed with openSUSE key"
 							}
 						]
 					},
@@ -128,12 +164,38 @@
 						"operator": "AND",
 						"criterions": [
 							{
+								"test_ref": "oval:org.opensuse.security:tst:2009946618",
+								"comment": "dlm-kmp-azure-5.14.21-150500.33.69.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009623279",
+								"comment": "dlm-kmp-azure is signed with openSUSE key"
+							}
+						]
+					},
+					{
+						"operator": "AND",
+						"criterions": [
+							{
 								"test_ref": "oval:org.opensuse.security:tst:2009946156",
 								"comment": "dlm-kmp-default-5.14.21-150500.55.83.1 is installed"
 							},
 							{
 								"test_ref": "oval:org.opensuse.security:tst:2009623280",
 								"comment": "dlm-kmp-default is signed with openSUSE key"
+							}
+						]
+					},
+					{
+						"operator": "AND",
+						"criterions": [
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009946633",
+								"comment": "dlm-kmp-rt-5.14.21-150500.13.73.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009342855",
+								"comment": "dlm-kmp-rt is signed with openSUSE key"
 							}
 						]
 					},
@@ -453,12 +515,38 @@
 						"operator": "AND",
 						"criterions": [
 							{
+								"test_ref": "oval:org.opensuse.security:tst:2009946619",
+								"comment": "gfs2-kmp-azure-5.14.21-150500.33.69.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009623281",
+								"comment": "gfs2-kmp-azure is signed with openSUSE key"
+							}
+						]
+					},
+					{
+						"operator": "AND",
+						"criterions": [
+							{
 								"test_ref": "oval:org.opensuse.security:tst:2009946181",
 								"comment": "gfs2-kmp-default-5.14.21-150500.55.83.1 is installed"
 							},
 							{
 								"test_ref": "oval:org.opensuse.security:tst:2009623282",
 								"comment": "gfs2-kmp-default is signed with openSUSE key"
+							}
+						]
+					},
+					{
+						"operator": "AND",
+						"criterions": [
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009946634",
+								"comment": "gfs2-kmp-rt-5.14.21-150500.13.73.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009342857",
+								"comment": "gfs2-kmp-rt is signed with openSUSE key"
 							}
 						]
 					},
@@ -524,6 +612,84 @@
 							{
 								"test_ref": "oval:org.opensuse.security:tst:2009623426",
 								"comment": "kernel-64kb-optional is signed with openSUSE key"
+							}
+						]
+					},
+					{
+						"operator": "AND",
+						"criterions": [
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009946620",
+								"comment": "kernel-azure-5.14.21-150500.33.69.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009623283",
+								"comment": "kernel-azure is signed with openSUSE key"
+							}
+						]
+					},
+					{
+						"operator": "AND",
+						"criterions": [
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009946621",
+								"comment": "kernel-azure-devel-5.14.21-150500.33.69.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009623285",
+								"comment": "kernel-azure-devel is signed with openSUSE key"
+							}
+						]
+					},
+					{
+						"operator": "AND",
+						"criterions": [
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009946622",
+								"comment": "kernel-azure-extra-5.14.21-150500.33.69.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009623286",
+								"comment": "kernel-azure-extra is signed with openSUSE key"
+							}
+						]
+					},
+					{
+						"operator": "AND",
+						"criterions": [
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009946623",
+								"comment": "kernel-azure-livepatch-devel-5.14.21-150500.33.69.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009623287",
+								"comment": "kernel-azure-livepatch-devel is signed with openSUSE key"
+							}
+						]
+					},
+					{
+						"operator": "AND",
+						"criterions": [
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009946624",
+								"comment": "kernel-azure-optional-5.14.21-150500.33.69.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009623427",
+								"comment": "kernel-azure-optional is signed with openSUSE key"
+							}
+						]
+					},
+					{
+						"operator": "AND",
+						"criterions": [
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009946625",
+								"comment": "kernel-azure-vdso-5.14.21-150500.33.69.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009769740",
+								"comment": "kernel-azure-vdso is signed with openSUSE key"
 							}
 						]
 					},
@@ -713,6 +879,32 @@
 						"operator": "AND",
 						"criterions": [
 							{
+								"test_ref": "oval:org.opensuse.security:tst:2009946626",
+								"comment": "kernel-devel-azure-5.14.21-150500.33.69.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009623293",
+								"comment": "kernel-devel-azure is signed with openSUSE key"
+							}
+						]
+					},
+					{
+						"operator": "AND",
+						"criterions": [
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009946635",
+								"comment": "kernel-devel-rt-5.14.21-150500.13.73.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009342859",
+								"comment": "kernel-devel-rt is signed with openSUSE key"
+							}
+						]
+					},
+					{
+						"operator": "AND",
+						"criterions": [
+							{
 								"test_ref": "oval:org.opensuse.security:tst:2009946201",
 								"comment": "kernel-docs-5.14.21-150500.55.83.1 is installed"
 							},
@@ -830,12 +1022,181 @@
 						"operator": "AND",
 						"criterions": [
 							{
+								"test_ref": "oval:org.opensuse.security:tst:2009946636",
+								"comment": "kernel-rt-5.14.21-150500.13.73.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009342860",
+								"comment": "kernel-rt is signed with openSUSE key"
+							}
+						]
+					},
+					{
+						"operator": "AND",
+						"criterions": [
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009946637",
+								"comment": "kernel-rt-devel-5.14.21-150500.13.73.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009342861",
+								"comment": "kernel-rt-devel is signed with openSUSE key"
+							}
+						]
+					},
+					{
+						"operator": "AND",
+						"criterions": [
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009946638",
+								"comment": "kernel-rt-extra-5.14.21-150500.13.73.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009342862",
+								"comment": "kernel-rt-extra is signed with openSUSE key"
+							}
+						]
+					},
+					{
+						"operator": "AND",
+						"criterions": [
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009946639",
+								"comment": "kernel-rt-livepatch-5.14.21-150500.13.73.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009771783",
+								"comment": "kernel-rt-livepatch is signed with openSUSE key"
+							}
+						]
+					},
+					{
+						"operator": "AND",
+						"criterions": [
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009946640",
+								"comment": "kernel-rt-livepatch-devel-5.14.21-150500.13.73.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009623297",
+								"comment": "kernel-rt-livepatch-devel is signed with openSUSE key"
+							}
+						]
+					},
+					{
+						"operator": "AND",
+						"criterions": [
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009946641",
+								"comment": "kernel-rt-optional-5.14.21-150500.13.73.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009771784",
+								"comment": "kernel-rt-optional is signed with openSUSE key"
+							}
+						]
+					},
+					{
+						"operator": "AND",
+						"criterions": [
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009946642",
+								"comment": "kernel-rt-vdso-5.14.21-150500.13.73.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009771785",
+								"comment": "kernel-rt-vdso is signed with openSUSE key"
+							}
+						]
+					},
+					{
+						"operator": "AND",
+						"criterions": [
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009946643",
+								"comment": "kernel-rt_debug-5.14.21-150500.13.73.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009342863",
+								"comment": "kernel-rt_debug is signed with openSUSE key"
+							}
+						]
+					},
+					{
+						"operator": "AND",
+						"criterions": [
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009946644",
+								"comment": "kernel-rt_debug-devel-5.14.21-150500.13.73.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009342864",
+								"comment": "kernel-rt_debug-devel is signed with openSUSE key"
+							}
+						]
+					},
+					{
+						"operator": "AND",
+						"criterions": [
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009946645",
+								"comment": "kernel-rt_debug-livepatch-devel-5.14.21-150500.13.73.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009623299",
+								"comment": "kernel-rt_debug-livepatch-devel is signed with openSUSE key"
+							}
+						]
+					},
+					{
+						"operator": "AND",
+						"criterions": [
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009946646",
+								"comment": "kernel-rt_debug-vdso-5.14.21-150500.13.73.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009771786",
+								"comment": "kernel-rt_debug-vdso is signed with openSUSE key"
+							}
+						]
+					},
+					{
+						"operator": "AND",
+						"criterions": [
+							{
 								"test_ref": "oval:org.opensuse.security:tst:2009946210",
 								"comment": "kernel-source-5.14.21-150500.55.83.1 is installed"
 							},
 							{
 								"test_ref": "oval:org.opensuse.security:tst:2009151360",
 								"comment": "kernel-source is signed with openSUSE key"
+							}
+						]
+					},
+					{
+						"operator": "AND",
+						"criterions": [
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009946627",
+								"comment": "kernel-source-azure-5.14.21-150500.33.69.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009623300",
+								"comment": "kernel-source-azure is signed with openSUSE key"
+							}
+						]
+					},
+					{
+						"operator": "AND",
+						"criterions": [
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009946647",
+								"comment": "kernel-source-rt-5.14.21-150500.13.73.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009342866",
+								"comment": "kernel-source-rt is signed with openSUSE key"
 							}
 						]
 					},
@@ -869,6 +1230,32 @@
 						"operator": "AND",
 						"criterions": [
 							{
+								"test_ref": "oval:org.opensuse.security:tst:2009946628",
+								"comment": "kernel-syms-azure-5.14.21-150500.33.69.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009623301",
+								"comment": "kernel-syms-azure is signed with openSUSE key"
+							}
+						]
+					},
+					{
+						"operator": "AND",
+						"criterions": [
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009946648",
+								"comment": "kernel-syms-rt-5.14.21-150500.13.73.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009342867",
+								"comment": "kernel-syms-rt is signed with openSUSE key"
+							}
+						]
+					},
+					{
+						"operator": "AND",
+						"criterions": [
+							{
 								"test_ref": "oval:org.opensuse.security:tst:2009946213",
 								"comment": "kernel-zfcpdump-5.14.21-150500.55.83.1 is installed"
 							},
@@ -895,12 +1282,38 @@
 						"operator": "AND",
 						"criterions": [
 							{
+								"test_ref": "oval:org.opensuse.security:tst:2009946629",
+								"comment": "kselftests-kmp-azure-5.14.21-150500.33.69.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009623305",
+								"comment": "kselftests-kmp-azure is signed with openSUSE key"
+							}
+						]
+					},
+					{
+						"operator": "AND",
+						"criterions": [
+							{
 								"test_ref": "oval:org.opensuse.security:tst:2009946215",
 								"comment": "kselftests-kmp-default-5.14.21-150500.55.83.1 is installed"
 							},
 							{
 								"test_ref": "oval:org.opensuse.security:tst:2009168714",
 								"comment": "kselftests-kmp-default is signed with openSUSE key"
+							}
+						]
+					},
+					{
+						"operator": "AND",
+						"criterions": [
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009946649",
+								"comment": "kselftests-kmp-rt-5.14.21-150500.13.73.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009342868",
+								"comment": "kselftests-kmp-rt is signed with openSUSE key"
 							}
 						]
 					},
@@ -921,12 +1334,38 @@
 						"operator": "AND",
 						"criterions": [
 							{
+								"test_ref": "oval:org.opensuse.security:tst:2009946630",
+								"comment": "ocfs2-kmp-azure-5.14.21-150500.33.69.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009623306",
+								"comment": "ocfs2-kmp-azure is signed with openSUSE key"
+							}
+						]
+					},
+					{
+						"operator": "AND",
+						"criterions": [
+							{
 								"test_ref": "oval:org.opensuse.security:tst:2009946217",
 								"comment": "ocfs2-kmp-default-5.14.21-150500.55.83.1 is installed"
 							},
 							{
 								"test_ref": "oval:org.opensuse.security:tst:2009623307",
 								"comment": "ocfs2-kmp-default is signed with openSUSE key"
+							}
+						]
+					},
+					{
+						"operator": "AND",
+						"criterions": [
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009946650",
+								"comment": "ocfs2-kmp-rt-5.14.21-150500.13.73.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009342870",
+								"comment": "ocfs2-kmp-rt is signed with openSUSE key"
 							}
 						]
 					},
@@ -947,12 +1386,38 @@
 						"operator": "AND",
 						"criterions": [
 							{
+								"test_ref": "oval:org.opensuse.security:tst:2009946631",
+								"comment": "reiserfs-kmp-azure-5.14.21-150500.33.69.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009623308",
+								"comment": "reiserfs-kmp-azure is signed with openSUSE key"
+							}
+						]
+					},
+					{
+						"operator": "AND",
+						"criterions": [
+							{
 								"test_ref": "oval:org.opensuse.security:tst:2009946219",
 								"comment": "reiserfs-kmp-default-5.14.21-150500.55.83.1 is installed"
 							},
 							{
 								"test_ref": "oval:org.opensuse.security:tst:2009623309",
 								"comment": "reiserfs-kmp-default is signed with openSUSE key"
+							}
+						]
+					},
+					{
+						"operator": "AND",
+						"criterions": [
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009946651",
+								"comment": "reiserfs-kmp-rt-5.14.21-150500.13.73.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009342872",
+								"comment": "reiserfs-kmp-rt is signed with openSUSE key"
 							}
 						]
 					}

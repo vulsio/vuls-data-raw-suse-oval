@@ -12,6 +12,7 @@
 				"SUSE Linux Enterprise High Performance Computing 15 SP5",
 				"SUSE Linux Enterprise High Performance Computing 15 SP6",
 				"SUSE Linux Enterprise Live Patching 15 SP2",
+				"SUSE Linux Enterprise Live Patching 15 SP3",
 				"SUSE Linux Enterprise Live Patching 15 SP5",
 				"SUSE Linux Enterprise Live Patching 15 SP6",
 				"SUSE Linux Enterprise Module for Basesystem 15 SP5",
@@ -21,6 +22,7 @@
 				"SUSE Linux Enterprise Module for Development Tools 15 SP6",
 				"SUSE Linux Enterprise Module for Legacy 15 SP5",
 				"SUSE Linux Enterprise Module for Legacy 15 SP6",
+				"SUSE Linux Enterprise Module for Public Cloud 15 SP5",
 				"SUSE Linux Enterprise Module for Public Cloud 15 SP6",
 				"SUSE Linux Enterprise Server 15 SP1-LTSS",
 				"SUSE Linux Enterprise Server 15 SP2-LTSS",
@@ -71,6 +73,16 @@
 				"ref_id": "SUSE-SU-2024:3569-1",
 				"ref_url": "https://lists.suse.com/pipermail/sle-security-updates/2024-October/019576.html",
 				"source": "SUSE-SU"
+			},
+			{
+				"ref_id": "SUSE-SU-2024:3587-1",
+				"ref_url": "https://lists.suse.com/pipermail/sle-security-updates/2024-October/019588.html",
+				"source": "SUSE-SU"
+			},
+			{
+				"ref_id": "SUSE-SU-2024:3592-1",
+				"ref_url": "https://lists.suse.com/pipermail/sle-updates/2024-October/037209.html",
+				"source": "SUSE-SU"
 			}
 		],
 		"description": "\n    In the Linux kernel, the following vulnerability has been resolved:\n\ntipc: force a dst refcount before doing decryption\n\nAs it says in commit 3bc07321ccc2 (\"xfrm: Force a dst refcount before\nentering the xfrm type handlers\"):\n\n\"Crypto requests might return asynchronous. In this case we leave the\n rcu protected region, so force a refcount on the skb's destination\n entry before we enter the xfrm type input/output handlers.\"\n\nOn TIPC decryption path it has the same problem, and skb_dst_force()\nshould be called before doing decryption to avoid a possible crash.\n\nShuang reported this issue when this warning is triggered:\n\n  [] WARNING: include/net/dst.h:337 tipc_sk_rcv+0x1055/0x1ea0 [tipc]\n  [] Kdump: loaded Tainted: G W --------- - - 4.18.0-496.el8.x86_64+debug\n  [] Workqueue: crypto cryptd_queue_worker\n  [] RIP: 0010:tipc_sk_rcv+0x1055/0x1ea0 [tipc]\n  [] Call Trace:\n  [] tipc_sk_mcast_rcv+0x548/0xea0 [tipc]\n  [] tipc_rcv+0xcf5/0x1060 [tipc]\n  [] tipc_aead_decrypt_done+0x215/0x2e0 [tipc]\n  [] cryptd_aead_crypt+0xdb/0x190\n  [] cryptd_queue_worker+0xed/0x190\n  [] process_one_work+0x93d/0x17e0\n    ",
@@ -99,7 +111,7 @@
 				"date": "2024-07-16"
 			},
 			"updated": {
-				"date": "2024-10-10"
+				"date": "2024-10-11"
 			},
 			"affected_cpe_list": {
 				"cpe": [
@@ -110,8 +122,10 @@
 					"cpe:/o:suse:sle-module-legacy:15:sp5",
 					"cpe:/o:suse:sle-module-legacy:15:sp6",
 					"cpe:/o:suse:sle-module-live-patching:15:sp2",
+					"cpe:/o:suse:sle-module-live-patching:15:sp3",
 					"cpe:/o:suse:sle-module-live-patching:15:sp5",
 					"cpe:/o:suse:sle-module-live-patching:15:sp6",
+					"cpe:/o:suse:sle-module-public-cloud:15:sp5",
 					"cpe:/o:suse:sle-module-public-cloud:15:sp6",
 					"cpe:/o:suse:sle-we:15:sp5",
 					"cpe:/o:suse:sle-we:15:sp6",
@@ -377,6 +391,19 @@
 						"operator": "OR",
 						"criterions": [
 							{
+								"test_ref": "oval:org.opensuse.security:tst:2009288462",
+								"comment": "SUSE Linux Enterprise Live Patching 15 SP2 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009478738",
+								"comment": "SUSE Linux Enterprise Live Patching 15 SP3 is installed"
+							}
+						]
+					},
+					{
+						"operator": "OR",
+						"criterions": [
+							{
 								"test_ref": "oval:org.opensuse.security:tst:2009728675",
 								"comment": "kernel-default-livepatch is not affected"
 							},
@@ -389,12 +416,6 @@
 								"comment": "kernel-source is not affected"
 							}
 						]
-					}
-				],
-				"criterions": [
-					{
-						"test_ref": "oval:org.opensuse.security:tst:2009288462",
-						"comment": "SUSE Linux Enterprise Live Patching 15 SP2 is installed"
 					}
 				]
 			},
@@ -748,6 +769,10 @@
 								"comment": "kernel-default-livepatch-devel-5.14.21-150500.55.83.1 is installed"
 							},
 							{
+								"test_ref": "oval:org.opensuse.security:tst:2009946711",
+								"comment": "kernel-livepatch-5_14_21-150500_13_73-rt-1-150500.11.3.1 is installed"
+							},
+							{
 								"test_ref": "oval:org.opensuse.security:tst:2009946322",
 								"comment": "kernel-livepatch-5_14_21-150500_55_83-default-1-150500.11.3.1 is installed"
 							}
@@ -790,6 +815,57 @@
 					{
 						"test_ref": "oval:org.opensuse.security:tst:2009857543",
 						"comment": "SUSE Linux Enterprise Live Patching 15 SP6 is installed"
+					}
+				]
+			},
+			{
+				"operator": "AND",
+				"criterias": [
+					{
+						"operator": "OR",
+						"criterions": [
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009759899",
+								"comment": "SUSE Linux Enterprise High Performance Computing 15 SP5 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009762868",
+								"comment": "SUSE Linux Enterprise Module for Public Cloud 15 SP5 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009759901",
+								"comment": "SUSE Linux Enterprise Server 15 SP5 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009759902",
+								"comment": "SUSE Linux Enterprise Server for SAP Applications 15 SP5 is installed"
+							}
+						]
+					},
+					{
+						"operator": "OR",
+						"criterions": [
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009946620",
+								"comment": "kernel-azure-5.14.21-150500.33.69.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009946621",
+								"comment": "kernel-azure-devel-5.14.21-150500.33.69.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009946626",
+								"comment": "kernel-devel-azure-5.14.21-150500.33.69.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009946627",
+								"comment": "kernel-source-azure-5.14.21-150500.33.69.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009946628",
+								"comment": "kernel-syms-azure-5.14.21-150500.33.69.1 is installed"
+							}
+						]
 					}
 				]
 			}

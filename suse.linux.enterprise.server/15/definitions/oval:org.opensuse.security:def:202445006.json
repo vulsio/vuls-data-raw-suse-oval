@@ -20,6 +20,7 @@
 				"SUSE Linux Enterprise Module for Development Tools 15 SP6",
 				"SUSE Linux Enterprise Module for Legacy 15 SP5",
 				"SUSE Linux Enterprise Module for Legacy 15 SP6",
+				"SUSE Linux Enterprise Module for Public Cloud 15 SP5",
 				"SUSE Linux Enterprise Module for Public Cloud 15 SP6",
 				"SUSE Linux Enterprise Server 15 SP1-LTSS",
 				"SUSE Linux Enterprise Server 15 SP5",
@@ -66,6 +67,16 @@
 				"ref_id": "SUSE-SU-2024:3569-1",
 				"ref_url": "https://lists.suse.com/pipermail/sle-security-updates/2024-October/019576.html",
 				"source": "SUSE-SU"
+			},
+			{
+				"ref_id": "SUSE-SU-2024:3587-1",
+				"ref_url": "https://lists.suse.com/pipermail/sle-security-updates/2024-October/019588.html",
+				"source": "SUSE-SU"
+			},
+			{
+				"ref_id": "SUSE-SU-2024:3592-1",
+				"ref_url": "https://lists.suse.com/pipermail/sle-updates/2024-October/037209.html",
+				"source": "SUSE-SU"
 			}
 		],
 		"description": "\n    In the Linux kernel, the following vulnerability has been resolved:\n\nxhci: Fix Panther point NULL pointer deref at full-speed re-enumeration\n\nre-enumerating full-speed devices after a failed address device command\ncan trigger a NULL pointer dereference.\n\nFull-speed devices may need to reconfigure the endpoint 0 Max Packet Size\nvalue during enumeration. Usb core calls usb_ep0_reinit() in this case,\nwhich ends up calling xhci_configure_endpoint().\n\nOn Panther point xHC the xhci_configure_endpoint() function will\nadditionally check and reserve bandwidth in software. Other hosts do\nthis in hardware\n\nIf xHC address device command fails then a new xhci_virt_device structure\nis allocated as part of re-enabling the slot, but the bandwidth table\npointers are not set up properly here.\nThis triggers the NULL pointer dereference the next time usb_ep0_reinit()\nis called and xhci_configure_endpoint() tries to check and reserve\nbandwidth\n\n[46710.713538] usb 3-1: new full-speed USB device number 5 using xhci_hcd\n[46710.713699] usb 3-1: Device not responding to setup address.\n[46710.917684] usb 3-1: Device not responding to setup address.\n[46711.125536] usb 3-1: device not accepting address 5, error -71\n[46711.125594] BUG: kernel NULL pointer dereference, address: 0000000000000008\n[46711.125600] #PF: supervisor read access in kernel mode\n[46711.125603] #PF: error_code(0x0000) - not-present page\n[46711.125606] PGD 0 P4D 0\n[46711.125610] Oops: Oops: 0000 [#1] PREEMPT SMP PTI\n[46711.125615] CPU: 1 PID: 25760 Comm: kworker/1:2 Not tainted 6.10.3_2 #1\n[46711.125620] Hardware name: Gigabyte Technology Co., Ltd.\n[46711.125623] Workqueue: usb_hub_wq hub_event [usbcore]\n[46711.125668] RIP: 0010:xhci_reserve_bandwidth (drivers/usb/host/xhci.c\n\nFix this by making sure bandwidth table pointers are set up correctly\nafter a failed address device command, and additionally by avoiding\nchecking for bandwidth in cases like this where no actual endpoints are\nadded or removed, i.e. only context for default control endpoint 0 is\nevaluated.\n    ",
@@ -96,7 +107,7 @@
 				"date": "2024-09-06"
 			},
 			"updated": {
-				"date": "2024-10-10"
+				"date": "2024-10-11"
 			},
 			"affected_cpe_list": {
 				"cpe": [
@@ -108,6 +119,7 @@
 					"cpe:/o:suse:sle-module-legacy:15:sp6",
 					"cpe:/o:suse:sle-module-live-patching:15:sp5",
 					"cpe:/o:suse:sle-module-live-patching:15:sp6",
+					"cpe:/o:suse:sle-module-public-cloud:15:sp5",
 					"cpe:/o:suse:sle-module-public-cloud:15:sp6",
 					"cpe:/o:suse:sle-we:15:sp5",
 					"cpe:/o:suse:sle-we:15:sp6",
@@ -657,6 +669,10 @@
 								"comment": "kernel-default-livepatch-devel-5.14.21-150500.55.83.1 is installed"
 							},
 							{
+								"test_ref": "oval:org.opensuse.security:tst:2009946711",
+								"comment": "kernel-livepatch-5_14_21-150500_13_73-rt-1-150500.11.3.1 is installed"
+							},
+							{
 								"test_ref": "oval:org.opensuse.security:tst:2009946322",
 								"comment": "kernel-livepatch-5_14_21-150500_55_83-default-1-150500.11.3.1 is installed"
 							}
@@ -699,6 +715,57 @@
 					{
 						"test_ref": "oval:org.opensuse.security:tst:2009857543",
 						"comment": "SUSE Linux Enterprise Live Patching 15 SP6 is installed"
+					}
+				]
+			},
+			{
+				"operator": "AND",
+				"criterias": [
+					{
+						"operator": "OR",
+						"criterions": [
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009759899",
+								"comment": "SUSE Linux Enterprise High Performance Computing 15 SP5 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009762868",
+								"comment": "SUSE Linux Enterprise Module for Public Cloud 15 SP5 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009759901",
+								"comment": "SUSE Linux Enterprise Server 15 SP5 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009759902",
+								"comment": "SUSE Linux Enterprise Server for SAP Applications 15 SP5 is installed"
+							}
+						]
+					},
+					{
+						"operator": "OR",
+						"criterions": [
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009946620",
+								"comment": "kernel-azure-5.14.21-150500.33.69.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009946621",
+								"comment": "kernel-azure-devel-5.14.21-150500.33.69.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009946626",
+								"comment": "kernel-devel-azure-5.14.21-150500.33.69.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009946627",
+								"comment": "kernel-source-azure-5.14.21-150500.33.69.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009946628",
+								"comment": "kernel-syms-azure-5.14.21-150500.33.69.1 is installed"
+							}
+						]
 					}
 				]
 			}
