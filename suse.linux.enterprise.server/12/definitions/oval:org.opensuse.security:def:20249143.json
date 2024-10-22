@@ -7,9 +7,18 @@
 		"affected": {
 			"family": "unix",
 			"platform": [
+				"SUSE Linux Enterprise High Performance Computing 12",
+				"SUSE Linux Enterprise Module for Legacy 12",
+				"SUSE Linux Enterprise Server 12",
+				"SUSE Linux Enterprise Server 12 SP2-LTSS",
+				"SUSE Linux Enterprise Server 12 SP3",
+				"SUSE Linux Enterprise Server 12 SP4",
 				"SUSE Linux Enterprise Server 12 SP4-LTSS",
 				"SUSE Linux Enterprise Server 12 SP5",
 				"SUSE Linux Enterprise Server 12 SP5-LTSS",
+				"SUSE Linux Enterprise Server for SAP Applications 12",
+				"SUSE Linux Enterprise Server for SAP Applications 12 SP3",
+				"SUSE Linux Enterprise Server for SAP Applications 12 SP4",
 				"SUSE Linux Enterprise Server for SAP Applications 12 SP5"
 			]
 		},
@@ -23,6 +32,11 @@
 				"ref_id": "SUSE CVE-2024-9143",
 				"ref_url": "https://www.suse.com/security/cve/CVE-2024-9143",
 				"source": "SUSE CVE"
+			},
+			{
+				"ref_id": "openSUSE-SU-2024:14416-1",
+				"ref_url": "https://lists.opensuse.org/archives/list/security-announce@lists.opensuse.org/thread/ZAEWAWTQ662APXDOVFSO6WSPPJ73EELU/",
+				"source": "SUSE-SU"
 			}
 		],
 		"description": "\n    Issue summary: Use of the low-level GF(2^m) elliptic curve APIs with untrusted\nexplicit values for the field polynomial can lead to out-of-bounds memory reads\nor writes.\n\nImpact summary: Out of bound memory writes can lead to an application crash or\neven a possibility of a remote code execution, however, in all the protocols\ninvolving Elliptic Curve Cryptography that we're aware of, either only \"named\ncurves\" are supported, or, if explicit curve parameters are supported, they\nspecify an X9.62 encoding of binary (GF(2^m)) curves that can't represent\nproblematic input values. Thus the likelihood of existence of a vulnerable\napplication is low.\n\nIn particular, the X9.62 encoding is used for ECC keys in X.509 certificates,\nso problematic inputs cannot occur in the context of processing X.509\ncertificates.  Any problematic use-cases would have to be using an \"exotic\"\ncurve encoding.\n\nThe affected APIs include: EC_GROUP_new_curve_GF2m(), EC_GROUP_new_from_params(),\nand various supporting BN_GF2m_*() functions.\n\nApplications working with \"exotic\" explicit binary (GF(2^m)) curve parameters,\nthat make it possible to represent invalid field polynomials with a zero\nconstant term, via the above or similar APIs, may terminate abruptly as a\nresult of reading or writing outside of array bounds.  Remote code execution\ncannot easily be ruled out.\n\nThe FIPS modules in 3.3, 3.2, 3.1 and 3.0 are not affected by this issue.\n    ",
@@ -51,36 +65,56 @@
 				"date": "2024-10-17"
 			},
 			"updated": {
-				"date": "2024-10-19"
+				"date": "2024-10-22"
 			},
 			"affected_cpe_list": {
 				"cpe": [
+					"cpe:/o:suse:sle-module-legacy:12",
+					"cpe:/o:suse:sle_hpc:12",
 					"cpe:/o:suse:sles-ltss-extended-security:12:sp5",
+					"cpe:/o:suse:sles-ltss:12:sp2",
 					"cpe:/o:suse:sles-ltss:12:sp4",
+					"cpe:/o:suse:sles:12",
+					"cpe:/o:suse:sles:12:sp3",
+					"cpe:/o:suse:sles:12:sp4",
 					"cpe:/o:suse:sles:12:sp5",
+					"cpe:/o:suse:sles_sap:12",
+					"cpe:/o:suse:sles_sap:12:sp3",
+					"cpe:/o:suse:sles_sap:12:sp4",
 					"cpe:/o:suse:sles_sap:12:sp5"
 				]
 			}
 		}
 	},
 	"criteria": {
-		"operator": "AND",
+		"operator": "OR",
 		"criterias": [
 			{
-				"operator": "OR",
+				"operator": "AND",
+				"criterias": [
+					{
+						"operator": "OR",
+						"criterions": [
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009334861",
+								"comment": "libopenssl0_9_8 is not affected"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009333942",
+								"comment": "openssl is not affected"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009333943",
+								"comment": "openssl-1_0_0 is not affected"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009333944",
+								"comment": "openssl-1_1 is not affected"
+							}
+						]
+					}
+				],
 				"criterions": [
-					{
-						"test_ref": "oval:org.opensuse.security:tst:2009240280",
-						"comment": "SUSE Linux Enterprise Server 12 SP4-LTSS is installed"
-					},
-					{
-						"test_ref": "oval:org.opensuse.security:tst:2009258033",
-						"comment": "SUSE Linux Enterprise Server 12 SP5 is installed"
-					},
-					{
-						"test_ref": "oval:org.opensuse.security:tst:2009258033",
-						"comment": "SUSE Linux Enterprise Server 12 SP5-LTSS is installed"
-					},
 					{
 						"test_ref": "oval:org.opensuse.security:tst:2009258806",
 						"comment": "SUSE Linux Enterprise Server for SAP Applications 12 SP5 is installed"
@@ -88,15 +122,192 @@
 				]
 			},
 			{
-				"operator": "OR",
-				"criterions": [
+				"operator": "AND",
+				"criterias": [
 					{
-						"test_ref": "oval:org.opensuse.security:tst:2009334864",
-						"comment": "libopenssl-devel is not affected"
+						"operator": "OR",
+						"criterions": [
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009703659",
+								"comment": "SUSE Linux Enterprise High Performance Computing 12 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009117869",
+								"comment": "SUSE Linux Enterprise Module for Legacy 12 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009116126",
+								"comment": "SUSE Linux Enterprise Server 12 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009158922",
+								"comment": "SUSE Linux Enterprise Server 12 SP3 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009240280",
+								"comment": "SUSE Linux Enterprise Server 12 SP4 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009258033",
+								"comment": "SUSE Linux Enterprise Server 12 SP5 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009258800",
+								"comment": "SUSE Linux Enterprise Server for SAP Applications 12 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009258803",
+								"comment": "SUSE Linux Enterprise Server for SAP Applications 12 SP3 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009258804",
+								"comment": "SUSE Linux Enterprise Server for SAP Applications 12 SP4 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009258806",
+								"comment": "SUSE Linux Enterprise Server for SAP Applications 12 SP5 is installed"
+							}
+						]
 					},
 					{
-						"test_ref": "oval:org.opensuse.security:tst:2009333942",
-						"comment": "openssl is not affected"
+						"operator": "OR",
+						"criterions": [
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009334861",
+								"comment": "libopenssl0_9_8 is not affected"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009334860",
+								"comment": "libopenssl0_9_8-32bit is not affected"
+							}
+						]
+					}
+				]
+			},
+			{
+				"operator": "AND",
+				"criterias": [
+					{
+						"operator": "OR",
+						"criterions": [
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009240280",
+								"comment": "SUSE Linux Enterprise Server 12 SP4-LTSS is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009258033",
+								"comment": "SUSE Linux Enterprise Server 12 SP5 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009258033",
+								"comment": "SUSE Linux Enterprise Server 12 SP5-LTSS is installed"
+							}
+						]
+					},
+					{
+						"operator": "OR",
+						"criterions": [
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009334864",
+								"comment": "libopenssl-devel is not affected"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009333942",
+								"comment": "openssl is not affected"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009334865",
+								"comment": "libopenssl-1_0_0-devel is not affected"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009334863",
+								"comment": "libopenssl1_0_0 is not affected"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009334862",
+								"comment": "libopenssl1_0_0-32bit is not affected"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009334868",
+								"comment": "libopenssl1_0_0-hmac is not affected"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009334870",
+								"comment": "libopenssl1_0_0-hmac-32bit is not affected"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009333943",
+								"comment": "openssl-1_0_0 is not affected"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009334871",
+								"comment": "openssl-1_0_0-doc is not affected"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009334866",
+								"comment": "libopenssl1_1 is not affected"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009334867",
+								"comment": "libopenssl1_1-32bit is not affected"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009343863",
+								"comment": "libopenssl1_1-hmac is not affected"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009343864",
+								"comment": "libopenssl1_1-hmac-32bit is not affected"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009333944",
+								"comment": "openssl-1_1 is not affected"
+							}
+						]
+					}
+				]
+			},
+			{
+				"operator": "AND",
+				"criterias": [
+					{
+						"operator": "OR",
+						"criterions": [
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009334864",
+								"comment": "libopenssl-devel is not affected"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009334863",
+								"comment": "libopenssl1_0_0 is not affected"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009334862",
+								"comment": "libopenssl1_0_0-32bit is not affected"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009334868",
+								"comment": "libopenssl1_0_0-hmac is not affected"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009334870",
+								"comment": "libopenssl1_0_0-hmac-32bit is not affected"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009333942",
+								"comment": "openssl is not affected"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009334869",
+								"comment": "openssl-doc is not affected"
+							}
+						]
+					}
+				],
+				"criterions": [
+					{
+						"test_ref": "oval:org.opensuse.security:tst:2009128018",
+						"comment": "SUSE Linux Enterprise Server 12 SP2-LTSS is installed"
 					}
 				]
 			}

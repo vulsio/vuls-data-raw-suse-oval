@@ -1,0 +1,141 @@
+{
+	"id": "oval:org.opensuse.security:def:202447678",
+	"version": "1",
+	"class": "vulnerability",
+	"metadata": {
+		"title": "CVE-2024-47678",
+		"affected": {
+			"family": "unix",
+			"platform": [
+				"SUSE Linux Enterprise High Performance Computing 12",
+				"SUSE Linux Enterprise Module for Public Cloud 12",
+				"SUSE Linux Enterprise Server 12",
+				"SUSE Linux Enterprise Server 12 SP3",
+				"SUSE Linux Enterprise Server 12 SP4",
+				"SUSE Linux Enterprise Server 12 SP5",
+				"SUSE Linux Enterprise Server for SAP Applications 12",
+				"SUSE Linux Enterprise Server for SAP Applications 12 SP3",
+				"SUSE Linux Enterprise Server for SAP Applications 12 SP4",
+				"SUSE Linux Enterprise Server for SAP Applications 12 SP5"
+			]
+		},
+		"reference": [
+			{
+				"ref_id": "Mitre CVE-2024-47678",
+				"ref_url": "https://cve.mitre.org/cgi-bin/cvename.cgi?name=CVE-2024-47678",
+				"source": "CVE"
+			},
+			{
+				"ref_id": "SUSE CVE-2024-47678",
+				"ref_url": "https://www.suse.com/security/cve/CVE-2024-47678",
+				"source": "SUSE CVE"
+			}
+		],
+		"description": "\n    In the Linux kernel, the following vulnerability has been resolved:\n\nicmp: change the order of rate limits\n\nICMP messages are ratelimited :\n\nAfter the blamed commits, the two rate limiters are applied in this order:\n\n1) host wide ratelimit (icmp_global_allow())\n\n2) Per destination ratelimit (inetpeer based)\n\nIn order to avoid side-channels attacks, we need to apply\nthe per destination check first.\n\nThis patch makes the following change :\n\n1) icmp_global_allow() checks if the host wide limit is reached.\n   But credits are not yet consumed. This is deferred to 3)\n\n2) The per destination limit is checked/updated.\n   This might add a new node in inetpeer tree.\n\n3) icmp_global_consume() consumes tokens if prior operations succeeded.\n\nThis means that host wide ratelimit is still effective\nin keeping inetpeer tree small even under DDOS.\n\nAs a bonus, I removed icmp_global.lock as the fast path\ncan use a lock-free operation.\n    ",
+		"advisory": {
+			"from": "security@suse.de",
+			"severity": "Moderate",
+			"cve": [
+				{
+					"text": "CVE-2024-47678 at SUSE",
+					"href": "https://www.suse.com/security/cve/CVE-2024-47678/",
+					"impact": "medium",
+					"cvss3": "5.5/CVSS:3.1/AV:L/AC:L/PR:L/UI:N/S:U/C:H/I:N/A:N"
+				},
+				{
+					"text": "CVE-2024-47678 at NVD",
+					"href": "https://nvd.nist.gov/vuln/detail/CVE-2024-47678"
+				}
+			],
+			"bugzilla": [
+				{
+					"text": "SUSE bug 1231854",
+					"href": "https://bugzilla.suse.com/1231854"
+				}
+			],
+			"issued": {
+				"date": "2024-10-22"
+			},
+			"updated": {
+				"date": "2024-10-22"
+			},
+			"affected_cpe_list": {
+				"cpe": [
+					"cpe:/o:suse:sle-module-public-cloud:12",
+					"cpe:/o:suse:sle_hpc:12",
+					"cpe:/o:suse:sles:12",
+					"cpe:/o:suse:sles:12:sp3",
+					"cpe:/o:suse:sles:12:sp4",
+					"cpe:/o:suse:sles:12:sp5",
+					"cpe:/o:suse:sles_sap:12",
+					"cpe:/o:suse:sles_sap:12:sp3",
+					"cpe:/o:suse:sles_sap:12:sp4",
+					"cpe:/o:suse:sles_sap:12:sp5"
+				]
+			}
+		}
+	},
+	"criteria": {
+		"operator": "AND",
+		"criterias": [
+			{
+				"operator": "OR",
+				"criterions": [
+					{
+						"test_ref": "oval:org.opensuse.security:tst:2009703659",
+						"comment": "SUSE Linux Enterprise High Performance Computing 12 is installed"
+					},
+					{
+						"test_ref": "oval:org.opensuse.security:tst:2009178199",
+						"comment": "SUSE Linux Enterprise Module for Public Cloud 12 is installed"
+					},
+					{
+						"test_ref": "oval:org.opensuse.security:tst:2009116126",
+						"comment": "SUSE Linux Enterprise Server 12 is installed"
+					},
+					{
+						"test_ref": "oval:org.opensuse.security:tst:2009158922",
+						"comment": "SUSE Linux Enterprise Server 12 SP3 is installed"
+					},
+					{
+						"test_ref": "oval:org.opensuse.security:tst:2009240280",
+						"comment": "SUSE Linux Enterprise Server 12 SP4 is installed"
+					},
+					{
+						"test_ref": "oval:org.opensuse.security:tst:2009258033",
+						"comment": "SUSE Linux Enterprise Server 12 SP5 is installed"
+					},
+					{
+						"test_ref": "oval:org.opensuse.security:tst:2009258800",
+						"comment": "SUSE Linux Enterprise Server for SAP Applications 12 is installed"
+					},
+					{
+						"test_ref": "oval:org.opensuse.security:tst:2009258803",
+						"comment": "SUSE Linux Enterprise Server for SAP Applications 12 SP3 is installed"
+					},
+					{
+						"test_ref": "oval:org.opensuse.security:tst:2009258804",
+						"comment": "SUSE Linux Enterprise Server for SAP Applications 12 SP4 is installed"
+					},
+					{
+						"test_ref": "oval:org.opensuse.security:tst:2009258806",
+						"comment": "SUSE Linux Enterprise Server for SAP Applications 12 SP5 is installed"
+					}
+				]
+			},
+			{
+				"operator": "OR",
+				"criterions": [
+					{
+						"test_ref": "oval:org.opensuse.security:tst:2009334017",
+						"comment": "kernel-default is not affected"
+					},
+					{
+						"test_ref": "oval:org.opensuse.security:tst:2009333928",
+						"comment": "kernel-source is not affected"
+					}
+				]
+			}
+		]
+	}
+}
