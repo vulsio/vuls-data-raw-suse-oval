@@ -1,0 +1,119 @@
+{
+	"id": "oval:org.opensuse.security:def:202447728",
+	"version": "1",
+	"class": "vulnerability",
+	"metadata": {
+		"title": "CVE-2024-47728",
+		"affected": {
+			"family": "unix",
+			"platform": [
+				"SUSE Linux Enterprise Server 15 SP1-LTSS",
+				"SUSE Linux Enterprise Server 15-LTSS"
+			]
+		},
+		"reference": [
+			{
+				"ref_id": "Mitre CVE-2024-47728",
+				"ref_url": "https://cve.mitre.org/cgi-bin/cvename.cgi?name=CVE-2024-47728",
+				"source": "CVE"
+			},
+			{
+				"ref_id": "SUSE CVE-2024-47728",
+				"ref_url": "https://www.suse.com/security/cve/CVE-2024-47728",
+				"source": "SUSE CVE"
+			}
+		],
+		"description": "\n    In the Linux kernel, the following vulnerability has been resolved:\n\nbpf: Zero former ARG_PTR_TO_{LONG,INT} args in case of error\n\nFor all non-tracing helpers which formerly had ARG_PTR_TO_{LONG,INT} as input\narguments, zero the value for the case of an error as otherwise it could leak\nmemory. For tracing, it is not needed given CAP_PERFMON can already read all\nkernel memory anyway hence bpf_get_func_arg() and bpf_get_func_ret() is skipped\nin here.\n\nAlso, the MTU helpers mtu_len pointer value is being written but also read.\nTechnically, the MEM_UNINIT should not be there in order to always force init.\nRemoving MEM_UNINIT needs more verifier rework though: MEM_UNINIT right now\nimplies two things actually: i) write into memory, ii) memory does not have\nto be initialized. If we lift MEM_UNINIT, it then becomes: i) read into memory,\nii) memory must be initialized. This means that for bpf_*_check_mtu() we're\nreadding the issue we're trying to fix, that is, it would then be able to\nwrite back into things like .rodata BPF maps. Follow-up work will rework the\nMEM_UNINIT semantics such that the intent can be better expressed. For now\njust clear the *mtu_len on error path which can be lifted later again.\n    ",
+		"advisory": {
+			"from": "security@suse.de",
+			"severity": "Moderate",
+			"cve": [
+				{
+					"text": "CVE-2024-47728 at SUSE",
+					"href": "https://www.suse.com/security/cve/CVE-2024-47728/",
+					"impact": "medium",
+					"cvss3": "5.5/CVSS:3.1/AV:L/AC:L/PR:L/UI:N/S:U/C:N/I:N/A:H"
+				},
+				{
+					"text": "CVE-2024-47728 at NVD",
+					"href": "https://nvd.nist.gov/vuln/detail/CVE-2024-47728",
+					"impact": "medium",
+					"cvss3": "5.5/CVSS:3.1/AV:L/AC:L/PR:L/UI:N/S:U/C:N/I:N/A:H"
+				}
+			],
+			"bugzilla": [
+				{
+					"text": "SUSE bug 1232076",
+					"href": "https://bugzilla.suse.com/1232076"
+				}
+			],
+			"issued": {
+				"date": "2024-10-27"
+			},
+			"updated": {
+				"date": "2024-10-27"
+			},
+			"affected_cpe_list": {
+				"cpe": [
+					"cpe:/o:suse:sles-ltss:15",
+					"cpe:/o:suse:sles-ltss:15:sp1"
+				]
+			}
+		}
+	},
+	"criteria": {
+		"operator": "AND",
+		"criterias": [
+			{
+				"operator": "OR",
+				"criterions": [
+					{
+						"test_ref": "oval:org.opensuse.security:tst:2009341508",
+						"comment": "SUSE Linux Enterprise Server 15 SP1-LTSS is installed"
+					},
+					{
+						"test_ref": "oval:org.opensuse.security:tst:2009302033",
+						"comment": "SUSE Linux Enterprise Server 15-LTSS is installed"
+					}
+				]
+			},
+			{
+				"operator": "OR",
+				"criterions": [
+					{
+						"test_ref": "oval:org.opensuse.security:tst:2009334017",
+						"comment": "kernel-default is not affected"
+					},
+					{
+						"test_ref": "oval:org.opensuse.security:tst:2009335425",
+						"comment": "kernel-default-base is not affected"
+					},
+					{
+						"test_ref": "oval:org.opensuse.security:tst:2009335423",
+						"comment": "kernel-default-devel is not affected"
+					},
+					{
+						"test_ref": "oval:org.opensuse.security:tst:2009335426",
+						"comment": "kernel-default-man is not affected"
+					},
+					{
+						"test_ref": "oval:org.opensuse.security:tst:2009338037",
+						"comment": "reiserfs-kmp-default is not affected"
+					},
+					{
+						"test_ref": "oval:org.opensuse.security:tst:2009334791",
+						"comment": "kernel-devel is not affected"
+					},
+					{
+						"test_ref": "oval:org.opensuse.security:tst:2009334792",
+						"comment": "kernel-macros is not affected"
+					},
+					{
+						"test_ref": "oval:org.opensuse.security:tst:2009333928",
+						"comment": "kernel-source is not affected"
+					}
+				]
+			}
+		]
+	}
+}
