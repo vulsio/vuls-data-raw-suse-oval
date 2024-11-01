@@ -1,0 +1,114 @@
+{
+	"id": "oval:org.opensuse.security:def:202446693",
+	"version": "1",
+	"class": "vulnerability",
+	"metadata": {
+		"title": "CVE-2024-46693",
+		"affected": {
+			"family": "unix",
+			"platform": [
+				"SUSE Linux Enterprise Micro 5.1"
+			]
+		},
+		"reference": [
+			{
+				"ref_id": "Mitre CVE-2024-46693",
+				"ref_url": "https://cve.mitre.org/cgi-bin/cvename.cgi?name=CVE-2024-46693",
+				"source": "CVE"
+			},
+			{
+				"ref_id": "SUSE CVE-2024-46693",
+				"ref_url": "https://www.suse.com/security/cve/CVE-2024-46693",
+				"source": "SUSE CVE"
+			},
+			{
+				"ref_id": "SUSE-SU-2024:3551-1",
+				"ref_url": "https://lists.suse.com/pipermail/sle-updates/2024-October/037163.html",
+				"source": "SUSE-SU"
+			},
+			{
+				"ref_id": "SUSE-SU-2024:3553-1",
+				"ref_url": "https://lists.suse.com/pipermail/sle-updates/2024-October/037161.html",
+				"source": "SUSE-SU"
+			},
+			{
+				"ref_id": "SUSE-SU-2024:3561-1",
+				"ref_url": "https://lists.suse.com/pipermail/sle-security-updates/2024-October/019580.html",
+				"source": "SUSE-SU"
+			},
+			{
+				"ref_id": "SUSE-SU-2024:3564-1",
+				"ref_url": "https://lists.suse.com/pipermail/sle-updates/2024-October/037178.html",
+				"source": "SUSE-SU"
+			}
+		],
+		"description": "\n    In the Linux kernel, the following vulnerability has been resolved:\n\nsoc: qcom: pmic_glink: Fix race during initialization\n\nAs pointed out by Stephen Boyd it is possible that during initialization\nof the pmic_glink child drivers, the protection-domain notifiers fires,\nand the associated work is scheduled, before the client registration\nreturns and as a result the local \"client\" pointer has been initialized.\n\nThe outcome of this is a NULL pointer dereference as the \"client\"\npointer is blindly dereferenced.\n\nTimeline provided by Stephen:\n CPU0                               CPU1\n ----                               ----\n ucsi->client = NULL;\n devm_pmic_glink_register_client()\n  client->pdr_notify(client->priv, pg->client_state)\n   pmic_glink_ucsi_pdr_notify()\n    schedule_work(&ucsi->register_work)\n    <schedule away>\n                                    pmic_glink_ucsi_register()\n                                     ucsi_register()\n                                      pmic_glink_ucsi_read_version()\n                                       pmic_glink_ucsi_read()\n                                        pmic_glink_ucsi_read()\n                                         pmic_glink_send(ucsi->client)\n                                         <client is NULL BAD>\n ucsi->client = client // Too late!\n\nThis code is identical across the altmode, battery manager and usci\nchild drivers.\n\nResolve this by splitting the allocation of the \"client\" object and the\nregistration thereof into two operations.\n\nThis only happens if the protection domain registry is populated at the\ntime of registration, which by the introduction of commit '1ebcde047c54\n(\"soc: qcom: add pd-mapper implementation\")' became much more likely.\n    ",
+		"advisory": {
+			"from": "security@suse.de",
+			"severity": "Moderate",
+			"cve": [
+				{
+					"text": "CVE-2024-46693 at SUSE",
+					"href": "https://www.suse.com/security/cve/CVE-2024-46693/",
+					"impact": "medium",
+					"cvss3": "5.5/CVSS:3.1/AV:L/AC:L/PR:L/UI:N/S:U/C:N/I:N/A:H"
+				},
+				{
+					"text": "CVE-2024-46693 at NVD",
+					"href": "https://nvd.nist.gov/vuln/detail/CVE-2024-46693",
+					"impact": "medium",
+					"cvss3": "4.7/CVSS:3.1/AV:L/AC:H/PR:L/UI:N/S:U/C:N/I:N/A:H"
+				}
+			],
+			"bugzilla": [
+				{
+					"text": "SUSE bug 1230521",
+					"href": "https://bugzilla.suse.com/1230521"
+				}
+			],
+			"issued": {
+				"date": "2024-09-14"
+			},
+			"updated": {
+				"date": "2024-10-10"
+			},
+			"affected_cpe_list": {
+				"cpe": [
+					"cpe:/o:suse:suse-microos:5.1"
+				]
+			}
+		}
+	},
+	"criteria": {
+		"operator": "AND",
+		"criterias": [
+			{
+				"operator": "OR",
+				"criterions": [
+					{
+						"test_ref": "oval:org.opensuse.security:tst:2009334017",
+						"comment": "kernel-default is not affected"
+					},
+					{
+						"test_ref": "oval:org.opensuse.security:tst:2009705046",
+						"comment": "kernel-rt is not affected"
+					},
+					{
+						"test_ref": "oval:org.opensuse.security:tst:2009333928",
+						"comment": "kernel-source is not affected"
+					},
+					{
+						"test_ref": "oval:org.opensuse.security:tst:2009728712",
+						"comment": "kernel-source-rt is not affected"
+					}
+				]
+			}
+		],
+		"criterions": [
+			{
+				"test_ref": "oval:org.opensuse.security:tst:2009669964",
+				"comment": "SUSE Linux Enterprise Micro 5.1 is installed"
+			}
+		]
+	}
+}

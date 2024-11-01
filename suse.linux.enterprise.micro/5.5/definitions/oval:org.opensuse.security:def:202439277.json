@@ -1,0 +1,90 @@
+{
+	"id": "oval:org.opensuse.security:def:202439277",
+	"version": "1",
+	"class": "vulnerability",
+	"metadata": {
+		"title": "CVE-2024-39277",
+		"affected": {
+			"family": "unix",
+			"platform": [
+				"SUSE Linux Enterprise Micro 5.5"
+			]
+		},
+		"reference": [
+			{
+				"ref_id": "Mitre CVE-2024-39277",
+				"ref_url": "https://cve.mitre.org/cgi-bin/cvename.cgi?name=CVE-2024-39277",
+				"source": "CVE"
+			},
+			{
+				"ref_id": "SUSE CVE-2024-39277",
+				"ref_url": "https://www.suse.com/security/cve/CVE-2024-39277",
+				"source": "SUSE CVE"
+			},
+			{
+				"ref_id": "SUSE-SU-2024:2571-1",
+				"ref_url": "https://lists.suse.com/pipermail/sle-updates/2024-July/036103.html",
+				"source": "SUSE-SU"
+			},
+			{
+				"ref_id": "SUSE-SU-2024:2896-1",
+				"ref_url": "https://lists.suse.com/pipermail/sle-security-updates/2024-August/019185.html",
+				"source": "SUSE-SU"
+			},
+			{
+				"ref_id": "SUSE-SU-2024:2973-1",
+				"ref_url": "https://lists.suse.com/pipermail/sle-security-updates/2024-August/019280.html",
+				"source": "SUSE-SU"
+			}
+		],
+		"description": "\n    In the Linux kernel, the following vulnerability has been resolved:\n\ndma-mapping: benchmark: handle NUMA_NO_NODE correctly\n\ncpumask_of_node() can be called for NUMA_NO_NODE inside do_map_benchmark()\nresulting in the following sanitizer report:\n\nUBSAN: array-index-out-of-bounds in ./arch/x86/include/asm/topology.h:72:28\nindex -1 is out of range for type 'cpumask [64][1]'\nCPU: 1 PID: 990 Comm: dma_map_benchma Not tainted 6.9.0-rc6 #29\nHardware name: QEMU Standard PC (i440FX + PIIX, 1996)\nCall Trace:\n <TASK>\ndump_stack_lvl (lib/dump_stack.c:117)\nubsan_epilogue (lib/ubsan.c:232)\n__ubsan_handle_out_of_bounds (lib/ubsan.c:429)\ncpumask_of_node (arch/x86/include/asm/topology.h:72) [inline]\ndo_map_benchmark (kernel/dma/map_benchmark.c:104)\nmap_benchmark_ioctl (kernel/dma/map_benchmark.c:246)\nfull_proxy_unlocked_ioctl (fs/debugfs/file.c:333)\n__x64_sys_ioctl (fs/ioctl.c:890)\ndo_syscall_64 (arch/x86/entry/common.c:83)\nentry_SYSCALL_64_after_hwframe (arch/x86/entry/entry_64.S:130)\n\nUse cpumask_of_node() in place when binding a kernel thread to a cpuset\nof a particular node.\n\nNote that the provided node id is checked inside map_benchmark_ioctl().\nIt's just a NUMA_NO_NODE case which is not handled properly later.\n\nFound by Linux Verification Center (linuxtesting.org).\n    ",
+		"advisory": {
+			"from": "security@suse.de",
+			"severity": "Moderate",
+			"cve": [
+				{
+					"text": "CVE-2024-39277 at SUSE",
+					"href": "https://www.suse.com/security/cve/CVE-2024-39277/",
+					"impact": "medium",
+					"cvss3": "6.6/CVSS:3.1/AV:L/AC:L/PR:L/UI:N/S:U/C:L/I:L/A:H"
+				},
+				{
+					"text": "CVE-2024-39277 at NVD",
+					"href": "https://nvd.nist.gov/vuln/detail/CVE-2024-39277",
+					"impact": "high",
+					"cvss3": "7.8/CVSS:3.1/AV:L/AC:L/PR:L/UI:N/S:U/C:H/I:H/A:H"
+				}
+			],
+			"bugzilla": [
+				{
+					"text": "SUSE bug 1226909",
+					"href": "https://bugzilla.suse.com/1226909"
+				}
+			],
+			"issued": {
+				"date": "2024-06-26"
+			},
+			"updated": {
+				"date": "2024-08-21"
+			},
+			"affected_cpe_list": {
+				"cpe": [
+					"cpe:/o:suse:sle-micro:5.5"
+				]
+			}
+		}
+	},
+	"criteria": {
+		"operator": "AND",
+		"criterions": [
+			{
+				"test_ref": "oval:org.opensuse.security:tst:2009800388",
+				"comment": "SUSE Linux Enterprise Micro 5.5 is installed"
+			},
+			{
+				"test_ref": "oval:org.opensuse.security:tst:2009728712",
+				"comment": "kernel-source-rt is not affected"
+			}
+		]
+	}
+}

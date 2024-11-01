@@ -1,0 +1,105 @@
+{
+	"id": "oval:org.opensuse.security:def:202438385",
+	"version": "1",
+	"class": "vulnerability",
+	"metadata": {
+		"title": "CVE-2024-38385",
+		"affected": {
+			"family": "unix",
+			"platform": [
+				"SUSE Linux Enterprise Micro 5.4"
+			]
+		},
+		"reference": [
+			{
+				"ref_id": "Mitre CVE-2024-38385",
+				"ref_url": "https://cve.mitre.org/cgi-bin/cvename.cgi?name=CVE-2024-38385",
+				"source": "CVE"
+			},
+			{
+				"ref_id": "SUSE CVE-2024-38385",
+				"ref_url": "https://www.suse.com/security/cve/CVE-2024-38385",
+				"source": "SUSE CVE"
+			},
+			{
+				"ref_id": "SUSE-SU-2024:2571-1",
+				"ref_url": "https://lists.suse.com/pipermail/sle-updates/2024-July/036103.html",
+				"source": "SUSE-SU"
+			},
+			{
+				"ref_id": "SUSE-SU-2024:2896-1",
+				"ref_url": "https://lists.suse.com/pipermail/sle-security-updates/2024-August/019185.html",
+				"source": "SUSE-SU"
+			},
+			{
+				"ref_id": "SUSE-SU-2024:2973-1",
+				"ref_url": "https://lists.suse.com/pipermail/sle-security-updates/2024-August/019280.html",
+				"source": "SUSE-SU"
+			}
+		],
+		"description": "\n    In the Linux kernel, the following vulnerability has been resolved:\n\ngenirq/irqdesc: Prevent use-after-free in irq_find_at_or_after()\n\nirq_find_at_or_after() dereferences the interrupt descriptor which is\nreturned by mt_find() while neither holding sparse_irq_lock nor RCU read\nlock, which means the descriptor can be freed between mt_find() and the\ndereference:\n\n    CPU0                            CPU1\n    desc = mt_find()\n                                    delayed_free_desc(desc)\n    irq_desc_get_irq(desc)\n\nThe use-after-free is reported by KASAN:\n\n    Call trace:\n     irq_get_next_irq+0x58/0x84\n     show_stat+0x638/0x824\n     seq_read_iter+0x158/0x4ec\n     proc_reg_read_iter+0x94/0x12c\n     vfs_read+0x1e0/0x2c8\n\n    Freed by task 4471:\n     slab_free_freelist_hook+0x174/0x1e0\n     __kmem_cache_free+0xa4/0x1dc\n     kfree+0x64/0x128\n     irq_kobj_release+0x28/0x3c\n     kobject_put+0xcc/0x1e0\n     delayed_free_desc+0x14/0x2c\n     rcu_do_batch+0x214/0x720\n\nGuard the access with a RCU read lock section.\n    ",
+		"advisory": {
+			"from": "security@suse.de",
+			"severity": "Moderate",
+			"cve": [
+				{
+					"text": "CVE-2024-38385 at SUSE",
+					"href": "https://www.suse.com/security/cve/CVE-2024-38385/",
+					"impact": "medium",
+					"cvss3": "5.5/CVSS:3.1/AV:L/AC:L/PR:L/UI:N/S:U/C:N/I:N/A:H"
+				},
+				{
+					"text": "CVE-2024-38385 at NVD",
+					"href": "https://nvd.nist.gov/vuln/detail/CVE-2024-38385",
+					"impact": "medium",
+					"cvss3": "5.5/CVSS:3.1/AV:L/AC:L/PR:L/UI:N/S:U/C:N/I:N/A:H"
+				}
+			],
+			"bugzilla": [
+				{
+					"text": "SUSE bug 1227085",
+					"href": "https://bugzilla.suse.com/1227085"
+				}
+			],
+			"issued": {
+				"date": "2024-06-27"
+			},
+			"updated": {
+				"date": "2024-09-04"
+			},
+			"affected_cpe_list": {
+				"cpe": [
+					"cpe:/o:suse:sle-micro:5.4"
+				]
+			}
+		}
+	},
+	"criteria": {
+		"operator": "AND",
+		"criterias": [
+			{
+				"operator": "OR",
+				"criterions": [
+					{
+						"test_ref": "oval:org.opensuse.security:tst:2009334017",
+						"comment": "kernel-default is not affected"
+					},
+					{
+						"test_ref": "oval:org.opensuse.security:tst:2009705046",
+						"comment": "kernel-rt is not affected"
+					},
+					{
+						"test_ref": "oval:org.opensuse.security:tst:2009728712",
+						"comment": "kernel-source-rt is not affected"
+					}
+				]
+			}
+		],
+		"criterions": [
+			{
+				"test_ref": "oval:org.opensuse.security:tst:2009755086",
+				"comment": "SUSE Linux Enterprise Micro 5.4 is installed"
+			}
+		]
+	}
+}

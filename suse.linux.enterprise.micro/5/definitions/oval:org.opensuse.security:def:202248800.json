@@ -1,0 +1,221 @@
+{
+	"id": "oval:org.opensuse.security:def:202248800",
+	"version": "1",
+	"class": "vulnerability",
+	"metadata": {
+		"title": "CVE-2022-48800",
+		"affected": {
+			"family": "unix",
+			"platform": [
+				"SUSE Linux Enterprise Micro 5.0",
+				"SUSE Linux Enterprise Micro 5.1",
+				"SUSE Linux Enterprise Micro 5.2",
+				"SUSE Linux Enterprise Micro 5.3",
+				"SUSE Linux Enterprise Micro 5.4",
+				"SUSE Linux Enterprise Micro 5.5"
+			]
+		},
+		"reference": [
+			{
+				"ref_id": "Mitre CVE-2022-48800",
+				"ref_url": "https://cve.mitre.org/cgi-bin/cvename.cgi?name=CVE-2022-48800",
+				"source": "CVE"
+			},
+			{
+				"ref_id": "SUSE CVE-2022-48800",
+				"ref_url": "https://www.suse.com/security/cve/CVE-2022-48800",
+				"source": "SUSE CVE"
+			},
+			{
+				"ref_id": "SUSE-SU-2024:2894-1",
+				"ref_url": "https://lists.suse.com/pipermail/sle-updates/2024-August/036430.html",
+				"source": "SUSE-SU"
+			},
+			{
+				"ref_id": "SUSE-SU-2024:2902-1",
+				"ref_url": "https://lists.suse.com/pipermail/sle-updates/2024-August/036443.html",
+				"source": "SUSE-SU"
+			},
+			{
+				"ref_id": "SUSE-SU-2024:2929-1",
+				"ref_url": "https://lists.suse.com/pipermail/sle-updates/2024-August/036473.html",
+				"source": "SUSE-SU"
+			},
+			{
+				"ref_id": "SUSE-SU-2024:2939-1",
+				"ref_url": "https://lists.suse.com/pipermail/sle-security-updates/2024-August/019211.html",
+				"source": "SUSE-SU"
+			},
+			{
+				"ref_id": "SUSE-SU-2024:2947-1",
+				"ref_url": "https://lists.suse.com/pipermail/sle-updates/2024-August/036488.html",
+				"source": "SUSE-SU"
+			}
+		],
+		"description": "\n    In the Linux kernel, the following vulnerability has been resolved:\n\nmm: vmscan: remove deadlock due to throttling failing to make progress\n\nA soft lockup bug in kcompactd was reported in a private bugzilla with\nthe following visible in dmesg;\n\n  watchdog: BUG: soft lockup - CPU#33 stuck for 26s! [kcompactd0:479]\n  watchdog: BUG: soft lockup - CPU#33 stuck for 52s! [kcompactd0:479]\n  watchdog: BUG: soft lockup - CPU#33 stuck for 78s! [kcompactd0:479]\n  watchdog: BUG: soft lockup - CPU#33 stuck for 104s! [kcompactd0:479]\n\nThe machine had 256G of RAM with no swap and an earlier failed\nallocation indicated that node 0 where kcompactd was run was potentially\nunreclaimable;\n\n  Node 0 active_anon:29355112kB inactive_anon:2913528kB active_file:0kB\n    inactive_file:0kB unevictable:64kB isolated(anon):0kB isolated(file):0kB\n    mapped:8kB dirty:0kB writeback:0kB shmem:26780kB shmem_thp:\n    0kB shmem_pmdmapped: 0kB anon_thp: 23480320kB writeback_tmp:0kB\n    kernel_stack:2272kB pagetables:24500kB all_unreclaimable? yes\n\nVlastimil Babka investigated a crash dump and found that a task\nmigrating pages was trying to drain PCP lists;\n\n  PID: 52922  TASK: ffff969f820e5000  CPU: 19  COMMAND: \"kworker/u128:3\"\n  Call Trace:\n     __schedule\n     schedule\n     schedule_timeout\n     wait_for_completion\n     __flush_work\n     __drain_all_pages\n     __alloc_pages_slowpath.constprop.114\n     __alloc_pages\n     alloc_migration_target\n     migrate_pages\n     migrate_to_node\n     do_migrate_pages\n     cpuset_migrate_mm_workfn\n     process_one_work\n     worker_thread\n     kthread\n     ret_from_fork\n\nThis failure is specific to CONFIG_PREEMPT=n builds.  The root of the\nproblem is that kcompact0 is not rescheduling on a CPU while a task that\nhas isolated a large number of the pages from the LRU is waiting on\nkcompact0 to reschedule so the pages can be released.  While\nshrink_inactive_list() only loops once around too_many_isolated, reclaim\ncan continue without rescheduling if sc->skipped_deactivate == 1 which\ncould happen if there was no file LRU and the inactive anon list was not\nlow.\n    ",
+		"advisory": {
+			"from": "security@suse.de",
+			"severity": "Low",
+			"cve": [
+				{
+					"text": "CVE-2022-48800 at SUSE",
+					"href": "https://www.suse.com/security/cve/CVE-2022-48800/",
+					"impact": "low",
+					"cvss3": "2.5/CVSS:3.1/AV:L/AC:H/PR:L/UI:N/S:U/C:N/I:N/A:L"
+				},
+				{
+					"text": "CVE-2022-48800 at NVD",
+					"href": "https://nvd.nist.gov/vuln/detail/CVE-2022-48800",
+					"impact": "medium",
+					"cvss3": "5.5/CVSS:3.1/AV:L/AC:L/PR:L/UI:N/S:U/C:N/I:N/A:H"
+				}
+			],
+			"bugzilla": [
+				{
+					"text": "SUSE bug 1227954",
+					"href": "https://bugzilla.suse.com/1227954"
+				}
+			],
+			"issued": {
+				"date": "2024-10-18"
+			},
+			"updated": {
+				"date": "2024-10-18"
+			},
+			"affected_cpe_list": {
+				"cpe": [
+					"cpe:/o:suse:sle-micro:5.3",
+					"cpe:/o:suse:sle-micro:5.4",
+					"cpe:/o:suse:sle-micro:5.5",
+					"cpe:/o:suse:suse-microos:5.0",
+					"cpe:/o:suse:suse-microos:5.1",
+					"cpe:/o:suse:suse-microos:5.2"
+				]
+			}
+		}
+	},
+	"criteria": {
+		"operator": "OR",
+		"criterias": [
+			{
+				"operator": "AND",
+				"criterions": [
+					{
+						"test_ref": "oval:org.opensuse.security:tst:2009704855",
+						"comment": "SUSE Linux Enterprise Micro 5.0 is installed"
+					},
+					{
+						"test_ref": "oval:org.opensuse.security:tst:2009334017",
+						"comment": "kernel-default is not affected"
+					}
+				]
+			},
+			{
+				"operator": "AND",
+				"criterias": [
+					{
+						"operator": "OR",
+						"criterions": [
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009669964",
+								"comment": "SUSE Linux Enterprise Micro 5.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009681300",
+								"comment": "SUSE Linux Enterprise Micro 5.2 is installed"
+							}
+						]
+					},
+					{
+						"operator": "OR",
+						"criterions": [
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009334017",
+								"comment": "kernel-default is not affected"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009705046",
+								"comment": "kernel-rt is not affected"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009728712",
+								"comment": "kernel-source-rt is not affected"
+							}
+						]
+					}
+				]
+			},
+			{
+				"operator": "AND",
+				"criterias": [
+					{
+						"operator": "OR",
+						"criterions": [
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009728694",
+								"comment": "SUSE Linux Enterprise Micro 5.3 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009755086",
+								"comment": "SUSE Linux Enterprise Micro 5.4 is installed"
+							}
+						]
+					},
+					{
+						"operator": "OR",
+						"criterions": [
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009879796",
+								"comment": "kernel-default-5.14.21-150400.24.128.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009879678",
+								"comment": "kernel-default-base-5.14.21-150400.24.128.1.150400.24.62.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009879551",
+								"comment": "kernel-rt-5.14.21-150400.15.88.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009879552",
+								"comment": "kernel-source-rt-5.14.21-150400.15.88.1 is installed"
+							}
+						]
+					}
+				]
+			},
+			{
+				"operator": "AND",
+				"criterias": [
+					{
+						"operator": "OR",
+						"criterions": [
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009879879",
+								"comment": "kernel-default-5.14.21-150500.55.73.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009880170",
+								"comment": "kernel-default-base-5.14.21-150500.55.73.1.150500.6.33.8 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009879144",
+								"comment": "kernel-rt-5.14.21-150500.13.64.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009879155",
+								"comment": "kernel-source-rt-5.14.21-150500.13.64.1 is installed"
+							}
+						]
+					}
+				],
+				"criterions": [
+					{
+						"test_ref": "oval:org.opensuse.security:tst:2009800388",
+						"comment": "SUSE Linux Enterprise Micro 5.5 is installed"
+					}
+				]
+			}
+		]
+	}
+}

@@ -1,0 +1,88 @@
+{
+	"id": "oval:org.opensuse.security:def:202435986",
+	"version": "1",
+	"class": "vulnerability",
+	"metadata": {
+		"title": "CVE-2024-35986",
+		"affected": {
+			"family": "unix",
+			"platform": [
+				"SUSE Linux Enterprise Micro 5.5"
+			]
+		},
+		"reference": [
+			{
+				"ref_id": "Mitre CVE-2024-35986",
+				"ref_url": "https://cve.mitre.org/cgi-bin/cvename.cgi?name=CVE-2024-35986",
+				"source": "CVE"
+			},
+			{
+				"ref_id": "SUSE CVE-2024-35986",
+				"ref_url": "https://www.suse.com/security/cve/CVE-2024-35986",
+				"source": "SUSE CVE"
+			},
+			{
+				"ref_id": "SUSE-SU-2024:2135-1",
+				"ref_url": "https://lists.suse.com/pipermail/sle-updates/2024-June/035681.html",
+				"source": "SUSE-SU"
+			},
+			{
+				"ref_id": "SUSE-SU-2024:2203-1",
+				"ref_url": "https://lists.suse.com/pipermail/sle-security-updates/2024-August/019244.html",
+				"source": "SUSE-SU"
+			},
+			{
+				"ref_id": "SUSE-SU-2024:2973-1",
+				"ref_url": "https://lists.suse.com/pipermail/sle-security-updates/2024-August/019280.html",
+				"source": "SUSE-SU"
+			}
+		],
+		"description": "\n    In the Linux kernel, the following vulnerability has been resolved:\n\nphy: ti: tusb1210: Resolve charger-det crash if charger psy is unregistered\n\nThe power_supply frame-work is not really designed for there to be\nlong living in kernel references to power_supply devices.\n\nSpecifically unregistering a power_supply while some other code has\na reference to it triggers a WARN in power_supply_unregister():\n\n\tWARN_ON(atomic_dec_return(&psy->use_cnt));\n\nFolllowed by the power_supply still getting removed and the\nbacking data freed anyway, leaving the tusb1210 charger-detect code\nwith a dangling reference, resulting in a crash the next time\ntusb1210_get_online() is called.\n\nFix this by only holding the reference in tusb1210_get_online()\nfreeing it at the end of the function. Note this still leaves\na theoretical race window, but it avoids the issue when manually\nrmmod-ing the charger chip driver during development.\n    ",
+		"advisory": {
+			"from": "security@suse.de",
+			"severity": "Moderate",
+			"cve": [
+				{
+					"text": "CVE-2024-35986 at SUSE",
+					"href": "https://www.suse.com/security/cve/CVE-2024-35986/",
+					"impact": "medium",
+					"cvss3": "5.5/CVSS:3.1/AV:L/AC:L/PR:L/UI:N/S:U/C:N/I:N/A:H"
+				},
+				{
+					"text": "CVE-2024-35986 at NVD",
+					"href": "https://nvd.nist.gov/vuln/detail/CVE-2024-35986"
+				}
+			],
+			"bugzilla": [
+				{
+					"text": "SUSE bug 1224562",
+					"href": "https://bugzilla.suse.com/1224562"
+				}
+			],
+			"issued": {
+				"date": "2024-05-21"
+			},
+			"updated": {
+				"date": "2024-08-21"
+			},
+			"affected_cpe_list": {
+				"cpe": [
+					"cpe:/o:suse:sle-micro:5.5"
+				]
+			}
+		}
+	},
+	"criteria": {
+		"operator": "AND",
+		"criterions": [
+			{
+				"test_ref": "oval:org.opensuse.security:tst:2009800388",
+				"comment": "SUSE Linux Enterprise Micro 5.5 is installed"
+			},
+			{
+				"test_ref": "oval:org.opensuse.security:tst:2009728712",
+				"comment": "kernel-source-rt is not affected"
+			}
+		]
+	}
+}

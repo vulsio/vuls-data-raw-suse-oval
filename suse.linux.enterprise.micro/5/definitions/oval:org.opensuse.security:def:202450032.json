@@ -1,0 +1,165 @@
+{
+	"id": "oval:org.opensuse.security:def:202450032",
+	"version": "1",
+	"class": "vulnerability",
+	"metadata": {
+		"title": "CVE-2024-50032",
+		"affected": {
+			"family": "unix",
+			"platform": [
+				"SUSE Linux Enterprise Micro 5.0",
+				"SUSE Linux Enterprise Micro 5.1",
+				"SUSE Linux Enterprise Micro 5.2",
+				"SUSE Linux Enterprise Micro 5.3",
+				"SUSE Linux Enterprise Micro 5.4",
+				"SUSE Linux Enterprise Micro 5.5"
+			]
+		},
+		"reference": [
+			{
+				"ref_id": "Mitre CVE-2024-50032",
+				"ref_url": "https://cve.mitre.org/cgi-bin/cvename.cgi?name=CVE-2024-50032",
+				"source": "CVE"
+			},
+			{
+				"ref_id": "SUSE CVE-2024-50032",
+				"ref_url": "https://www.suse.com/security/cve/CVE-2024-50032",
+				"source": "SUSE CVE"
+			}
+		],
+		"description": "\n    In the Linux kernel, the following vulnerability has been resolved:\n\nrcu/nocb: Fix rcuog wake-up from offline softirq\n\nAfter a CPU has set itself offline and before it eventually calls\nrcutree_report_cpu_dead(), there are still opportunities for callbacks\nto be enqueued, for example from a softirq. When that happens on NOCB,\nthe rcuog wake-up is deferred through an IPI to an online CPU in order\nnot to call into the scheduler and risk arming the RT-bandwidth after\nhrtimers have been migrated out and disabled.\n\nBut performing a synchronized IPI from a softirq is buggy as reported in\nthe following scenario:\n\n        WARNING: CPU: 1 PID: 26 at kernel/smp.c:633 smp_call_function_single\n        Modules linked in: rcutorture torture\n        CPU: 1 UID: 0 PID: 26 Comm: migration/1 Not tainted 6.11.0-rc1-00012-g9139f93209d1 #1\n        Stopper: multi_cpu_stop+0x0/0x320 <- __stop_cpus+0xd0/0x120\n        RIP: 0010:smp_call_function_single\n        <IRQ>\n        swake_up_one_online\n        __call_rcu_nocb_wake\n        __call_rcu_common\n        ? rcu_torture_one_read\n        call_timer_fn\n        __run_timers\n        run_timer_softirq\n        handle_softirqs\n        irq_exit_rcu\n        ? tick_handle_periodic\n        sysvec_apic_timer_interrupt\n        </IRQ>\n\nFix this with forcing deferred rcuog wake up through the NOCB timer when\nthe CPU is offline. The actual wake up will happen from\nrcutree_report_cpu_dead().\n    ",
+		"advisory": {
+			"from": "security@suse.de",
+			"severity": "Moderate",
+			"cve": [
+				{
+					"text": "CVE-2024-50032 at SUSE",
+					"href": "https://www.suse.com/security/cve/CVE-2024-50032/",
+					"impact": "medium",
+					"cvss3": "5.5/CVSS:3.1/AV:L/AC:L/PR:L/UI:N/S:U/C:N/I:N/A:H"
+				},
+				{
+					"text": "CVE-2024-50032 at NVD",
+					"href": "https://nvd.nist.gov/vuln/detail/CVE-2024-50032",
+					"impact": "medium",
+					"cvss3": "5.5/CVSS:3.1/AV:L/AC:L/PR:L/UI:N/S:U/C:N/I:N/A:H"
+				}
+			],
+			"bugzilla": [
+				{
+					"text": "SUSE bug 1231915",
+					"href": "https://bugzilla.suse.com/1231915"
+				}
+			],
+			"issued": {
+				"date": "2024-10-23"
+			},
+			"updated": {
+				"date": "2024-10-27"
+			},
+			"affected_cpe_list": {
+				"cpe": [
+					"cpe:/o:suse:sle-micro:5.3",
+					"cpe:/o:suse:sle-micro:5.4",
+					"cpe:/o:suse:sle-micro:5.5",
+					"cpe:/o:suse:suse-microos:5.0",
+					"cpe:/o:suse:suse-microos:5.1",
+					"cpe:/o:suse:suse-microos:5.2"
+				]
+			}
+		}
+	},
+	"criteria": {
+		"operator": "OR",
+		"criterias": [
+			{
+				"operator": "AND",
+				"criterions": [
+					{
+						"test_ref": "oval:org.opensuse.security:tst:2009704855",
+						"comment": "SUSE Linux Enterprise Micro 5.0 is installed"
+					},
+					{
+						"test_ref": "oval:org.opensuse.security:tst:2009334017",
+						"comment": "kernel-default is not affected"
+					}
+				]
+			},
+			{
+				"operator": "AND",
+				"criterias": [
+					{
+						"operator": "OR",
+						"criterions": [
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009334017",
+								"comment": "kernel-default is not affected"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009333928",
+								"comment": "kernel-source is not affected"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009728712",
+								"comment": "kernel-source-rt is not affected"
+							}
+						]
+					}
+				],
+				"criterions": [
+					{
+						"test_ref": "oval:org.opensuse.security:tst:2009800388",
+						"comment": "SUSE Linux Enterprise Micro 5.5 is installed"
+					}
+				]
+			},
+			{
+				"operator": "AND",
+				"criterias": [
+					{
+						"operator": "OR",
+						"criterions": [
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009669964",
+								"comment": "SUSE Linux Enterprise Micro 5.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009681300",
+								"comment": "SUSE Linux Enterprise Micro 5.2 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009728694",
+								"comment": "SUSE Linux Enterprise Micro 5.3 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009755086",
+								"comment": "SUSE Linux Enterprise Micro 5.4 is installed"
+							}
+						]
+					},
+					{
+						"operator": "OR",
+						"criterions": [
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009334017",
+								"comment": "kernel-default is not affected"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009705046",
+								"comment": "kernel-rt is not affected"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009333928",
+								"comment": "kernel-source is not affected"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009728712",
+								"comment": "kernel-source-rt is not affected"
+							}
+						]
+					}
+				]
+			}
+		]
+	}
+}

@@ -1,0 +1,75 @@
+{
+	"id": "oval:org.opensuse.security:def:202449985",
+	"version": "1",
+	"class": "vulnerability",
+	"metadata": {
+		"title": "CVE-2024-49985",
+		"affected": {
+			"family": "unix",
+			"platform": [
+				"SUSE Linux Enterprise Micro 5.0"
+			]
+		},
+		"reference": [
+			{
+				"ref_id": "Mitre CVE-2024-49985",
+				"ref_url": "https://cve.mitre.org/cgi-bin/cvename.cgi?name=CVE-2024-49985",
+				"source": "CVE"
+			},
+			{
+				"ref_id": "SUSE CVE-2024-49985",
+				"ref_url": "https://www.suse.com/security/cve/CVE-2024-49985",
+				"source": "SUSE CVE"
+			}
+		],
+		"description": "\n    In the Linux kernel, the following vulnerability has been resolved:\n\ni2c: stm32f7: Do not prepare/unprepare clock during runtime suspend/resume\n\nIn case there is any sort of clock controller attached to this I2C bus\ncontroller, for example Versaclock or even an AIC32x4 I2C codec, then\nan I2C transfer triggered from the clock controller clk_ops .prepare\ncallback may trigger a deadlock on drivers/clk/clk.c prepare_lock mutex.\n\nThis is because the clock controller first grabs the prepare_lock mutex\nand then performs the prepare operation, including its I2C access. The\nI2C access resumes this I2C bus controller via .runtime_resume callback,\nwhich calls clk_prepare_enable(), which attempts to grab the prepare_lock\nmutex again and deadlocks.\n\nSince the clock are already prepared since probe() and unprepared in\nremove(), use simple clk_enable()/clk_disable() calls to enable and\ndisable the clock on runtime suspend and resume, to avoid hitting the\nprepare_lock mutex.\n    ",
+		"advisory": {
+			"from": "security@suse.de",
+			"severity": "Moderate",
+			"cve": [
+				{
+					"text": "CVE-2024-49985 at SUSE",
+					"href": "https://www.suse.com/security/cve/CVE-2024-49985/",
+					"impact": "medium",
+					"cvss3": "5.5/CVSS:3.1/AV:L/AC:L/PR:L/UI:N/S:U/C:N/I:N/A:H"
+				},
+				{
+					"text": "CVE-2024-49985 at NVD",
+					"href": "https://nvd.nist.gov/vuln/detail/CVE-2024-49985",
+					"impact": "medium",
+					"cvss3": "5.5/CVSS:3.1/AV:L/AC:L/PR:L/UI:N/S:U/C:N/I:N/A:H"
+				}
+			],
+			"bugzilla": [
+				{
+					"text": "SUSE bug 1232094",
+					"href": "https://bugzilla.suse.com/1232094"
+				}
+			],
+			"issued": {
+				"date": "2024-10-27"
+			},
+			"updated": {
+				"date": "2024-10-31"
+			},
+			"affected_cpe_list": {
+				"cpe": [
+					"cpe:/o:suse:suse-microos:5.0"
+				]
+			}
+		}
+	},
+	"criteria": {
+		"operator": "AND",
+		"criterions": [
+			{
+				"test_ref": "oval:org.opensuse.security:tst:2009704855",
+				"comment": "SUSE Linux Enterprise Micro 5.0 is installed"
+			},
+			{
+				"test_ref": "oval:org.opensuse.security:tst:2009334017",
+				"comment": "kernel-default is not affected"
+			}
+		]
+	}
+}

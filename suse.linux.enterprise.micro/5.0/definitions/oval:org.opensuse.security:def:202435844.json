@@ -1,0 +1,73 @@
+{
+	"id": "oval:org.opensuse.security:def:202435844",
+	"version": "1",
+	"class": "vulnerability",
+	"metadata": {
+		"title": "CVE-2024-35844",
+		"affected": {
+			"family": "unix",
+			"platform": [
+				"SUSE Linux Enterprise Micro 5.0"
+			]
+		},
+		"reference": [
+			{
+				"ref_id": "Mitre CVE-2024-35844",
+				"ref_url": "https://cve.mitre.org/cgi-bin/cvename.cgi?name=CVE-2024-35844",
+				"source": "CVE"
+			},
+			{
+				"ref_id": "SUSE CVE-2024-35844",
+				"ref_url": "https://www.suse.com/security/cve/CVE-2024-35844",
+				"source": "SUSE CVE"
+			}
+		],
+		"description": "\n    In the Linux kernel, the following vulnerability has been resolved:\n\nf2fs: compress: fix reserve_cblocks counting error when out of space\n\nWhen a file only needs one direct_node, performing the following\noperations will cause the file to be unrepairable:\n\nunisoc # ./f2fs_io compress test.apk\nunisoc #df -h | grep dm-48\n/dev/block/dm-48 112G 112G 1.2M 100% /data\n\nunisoc # ./f2fs_io release_cblocks test.apk\n924\nunisoc # df -h | grep dm-48\n/dev/block/dm-48 112G 112G 4.8M 100% /data\n\nunisoc # dd if=/dev/random of=file4 bs=1M count=3\n3145728 bytes (3.0 M) copied, 0.025 s, 120 M/s\nunisoc # df -h | grep dm-48\n/dev/block/dm-48 112G 112G 1.8M 100% /data\n\nunisoc # ./f2fs_io reserve_cblocks test.apk\nF2FS_IOC_RESERVE_COMPRESS_BLOCKS failed: No space left on device\n\nadb reboot\nunisoc # df -h  | grep dm-48\n/dev/block/dm-48             112G 112G   11M 100% /data\nunisoc # ./f2fs_io reserve_cblocks test.apk\n0\n\nThis is because the file has only one direct_node. After returning\nto -ENOSPC, reserved_blocks += ret will not be executed. As a result,\nthe reserved_blocks at this time is still 0, which is not the real\nnumber of reserved blocks. Therefore, fsck cannot be set to repair\nthe file.\n\nAfter this patch, the fsck flag will be set to fix this problem.\n\nunisoc # df -h | grep dm-48\n/dev/block/dm-48             112G 112G  1.8M 100% /data\nunisoc # ./f2fs_io reserve_cblocks test.apk\nF2FS_IOC_RESERVE_COMPRESS_BLOCKS failed: No space left on device\n\nadb reboot then fsck will be executed\nunisoc # df -h  | grep dm-48\n/dev/block/dm-48             112G 112G   11M 100% /data\nunisoc # ./f2fs_io reserve_cblocks test.apk\n924\n    ",
+		"advisory": {
+			"from": "security@suse.de",
+			"severity": "Moderate",
+			"cve": [
+				{
+					"text": "CVE-2024-35844 at SUSE",
+					"href": "https://www.suse.com/security/cve/CVE-2024-35844/",
+					"impact": "medium",
+					"cvss3": "5.5/CVSS:3.1/AV:L/AC:L/PR:L/UI:N/S:U/C:N/I:N/A:H"
+				},
+				{
+					"text": "CVE-2024-35844 at NVD",
+					"href": "https://nvd.nist.gov/vuln/detail/CVE-2024-35844"
+				}
+			],
+			"bugzilla": [
+				{
+					"text": "SUSE bug 1224594",
+					"href": "https://bugzilla.suse.com/1224594"
+				}
+			],
+			"issued": {
+				"date": "2024-05-21"
+			},
+			"updated": {
+				"date": "2024-05-21"
+			},
+			"affected_cpe_list": {
+				"cpe": [
+					"cpe:/o:suse:suse-microos:5.0"
+				]
+			}
+		}
+	},
+	"criteria": {
+		"operator": "AND",
+		"criterions": [
+			{
+				"test_ref": "oval:org.opensuse.security:tst:2009704855",
+				"comment": "SUSE Linux Enterprise Micro 5.0 is installed"
+			},
+			{
+				"test_ref": "oval:org.opensuse.security:tst:2009334017",
+				"comment": "kernel-default is not affected"
+			}
+		]
+	}
+}

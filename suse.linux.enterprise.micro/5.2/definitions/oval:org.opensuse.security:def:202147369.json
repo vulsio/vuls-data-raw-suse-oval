@@ -1,0 +1,151 @@
+{
+	"id": "oval:org.opensuse.security:def:202147369",
+	"version": "1",
+	"class": "vulnerability",
+	"metadata": {
+		"title": "CVE-2021-47369",
+		"affected": {
+			"family": "unix",
+			"platform": [
+				"SUSE Linux Enterprise Micro 5.2"
+			]
+		},
+		"reference": [
+			{
+				"ref_id": "Mitre CVE-2021-47369",
+				"ref_url": "https://cve.mitre.org/cgi-bin/cvename.cgi?name=CVE-2021-47369",
+				"source": "CVE"
+			},
+			{
+				"ref_id": "SUSE CVE-2021-47369",
+				"ref_url": "https://www.suse.com/security/cve/CVE-2021-47369",
+				"source": "SUSE CVE"
+			},
+			{
+				"ref_id": "SUSE-SU-2024:1979-1",
+				"ref_url": "https://lists.suse.com/pipermail/sle-updates/2024-June/035536.html",
+				"source": "SUSE-SU"
+			},
+			{
+				"ref_id": "SUSE-SU-2024:1983-1",
+				"ref_url": "https://lists.suse.com/pipermail/sle-updates/2024-June/035554.html",
+				"source": "SUSE-SU"
+			},
+			{
+				"ref_id": "SUSE-SU-2024:2008-1",
+				"ref_url": "https://lists.suse.com/pipermail/sle-updates/2024-June/035569.html",
+				"source": "SUSE-SU"
+			},
+			{
+				"ref_id": "SUSE-SU-2024:2010-1",
+				"ref_url": "https://lists.suse.com/pipermail/sle-updates/2024-June/035576.html",
+				"source": "SUSE-SU"
+			},
+			{
+				"ref_id": "SUSE-SU-2024:2011-1",
+				"ref_url": "https://lists.suse.com/pipermail/sle-updates/2024-June/035575.html",
+				"source": "SUSE-SU"
+			},
+			{
+				"ref_id": "SUSE-SU-2024:2019-1",
+				"ref_url": "https://lists.suse.com/pipermail/sle-updates/2024-June/035578.html",
+				"source": "SUSE-SU"
+			},
+			{
+				"ref_id": "SUSE-SU-2024:2183-1",
+				"ref_url": "https://lists.suse.com/pipermail/sle-updates/2024-June/035717.html",
+				"source": "SUSE-SU"
+			},
+			{
+				"ref_id": "SUSE-SU-2024:2184-1",
+				"ref_url": "https://lists.suse.com/pipermail/sle-updates/2024-June/035716.html",
+				"source": "SUSE-SU"
+			},
+			{
+				"ref_id": "SUSE-SU-2024:2185-1",
+				"ref_url": "https://lists.suse.com/pipermail/sle-updates/2024-June/035718.html",
+				"source": "SUSE-SU"
+			},
+			{
+				"ref_id": "SUSE-SU-2024:2189-1",
+				"ref_url": "https://lists.suse.com/pipermail/sle-updates/2024-June/035721.html",
+				"source": "SUSE-SU"
+			},
+			{
+				"ref_id": "SUSE-SU-2024:2190-1",
+				"ref_url": "https://lists.suse.com/pipermail/sle-updates/2024-June/035732.html",
+				"source": "SUSE-SU"
+			}
+		],
+		"description": "\n    In the Linux kernel, the following vulnerability has been resolved:\n\ns390/qeth: fix NULL deref in qeth_clear_working_pool_list()\n\nWhen qeth_set_online() calls qeth_clear_working_pool_list() to roll\nback after an error exit from qeth_hardsetup_card(), we are at risk of\naccessing card->qdio.in_q before it was allocated by\nqeth_alloc_qdio_queues() via qeth_mpc_initialize().\n\nqeth_clear_working_pool_list() then dereferences NULL, and by writing to\nqueue->bufs[i].pool_entry scribbles all over the CPU's lowcore.\nResulting in a crash when those lowcore areas are used next (eg. on\nthe next machine-check interrupt).\n\nSuch a scenario would typically happen when the device is first set\nonline and its queues aren't allocated yet. An early IO error or certain\nmisconfigs (eg. mismatched transport mode, bad portno) then cause us to\nerror out from qeth_hardsetup_card() with card->qdio.in_q still being\nNULL.\n\nFix it by checking the pointer for NULL before accessing it.\n\nNote that we also have (rare) paths inside qeth_mpc_initialize() where\na configuration change can cause us to free the existing queues,\nexpecting that subsequent code will allocate them again. If we then\nerror out before that re-allocation happens, the same bug occurs.\n\nRoot-caused-by: Heiko Carstens <hca@linux.ibm.com>\n    ",
+		"advisory": {
+			"from": "security@suse.de",
+			"severity": "Moderate",
+			"cve": [
+				{
+					"text": "CVE-2021-47369 at SUSE",
+					"href": "https://www.suse.com/security/cve/CVE-2021-47369/",
+					"impact": "high",
+					"cvss3": "7/CVSS:3.1/AV:L/AC:H/PR:L/UI:N/S:U/C:H/I:H/A:H"
+				},
+				{
+					"text": "CVE-2021-47369 at NVD",
+					"href": "https://nvd.nist.gov/vuln/detail/CVE-2021-47369"
+				}
+			],
+			"bugzilla": [
+				{
+					"text": "SUSE bug 1225164",
+					"href": "https://bugzilla.suse.com/1225164"
+				},
+				{
+					"text": "SUSE bug 1227324",
+					"href": "https://bugzilla.suse.com/1227324"
+				}
+			],
+			"issued": {
+				"date": "2024-06-13"
+			},
+			"updated": {
+				"date": "2024-07-04"
+			},
+			"affected_cpe_list": {
+				"cpe": [
+					"cpe:/o:suse:suse-microos:5.2"
+				]
+			}
+		}
+	},
+	"criteria": {
+		"operator": "AND",
+		"criterias": [
+			{
+				"operator": "OR",
+				"criterions": [
+					{
+						"test_ref": "oval:org.opensuse.security:tst:2009868905",
+						"comment": "kernel-default-5.3.18-150300.59.164.1 is installed"
+					},
+					{
+						"test_ref": "oval:org.opensuse.security:tst:2009868822",
+						"comment": "kernel-default-base-5.3.18-150300.59.164.1.150300.18.96.1 is installed"
+					},
+					{
+						"test_ref": "oval:org.opensuse.security:tst:2009865703",
+						"comment": "kernel-rt-5.3.18-150300.172.1 is installed"
+					},
+					{
+						"test_ref": "oval:org.opensuse.security:tst:2009865704",
+						"comment": "kernel-source-rt-5.3.18-150300.172.1 is installed"
+					}
+				]
+			}
+		],
+		"criterions": [
+			{
+				"test_ref": "oval:org.opensuse.security:tst:2009681300",
+				"comment": "SUSE Linux Enterprise Micro 5.2 is installed"
+			}
+		]
+	}
+}

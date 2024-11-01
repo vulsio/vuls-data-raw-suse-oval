@@ -1,0 +1,90 @@
+{
+	"id": "oval:org.opensuse.security:def:202147613",
+	"version": "1",
+	"class": "vulnerability",
+	"metadata": {
+		"title": "CVE-2021-47613",
+		"affected": {
+			"family": "unix",
+			"platform": [
+				"SUSE Linux Enterprise Micro 5.2"
+			]
+		},
+		"reference": [
+			{
+				"ref_id": "Mitre CVE-2021-47613",
+				"ref_url": "https://cve.mitre.org/cgi-bin/cvename.cgi?name=CVE-2021-47613",
+				"source": "CVE"
+			},
+			{
+				"ref_id": "SUSE CVE-2021-47613",
+				"ref_url": "https://www.suse.com/security/cve/CVE-2021-47613",
+				"source": "SUSE CVE"
+			}
+		],
+		"description": "\n    In the Linux kernel, the following vulnerability has been resolved:\n\ni2c: virtio: fix completion handling\n\nThe driver currently assumes that the notify callback is only received\nwhen the device is done with all the queued buffers.\n\nHowever, this is not true, since the notify callback could be called\nwithout any of the queued buffers being completed (for example, with\nvirtio-pci and shared interrupts) or with only some of the buffers being\ncompleted (since the driver makes them available to the device in\nmultiple separate virtqueue_add_sgs() calls).\n\nThis can lead to incorrect data on the I2C bus or memory corruption in\nthe guest if the device operates on buffers which are have been freed by\nthe driver.  (The WARN_ON in the driver is also triggered.)\n\n BUG kmalloc-128 (Tainted: G        W        ): Poison overwritten\n First byte 0x0 instead of 0x6b\n Allocated in i2cdev_ioctl_rdwr+0x9d/0x1de age=243 cpu=0 pid=28\n \tmemdup_user+0x2e/0xbd\n \ti2cdev_ioctl_rdwr+0x9d/0x1de\n \ti2cdev_ioctl+0x247/0x2ed\n \tvfs_ioctl+0x21/0x30\n \tsys_ioctl+0xb18/0xb41\n Freed in i2cdev_ioctl_rdwr+0x1bb/0x1de age=68 cpu=0 pid=28\n \tkfree+0x1bd/0x1cc\n \ti2cdev_ioctl_rdwr+0x1bb/0x1de\n \ti2cdev_ioctl+0x247/0x2ed\n \tvfs_ioctl+0x21/0x30\n \tsys_ioctl+0xb18/0xb41\n\nFix this by calling virtio_get_buf() from the notify handler like other\nvirtio drivers and by actually waiting for all the buffers to be\ncompleted.\n    ",
+		"advisory": {
+			"from": "security@suse.de",
+			"severity": "Moderate",
+			"cve": [
+				{
+					"text": "CVE-2021-47613 at SUSE",
+					"href": "https://www.suse.com/security/cve/CVE-2021-47613/",
+					"impact": "medium",
+					"cvss3": "5.3/CVSS:3.1/AV:L/AC:H/PR:L/UI:N/S:U/C:N/I:H/A:L"
+				},
+				{
+					"text": "CVE-2021-47613 at NVD",
+					"href": "https://nvd.nist.gov/vuln/detail/CVE-2021-47613",
+					"impact": "high",
+					"cvss3": "7.8/CVSS:3.1/AV:L/AC:L/PR:L/UI:N/S:U/C:H/I:H/A:H"
+				}
+			],
+			"bugzilla": [
+				{
+					"text": "SUSE bug 1226600",
+					"href": "https://bugzilla.suse.com/1226600"
+				}
+			],
+			"issued": {
+				"date": "2024-06-21"
+			},
+			"updated": {
+				"date": "2024-10-31"
+			},
+			"affected_cpe_list": {
+				"cpe": [
+					"cpe:/o:suse:suse-microos:5.2"
+				]
+			}
+		}
+	},
+	"criteria": {
+		"operator": "AND",
+		"criterias": [
+			{
+				"operator": "OR",
+				"criterions": [
+					{
+						"test_ref": "oval:org.opensuse.security:tst:2009334017",
+						"comment": "kernel-default is not affected"
+					},
+					{
+						"test_ref": "oval:org.opensuse.security:tst:2009705046",
+						"comment": "kernel-rt is not affected"
+					},
+					{
+						"test_ref": "oval:org.opensuse.security:tst:2009728712",
+						"comment": "kernel-source-rt is not affected"
+					}
+				]
+			}
+		],
+		"criterions": [
+			{
+				"test_ref": "oval:org.opensuse.security:tst:2009681300",
+				"comment": "SUSE Linux Enterprise Micro 5.2 is installed"
+			}
+		]
+	}
+}

@@ -1,0 +1,140 @@
+{
+	"id": "oval:org.opensuse.security:def:202352738",
+	"version": "1",
+	"class": "vulnerability",
+	"metadata": {
+		"title": "CVE-2023-52738",
+		"affected": {
+			"family": "unix",
+			"platform": [
+				"openSUSE Leap Micro 5.3"
+			]
+		},
+		"reference": [
+			{
+				"ref_id": "Mitre CVE-2023-52738",
+				"ref_url": "https://cve.mitre.org/cgi-bin/cvename.cgi?name=CVE-2023-52738",
+				"source": "CVE"
+			},
+			{
+				"ref_id": "SUSE CVE-2023-52738",
+				"ref_url": "https://www.suse.com/security/cve/CVE-2023-52738",
+				"source": "SUSE CVE"
+			},
+			{
+				"ref_id": "SUSE-SU-2024:2008-1",
+				"ref_url": "https://lists.suse.com/pipermail/sle-updates/2024-June/035569.html",
+				"source": "SUSE-SU"
+			},
+			{
+				"ref_id": "SUSE-SU-2024:2011-1",
+				"ref_url": "https://lists.suse.com/pipermail/sle-updates/2024-June/035575.html",
+				"source": "SUSE-SU"
+			},
+			{
+				"ref_id": "SUSE-SU-2024:2019-1",
+				"ref_url": "https://lists.suse.com/pipermail/sle-updates/2024-June/035578.html",
+				"source": "SUSE-SU"
+			},
+			{
+				"ref_id": "SUSE-SU-2024:2189-1",
+				"ref_url": "https://lists.suse.com/pipermail/sle-updates/2024-June/035721.html",
+				"source": "SUSE-SU"
+			},
+			{
+				"ref_id": "SUSE-SU-2024:2190-1",
+				"ref_url": "https://lists.suse.com/pipermail/sle-updates/2024-June/035732.html",
+				"source": "SUSE-SU"
+			}
+		],
+		"description": "\n    In the Linux kernel, the following vulnerability has been resolved:\n\ndrm/amdgpu/fence: Fix oops due to non-matching drm_sched init/fini\n\nCurrently amdgpu calls drm_sched_fini() from the fence driver sw fini\nroutine - such function is expected to be called only after the\nrespective init function - drm_sched_init() - was executed successfully.\n\nHappens that we faced a driver probe failure in the Steam Deck\nrecently, and the function drm_sched_fini() was called even without\nits counter-part had been previously called, causing the following oops:\n\namdgpu: probe of 0000:04:00.0 failed with error -110\nBUG: kernel NULL pointer dereference, address: 0000000000000090\nPGD 0 P4D 0\nOops: 0002 [#1] PREEMPT SMP NOPTI\nCPU: 0 PID: 609 Comm: systemd-udevd Not tainted 6.2.0-rc3-gpiccoli #338\nHardware name: Valve Jupiter/Jupiter, BIOS F7A0113 11/04/2022\nRIP: 0010:drm_sched_fini+0x84/0xa0 [gpu_sched]\n[...]\nCall Trace:\n <TASK>\n amdgpu_fence_driver_sw_fini+0xc8/0xd0 [amdgpu]\n amdgpu_device_fini_sw+0x2b/0x3b0 [amdgpu]\n amdgpu_driver_release_kms+0x16/0x30 [amdgpu]\n devm_drm_dev_init_release+0x49/0x70\n [...]\n\nTo prevent that, check if the drm_sched was properly initialized for a\ngiven ring before calling its fini counter-part.\n\nNotice ideally we'd use sched.ready for that; such field is set as the latest\nthing on drm_sched_init(). But amdgpu seems to \"override\" the meaning of such\nfield - in the above oops for example, it was a GFX ring causing the crash, and\nthe sched.ready field was set to true in the ring init routine, regardless of\nthe state of the DRM scheduler. Hence, we ended-up using sched.ops as per\nChristian's suggestion [0], and also removed the no_scheduler check [1].\n\n[0] https://lore.kernel.org/amd-gfx/984ee981-2906-0eaf-ccec-9f80975cb136@amd.com/\n[1] https://lore.kernel.org/amd-gfx/cd0e2994-f85f-d837-609f-7056d5fb7231@amd.com/\n    ",
+		"advisory": {
+			"from": "security@suse.de",
+			"severity": "Moderate",
+			"cve": [
+				{
+					"text": "CVE-2023-52738 at SUSE",
+					"href": "https://www.suse.com/security/cve/CVE-2023-52738/",
+					"impact": "medium",
+					"cvss3": "4.4/CVSS:3.1/AV:L/AC:L/PR:H/UI:N/S:U/C:N/I:N/A:H"
+				},
+				{
+					"text": "CVE-2023-52738 at NVD",
+					"href": "https://nvd.nist.gov/vuln/detail/CVE-2023-52738"
+				}
+			],
+			"bugzilla": [
+				{
+					"text": "SUSE bug 1225005",
+					"href": "https://bugzilla.suse.com/1225005"
+				}
+			],
+			"issued": {
+				"date": "2024-06-13"
+			},
+			"updated": {
+				"date": "2024-06-26"
+			},
+			"affected_cpe_list": {
+				"cpe": [
+					"cpe:/o:opensuse:leap-micro:5.3"
+				]
+			}
+		}
+	},
+	"criteria": {
+		"operator": "AND",
+		"criterias": [
+			{
+				"operator": "OR",
+				"criterias": [
+					{
+						"operator": "AND",
+						"criterions": [
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009869532",
+								"comment": "kernel-default-5.14.21-150400.24.122.2 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009151354",
+								"comment": "kernel-default is signed with openSUSE key"
+							}
+						]
+					},
+					{
+						"operator": "AND",
+						"criterions": [
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009869533",
+								"comment": "kernel-default-base-5.14.21-150400.24.122.2.150400.24.58.2 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009151960",
+								"comment": "kernel-default-base is signed with openSUSE key"
+							}
+						]
+					},
+					{
+						"operator": "AND",
+						"criterions": [
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009865707",
+								"comment": "kernel-rt-5.14.21-150400.15.82.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009342860",
+								"comment": "kernel-rt is signed with openSUSE key"
+							}
+						]
+					}
+				]
+			}
+		],
+		"criterions": [
+			{
+				"test_ref": "oval:org.opensuse.security:tst:2009728915",
+				"comment": "openSUSE Leap Micro 5.3 is installed"
+			}
+		]
+	}
+}

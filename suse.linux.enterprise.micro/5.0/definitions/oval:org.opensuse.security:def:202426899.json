@@ -1,0 +1,90 @@
+{
+	"id": "oval:org.opensuse.security:def:202426899",
+	"version": "1",
+	"class": "vulnerability",
+	"metadata": {
+		"title": "CVE-2024-26899",
+		"affected": {
+			"family": "unix",
+			"platform": [
+				"SUSE Linux Enterprise Micro 5.0"
+			]
+		},
+		"reference": [
+			{
+				"ref_id": "Mitre CVE-2024-26899",
+				"ref_url": "https://cve.mitre.org/cgi-bin/cvename.cgi?name=CVE-2024-26899",
+				"source": "CVE"
+			},
+			{
+				"ref_id": "SUSE CVE-2024-26899",
+				"ref_url": "https://www.suse.com/security/cve/CVE-2024-26899",
+				"source": "SUSE CVE"
+			},
+			{
+				"ref_id": "SUSE-SU-2024:2135-1",
+				"ref_url": "https://lists.suse.com/pipermail/sle-updates/2024-June/035681.html",
+				"source": "SUSE-SU"
+			},
+			{
+				"ref_id": "SUSE-SU-2024:2203-1",
+				"ref_url": "https://lists.suse.com/pipermail/sle-security-updates/2024-August/019244.html",
+				"source": "SUSE-SU"
+			},
+			{
+				"ref_id": "SUSE-SU-2024:2973-1",
+				"ref_url": "https://lists.suse.com/pipermail/sle-security-updates/2024-August/019280.html",
+				"source": "SUSE-SU"
+			}
+		],
+		"description": "\n    In the Linux kernel, the following vulnerability has been resolved:\n\nblock: fix deadlock between bd_link_disk_holder and partition scan\n\n'open_mutex' of gendisk is used to protect open/close block devices. But\nin bd_link_disk_holder(), it is used to protect the creation of symlink\nbetween holding disk and slave bdev, which introduces some issues.\n\nWhen bd_link_disk_holder() is called, the driver is usually in the process\nof initialization/modification and may suspend submitting io. At this\ntime, any io hold 'open_mutex', such as scanning partitions, can cause\ndeadlocks. For example, in raid:\n\nT1                              T2\nbdev_open_by_dev\n lock open_mutex [1]\n ...\n  efi_partition\n  ...\n   md_submit_bio\n\t\t\t\tmd_ioctl mddev_syspend\n\t\t\t\t  -> suspend all io\n\t\t\t\t md_add_new_disk\n\t\t\t\t  bind_rdev_to_array\n\t\t\t\t   bd_link_disk_holder\n\t\t\t\t    try lock open_mutex [2]\n    md_handle_request\n     -> wait mddev_resume\n\nT1 scan partition, T2 add a new device to raid. T1 waits for T2 to resume\nmddev, but T2 waits for open_mutex held by T1. Deadlock occurs.\n\nFix it by introducing a local mutex 'blk_holder_mutex' to replace\n'open_mutex'.\n    ",
+		"advisory": {
+			"from": "security@suse.de",
+			"severity": "Moderate",
+			"cve": [
+				{
+					"text": "CVE-2024-26899 at SUSE",
+					"href": "https://www.suse.com/security/cve/CVE-2024-26899/",
+					"impact": "medium",
+					"cvss3": "5.5/CVSS:3.1/AV:L/AC:L/PR:L/UI:N/S:U/C:N/I:N/A:H"
+				},
+				{
+					"text": "CVE-2024-26899 at NVD",
+					"href": "https://nvd.nist.gov/vuln/detail/CVE-2024-26899",
+					"impact": "medium",
+					"cvss3": "5.5/CVSS:3.1/AV:L/AC:L/PR:L/UI:N/S:U/C:N/I:N/A:H"
+				}
+			],
+			"bugzilla": [
+				{
+					"text": "SUSE bug 1223045",
+					"href": "https://bugzilla.suse.com/1223045"
+				}
+			],
+			"issued": {
+				"date": "2024-04-19"
+			},
+			"updated": {
+				"date": "2024-08-21"
+			},
+			"affected_cpe_list": {
+				"cpe": [
+					"cpe:/o:suse:suse-microos:5.0"
+				]
+			}
+		}
+	},
+	"criteria": {
+		"operator": "AND",
+		"criterions": [
+			{
+				"test_ref": "oval:org.opensuse.security:tst:2009704855",
+				"comment": "SUSE Linux Enterprise Micro 5.0 is installed"
+			},
+			{
+				"test_ref": "oval:org.opensuse.security:tst:2009334017",
+				"comment": "kernel-default is not affected"
+			}
+		]
+	}
+}

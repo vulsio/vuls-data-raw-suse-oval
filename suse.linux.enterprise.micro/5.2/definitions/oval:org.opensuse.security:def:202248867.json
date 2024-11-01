@@ -1,0 +1,90 @@
+{
+	"id": "oval:org.opensuse.security:def:202248867",
+	"version": "1",
+	"class": "vulnerability",
+	"metadata": {
+		"title": "CVE-2022-48867",
+		"affected": {
+			"family": "unix",
+			"platform": [
+				"SUSE Linux Enterprise Micro 5.2"
+			]
+		},
+		"reference": [
+			{
+				"ref_id": "Mitre CVE-2022-48867",
+				"ref_url": "https://cve.mitre.org/cgi-bin/cvename.cgi?name=CVE-2022-48867",
+				"source": "CVE"
+			},
+			{
+				"ref_id": "SUSE CVE-2022-48867",
+				"ref_url": "https://www.suse.com/security/cve/CVE-2022-48867",
+				"source": "SUSE CVE"
+			}
+		],
+		"description": "\n    In the Linux kernel, the following vulnerability has been resolved:\n\ndmaengine: idxd: Prevent use after free on completion memory\n\nOn driver unload any pending descriptors are flushed at the\ntime the interrupt is freed:\nidxd_dmaengine_drv_remove() ->\n\tdrv_disable_wq() ->\n\t\tidxd_wq_free_irq() ->\n\t\t\tidxd_flush_pending_descs().\n\nIf there are any descriptors present that need to be flushed this\nflow triggers a \"not present\" page fault as below:\n\n BUG: unable to handle page fault for address: ff391c97c70c9040\n #PF: supervisor read access in kernel mode\n #PF: error_code(0x0000) - not-present page\n\nThe address that triggers the fault is the address of the\ndescriptor that was freed moments earlier via:\ndrv_disable_wq()->idxd_wq_free_resources()\n\nFix the use after free by freeing the descriptors after any possible\nusage. This is done after idxd_wq_reset() to ensure that the memory\nremains accessible during possible completion writes by the device.\n    ",
+		"advisory": {
+			"from": "security@suse.de",
+			"severity": "Moderate",
+			"cve": [
+				{
+					"text": "CVE-2022-48867 at SUSE",
+					"href": "https://www.suse.com/security/cve/CVE-2022-48867/",
+					"impact": "medium",
+					"cvss3": "6.4/CVSS:3.1/AV:L/AC:H/PR:H/UI:N/S:U/C:H/I:H/A:H"
+				},
+				{
+					"text": "CVE-2022-48867 at NVD",
+					"href": "https://nvd.nist.gov/vuln/detail/CVE-2022-48867",
+					"impact": "high",
+					"cvss3": "7.8/CVSS:3.1/AV:L/AC:L/PR:L/UI:N/S:U/C:H/I:H/A:H"
+				}
+			],
+			"bugzilla": [
+				{
+					"text": "SUSE bug 1229505",
+					"href": "https://bugzilla.suse.com/1229505"
+				}
+			],
+			"issued": {
+				"date": "2024-08-22"
+			},
+			"updated": {
+				"date": "2024-09-07"
+			},
+			"affected_cpe_list": {
+				"cpe": [
+					"cpe:/o:suse:suse-microos:5.2"
+				]
+			}
+		}
+	},
+	"criteria": {
+		"operator": "AND",
+		"criterias": [
+			{
+				"operator": "OR",
+				"criterions": [
+					{
+						"test_ref": "oval:org.opensuse.security:tst:2009334017",
+						"comment": "kernel-default is not affected"
+					},
+					{
+						"test_ref": "oval:org.opensuse.security:tst:2009705046",
+						"comment": "kernel-rt is not affected"
+					},
+					{
+						"test_ref": "oval:org.opensuse.security:tst:2009728712",
+						"comment": "kernel-source-rt is not affected"
+					}
+				]
+			}
+		],
+		"criterions": [
+			{
+				"test_ref": "oval:org.opensuse.security:tst:2009681300",
+				"comment": "SUSE Linux Enterprise Micro 5.2 is installed"
+			}
+		]
+	}
+}

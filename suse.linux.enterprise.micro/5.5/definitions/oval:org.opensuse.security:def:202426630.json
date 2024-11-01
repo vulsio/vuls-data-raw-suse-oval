@@ -1,0 +1,76 @@
+{
+	"id": "oval:org.opensuse.security:def:202426630",
+	"version": "1",
+	"class": "vulnerability",
+	"metadata": {
+		"title": "CVE-2024-26630",
+		"affected": {
+			"family": "unix",
+			"platform": [
+				"SUSE Linux Enterprise Micro 5.5"
+			]
+		},
+		"reference": [
+			{
+				"ref_id": "Mitre CVE-2024-26630",
+				"ref_url": "https://cve.mitre.org/cgi-bin/cvename.cgi?name=CVE-2024-26630",
+				"source": "CVE"
+			},
+			{
+				"ref_id": "SUSE CVE-2024-26630",
+				"ref_url": "https://www.suse.com/security/cve/CVE-2024-26630",
+				"source": "SUSE CVE"
+			},
+			{
+				"ref_id": "RHSA-2024:6567",
+				"ref_url": "https://lists.suse.com/pipermail/suse-liberty-linux-updates/2024-September/000022.html",
+				"source": "SUSE-SU"
+			}
+		],
+		"description": "\n    In the Linux kernel, the following vulnerability has been resolved:\n\nmm: cachestat: fix folio read-after-free in cache walk\n\nIn cachestat, we access the folio from the page cache's xarray to compute\nits page offset, and check for its dirty and writeback flags.  However, we\ndo not hold a reference to the folio before performing these actions,\nwhich means the folio can concurrently be released and reused as another\nfolio/page/slab.\n\nGet around this altogether by just using xarray's existing machinery for\nthe folio page offsets and dirty/writeback states.\n\nThis changes behavior for tmpfs files to now always report zeroes in their\ndirty and writeback counters.  This is okay as tmpfs doesn't follow\nconventional writeback cache behavior: its pages get \"cleaned\" during\nswapout, after which they're no longer resident etc.\n    ",
+		"advisory": {
+			"from": "security@suse.de",
+			"severity": "Important",
+			"cve": [
+				{
+					"text": "CVE-2024-26630 at SUSE",
+					"href": "https://www.suse.com/security/cve/CVE-2024-26630/"
+				},
+				{
+					"text": "CVE-2024-26630 at NVD",
+					"href": "https://nvd.nist.gov/vuln/detail/CVE-2024-26630"
+				}
+			],
+			"bugzilla": [
+				{
+					"text": "SUSE bug 1221380",
+					"href": "https://bugzilla.suse.com/1221380"
+				}
+			],
+			"issued": {
+				"date": "2024-03-15"
+			},
+			"updated": {
+				"date": "2024-09-30"
+			},
+			"affected_cpe_list": {
+				"cpe": [
+					"cpe:/o:suse:sle-micro:5.5"
+				]
+			}
+		}
+	},
+	"criteria": {
+		"operator": "AND",
+		"criterions": [
+			{
+				"test_ref": "oval:org.opensuse.security:tst:2009800388",
+				"comment": "SUSE Linux Enterprise Micro 5.5 is installed"
+			},
+			{
+				"test_ref": "oval:org.opensuse.security:tst:2009728712",
+				"comment": "kernel-source-rt is not affected"
+			}
+		]
+	}
+}

@@ -1,0 +1,127 @@
+{
+	"id": "oval:org.opensuse.security:def:202447748",
+	"version": "1",
+	"class": "vulnerability",
+	"metadata": {
+		"title": "CVE-2024-47748",
+		"affected": {
+			"family": "unix",
+			"platform": [
+				"SUSE Linux Enterprise Micro 5.0",
+				"SUSE Linux Enterprise Micro 5.1",
+				"SUSE Linux Enterprise Micro 5.2"
+			]
+		},
+		"reference": [
+			{
+				"ref_id": "Mitre CVE-2024-47748",
+				"ref_url": "https://cve.mitre.org/cgi-bin/cvename.cgi?name=CVE-2024-47748",
+				"source": "CVE"
+			},
+			{
+				"ref_id": "SUSE CVE-2024-47748",
+				"ref_url": "https://www.suse.com/security/cve/CVE-2024-47748",
+				"source": "SUSE CVE"
+			}
+		],
+		"description": "\n    In the Linux kernel, the following vulnerability has been resolved:\n\nvhost_vdpa: assign irq bypass producer token correctly\n\nWe used to call irq_bypass_unregister_producer() in\nvhost_vdpa_setup_vq_irq() which is problematic as we don't know if the\ntoken pointer is still valid or not.\n\nActually, we use the eventfd_ctx as the token so the life cycle of the\ntoken should be bound to the VHOST_SET_VRING_CALL instead of\nvhost_vdpa_setup_vq_irq() which could be called by set_status().\n\nFixing this by setting up irq bypass producer's token when handling\nVHOST_SET_VRING_CALL and un-registering the producer before calling\nvhost_vring_ioctl() to prevent a possible use after free as eventfd\ncould have been released in vhost_vring_ioctl(). And such registering\nand unregistering will only be done if DRIVER_OK is set.\n    ",
+		"advisory": {
+			"from": "security@suse.de",
+			"severity": "Important",
+			"cve": [
+				{
+					"text": "CVE-2024-47748 at SUSE",
+					"href": "https://www.suse.com/security/cve/CVE-2024-47748/",
+					"impact": "high",
+					"cvss3": "7.8/CVSS:3.1/AV:L/AC:L/PR:L/UI:N/S:U/C:H/I:H/A:H"
+				},
+				{
+					"text": "CVE-2024-47748 at NVD",
+					"href": "https://nvd.nist.gov/vuln/detail/CVE-2024-47748",
+					"impact": "high",
+					"cvss3": "7.8/CVSS:3.1/AV:L/AC:L/PR:L/UI:N/S:U/C:H/I:H/A:H"
+				}
+			],
+			"bugzilla": [
+				{
+					"text": "SUSE bug 1232174",
+					"href": "https://bugzilla.suse.com/1232174"
+				},
+				{
+					"text": "SUSE bug 1232177",
+					"href": "https://bugzilla.suse.com/1232177"
+				}
+			],
+			"issued": {
+				"date": "2024-10-27"
+			},
+			"updated": {
+				"date": "2024-10-27"
+			},
+			"affected_cpe_list": {
+				"cpe": [
+					"cpe:/o:suse:suse-microos:5.0",
+					"cpe:/o:suse:suse-microos:5.1",
+					"cpe:/o:suse:suse-microos:5.2"
+				]
+			}
+		}
+	},
+	"criteria": {
+		"operator": "OR",
+		"criterias": [
+			{
+				"operator": "AND",
+				"criterions": [
+					{
+						"test_ref": "oval:org.opensuse.security:tst:2009704855",
+						"comment": "SUSE Linux Enterprise Micro 5.0 is installed"
+					},
+					{
+						"test_ref": "oval:org.opensuse.security:tst:2009334017",
+						"comment": "kernel-default is not affected"
+					}
+				]
+			},
+			{
+				"operator": "AND",
+				"criterias": [
+					{
+						"operator": "OR",
+						"criterions": [
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009669964",
+								"comment": "SUSE Linux Enterprise Micro 5.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009681300",
+								"comment": "SUSE Linux Enterprise Micro 5.2 is installed"
+							}
+						]
+					},
+					{
+						"operator": "OR",
+						"criterions": [
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009334017",
+								"comment": "kernel-default is not affected"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009705046",
+								"comment": "kernel-rt is not affected"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009333928",
+								"comment": "kernel-source is not affected"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009728712",
+								"comment": "kernel-source-rt is not affected"
+							}
+						]
+					}
+				]
+			}
+		]
+	}
+}

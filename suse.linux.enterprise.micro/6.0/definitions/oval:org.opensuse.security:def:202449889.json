@@ -1,0 +1,102 @@
+{
+	"id": "oval:org.opensuse.security:def:202449889",
+	"version": "1",
+	"class": "vulnerability",
+	"metadata": {
+		"title": "CVE-2024-49889",
+		"affected": {
+			"family": "unix",
+			"platform": [
+				"SUSE Linux Enterprise Micro 6.0"
+			]
+		},
+		"reference": [
+			{
+				"ref_id": "Mitre CVE-2024-49889",
+				"ref_url": "https://cve.mitre.org/cgi-bin/cvename.cgi?name=CVE-2024-49889",
+				"source": "CVE"
+			},
+			{
+				"ref_id": "SUSE CVE-2024-49889",
+				"ref_url": "https://www.suse.com/security/cve/CVE-2024-49889",
+				"source": "SUSE CVE"
+			}
+		],
+		"description": "\n    In the Linux kernel, the following vulnerability has been resolved:\n\next4: avoid use-after-free in ext4_ext_show_leaf()\n\nIn ext4_find_extent(), path may be freed by error or be reallocated, so\nusing a previously saved *ppath may have been freed and thus may trigger\nuse-after-free, as follows:\n\next4_split_extent\n  path = *ppath;\n  ext4_split_extent_at(ppath)\n  path = ext4_find_extent(ppath)\n  ext4_split_extent_at(ppath)\n    // ext4_find_extent fails to free path\n    // but zeroout succeeds\n  ext4_ext_show_leaf(inode, path)\n    eh = path[depth].p_hdr\n    // path use-after-free !!!\n\nSimilar to ext4_split_extent_at(), we use *ppath directly as an input to\next4_ext_show_leaf(). Fix a spelling error by the way.\n\nSame problem in ext4_ext_handle_unwritten_extents(). Since 'path' is only\nused in ext4_ext_show_leaf(), remove 'path' and use *ppath directly.\n\nThis issue is triggered only when EXT_DEBUG is defined and therefore does\nnot affect functionality.\n    ",
+		"advisory": {
+			"from": "security@suse.de",
+			"severity": "Important",
+			"cve": [
+				{
+					"text": "CVE-2024-49889 at SUSE",
+					"href": "https://www.suse.com/security/cve/CVE-2024-49889/",
+					"impact": "high",
+					"cvss3": "7.8/CVSS:3.1/AV:L/AC:L/PR:L/UI:N/S:U/C:H/I:H/A:H"
+				},
+				{
+					"text": "CVE-2024-49889 at NVD",
+					"href": "https://nvd.nist.gov/vuln/detail/CVE-2024-49889",
+					"impact": "high",
+					"cvss3": "7.8/CVSS:3.1/AV:L/AC:L/PR:L/UI:N/S:U/C:H/I:H/A:H"
+				}
+			],
+			"bugzilla": [
+				{
+					"text": "SUSE bug 1232215",
+					"href": "https://bugzilla.suse.com/1232215"
+				}
+			],
+			"issued": {
+				"date": "2024-10-27"
+			},
+			"updated": {
+				"date": "2024-10-27"
+			},
+			"affected_cpe_list": {
+				"cpe": [
+					"cpe:/o:suse:sl-micro:6.0"
+				]
+			}
+		}
+	},
+	"criteria": {
+		"operator": "AND",
+		"criterias": [
+			{
+				"operator": "OR",
+				"criterions": [
+					{
+						"test_ref": "oval:org.opensuse.security:tst:2009334017",
+						"comment": "kernel-default is not affected"
+					},
+					{
+						"test_ref": "oval:org.opensuse.security:tst:2009334791",
+						"comment": "kernel-devel is not affected"
+					},
+					{
+						"test_ref": "oval:org.opensuse.security:tst:2009334792",
+						"comment": "kernel-macros is not affected"
+					},
+					{
+						"test_ref": "oval:org.opensuse.security:tst:2009333928",
+						"comment": "kernel-source is not affected"
+					},
+					{
+						"test_ref": "oval:org.opensuse.security:tst:2009728711",
+						"comment": "kernel-devel-rt is not affected"
+					},
+					{
+						"test_ref": "oval:org.opensuse.security:tst:2009728712",
+						"comment": "kernel-source-rt is not affected"
+					}
+				]
+			}
+		],
+		"criterions": [
+			{
+				"test_ref": "oval:org.opensuse.security:tst:2009864179",
+				"comment": "SUSE Linux Enterprise Micro 6.0 is installed"
+			}
+		]
+	}
+}

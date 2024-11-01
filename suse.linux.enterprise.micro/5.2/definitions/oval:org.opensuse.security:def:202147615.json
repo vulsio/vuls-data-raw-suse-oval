@@ -1,0 +1,113 @@
+{
+	"id": "oval:org.opensuse.security:def:202147615",
+	"version": "1",
+	"class": "vulnerability",
+	"metadata": {
+		"title": "CVE-2021-47615",
+		"affected": {
+			"family": "unix",
+			"platform": [
+				"SUSE Linux Enterprise Micro 5.2"
+			]
+		},
+		"reference": [
+			{
+				"ref_id": "Mitre CVE-2021-47615",
+				"ref_url": "https://cve.mitre.org/cgi-bin/cvename.cgi?name=CVE-2021-47615",
+				"source": "CVE"
+			},
+			{
+				"ref_id": "SUSE CVE-2021-47615",
+				"ref_url": "https://www.suse.com/security/cve/CVE-2021-47615",
+				"source": "SUSE CVE"
+			},
+			{
+				"ref_id": "SUSE-SU-2024:2372-1",
+				"ref_url": "https://lists.suse.com/pipermail/sle-updates/2024-July/035868.html",
+				"source": "SUSE-SU"
+			},
+			{
+				"ref_id": "SUSE-SU-2024:2394-1",
+				"ref_url": "https://lists.suse.com/pipermail/sle-updates/2024-July/035907.html",
+				"source": "SUSE-SU"
+			},
+			{
+				"ref_id": "SUSE-SU-2024:2902-1",
+				"ref_url": "https://lists.suse.com/pipermail/sle-updates/2024-August/036443.html",
+				"source": "SUSE-SU"
+			},
+			{
+				"ref_id": "SUSE-SU-2024:2929-1",
+				"ref_url": "https://lists.suse.com/pipermail/sle-updates/2024-August/036473.html",
+				"source": "SUSE-SU"
+			},
+			{
+				"ref_id": "SUSE-SU-2024:2939-1",
+				"ref_url": "https://lists.suse.com/pipermail/sle-security-updates/2024-August/019211.html",
+				"source": "SUSE-SU"
+			}
+		],
+		"description": "\n    In the Linux kernel, the following vulnerability has been resolved:\n\nRDMA/mlx5: Fix releasing unallocated memory in dereg MR flow\n\nFor the case of IB_MR_TYPE_DM the mr does doesn't have a umem, even though\nit is a user MR. This causes function mlx5_free_priv_descs() to think that\nit is a kernel MR, leading to wrongly accessing mr->descs that will get\nwrong values in the union which leads to attempt to release resources that\nwere not allocated in the first place.\n\nFor example:\n DMA-API: mlx5_core 0000:08:00.1: device driver tries to free DMA memory it has not allocated [device address=0x0000000000000000] [size=0 bytes]\n WARNING: CPU: 8 PID: 1021 at kernel/dma/debug.c:961 check_unmap+0x54f/0x8b0\n RIP: 0010:check_unmap+0x54f/0x8b0\n Call Trace:\n  debug_dma_unmap_page+0x57/0x60\n  mlx5_free_priv_descs+0x57/0x70 [mlx5_ib]\n  mlx5_ib_dereg_mr+0x1fb/0x3d0 [mlx5_ib]\n  ib_dereg_mr_user+0x60/0x140 [ib_core]\n  uverbs_destroy_uobject+0x59/0x210 [ib_uverbs]\n  uobj_destroy+0x3f/0x80 [ib_uverbs]\n  ib_uverbs_cmd_verbs+0x435/0xd10 [ib_uverbs]\n  ? uverbs_finalize_object+0x50/0x50 [ib_uverbs]\n  ? lock_acquire+0xc4/0x2e0\n  ? lock_acquired+0x12/0x380\n  ? lock_acquire+0xc4/0x2e0\n  ? lock_acquire+0xc4/0x2e0\n  ? ib_uverbs_ioctl+0x7c/0x140 [ib_uverbs]\n  ? lock_release+0x28a/0x400\n  ib_uverbs_ioctl+0xc0/0x140 [ib_uverbs]\n  ? ib_uverbs_ioctl+0x7c/0x140 [ib_uverbs]\n  __x64_sys_ioctl+0x7f/0xb0\n  do_syscall_64+0x38/0x90\n\nFix it by reorganizing the dereg flow and mlx5_ib_mr structure:\n - Move the ib_umem field into the user MRs structure in the union as it's\n   applicable only there.\n - Function mlx5_ib_dereg_mr() will now call mlx5_free_priv_descs() only\n   in case there isn't udata, which indicates that this isn't a user MR.\n    ",
+		"advisory": {
+			"from": "security@suse.de",
+			"severity": "Low",
+			"cve": [
+				{
+					"text": "CVE-2021-47615 at SUSE",
+					"href": "https://www.suse.com/security/cve/CVE-2021-47615/",
+					"impact": "low",
+					"cvss3": "3.4/CVSS:3.1/AV:L/AC:L/PR:H/UI:N/S:U/C:N/I:L/A:L"
+				},
+				{
+					"text": "CVE-2021-47615 at NVD",
+					"href": "https://nvd.nist.gov/vuln/detail/CVE-2021-47615"
+				}
+			],
+			"bugzilla": [
+				{
+					"text": "SUSE bug 1226602",
+					"href": "https://bugzilla.suse.com/1226602"
+				}
+			],
+			"issued": {
+				"date": "2024-06-21"
+			},
+			"updated": {
+				"date": "2024-08-17"
+			},
+			"affected_cpe_list": {
+				"cpe": [
+					"cpe:/o:suse:suse-microos:5.2"
+				]
+			}
+		}
+	},
+	"criteria": {
+		"operator": "AND",
+		"criterias": [
+			{
+				"operator": "OR",
+				"criterions": [
+					{
+						"test_ref": "oval:org.opensuse.security:tst:2009334017",
+						"comment": "kernel-default is not affected"
+					},
+					{
+						"test_ref": "oval:org.opensuse.security:tst:2009705046",
+						"comment": "kernel-rt is not affected"
+					},
+					{
+						"test_ref": "oval:org.opensuse.security:tst:2009728712",
+						"comment": "kernel-source-rt is not affected"
+					}
+				]
+			}
+		],
+		"criterions": [
+			{
+				"test_ref": "oval:org.opensuse.security:tst:2009681300",
+				"comment": "SUSE Linux Enterprise Micro 5.2 is installed"
+			}
+		]
+	}
+}

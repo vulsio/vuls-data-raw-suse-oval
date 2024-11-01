@@ -1,0 +1,122 @@
+{
+	"id": "oval:org.opensuse.security:def:202441045",
+	"version": "1",
+	"class": "vulnerability",
+	"metadata": {
+		"title": "CVE-2024-41045",
+		"affected": {
+			"family": "unix",
+			"platform": [
+				"SUSE Linux Enterprise Micro 5.1"
+			]
+		},
+		"reference": [
+			{
+				"ref_id": "Mitre CVE-2024-41045",
+				"ref_url": "https://cve.mitre.org/cgi-bin/cvename.cgi?name=CVE-2024-41045",
+				"source": "CVE"
+			},
+			{
+				"ref_id": "SUSE CVE-2024-41045",
+				"ref_url": "https://www.suse.com/security/cve/CVE-2024-41045",
+				"source": "SUSE CVE"
+			},
+			{
+				"ref_id": "SUSE-SU-2024:3190-1",
+				"ref_url": "https://lists.suse.com/pipermail/sle-security-updates/2024-September/019403.html",
+				"source": "SUSE-SU"
+			},
+			{
+				"ref_id": "SUSE-SU-2024:3194-1",
+				"ref_url": "https://lists.suse.com/pipermail/sle-updates/2024-September/036835.html",
+				"source": "SUSE-SU"
+			},
+			{
+				"ref_id": "SUSE-SU-2024:3195-1",
+				"ref_url": "https://lists.suse.com/pipermail/sle-updates/2024-September/036842.html",
+				"source": "SUSE-SU"
+			},
+			{
+				"ref_id": "SUSE-SU-2024:3209-1",
+				"ref_url": "https://lists.suse.com/pipermail/sle-updates/2024-September/036854.html",
+				"source": "SUSE-SU"
+			},
+			{
+				"ref_id": "SUSE-SU-2024:3383-1",
+				"ref_url": "https://lists.suse.com/pipermail/sle-security-updates/2024-September/019497.html",
+				"source": "SUSE-SU"
+			},
+			{
+				"ref_id": "SUSE-SU-2024:3483-1",
+				"ref_url": "https://lists.suse.com/pipermail/sle-updates/2024-September/037089.html",
+				"source": "SUSE-SU"
+			}
+		],
+		"description": "\n    In the Linux kernel, the following vulnerability has been resolved:\n\nbpf: Defer work in bpf_timer_cancel_and_free\n\nCurrently, the same case as previous patch (two timer callbacks trying\nto cancel each other) can be invoked through bpf_map_update_elem as\nwell, or more precisely, freeing map elements containing timers. Since\nthis relies on hrtimer_cancel as well, it is prone to the same deadlock\nsituation as the previous patch.\n\nIt would be sufficient to use hrtimer_try_to_cancel to fix this problem,\nas the timer cannot be enqueued after async_cancel_and_free. Once\nasync_cancel_and_free has been done, the timer must be reinitialized\nbefore it can be armed again. The callback running in parallel trying to\narm the timer will fail, and freeing bpf_hrtimer without waiting is\nsufficient (given kfree_rcu), and bpf_timer_cb will return\nHRTIMER_NORESTART, preventing the timer from being rearmed again.\n\nHowever, there exists a UAF scenario where the callback arms the timer\nbefore entering this function, such that if cancellation fails (due to\ntimer callback invoking this routine, or the target timer callback\nrunning concurrently). In such a case, if the timer expiration is\nsignificantly far in the future, the RCU grace period expiration\nhappening before it will free the bpf_hrtimer state and along with it\nthe struct hrtimer, that is enqueued.\n\nHence, it is clear cancellation needs to occur after\nasync_cancel_and_free, and yet it cannot be done inline due to deadlock\nissues. We thus modify bpf_timer_cancel_and_free to defer work to the\nglobal workqueue, adding a work_struct alongside rcu_head (both used at\n_different_ points of time, so can share space).\n\nUpdate existing code comments to reflect the new state of affairs.\n    ",
+		"advisory": {
+			"from": "security@suse.de",
+			"severity": "Moderate",
+			"cve": [
+				{
+					"text": "CVE-2024-41045 at SUSE",
+					"href": "https://www.suse.com/security/cve/CVE-2024-41045/",
+					"impact": "medium",
+					"cvss3": "6.4/CVSS:3.1/AV:L/AC:H/PR:H/UI:N/S:U/C:H/I:H/A:H"
+				},
+				{
+					"text": "CVE-2024-41045 at NVD",
+					"href": "https://nvd.nist.gov/vuln/detail/CVE-2024-41045"
+				}
+			],
+			"bugzilla": [
+				{
+					"text": "SUSE bug 1228531",
+					"href": "https://bugzilla.suse.com/1228531"
+				}
+			],
+			"issued": {
+				"date": "2024-08-06"
+			},
+			"updated": {
+				"date": "2024-10-09"
+			},
+			"affected_cpe_list": {
+				"cpe": [
+					"cpe:/o:suse:suse-microos:5.1"
+				]
+			}
+		}
+	},
+	"criteria": {
+		"operator": "AND",
+		"criterias": [
+			{
+				"operator": "OR",
+				"criterions": [
+					{
+						"test_ref": "oval:org.opensuse.security:tst:2009334017",
+						"comment": "kernel-default is not affected"
+					},
+					{
+						"test_ref": "oval:org.opensuse.security:tst:2009705046",
+						"comment": "kernel-rt is not affected"
+					},
+					{
+						"test_ref": "oval:org.opensuse.security:tst:2009333928",
+						"comment": "kernel-source is not affected"
+					},
+					{
+						"test_ref": "oval:org.opensuse.security:tst:2009728712",
+						"comment": "kernel-source-rt is not affected"
+					}
+				]
+			}
+		],
+		"criterions": [
+			{
+				"test_ref": "oval:org.opensuse.security:tst:2009669964",
+				"comment": "SUSE Linux Enterprise Micro 5.1 is installed"
+			}
+		]
+	}
+}

@@ -1,0 +1,91 @@
+{
+	"id": "oval:org.opensuse.security:def:20214442",
+	"version": "1",
+	"class": "vulnerability",
+	"metadata": {
+		"title": "CVE-2021-4442",
+		"affected": {
+			"family": "unix",
+			"platform": [
+				"SUSE Linux Enterprise Micro 5.0"
+			]
+		},
+		"reference": [
+			{
+				"ref_id": "Mitre CVE-2021-4442",
+				"ref_url": "https://cve.mitre.org/cgi-bin/cvename.cgi?name=CVE-2021-4442",
+				"source": "CVE"
+			},
+			{
+				"ref_id": "SUSE CVE-2021-4442",
+				"ref_url": "https://www.suse.com/security/cve/CVE-2021-4442",
+				"source": "SUSE CVE"
+			},
+			{
+				"ref_id": "SUSE-SU-2024:3566-1",
+				"ref_url": "https://lists.suse.com/pipermail/sle-security-updates/2024-October/019578.html",
+				"source": "SUSE-SU"
+			}
+		],
+		"description": "\n    In the Linux kernel, the following vulnerability has been resolved:\n\ntcp: add sanity tests to TCP_QUEUE_SEQ\n\nQingyu Li reported a syzkaller bug where the repro\nchanges RCV SEQ _after_ restoring data in the receive queue.\n\nmprotect(0x4aa000, 12288, PROT_READ)    = 0\nmmap(0x1ffff000, 4096, PROT_NONE, MAP_PRIVATE|MAP_FIXED|MAP_ANONYMOUS, -1, 0) = 0x1ffff000\nmmap(0x20000000, 16777216, PROT_READ|PROT_WRITE|PROT_EXEC, MAP_PRIVATE|MAP_FIXED|MAP_ANONYMOUS, -1, 0) = 0x20000000\nmmap(0x21000000, 4096, PROT_NONE, MAP_PRIVATE|MAP_FIXED|MAP_ANONYMOUS, -1, 0) = 0x21000000\nsocket(AF_INET6, SOCK_STREAM, IPPROTO_IP) = 3\nsetsockopt(3, SOL_TCP, TCP_REPAIR, [1], 4) = 0\nconnect(3, {sa_family=AF_INET6, sin6_port=htons(0), sin6_flowinfo=htonl(0), inet_pton(AF_INET6, \"::1\", &sin6_addr), sin6_scope_id=0}, 28) = 0\nsetsockopt(3, SOL_TCP, TCP_REPAIR_QUEUE, [1], 4) = 0\nsendmsg(3, {msg_name=NULL, msg_namelen=0, msg_iov=[{iov_base=\"0x0000000000000003\\0\\0\", iov_len=20}], msg_iovlen=1, msg_controllen=0, msg_flags=0}, 0) = 20\nsetsockopt(3, SOL_TCP, TCP_REPAIR, [0], 4) = 0\nsetsockopt(3, SOL_TCP, TCP_QUEUE_SEQ, [128], 4) = 0\nrecvfrom(3, NULL, 20, 0, NULL, NULL)    = -1 ECONNRESET (Connection reset by peer)\n\nsyslog shows:\n[  111.205099] TCP recvmsg seq # bug 2: copied 80, seq 0, rcvnxt 80, fl 0\n[  111.207894] WARNING: CPU: 1 PID: 356 at net/ipv4/tcp.c:2343 tcp_recvmsg_locked+0x90e/0x29a0\n\nThis should not be allowed. TCP_QUEUE_SEQ should only be used\nwhen queues are empty.\n\nThis patch fixes this case, and the tx path as well.\n    ",
+		"advisory": {
+			"from": "security@suse.de",
+			"severity": "Moderate",
+			"cve": [
+				{
+					"text": "CVE-2021-4442 at SUSE",
+					"href": "https://www.suse.com/security/cve/CVE-2021-4442/",
+					"impact": "medium",
+					"cvss3": "5.5/CVSS:3.1/AV:L/AC:L/PR:L/UI:N/S:U/C:N/I:N/A:H"
+				},
+				{
+					"text": "CVE-2021-4442 at NVD",
+					"href": "https://nvd.nist.gov/vuln/detail/CVE-2021-4442",
+					"impact": "medium",
+					"cvss3": "5.5/CVSS:3.1/AV:L/AC:L/PR:L/UI:N/S:U/C:N/I:N/A:H"
+				}
+			],
+			"bugzilla": [
+				{
+					"text": "SUSE bug 1229912",
+					"href": "https://bugzilla.suse.com/1229912"
+				}
+			],
+			"issued": {
+				"date": "2024-10-18"
+			},
+			"updated": {
+				"date": "2024-10-18"
+			},
+			"affected_cpe_list": {
+				"cpe": [
+					"cpe:/o:suse:suse-microos:5.0"
+				]
+			}
+		}
+	},
+	"criteria": {
+		"operator": "AND",
+		"criterias": [
+			{
+				"operator": "OR",
+				"criterions": [
+					{
+						"test_ref": "oval:org.opensuse.security:tst:2009334017",
+						"comment": "kernel-default is not affected"
+					},
+					{
+						"test_ref": "oval:org.opensuse.security:tst:2009705046",
+						"comment": "kernel-rt is not affected"
+					}
+				]
+			}
+		],
+		"criterions": [
+			{
+				"test_ref": "oval:org.opensuse.security:tst:2009704855",
+				"comment": "SUSE Linux Enterprise Micro 5.0 is installed"
+			}
+		]
+	}
+}

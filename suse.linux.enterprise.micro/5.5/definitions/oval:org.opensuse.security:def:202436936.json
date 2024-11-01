@@ -1,0 +1,122 @@
+{
+	"id": "oval:org.opensuse.security:def:202436936",
+	"version": "1",
+	"class": "vulnerability",
+	"metadata": {
+		"title": "CVE-2024-36936",
+		"affected": {
+			"family": "unix",
+			"platform": [
+				"SUSE Linux Enterprise Micro 5.5"
+			]
+		},
+		"reference": [
+			{
+				"ref_id": "Mitre CVE-2024-36936",
+				"ref_url": "https://cve.mitre.org/cgi-bin/cvename.cgi?name=CVE-2024-36936",
+				"source": "CVE"
+			},
+			{
+				"ref_id": "SUSE CVE-2024-36936",
+				"ref_url": "https://www.suse.com/security/cve/CVE-2024-36936",
+				"source": "SUSE CVE"
+			},
+			{
+				"ref_id": "SUSE-SU-2024:2135-1",
+				"ref_url": "https://lists.suse.com/pipermail/sle-updates/2024-June/035681.html",
+				"source": "SUSE-SU"
+			},
+			{
+				"ref_id": "SUSE-SU-2024:2203-1",
+				"ref_url": "https://lists.suse.com/pipermail/sle-security-updates/2024-August/019244.html",
+				"source": "SUSE-SU"
+			},
+			{
+				"ref_id": "SUSE-SU-2024:2973-1",
+				"ref_url": "https://lists.suse.com/pipermail/sle-security-updates/2024-August/019280.html",
+				"source": "SUSE-SU"
+			},
+			{
+				"ref_id": "SUSE-SU-2024:3190-1",
+				"ref_url": "https://lists.suse.com/pipermail/sle-security-updates/2024-September/019403.html",
+				"source": "SUSE-SU"
+			},
+			{
+				"ref_id": "SUSE-SU-2024:3209-1",
+				"ref_url": "https://lists.suse.com/pipermail/sle-updates/2024-September/036854.html",
+				"source": "SUSE-SU"
+			},
+			{
+				"ref_id": "SUSE-SU-2024:3483-1",
+				"ref_url": "https://lists.suse.com/pipermail/sle-updates/2024-September/037089.html",
+				"source": "SUSE-SU"
+			}
+		],
+		"description": "\n    In the Linux kernel, the following vulnerability has been resolved:\n\nefi/unaccepted: touch soft lockup during memory accept\n\nCommit 50e782a86c98 (\"efi/unaccepted: Fix soft lockups caused by\nparallel memory acceptance\") has released the spinlock so other CPUs can\ndo memory acceptance in parallel and not triggers softlockup on other\nCPUs.\n\nHowever the softlock up was intermittent shown up if the memory of the\nTD guest is large, and the timeout of softlockup is set to 1 second:\n\n RIP: 0010:_raw_spin_unlock_irqrestore\n Call Trace:\n ? __hrtimer_run_queues\n <IRQ>\n ? hrtimer_interrupt\n ? watchdog_timer_fn\n ? __sysvec_apic_timer_interrupt\n ? __pfx_watchdog_timer_fn\n ? sysvec_apic_timer_interrupt\n </IRQ>\n ? __hrtimer_run_queues\n <TASK>\n ? hrtimer_interrupt\n ? asm_sysvec_apic_timer_interrupt\n ? _raw_spin_unlock_irqrestore\n ? __sysvec_apic_timer_interrupt\n ? sysvec_apic_timer_interrupt\n accept_memory\n try_to_accept_memory\n do_huge_pmd_anonymous_page\n get_page_from_freelist\n __handle_mm_fault\n __alloc_pages\n __folio_alloc\n ? __tdx_hypercall\n handle_mm_fault\n vma_alloc_folio\n do_user_addr_fault\n do_huge_pmd_anonymous_page\n exc_page_fault\n ? __do_huge_pmd_anonymous_page\n asm_exc_page_fault\n __handle_mm_fault\n\nWhen the local irq is enabled at the end of accept_memory(), the\nsoftlockup detects that the watchdog on single CPU has not been fed for\na while. That is to say, even other CPUs will not be blocked by\nspinlock, the current CPU might be stunk with local irq disabled for a\nwhile, which hurts not only nmi watchdog but also softlockup.\n\nChao Gao pointed out that the memory accept could be time costly and\nthere was similar report before. Thus to avoid any softlocup detection\nduring this stage, give the softlockup a flag to skip the timeout check\nat the end of accept_memory(), by invoking touch_softlockup_watchdog().\n    ",
+		"advisory": {
+			"from": "security@suse.de",
+			"severity": "Low",
+			"cve": [
+				{
+					"text": "CVE-2024-36936 at SUSE",
+					"href": "https://www.suse.com/security/cve/CVE-2024-36936/",
+					"impact": "low",
+					"cvss3": "3.3/CVSS:3.1/AV:L/AC:L/PR:L/UI:N/S:U/C:N/I:N/A:L"
+				},
+				{
+					"text": "CVE-2024-36936 at NVD",
+					"href": "https://nvd.nist.gov/vuln/detail/CVE-2024-36936"
+				}
+			],
+			"bugzilla": [
+				{
+					"text": "SUSE bug 1225773",
+					"href": "https://bugzilla.suse.com/1225773"
+				}
+			],
+			"issued": {
+				"date": "2024-09-12"
+			},
+			"updated": {
+				"date": "2024-10-11"
+			},
+			"affected_cpe_list": {
+				"cpe": [
+					"cpe:/o:suse:sle-micro:5.5"
+				]
+			}
+		}
+	},
+	"criteria": {
+		"operator": "AND",
+		"criterias": [
+			{
+				"operator": "OR",
+				"criterions": [
+					{
+						"test_ref": "oval:org.opensuse.security:tst:2009945068",
+						"comment": "kernel-default-5.14.21-150500.55.80.2 is installed"
+					},
+					{
+						"test_ref": "oval:org.opensuse.security:tst:2009945182",
+						"comment": "kernel-default-base-5.14.21-150500.55.80.2.150500.6.35.6 is installed"
+					},
+					{
+						"test_ref": "oval:org.opensuse.security:tst:2009942305",
+						"comment": "kernel-rt-5.14.21-150500.13.67.3 is installed"
+					},
+					{
+						"test_ref": "oval:org.opensuse.security:tst:2009942316",
+						"comment": "kernel-source-rt-5.14.21-150500.13.67.3 is installed"
+					}
+				]
+			}
+		],
+		"criterions": [
+			{
+				"test_ref": "oval:org.opensuse.security:tst:2009800388",
+				"comment": "SUSE Linux Enterprise Micro 5.5 is installed"
+			}
+		]
+	}
+}

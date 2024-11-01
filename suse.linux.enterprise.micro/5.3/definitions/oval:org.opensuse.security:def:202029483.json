@@ -1,0 +1,159 @@
+{
+	"id": "oval:org.opensuse.security:def:202029483",
+	"version": "1",
+	"class": "vulnerability",
+	"metadata": {
+		"title": "CVE-2020-29483",
+		"affected": {
+			"family": "unix",
+			"platform": [
+				"SUSE Linux Enterprise Micro 5.3"
+			]
+		},
+		"reference": [
+			{
+				"ref_id": "Mitre CVE-2020-29483",
+				"ref_url": "https://cve.mitre.org/cgi-bin/cvename.cgi?name=CVE-2020-29483",
+				"source": "CVE"
+			},
+			{
+				"ref_id": "SUSE CVE-2020-29483",
+				"ref_url": "https://www.suse.com/security/cve/CVE-2020-29483",
+				"source": "SUSE CVE"
+			},
+			{
+				"ref_id": "SUSE-CU-2021:233-1",
+				"ref_url": "https://lists.suse.com/pipermail/sle-security-updates/2021-June/008902.html",
+				"source": "SUSE-SU"
+			},
+			{
+				"ref_id": "SUSE-IU-2021:1-1",
+				"ref_url": "https://lists.suse.com/pipermail/sle-security-updates/2021-February/008273.html",
+				"source": "SUSE-SU"
+			},
+			{
+				"ref_id": "SUSE-IU-2021:3-1",
+				"ref_url": "https://lists.suse.com/pipermail/sle-security-updates/2021-February/008275.html",
+				"source": "SUSE-SU"
+			},
+			{
+				"ref_id": "SUSE-IU-2021:4-1",
+				"ref_url": "https://lists.suse.com/pipermail/sle-security-updates/2021-February/008276.html",
+				"source": "SUSE-SU"
+			},
+			{
+				"ref_id": "SUSE-IU-2021:5-1",
+				"ref_url": "https://lists.suse.com/pipermail/sle-security-updates/2021-February/008293.html",
+				"source": "SUSE-SU"
+			},
+			{
+				"ref_id": "SUSE-IU-2021:7-1",
+				"ref_url": "https://lists.suse.com/pipermail/sle-security-updates/2021-February/008295.html",
+				"source": "SUSE-SU"
+			},
+			{
+				"ref_id": "SUSE-SU-2020:14578-1",
+				"ref_url": "https://lists.suse.com/pipermail/sle-security-updates/2020-December/008079.html",
+				"source": "SUSE-SU"
+			},
+			{
+				"ref_id": "SUSE-SU-2020:3880-1",
+				"ref_url": "https://lists.suse.com/pipermail/sle-security-updates/2020-December/008094.html",
+				"source": "SUSE-SU"
+			},
+			{
+				"ref_id": "SUSE-SU-2020:3881-1",
+				"ref_url": "https://lists.suse.com/pipermail/sle-security-updates/2020-December/008093.html",
+				"source": "SUSE-SU"
+			},
+			{
+				"ref_id": "SUSE-SU-2020:3913-1",
+				"ref_url": "https://lists.suse.com/pipermail/sle-security-updates/2020-December/008112.html",
+				"source": "SUSE-SU"
+			},
+			{
+				"ref_id": "SUSE-SU-2020:3914-1",
+				"ref_url": "https://lists.suse.com/pipermail/sle-security-updates/2020-December/008113.html",
+				"source": "SUSE-SU"
+			},
+			{
+				"ref_id": "SUSE-SU-2020:3915-1",
+				"ref_url": "https://lists.suse.com/pipermail/sle-security-updates/2020-December/008115.html",
+				"source": "SUSE-SU"
+			},
+			{
+				"ref_id": "SUSE-SU-2020:3916-1",
+				"ref_url": "https://lists.suse.com/pipermail/sle-security-updates/2020-December/008111.html",
+				"source": "SUSE-SU"
+			},
+			{
+				"ref_id": "SUSE-SU-2020:3945-1",
+				"ref_url": "https://lists.suse.com/pipermail/sle-security-updates/2020-December/008127.html",
+				"source": "SUSE-SU"
+			},
+			{
+				"ref_id": "openSUSE-SU-2020:2313-1",
+				"ref_url": "https://lists.opensuse.org/archives/list/security-announce@lists.opensuse.org/thread/ORUQM2NUGI7GTGQ4QQYAXYCCBGXOCR55/",
+				"source": "SUSE-SU"
+			},
+			{
+				"ref_id": "openSUSE-SU-2020:2331-1",
+				"ref_url": "https://lists.opensuse.org/archives/list/security-announce@lists.opensuse.org/thread/KLZB3TTBVYNCRCZSSEYYBTXS7RCM6NL7/",
+				"source": "SUSE-SU"
+			}
+		],
+		"description": "\n    An issue was discovered in Xen through 4.14.x. Xenstored and guests communicate via a shared memory page using a specific protocol. When a guest violates this protocol, xenstored will drop the connection to that guest. Unfortunately, this is done by just removing the guest from xenstored's internal management, resulting in the same actions as if the guest had been destroyed, including sending an @releaseDomain event. @releaseDomain events do not say that the guest has been removed. All watchers of this event must look at the states of all guests to find the guest that has been removed. When an @releaseDomain is generated due to a domain xenstored protocol violation, because the guest is still running, the watchers will not react. Later, when the guest is actually destroyed, xenstored will no longer have it stored in its internal data base, so no further @releaseDomain event will be sent. This can lead to a zombie domain; memory mappings of that guest's memory will not be removed, due to the missing event. This zombie domain will be cleaned up only after another domain is destroyed, as that will trigger another @releaseDomain event. If the device model of the guest that violated the Xenstore protocol is running in a stub-domain, a use-after-free case could happen in xenstored, after having removed the guest from its internal data base, possibly resulting in a crash of xenstored. A malicious guest can block resources of the host for a period after its own death. Guests with a stub domain device model can eventually crash xenstored, resulting in a more serious denial of service (the prevention of any further domain management operations). Only the C variant of Xenstore is affected; the Ocaml variant is not affected. Only HVM guests with a stubdom device model can cause a serious DoS.\n    ",
+		"advisory": {
+			"from": "security@suse.de",
+			"severity": "Moderate",
+			"cve": [
+				{
+					"text": "CVE-2020-29483 at SUSE",
+					"href": "https://www.suse.com/security/cve/CVE-2020-29483/",
+					"impact": "medium",
+					"cvss3": "6.5/CVSS:3.1/AV:L/AC:L/PR:L/UI:N/S:C/C:N/I:N/A:H"
+				},
+				{
+					"text": "CVE-2020-29483 at NVD",
+					"href": "https://nvd.nist.gov/vuln/detail/CVE-2020-29483",
+					"impact": "medium",
+					"cvss3": "6.5/CVSS:3.1/AV:L/AC:L/PR:L/UI:N/S:C/C:N/I:N/A:H"
+				}
+			],
+			"bugzilla": [
+				{
+					"text": "SUSE bug 1178658",
+					"href": "https://bugzilla.suse.com/1178658"
+				},
+				{
+					"text": "SUSE bug 1179502",
+					"href": "https://bugzilla.suse.com/1179502"
+				}
+			],
+			"issued": {
+				"date": "2023-05-23"
+			},
+			"updated": {
+				"date": "2024-09-01"
+			},
+			"affected_cpe_list": {
+				"cpe": [
+					"cpe:/o:suse:sle-micro:5.3"
+				]
+			}
+		}
+	},
+	"criteria": {
+		"operator": "AND",
+		"criterions": [
+			{
+				"test_ref": "oval:org.opensuse.security:tst:2009728694",
+				"comment": "SUSE Linux Enterprise Micro 5.3 is installed"
+			},
+			{
+				"test_ref": "oval:org.opensuse.security:tst:2009904849",
+				"comment": "xen-libs-4.16.1_06-150400.4.8.1 is installed"
+			}
+		]
+	}
+}

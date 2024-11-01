@@ -1,0 +1,109 @@
+{
+	"id": "oval:org.opensuse.security:def:202439486",
+	"version": "1",
+	"class": "vulnerability",
+	"metadata": {
+		"title": "CVE-2024-39486",
+		"affected": {
+			"family": "unix",
+			"platform": [
+				"SUSE Linux Enterprise Micro 5.1"
+			]
+		},
+		"reference": [
+			{
+				"ref_id": "Mitre CVE-2024-39486",
+				"ref_url": "https://cve.mitre.org/cgi-bin/cvename.cgi?name=CVE-2024-39486",
+				"source": "CVE"
+			},
+			{
+				"ref_id": "SUSE CVE-2024-39486",
+				"ref_url": "https://www.suse.com/security/cve/CVE-2024-39486",
+				"source": "SUSE CVE"
+			},
+			{
+				"ref_id": "SUSE-SU-2024:3194-1",
+				"ref_url": "https://lists.suse.com/pipermail/sle-updates/2024-September/036835.html",
+				"source": "SUSE-SU"
+			},
+			{
+				"ref_id": "SUSE-SU-2024:3195-1",
+				"ref_url": "https://lists.suse.com/pipermail/sle-updates/2024-September/036842.html",
+				"source": "SUSE-SU"
+			},
+			{
+				"ref_id": "SUSE-SU-2024:3383-1",
+				"ref_url": "https://lists.suse.com/pipermail/sle-security-updates/2024-September/019497.html",
+				"source": "SUSE-SU"
+			}
+		],
+		"description": "\n    In the Linux kernel, the following vulnerability has been resolved:\n\ndrm/drm_file: Fix pid refcounting race\n\n<maarten.lankhorst@linux.intel.com>, Maxime Ripard\n<mripard@kernel.org>, Thomas Zimmermann <tzimmermann@suse.de>\n\nfilp->pid is supposed to be a refcounted pointer; however, before this\npatch, drm_file_update_pid() only increments the refcount of a struct\npid after storing a pointer to it in filp->pid and dropping the\ndev->filelist_mutex, making the following race possible:\n\nprocess A               process B\n=========               =========\n                        begin drm_file_update_pid\n                        mutex_lock(&dev->filelist_mutex)\n                        rcu_replace_pointer(filp->pid, <pid B>, 1)\n                        mutex_unlock(&dev->filelist_mutex)\nbegin drm_file_update_pid\nmutex_lock(&dev->filelist_mutex)\nrcu_replace_pointer(filp->pid, <pid A>, 1)\nmutex_unlock(&dev->filelist_mutex)\nget_pid(<pid A>)\nsynchronize_rcu()\nput_pid(<pid B>)   *** pid B reaches refcount 0 and is freed here ***\n                        get_pid(<pid B>)   *** UAF ***\n                        synchronize_rcu()\n                        put_pid(<pid A>)\n\nAs far as I know, this race can only occur with CONFIG_PREEMPT_RCU=y\nbecause it requires RCU to detect a quiescent state in code that is not\nexplicitly calling into the scheduler.\n\nThis race leads to use-after-free of a \"struct pid\".\nIt is probably somewhat hard to hit because process A has to pass\nthrough a synchronize_rcu() operation while process B is between\nmutex_unlock() and get_pid().\n\nFix it by ensuring that by the time a pointer to the current task's pid\nis stored in the file, an extra reference to the pid has been taken.\n\nThis fix also removes the condition for synchronize_rcu(); I think\nthat optimization is unnecessary complexity, since in that case we\nwould usually have bailed out on the lockless check above.\n    ",
+		"advisory": {
+			"from": "security@suse.de",
+			"severity": "Moderate",
+			"cve": [
+				{
+					"text": "CVE-2024-39486 at SUSE",
+					"href": "https://www.suse.com/security/cve/CVE-2024-39486/",
+					"impact": "medium",
+					"cvss3": "5.5/CVSS:3.1/AV:L/AC:L/PR:L/UI:N/S:U/C:N/I:N/A:H"
+				},
+				{
+					"text": "CVE-2024-39486 at NVD",
+					"href": "https://nvd.nist.gov/vuln/detail/CVE-2024-39486",
+					"impact": "high",
+					"cvss3": "7/CVSS:3.1/AV:L/AC:H/PR:L/UI:N/S:U/C:H/I:H/A:H"
+				}
+			],
+			"bugzilla": [
+				{
+					"text": "SUSE bug 1227492",
+					"href": "https://bugzilla.suse.com/1227492"
+				}
+			],
+			"issued": {
+				"date": "2024-07-09"
+			},
+			"updated": {
+				"date": "2024-10-09"
+			},
+			"affected_cpe_list": {
+				"cpe": [
+					"cpe:/o:suse:suse-microos:5.1"
+				]
+			}
+		}
+	},
+	"criteria": {
+		"operator": "AND",
+		"criterias": [
+			{
+				"operator": "OR",
+				"criterions": [
+					{
+						"test_ref": "oval:org.opensuse.security:tst:2009334017",
+						"comment": "kernel-default is not affected"
+					},
+					{
+						"test_ref": "oval:org.opensuse.security:tst:2009705046",
+						"comment": "kernel-rt is not affected"
+					},
+					{
+						"test_ref": "oval:org.opensuse.security:tst:2009333928",
+						"comment": "kernel-source is not affected"
+					},
+					{
+						"test_ref": "oval:org.opensuse.security:tst:2009728712",
+						"comment": "kernel-source-rt is not affected"
+					}
+				]
+			}
+		],
+		"criterions": [
+			{
+				"test_ref": "oval:org.opensuse.security:tst:2009669964",
+				"comment": "SUSE Linux Enterprise Micro 5.1 is installed"
+			}
+		]
+	}
+}

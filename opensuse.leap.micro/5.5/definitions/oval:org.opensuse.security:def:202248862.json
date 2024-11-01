@@ -1,0 +1,142 @@
+{
+	"id": "oval:org.opensuse.security:def:202248862",
+	"version": "1",
+	"class": "vulnerability",
+	"metadata": {
+		"title": "CVE-2022-48862",
+		"affected": {
+			"family": "unix",
+			"platform": [
+				"openSUSE Leap Micro 5.5"
+			]
+		},
+		"reference": [
+			{
+				"ref_id": "Mitre CVE-2022-48862",
+				"ref_url": "https://cve.mitre.org/cgi-bin/cvename.cgi?name=CVE-2022-48862",
+				"source": "CVE"
+			},
+			{
+				"ref_id": "SUSE CVE-2022-48862",
+				"ref_url": "https://www.suse.com/security/cve/CVE-2022-48862",
+				"source": "SUSE CVE"
+			},
+			{
+				"ref_id": "SUSE-SU-2024:2894-1",
+				"ref_url": "https://lists.suse.com/pipermail/sle-updates/2024-August/036430.html",
+				"source": "SUSE-SU"
+			},
+			{
+				"ref_id": "SUSE-SU-2024:2902-1",
+				"ref_url": "https://lists.suse.com/pipermail/sle-updates/2024-August/036443.html",
+				"source": "SUSE-SU"
+			},
+			{
+				"ref_id": "SUSE-SU-2024:2929-1",
+				"ref_url": "https://lists.suse.com/pipermail/sle-updates/2024-August/036473.html",
+				"source": "SUSE-SU"
+			},
+			{
+				"ref_id": "SUSE-SU-2024:2939-1",
+				"ref_url": "https://lists.suse.com/pipermail/sle-security-updates/2024-August/019211.html",
+				"source": "SUSE-SU"
+			},
+			{
+				"ref_id": "SUSE-SU-2024:2947-1",
+				"ref_url": "https://lists.suse.com/pipermail/sle-updates/2024-August/036488.html",
+				"source": "SUSE-SU"
+			}
+		],
+		"description": "\n    In the Linux kernel, the following vulnerability has been resolved:\n\nvhost: fix hung thread due to erroneous iotlb entries\n\nIn vhost_iotlb_add_range_ctx(), range size can overflow to 0 when\nstart is 0 and last is ULONG_MAX. One instance where it can happen\nis when userspace sends an IOTLB message with iova=size=uaddr=0\n(vhost_process_iotlb_msg). So, an entry with size = 0, start = 0,\nlast = ULONG_MAX ends up in the iotlb. Next time a packet is sent,\niotlb_access_ok() loops indefinitely due to that erroneous entry.\n\n\tCall Trace:\n\t <TASK>\n\t iotlb_access_ok+0x21b/0x3e0 drivers/vhost/vhost.c:1340\n\t vq_meta_prefetch+0xbc/0x280 drivers/vhost/vhost.c:1366\n\t vhost_transport_do_send_pkt+0xe0/0xfd0 drivers/vhost/vsock.c:104\n\t vhost_worker+0x23d/0x3d0 drivers/vhost/vhost.c:372\n\t kthread+0x2e9/0x3a0 kernel/kthread.c:377\n\t ret_from_fork+0x1f/0x30 arch/x86/entry/entry_64.S:295\n\t </TASK>\n\nReported by syzbot at:\n\thttps://syzkaller.appspot.com/bug?extid=0abd373e2e50d704db87\n\nTo fix this, do two things:\n\n1. Return -EINVAL in vhost_chr_write_iter() when userspace asks to map\n   a range with size 0.\n2. Fix vhost_iotlb_add_range_ctx() to handle the range [0, ULONG_MAX]\n   by splitting it into two entries.\n    ",
+		"advisory": {
+			"from": "security@suse.de",
+			"severity": "Moderate",
+			"cve": [
+				{
+					"text": "CVE-2022-48862 at SUSE",
+					"href": "https://www.suse.com/security/cve/CVE-2022-48862/",
+					"impact": "medium",
+					"cvss3": "5.5/CVSS:3.1/AV:L/AC:L/PR:L/UI:N/S:U/C:N/I:N/A:H"
+				},
+				{
+					"text": "CVE-2022-48862 at NVD",
+					"href": "https://nvd.nist.gov/vuln/detail/CVE-2022-48862",
+					"impact": "medium",
+					"cvss3": "5.5/CVSS:3.1/AV:L/AC:L/PR:L/UI:N/S:U/C:N/I:N/A:H"
+				}
+			],
+			"bugzilla": [
+				{
+					"text": "SUSE bug 1228010",
+					"href": "https://bugzilla.suse.com/1228010"
+				}
+			],
+			"issued": {
+				"date": "2024-08-14"
+			},
+			"updated": {
+				"date": "2024-08-17"
+			},
+			"affected_cpe_list": {
+				"cpe": [
+					"cpe:/o:opensuse:leap-micro:5.5"
+				]
+			}
+		}
+	},
+	"criteria": {
+		"operator": "AND",
+		"criterias": [
+			{
+				"operator": "OR",
+				"criterias": [
+					{
+						"operator": "AND",
+						"criterions": [
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009880171",
+								"comment": "kernel-default-5.14.21-150500.55.73.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009151354",
+								"comment": "kernel-default is signed with openSUSE key"
+							}
+						]
+					},
+					{
+						"operator": "AND",
+						"criterions": [
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009880170",
+								"comment": "kernel-default-base-5.14.21-150500.55.73.1.150500.6.33.8 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009151960",
+								"comment": "kernel-default-base is signed with openSUSE key"
+							}
+						]
+					},
+					{
+						"operator": "AND",
+						"criterions": [
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009879144",
+								"comment": "kernel-rt-5.14.21-150500.13.64.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009342860",
+								"comment": "kernel-rt is signed with openSUSE key"
+							}
+						]
+					}
+				]
+			}
+		],
+		"criterions": [
+			{
+				"test_ref": "oval:org.opensuse.security:tst:2009799821",
+				"comment": "openSUSE Leap Micro 5.5 is installed"
+			}
+		]
+	}
+}

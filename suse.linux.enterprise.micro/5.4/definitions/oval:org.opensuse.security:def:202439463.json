@@ -1,0 +1,138 @@
+{
+	"id": "oval:org.opensuse.security:def:202439463",
+	"version": "1",
+	"class": "vulnerability",
+	"metadata": {
+		"title": "CVE-2024-39463",
+		"affected": {
+			"family": "unix",
+			"platform": [
+				"SUSE Linux Enterprise Micro 5.4"
+			]
+		},
+		"reference": [
+			{
+				"ref_id": "Mitre CVE-2024-39463",
+				"ref_url": "https://cve.mitre.org/cgi-bin/cvename.cgi?name=CVE-2024-39463",
+				"source": "CVE"
+			},
+			{
+				"ref_id": "SUSE CVE-2024-39463",
+				"ref_url": "https://www.suse.com/security/cve/CVE-2024-39463",
+				"source": "SUSE CVE"
+			},
+			{
+				"ref_id": "SUSE-SU-2024:2571-1",
+				"ref_url": "https://lists.suse.com/pipermail/sle-updates/2024-July/036103.html",
+				"source": "SUSE-SU"
+			},
+			{
+				"ref_id": "SUSE-SU-2024:2894-1",
+				"ref_url": "https://lists.suse.com/pipermail/sle-updates/2024-August/036430.html",
+				"source": "SUSE-SU"
+			},
+			{
+				"ref_id": "SUSE-SU-2024:2896-1",
+				"ref_url": "https://lists.suse.com/pipermail/sle-security-updates/2024-August/019185.html",
+				"source": "SUSE-SU"
+			},
+			{
+				"ref_id": "SUSE-SU-2024:2902-1",
+				"ref_url": "https://lists.suse.com/pipermail/sle-updates/2024-August/036443.html",
+				"source": "SUSE-SU"
+			},
+			{
+				"ref_id": "SUSE-SU-2024:2929-1",
+				"ref_url": "https://lists.suse.com/pipermail/sle-updates/2024-August/036473.html",
+				"source": "SUSE-SU"
+			},
+			{
+				"ref_id": "SUSE-SU-2024:2939-1",
+				"ref_url": "https://lists.suse.com/pipermail/sle-security-updates/2024-August/019211.html",
+				"source": "SUSE-SU"
+			},
+			{
+				"ref_id": "SUSE-SU-2024:2947-1",
+				"ref_url": "https://lists.suse.com/pipermail/sle-updates/2024-August/036488.html",
+				"source": "SUSE-SU"
+			},
+			{
+				"ref_id": "SUSE-SU-2024:2973-1",
+				"ref_url": "https://lists.suse.com/pipermail/sle-security-updates/2024-August/019280.html",
+				"source": "SUSE-SU"
+			}
+		],
+		"description": "\n    In the Linux kernel, the following vulnerability has been resolved:\n\n9p: add missing locking around taking dentry fid list\n\nFix a use-after-free on dentry's d_fsdata fid list when a thread\nlooks up a fid through dentry while another thread unlinks it:\n\nUAF thread:\nrefcount_t: addition on 0; use-after-free.\n p9_fid_get linux/./include/net/9p/client.h:262\n v9fs_fid_find+0x236/0x280 linux/fs/9p/fid.c:129\n v9fs_fid_lookup_with_uid linux/fs/9p/fid.c:181\n v9fs_fid_lookup+0xbf/0xc20 linux/fs/9p/fid.c:314\n v9fs_vfs_getattr_dotl+0xf9/0x360 linux/fs/9p/vfs_inode_dotl.c:400\n vfs_statx+0xdd/0x4d0 linux/fs/stat.c:248\n\nFreed by:\n p9_fid_destroy (inlined)\n p9_client_clunk+0xb0/0xe0 linux/net/9p/client.c:1456\n p9_fid_put linux/./include/net/9p/client.h:278\n v9fs_dentry_release+0xb5/0x140 linux/fs/9p/vfs_dentry.c:55\n v9fs_remove+0x38f/0x620 linux/fs/9p/vfs_inode.c:518\n vfs_unlink+0x29a/0x810 linux/fs/namei.c:4335\n\nThe problem is that d_fsdata was not accessed under d_lock, because\nd_release() normally is only called once the dentry is otherwise no\nlonger accessible but since we also call it explicitly in v9fs_remove\nthat lock is required:\nmove the hlist out of the dentry under lock then unref its fids once\nthey are no longer accessible.\n    ",
+		"advisory": {
+			"from": "security@suse.de",
+			"severity": "Moderate",
+			"cve": [
+				{
+					"text": "CVE-2024-39463 at SUSE",
+					"href": "https://www.suse.com/security/cve/CVE-2024-39463/",
+					"impact": "high",
+					"cvss3": "7/CVSS:3.1/AV:L/AC:H/PR:L/UI:N/S:U/C:H/I:H/A:H"
+				},
+				{
+					"text": "CVE-2024-39463 at NVD",
+					"href": "https://nvd.nist.gov/vuln/detail/CVE-2024-39463",
+					"impact": "high",
+					"cvss3": "7.8/CVSS:3.1/AV:L/AC:L/PR:L/UI:N/S:U/C:H/I:H/A:H"
+				}
+			],
+			"bugzilla": [
+				{
+					"text": "SUSE bug 1227090",
+					"href": "https://bugzilla.suse.com/1227090"
+				},
+				{
+					"text": "SUSE bug 1227091",
+					"href": "https://bugzilla.suse.com/1227091"
+				}
+			],
+			"issued": {
+				"date": "2024-08-15"
+			},
+			"updated": {
+				"date": "2024-08-21"
+			},
+			"affected_cpe_list": {
+				"cpe": [
+					"cpe:/o:suse:sle-micro:5.4"
+				]
+			}
+		}
+	},
+	"criteria": {
+		"operator": "AND",
+		"criterias": [
+			{
+				"operator": "OR",
+				"criterions": [
+					{
+						"test_ref": "oval:org.opensuse.security:tst:2009879796",
+						"comment": "kernel-default-5.14.21-150400.24.128.1 is installed"
+					},
+					{
+						"test_ref": "oval:org.opensuse.security:tst:2009879678",
+						"comment": "kernel-default-base-5.14.21-150400.24.128.1.150400.24.62.1 is installed"
+					},
+					{
+						"test_ref": "oval:org.opensuse.security:tst:2009879551",
+						"comment": "kernel-rt-5.14.21-150400.15.88.1 is installed"
+					},
+					{
+						"test_ref": "oval:org.opensuse.security:tst:2009879552",
+						"comment": "kernel-source-rt-5.14.21-150400.15.88.1 is installed"
+					}
+				]
+			}
+		],
+		"criterions": [
+			{
+				"test_ref": "oval:org.opensuse.security:tst:2009755086",
+				"comment": "SUSE Linux Enterprise Micro 5.4 is installed"
+			}
+		]
+	}
+}

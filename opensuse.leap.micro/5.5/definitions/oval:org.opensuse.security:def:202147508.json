@@ -1,0 +1,130 @@
+{
+	"id": "oval:org.opensuse.security:def:202147508",
+	"version": "1",
+	"class": "vulnerability",
+	"metadata": {
+		"title": "CVE-2021-47508",
+		"affected": {
+			"family": "unix",
+			"platform": [
+				"openSUSE Leap Micro 5.5"
+			]
+		},
+		"reference": [
+			{
+				"ref_id": "Mitre CVE-2021-47508",
+				"ref_url": "https://cve.mitre.org/cgi-bin/cvename.cgi?name=CVE-2021-47508",
+				"source": "CVE"
+			},
+			{
+				"ref_id": "SUSE CVE-2021-47508",
+				"ref_url": "https://www.suse.com/security/cve/CVE-2021-47508",
+				"source": "SUSE CVE"
+			},
+			{
+				"ref_id": "SUSE-SU-2024:2008-1",
+				"ref_url": "https://lists.suse.com/pipermail/sle-updates/2024-June/035569.html",
+				"source": "SUSE-SU"
+			},
+			{
+				"ref_id": "SUSE-SU-2024:2019-1",
+				"ref_url": "https://lists.suse.com/pipermail/sle-updates/2024-June/035578.html",
+				"source": "SUSE-SU"
+			},
+			{
+				"ref_id": "SUSE-SU-2024:2190-1",
+				"ref_url": "https://lists.suse.com/pipermail/sle-updates/2024-June/035732.html",
+				"source": "SUSE-SU"
+			}
+		],
+		"description": "\n    In the Linux kernel, the following vulnerability has been resolved:\n\nbtrfs: free exchange changeset on failures\n\nFstests runs on my VMs have show several kmemleak reports like the following.\n\n  unreferenced object 0xffff88811ae59080 (size 64):\n    comm \"xfs_io\", pid 12124, jiffies 4294987392 (age 6.368s)\n    hex dump (first 32 bytes):\n      00 c0 1c 00 00 00 00 00 ff cf 1c 00 00 00 00 00  ................\n      90 97 e5 1a 81 88 ff ff 90 97 e5 1a 81 88 ff ff  ................\n    backtrace:\n      [<00000000ac0176d2>] ulist_add_merge+0x60/0x150 [btrfs]\n      [<0000000076e9f312>] set_state_bits+0x86/0xc0 [btrfs]\n      [<0000000014fe73d6>] set_extent_bit+0x270/0x690 [btrfs]\n      [<000000004f675208>] set_record_extent_bits+0x19/0x20 [btrfs]\n      [<00000000b96137b1>] qgroup_reserve_data+0x274/0x310 [btrfs]\n      [<0000000057e9dcbb>] btrfs_check_data_free_space+0x5c/0xa0 [btrfs]\n      [<0000000019c4511d>] btrfs_delalloc_reserve_space+0x1b/0xa0 [btrfs]\n      [<000000006d37e007>] btrfs_dio_iomap_begin+0x415/0x970 [btrfs]\n      [<00000000fb8a74b8>] iomap_iter+0x161/0x1e0\n      [<0000000071dff6ff>] __iomap_dio_rw+0x1df/0x700\n      [<000000002567ba53>] iomap_dio_rw+0x5/0x20\n      [<0000000072e555f8>] btrfs_file_write_iter+0x290/0x530 [btrfs]\n      [<000000005eb3d845>] new_sync_write+0x106/0x180\n      [<000000003fb505bf>] vfs_write+0x24d/0x2f0\n      [<000000009bb57d37>] __x64_sys_pwrite64+0x69/0xa0\n      [<000000003eba3fdf>] do_syscall_64+0x43/0x90\n\nIn case brtfs_qgroup_reserve_data() or btrfs_delalloc_reserve_metadata()\nfail the allocated extent_changeset will not be freed.\n\nSo in btrfs_check_data_free_space() and btrfs_delalloc_reserve_space()\nfree the allocated extent_changeset to get rid of the allocated memory.\n\nThe issue currently only happens in the direct IO write path, but only\nafter 65b3c08606e5 (\"btrfs: fix ENOSPC failure when attempting direct IO\nwrite into NOCOW range\"), and also at defrag_one_locked_target(). Every\nother place is always calling extent_changeset_free() even if its call\nto btrfs_delalloc_reserve_space() or btrfs_check_data_free_space() has\nfailed.\n    ",
+		"advisory": {
+			"from": "security@suse.de",
+			"severity": "Moderate",
+			"cve": [
+				{
+					"text": "CVE-2021-47508 at SUSE",
+					"href": "https://www.suse.com/security/cve/CVE-2021-47508/",
+					"impact": "medium",
+					"cvss3": "4.4/CVSS:3.1/AV:L/AC:L/PR:L/UI:N/S:U/C:L/I:N/A:L"
+				},
+				{
+					"text": "CVE-2021-47508 at NVD",
+					"href": "https://nvd.nist.gov/vuln/detail/CVE-2021-47508"
+				}
+			],
+			"bugzilla": [
+				{
+					"text": "SUSE bug 1225408",
+					"href": "https://bugzilla.suse.com/1225408"
+				}
+			],
+			"issued": {
+				"date": "2024-06-13"
+			},
+			"updated": {
+				"date": "2024-07-17"
+			},
+			"affected_cpe_list": {
+				"cpe": [
+					"cpe:/o:opensuse:leap-micro:5.5"
+				]
+			}
+		}
+	},
+	"criteria": {
+		"operator": "AND",
+		"criterias": [
+			{
+				"operator": "OR",
+				"criterias": [
+					{
+						"operator": "AND",
+						"criterions": [
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009869880",
+								"comment": "kernel-default-5.14.21-150500.55.68.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009151354",
+								"comment": "kernel-default is signed with openSUSE key"
+							}
+						]
+					},
+					{
+						"operator": "AND",
+						"criterions": [
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009869881",
+								"comment": "kernel-default-base-5.14.21-150500.55.68.1.150500.6.31.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009151960",
+								"comment": "kernel-default-base is signed with openSUSE key"
+							}
+						]
+					},
+					{
+						"operator": "AND",
+						"criterions": [
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009865619",
+								"comment": "kernel-rt-5.14.21-150500.13.58.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009342860",
+								"comment": "kernel-rt is signed with openSUSE key"
+							}
+						]
+					}
+				]
+			}
+		],
+		"criterions": [
+			{
+				"test_ref": "oval:org.opensuse.security:tst:2009799821",
+				"comment": "openSUSE Leap Micro 5.5 is installed"
+			}
+		]
+	}
+}

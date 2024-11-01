@@ -1,0 +1,119 @@
+{
+	"id": "oval:org.opensuse.security:def:202146942",
+	"version": "1",
+	"class": "vulnerability",
+	"metadata": {
+		"title": "CVE-2021-46942",
+		"affected": {
+			"family": "unix",
+			"platform": [
+				"SUSE Linux Enterprise Micro 5.0",
+				"SUSE Linux Enterprise Micro 5.1",
+				"SUSE Linux Enterprise Micro 5.2"
+			]
+		},
+		"reference": [
+			{
+				"ref_id": "Mitre CVE-2021-46942",
+				"ref_url": "https://cve.mitre.org/cgi-bin/cvename.cgi?name=CVE-2021-46942",
+				"source": "CVE"
+			},
+			{
+				"ref_id": "SUSE CVE-2021-46942",
+				"ref_url": "https://www.suse.com/security/cve/CVE-2021-46942",
+				"source": "SUSE CVE"
+			}
+		],
+		"description": "\n    In the Linux kernel, the following vulnerability has been resolved:\n\nio_uring: fix shared sqpoll cancellation hangs\n\n[  736.982891] INFO: task iou-sqp-4294:4295 blocked for more than 122 seconds.\n[  736.982897] Call Trace:\n[  736.982901]  schedule+0x68/0xe0\n[  736.982903]  io_uring_cancel_sqpoll+0xdb/0x110\n[  736.982908]  io_sqpoll_cancel_cb+0x24/0x30\n[  736.982911]  io_run_task_work_head+0x28/0x50\n[  736.982913]  io_sq_thread+0x4e3/0x720\n\nWe call io_uring_cancel_sqpoll() one by one for each ctx either in\nsq_thread() itself or via task works, and it's intended to cancel all\nrequests of a specified context. However the function uses per-task\ncounters to track the number of inflight requests, so it counts more\nrequests than available via currect io_uring ctx and goes to sleep for\nthem to appear (e.g. from IRQ), that will never happen.\n\nCancel a bit more than before, i.e. all ctxs that share sqpoll\nand continue to use shared counters. Don't forget that we should not\nremove ctx from the list before running that task_work sqpoll-cancel,\notherwise the function wouldn't be able to find the context and will\nhang.\n    ",
+		"advisory": {
+			"from": "security@suse.de",
+			"severity": "Moderate",
+			"cve": [
+				{
+					"text": "CVE-2021-46942 at SUSE",
+					"href": "https://www.suse.com/security/cve/CVE-2021-46942/",
+					"impact": "medium",
+					"cvss3": "5.5/CVSS:3.1/AV:L/AC:L/PR:L/UI:N/S:U/C:N/I:N/A:H"
+				},
+				{
+					"text": "CVE-2021-46942 at NVD",
+					"href": "https://nvd.nist.gov/vuln/detail/CVE-2021-46942",
+					"impact": "medium",
+					"cvss3": "5.5/CVSS:3.1/AV:L/AC:L/PR:L/UI:N/S:U/C:N/I:N/A:H"
+				}
+			],
+			"bugzilla": [
+				{
+					"text": "SUSE bug 1220602",
+					"href": "https://bugzilla.suse.com/1220602"
+				}
+			],
+			"issued": {
+				"date": "2024-10-18"
+			},
+			"updated": {
+				"date": "2024-10-18"
+			},
+			"affected_cpe_list": {
+				"cpe": [
+					"cpe:/o:suse:suse-microos:5.0",
+					"cpe:/o:suse:suse-microos:5.1",
+					"cpe:/o:suse:suse-microos:5.2"
+				]
+			}
+		}
+	},
+	"criteria": {
+		"operator": "OR",
+		"criterias": [
+			{
+				"operator": "AND",
+				"criterions": [
+					{
+						"test_ref": "oval:org.opensuse.security:tst:2009704855",
+						"comment": "SUSE Linux Enterprise Micro 5.0 is installed"
+					},
+					{
+						"test_ref": "oval:org.opensuse.security:tst:2009334017",
+						"comment": "kernel-default is not affected"
+					}
+				]
+			},
+			{
+				"operator": "AND",
+				"criterias": [
+					{
+						"operator": "OR",
+						"criterions": [
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009669964",
+								"comment": "SUSE Linux Enterprise Micro 5.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009681300",
+								"comment": "SUSE Linux Enterprise Micro 5.2 is installed"
+							}
+						]
+					},
+					{
+						"operator": "OR",
+						"criterions": [
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009334017",
+								"comment": "kernel-default is not affected"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009705046",
+								"comment": "kernel-rt is not affected"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009728712",
+								"comment": "kernel-source-rt is not affected"
+							}
+						]
+					}
+				]
+			}
+		]
+	}
+}

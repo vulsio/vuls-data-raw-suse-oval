@@ -1,0 +1,147 @@
+{
+	"id": "oval:org.opensuse.security:def:202352759",
+	"version": "1",
+	"class": "vulnerability",
+	"metadata": {
+		"title": "CVE-2023-52759",
+		"affected": {
+			"family": "unix",
+			"platform": [
+				"SUSE Linux Enterprise Micro 5.4"
+			]
+		},
+		"reference": [
+			{
+				"ref_id": "Mitre CVE-2023-52759",
+				"ref_url": "https://cve.mitre.org/cgi-bin/cvename.cgi?name=CVE-2023-52759",
+				"source": "CVE"
+			},
+			{
+				"ref_id": "SUSE CVE-2023-52759",
+				"ref_url": "https://www.suse.com/security/cve/CVE-2023-52759",
+				"source": "SUSE CVE"
+			},
+			{
+				"ref_id": "SUSE-SU-2024:1979-1",
+				"ref_url": "https://lists.suse.com/pipermail/sle-updates/2024-June/035536.html",
+				"source": "SUSE-SU"
+			},
+			{
+				"ref_id": "SUSE-SU-2024:1983-1",
+				"ref_url": "https://lists.suse.com/pipermail/sle-updates/2024-June/035554.html",
+				"source": "SUSE-SU"
+			},
+			{
+				"ref_id": "SUSE-SU-2024:2008-1",
+				"ref_url": "https://lists.suse.com/pipermail/sle-updates/2024-June/035569.html",
+				"source": "SUSE-SU"
+			},
+			{
+				"ref_id": "SUSE-SU-2024:2011-1",
+				"ref_url": "https://lists.suse.com/pipermail/sle-updates/2024-June/035575.html",
+				"source": "SUSE-SU"
+			},
+			{
+				"ref_id": "SUSE-SU-2024:2019-1",
+				"ref_url": "https://lists.suse.com/pipermail/sle-updates/2024-June/035578.html",
+				"source": "SUSE-SU"
+			},
+			{
+				"ref_id": "SUSE-SU-2024:2184-1",
+				"ref_url": "https://lists.suse.com/pipermail/sle-updates/2024-June/035716.html",
+				"source": "SUSE-SU"
+			},
+			{
+				"ref_id": "SUSE-SU-2024:2189-1",
+				"ref_url": "https://lists.suse.com/pipermail/sle-updates/2024-June/035721.html",
+				"source": "SUSE-SU"
+			},
+			{
+				"ref_id": "SUSE-SU-2024:2190-1",
+				"ref_url": "https://lists.suse.com/pipermail/sle-updates/2024-June/035732.html",
+				"source": "SUSE-SU"
+			},
+			{
+				"ref_id": "SUSE-SU-2024:2571-1",
+				"ref_url": "https://lists.suse.com/pipermail/sle-updates/2024-July/036103.html",
+				"source": "SUSE-SU"
+			},
+			{
+				"ref_id": "SUSE-SU-2024:2896-1",
+				"ref_url": "https://lists.suse.com/pipermail/sle-security-updates/2024-August/019185.html",
+				"source": "SUSE-SU"
+			},
+			{
+				"ref_id": "SUSE-SU-2024:2973-1",
+				"ref_url": "https://lists.suse.com/pipermail/sle-security-updates/2024-August/019280.html",
+				"source": "SUSE-SU"
+			}
+		],
+		"description": "\n    In the Linux kernel, the following vulnerability has been resolved:\n\ngfs2: ignore negated quota changes\n\nWhen lots of quota changes are made, there may be cases in which an\ninode's quota information is increased and then decreased, such as when\nblocks are added to a file, then deleted from it. If the timing is\nright, function do_qc can add pending quota changes to a transaction,\nthen later, another call to do_qc can negate those changes, resulting\nin a net gain of 0. The quota_change information is recorded in the qc\nbuffer (and qd element of the inode as well). The buffer is added to the\ntransaction by the first call to do_qc, but a subsequent call changes\nthe value from non-zero back to zero. At that point it's too late to\nremove the buffer_head from the transaction. Later, when the quota sync\ncode is called, the zero-change qd element is discovered and flagged as\nan assert warning. If the fs is mounted with errors=panic, the kernel\nwill panic.\n\nThis is usually seen when files are truncated and the quota changes are\nnegated by punch_hole/truncate which uses gfs2_quota_hold and\ngfs2_quota_unhold rather than block allocations that use gfs2_quota_lock\nand gfs2_quota_unlock which automatically do quota sync.\n\nThis patch solves the problem by adding a check to qd_check_sync such\nthat net-zero quota changes already added to the transaction are no\nlonger deemed necessary to be synced, and skipped.\n\nIn this case references are taken for the qd and the slot from do_qc\nso those need to be put. The normal sequence of events for a normal\nnon-zero quota change is as follows:\n\ngfs2_quota_change\n   do_qc\n      qd_hold\n      slot_hold\n\nLater, when the changes are to be synced:\n\ngfs2_quota_sync\n   qd_fish\n      qd_check_sync\n         gets qd ref via lockref_get_not_dead\n   do_sync\n      do_qc(QC_SYNC)\n         qd_put\n\t    lockref_put_or_lock\n   qd_unlock\n      qd_put\n         lockref_put_or_lock\n\nIn the net-zero change case, we add a check to qd_check_sync so it puts\nthe qd and slot references acquired in gfs2_quota_change and skip the\nunneeded sync.\n    ",
+		"advisory": {
+			"from": "security@suse.de",
+			"severity": "Moderate",
+			"cve": [
+				{
+					"text": "CVE-2023-52759 at SUSE",
+					"href": "https://www.suse.com/security/cve/CVE-2023-52759/",
+					"impact": "medium",
+					"cvss3": "5.5/CVSS:3.1/AV:L/AC:L/PR:L/UI:N/S:U/C:N/I:N/A:H"
+				},
+				{
+					"text": "CVE-2023-52759 at NVD",
+					"href": "https://nvd.nist.gov/vuln/detail/CVE-2023-52759"
+				}
+			],
+			"bugzilla": [
+				{
+					"text": "SUSE bug 1225560",
+					"href": "https://bugzilla.suse.com/1225560"
+				}
+			],
+			"issued": {
+				"date": "2024-07-26"
+			},
+			"updated": {
+				"date": "2024-08-21"
+			},
+			"affected_cpe_list": {
+				"cpe": [
+					"cpe:/o:suse:sle-micro:5.4"
+				]
+			}
+		}
+	},
+	"criteria": {
+		"operator": "AND",
+		"criterias": [
+			{
+				"operator": "OR",
+				"criterions": [
+					{
+						"test_ref": "oval:org.opensuse.security:tst:2009869879",
+						"comment": "kernel-default-5.14.21-150400.24.122.2 is installed"
+					},
+					{
+						"test_ref": "oval:org.opensuse.security:tst:2009869533",
+						"comment": "kernel-default-base-5.14.21-150400.24.122.2.150400.24.58.2 is installed"
+					},
+					{
+						"test_ref": "oval:org.opensuse.security:tst:2009865707",
+						"comment": "kernel-rt-5.14.21-150400.15.82.1 is installed"
+					},
+					{
+						"test_ref": "oval:org.opensuse.security:tst:2009865708",
+						"comment": "kernel-source-rt-5.14.21-150400.15.82.1 is installed"
+					}
+				]
+			}
+		],
+		"criterions": [
+			{
+				"test_ref": "oval:org.opensuse.security:tst:2009755086",
+				"comment": "SUSE Linux Enterprise Micro 5.4 is installed"
+			}
+		]
+	}
+}

@@ -1,0 +1,145 @@
+{
+	"id": "oval:org.opensuse.security:def:202352447",
+	"version": "1",
+	"class": "vulnerability",
+	"metadata": {
+		"title": "CVE-2023-52447",
+		"affected": {
+			"family": "unix",
+			"platform": [
+				"SUSE Linux Enterprise Micro 5.0"
+			]
+		},
+		"reference": [
+			{
+				"ref_id": "Mitre CVE-2023-52447",
+				"ref_url": "https://cve.mitre.org/cgi-bin/cvename.cgi?name=CVE-2023-52447",
+				"source": "CVE"
+			},
+			{
+				"ref_id": "SUSE CVE-2023-52447",
+				"ref_url": "https://www.suse.com/security/cve/CVE-2023-52447",
+				"source": "SUSE CVE"
+			},
+			{
+				"ref_id": "SUSE-SU-2024:0855-1",
+				"ref_url": "https://lists.suse.com/pipermail/sle-security-updates/2024-March/018151.html",
+				"source": "SUSE-SU"
+			},
+			{
+				"ref_id": "SUSE-SU-2024:0858-1",
+				"ref_url": "https://lists.suse.com/pipermail/sle-security-updates/2024-March/018153.html",
+				"source": "SUSE-SU"
+			},
+			{
+				"ref_id": "SUSE-SU-2024:0900-1",
+				"ref_url": "https://lists.suse.com/pipermail/sle-security-updates/2024-March/018167.html",
+				"source": "SUSE-SU"
+			},
+			{
+				"ref_id": "SUSE-SU-2024:0900-2",
+				"ref_url": "https://lists.suse.com/pipermail/sle-security-updates/2024-March/018182.html",
+				"source": "SUSE-SU"
+			},
+			{
+				"ref_id": "SUSE-SU-2024:0910-1",
+				"ref_url": "https://lists.suse.com/pipermail/sle-security-updates/2024-March/018181.html",
+				"source": "SUSE-SU"
+			},
+			{
+				"ref_id": "SUSE-SU-2024:0977-1",
+				"ref_url": "https://lists.suse.com/pipermail/sle-security-updates/2024-March/018210.html",
+				"source": "SUSE-SU"
+			},
+			{
+				"ref_id": "SUSE-SU-2024:1321-1",
+				"ref_url": "https://lists.suse.com/pipermail/sle-updates/2024-April/035005.html",
+				"source": "SUSE-SU"
+			},
+			{
+				"ref_id": "SUSE-SU-2024:1322-1",
+				"ref_url": "https://lists.suse.com/pipermail/sle-updates/2024-April/035002.html",
+				"source": "SUSE-SU"
+			},
+			{
+				"ref_id": "SUSE-SU-2024:1322-2",
+				"ref_url": "https://lists.suse.com/pipermail/sle-security-updates/2024-April/018377.html",
+				"source": "SUSE-SU"
+			},
+			{
+				"ref_id": "SUSE-SU-2024:1332-1",
+				"ref_url": "https://lists.suse.com/pipermail/sle-updates/2024-April/035014.html",
+				"source": "SUSE-SU"
+			},
+			{
+				"ref_id": "SUSE-SU-2024:1332-2",
+				"ref_url": "https://lists.suse.com/pipermail/sle-security-updates/2024-April/018378.html",
+				"source": "SUSE-SU"
+			},
+			{
+				"ref_id": "SUSE-SU-2024:1466-1",
+				"ref_url": "https://lists.suse.com/pipermail/sle-updates/2024-April/035122.html",
+				"source": "SUSE-SU"
+			},
+			{
+				"ref_id": "SUSE-SU-2024:1480-1",
+				"ref_url": "https://lists.suse.com/pipermail/sle-updates/2024-April/035134.html",
+				"source": "SUSE-SU"
+			},
+			{
+				"ref_id": "SUSE-SU-2024:1490-1",
+				"ref_url": "https://lists.suse.com/pipermail/sle-updates/2024-May/035140.html",
+				"source": "SUSE-SU"
+			}
+		],
+		"description": "\n    In the Linux kernel, the following vulnerability has been resolved:\n\nbpf: Defer the free of inner map when necessary\n\nWhen updating or deleting an inner map in map array or map htab, the map\nmay still be accessed by non-sleepable program or sleepable program.\nHowever bpf_map_fd_put_ptr() decreases the ref-counter of the inner map\ndirectly through bpf_map_put(), if the ref-counter is the last one\n(which is true for most cases), the inner map will be freed by\nops->map_free() in a kworker. But for now, most .map_free() callbacks\ndon't use synchronize_rcu() or its variants to wait for the elapse of a\nRCU grace period, so after the invocation of ops->map_free completes,\nthe bpf program which is accessing the inner map may incur\nuse-after-free problem.\n\nFix the free of inner map by invoking bpf_map_free_deferred() after both\none RCU grace period and one tasks trace RCU grace period if the inner\nmap has been removed from the outer map before. The deferment is\naccomplished by using call_rcu() or call_rcu_tasks_trace() when\nreleasing the last ref-counter of bpf map. The newly-added rcu_head\nfield in bpf_map shares the same storage space with work field to\nreduce the size of bpf_map.\n    ",
+		"advisory": {
+			"from": "security@suse.de",
+			"severity": "Moderate",
+			"cve": [
+				{
+					"text": "CVE-2023-52447 at SUSE",
+					"href": "https://www.suse.com/security/cve/CVE-2023-52447/",
+					"impact": "medium",
+					"cvss3": "6.7/CVSS:3.1/AV:L/AC:L/PR:H/UI:N/S:U/C:H/I:H/A:H"
+				},
+				{
+					"text": "CVE-2023-52447 at NVD",
+					"href": "https://nvd.nist.gov/vuln/detail/CVE-2023-52447",
+					"impact": "medium",
+					"cvss3": "6.7/CVSS:3.1/AV:L/AC:L/PR:H/UI:N/S:U/C:H/I:H/A:H"
+				}
+			],
+			"bugzilla": [
+				{
+					"text": "SUSE bug 1220251",
+					"href": "https://bugzilla.suse.com/1220251"
+				}
+			],
+			"issued": {
+				"date": "2024-02-24"
+			},
+			"updated": {
+				"date": "2024-10-08"
+			},
+			"affected_cpe_list": {
+				"cpe": [
+					"cpe:/o:suse:suse-microos:5.0"
+				]
+			}
+		}
+	},
+	"criteria": {
+		"operator": "AND",
+		"criterions": [
+			{
+				"test_ref": "oval:org.opensuse.security:tst:2009704855",
+				"comment": "SUSE Linux Enterprise Micro 5.0 is installed"
+			},
+			{
+				"test_ref": "oval:org.opensuse.security:tst:2009334017",
+				"comment": "kernel-default is not affected"
+			}
+		]
+	}
+}

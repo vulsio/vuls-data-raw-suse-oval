@@ -1,0 +1,118 @@
+{
+	"id": "oval:org.opensuse.security:def:202436962",
+	"version": "1",
+	"class": "vulnerability",
+	"metadata": {
+		"title": "CVE-2024-36962",
+		"affected": {
+			"family": "unix",
+			"platform": [
+				"SUSE Linux Enterprise Micro 5.4"
+			]
+		},
+		"reference": [
+			{
+				"ref_id": "Mitre CVE-2024-36962",
+				"ref_url": "https://cve.mitre.org/cgi-bin/cvename.cgi?name=CVE-2024-36962",
+				"source": "CVE"
+			},
+			{
+				"ref_id": "SUSE CVE-2024-36962",
+				"ref_url": "https://www.suse.com/security/cve/CVE-2024-36962",
+				"source": "SUSE CVE"
+			},
+			{
+				"ref_id": "SUSE-SU-2024:2571-1",
+				"ref_url": "https://lists.suse.com/pipermail/sle-updates/2024-July/036103.html",
+				"source": "SUSE-SU"
+			},
+			{
+				"ref_id": "SUSE-SU-2024:2896-1",
+				"ref_url": "https://lists.suse.com/pipermail/sle-security-updates/2024-August/019185.html",
+				"source": "SUSE-SU"
+			},
+			{
+				"ref_id": "SUSE-SU-2024:2973-1",
+				"ref_url": "https://lists.suse.com/pipermail/sle-security-updates/2024-August/019280.html",
+				"source": "SUSE-SU"
+			},
+			{
+				"ref_id": "SUSE-SU-2024:3190-1",
+				"ref_url": "https://lists.suse.com/pipermail/sle-security-updates/2024-September/019403.html",
+				"source": "SUSE-SU"
+			},
+			{
+				"ref_id": "SUSE-SU-2024:3209-1",
+				"ref_url": "https://lists.suse.com/pipermail/sle-updates/2024-September/036854.html",
+				"source": "SUSE-SU"
+			},
+			{
+				"ref_id": "SUSE-SU-2024:3483-1",
+				"ref_url": "https://lists.suse.com/pipermail/sle-updates/2024-September/037089.html",
+				"source": "SUSE-SU"
+			}
+		],
+		"description": "\n    In the Linux kernel, the following vulnerability has been resolved:\n\nnet: ks8851: Queue RX packets in IRQ handler instead of disabling BHs\n\nCurrently the driver uses local_bh_disable()/local_bh_enable() in its\nIRQ handler to avoid triggering net_rx_action() softirq on exit from\nnetif_rx(). The net_rx_action() could trigger this driver .start_xmit\ncallback, which is protected by the same lock as the IRQ handler, so\ncalling the .start_xmit from netif_rx() from the IRQ handler critical\nsection protected by the lock could lead to an attempt to claim the\nalready claimed lock, and a hang.\n\nThe local_bh_disable()/local_bh_enable() approach works only in case\nthe IRQ handler is protected by a spinlock, but does not work if the\nIRQ handler is protected by mutex, i.e. this works for KS8851 with\nParallel bus interface, but not for KS8851 with SPI bus interface.\n\nRemove the BH manipulation and instead of calling netif_rx() inside\nthe IRQ handler code protected by the lock, queue all the received\nSKBs in the IRQ handler into a queue first, and once the IRQ handler\nexits the critical section protected by the lock, dequeue all the\nqueued SKBs and push them all into netif_rx(). At this point, it is\nsafe to trigger the net_rx_action() softirq, since the netif_rx()\ncall is outside of the lock that protects the IRQ handler.\n    ",
+		"advisory": {
+			"from": "security@suse.de",
+			"severity": "Moderate",
+			"cve": [
+				{
+					"text": "CVE-2024-36962 at SUSE",
+					"href": "https://www.suse.com/security/cve/CVE-2024-36962/",
+					"impact": "medium",
+					"cvss3": "6.2/CVSS:3.1/AV:L/AC:L/PR:N/UI:N/S:U/C:N/I:N/A:H"
+				},
+				{
+					"text": "CVE-2024-36962 at NVD",
+					"href": "https://nvd.nist.gov/vuln/detail/CVE-2024-36962"
+				}
+			],
+			"bugzilla": [
+				{
+					"text": "SUSE bug 1225827",
+					"href": "https://bugzilla.suse.com/1225827"
+				}
+			],
+			"issued": {
+				"date": "2024-06-04"
+			},
+			"updated": {
+				"date": "2024-09-30"
+			},
+			"affected_cpe_list": {
+				"cpe": [
+					"cpe:/o:suse:sle-micro:5.4"
+				]
+			}
+		}
+	},
+	"criteria": {
+		"operator": "AND",
+		"criterias": [
+			{
+				"operator": "OR",
+				"criterions": [
+					{
+						"test_ref": "oval:org.opensuse.security:tst:2009334017",
+						"comment": "kernel-default is not affected"
+					},
+					{
+						"test_ref": "oval:org.opensuse.security:tst:2009705046",
+						"comment": "kernel-rt is not affected"
+					},
+					{
+						"test_ref": "oval:org.opensuse.security:tst:2009728712",
+						"comment": "kernel-source-rt is not affected"
+					}
+				]
+			}
+		],
+		"criterions": [
+			{
+				"test_ref": "oval:org.opensuse.security:tst:2009755086",
+				"comment": "SUSE Linux Enterprise Micro 5.4 is installed"
+			}
+		]
+	}
+}

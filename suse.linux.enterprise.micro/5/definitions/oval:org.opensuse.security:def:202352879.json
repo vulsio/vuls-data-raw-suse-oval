@@ -1,0 +1,159 @@
+{
+	"id": "oval:org.opensuse.security:def:202352879",
+	"version": "1",
+	"class": "vulnerability",
+	"metadata": {
+		"title": "CVE-2023-52879",
+		"affected": {
+			"family": "unix",
+			"platform": [
+				"SUSE Linux Enterprise Micro 5.0",
+				"SUSE Linux Enterprise Micro 5.1",
+				"SUSE Linux Enterprise Micro 5.2",
+				"SUSE Linux Enterprise Micro 5.3",
+				"SUSE Linux Enterprise Micro 5.4",
+				"SUSE Linux Enterprise Micro 5.5"
+			]
+		},
+		"reference": [
+			{
+				"ref_id": "Mitre CVE-2023-52879",
+				"ref_url": "https://cve.mitre.org/cgi-bin/cvename.cgi?name=CVE-2023-52879",
+				"source": "CVE"
+			},
+			{
+				"ref_id": "SUSE CVE-2023-52879",
+				"ref_url": "https://www.suse.com/security/cve/CVE-2023-52879",
+				"source": "SUSE CVE"
+			},
+			{
+				"ref_id": "SUSE-SU-2024:2571-1",
+				"ref_url": "https://lists.suse.com/pipermail/sle-updates/2024-July/036103.html",
+				"source": "SUSE-SU"
+			},
+			{
+				"ref_id": "SUSE-SU-2024:2896-1",
+				"ref_url": "https://lists.suse.com/pipermail/sle-security-updates/2024-August/019185.html",
+				"source": "SUSE-SU"
+			},
+			{
+				"ref_id": "SUSE-SU-2024:2973-1",
+				"ref_url": "https://lists.suse.com/pipermail/sle-security-updates/2024-August/019280.html",
+				"source": "SUSE-SU"
+			}
+		],
+		"description": "\n    In the Linux kernel, the following vulnerability has been resolved:\n\ntracing: Have trace_event_file have ref counters\n\nThe following can crash the kernel:\n\n # cd /sys/kernel/tracing\n # echo 'p:sched schedule' > kprobe_events\n # exec 5>>events/kprobes/sched/enable\n # > kprobe_events\n # exec 5>&-\n\nThe above commands:\n\n 1. Change directory to the tracefs directory\n 2. Create a kprobe event (doesn't matter what one)\n 3. Open bash file descriptor 5 on the enable file of the kprobe event\n 4. Delete the kprobe event (removes the files too)\n 5. Close the bash file descriptor 5\n\nThe above causes a crash!\n\n BUG: kernel NULL pointer dereference, address: 0000000000000028\n #PF: supervisor read access in kernel mode\n #PF: error_code(0x0000) - not-present page\n PGD 0 P4D 0\n Oops: 0000 [#1] PREEMPT SMP PTI\n CPU: 6 PID: 877 Comm: bash Not tainted 6.5.0-rc4-test-00008-g2c6b6b1029d4-dirty #186\n Hardware name: QEMU Standard PC (Q35 + ICH9, 2009), BIOS 1.16.2-debian-1.16.2-1 04/01/2014\n RIP: 0010:tracing_release_file_tr+0xc/0x50\n\nWhat happens here is that the kprobe event creates a trace_event_file\n\"file\" descriptor that represents the file in tracefs to the event. It\nmaintains state of the event (is it enabled for the given instance?).\nOpening the \"enable\" file gets a reference to the event \"file\" descriptor\nvia the open file descriptor. When the kprobe event is deleted, the file is\nalso deleted from the tracefs system which also frees the event \"file\"\ndescriptor.\n\nBut as the tracefs file is still opened by user space, it will not be\ntotally removed until the final dput() is called on it. But this is not\ntrue with the event \"file\" descriptor that is already freed. If the user\ndoes a write to or simply closes the file descriptor it will reference the\nevent \"file\" descriptor that was just freed, causing a use-after-free bug.\n\nTo solve this, add a ref count to the event \"file\" descriptor as well as a\nnew flag called \"FREED\". The \"file\" will not be freed until the last\nreference is released. But the FREE flag will be set when the event is\nremoved to prevent any more modifications to that event from happening,\neven if there's still a reference to the event \"file\" descriptor.\n    ",
+		"advisory": {
+			"from": "security@suse.de",
+			"severity": "Moderate",
+			"cve": [
+				{
+					"text": "CVE-2023-52879 at SUSE",
+					"href": "https://www.suse.com/security/cve/CVE-2023-52879/",
+					"impact": "medium",
+					"cvss3": "4.4/CVSS:3.1/AV:L/AC:L/PR:H/UI:N/S:U/C:N/I:N/A:H"
+				},
+				{
+					"text": "CVE-2023-52879 at NVD",
+					"href": "https://nvd.nist.gov/vuln/detail/CVE-2023-52879"
+				}
+			],
+			"bugzilla": [
+				{
+					"text": "SUSE bug 1225101",
+					"href": "https://bugzilla.suse.com/1225101"
+				}
+			],
+			"issued": {
+				"date": "2024-10-18"
+			},
+			"updated": {
+				"date": "2024-10-18"
+			},
+			"affected_cpe_list": {
+				"cpe": [
+					"cpe:/o:suse:sle-micro:5.3",
+					"cpe:/o:suse:sle-micro:5.4",
+					"cpe:/o:suse:sle-micro:5.5",
+					"cpe:/o:suse:suse-microos:5.0",
+					"cpe:/o:suse:suse-microos:5.1",
+					"cpe:/o:suse:suse-microos:5.2"
+				]
+			}
+		}
+	},
+	"criteria": {
+		"operator": "OR",
+		"criterias": [
+			{
+				"operator": "AND",
+				"criterions": [
+					{
+						"test_ref": "oval:org.opensuse.security:tst:2009704855",
+						"comment": "SUSE Linux Enterprise Micro 5.0 is installed"
+					},
+					{
+						"test_ref": "oval:org.opensuse.security:tst:2009334017",
+						"comment": "kernel-default is not affected"
+					}
+				]
+			},
+			{
+				"operator": "AND",
+				"criterions": [
+					{
+						"test_ref": "oval:org.opensuse.security:tst:2009800388",
+						"comment": "SUSE Linux Enterprise Micro 5.5 is installed"
+					},
+					{
+						"test_ref": "oval:org.opensuse.security:tst:2009728712",
+						"comment": "kernel-source-rt is not affected"
+					}
+				]
+			},
+			{
+				"operator": "AND",
+				"criterias": [
+					{
+						"operator": "OR",
+						"criterions": [
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009669964",
+								"comment": "SUSE Linux Enterprise Micro 5.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009681300",
+								"comment": "SUSE Linux Enterprise Micro 5.2 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009728694",
+								"comment": "SUSE Linux Enterprise Micro 5.3 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009755086",
+								"comment": "SUSE Linux Enterprise Micro 5.4 is installed"
+							}
+						]
+					},
+					{
+						"operator": "OR",
+						"criterions": [
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009334017",
+								"comment": "kernel-default is not affected"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009705046",
+								"comment": "kernel-rt is not affected"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009728712",
+								"comment": "kernel-source-rt is not affected"
+							}
+						]
+					}
+				]
+			}
+		]
+	}
+}

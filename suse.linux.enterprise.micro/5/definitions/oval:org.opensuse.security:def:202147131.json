@@ -1,0 +1,165 @@
+{
+	"id": "oval:org.opensuse.security:def:202147131",
+	"version": "1",
+	"class": "vulnerability",
+	"metadata": {
+		"title": "CVE-2021-47131",
+		"affected": {
+			"family": "unix",
+			"platform": [
+				"SUSE Linux Enterprise Micro 5.1",
+				"SUSE Linux Enterprise Micro 5.2"
+			]
+		},
+		"reference": [
+			{
+				"ref_id": "Mitre CVE-2021-47131",
+				"ref_url": "https://cve.mitre.org/cgi-bin/cvename.cgi?name=CVE-2021-47131",
+				"source": "CVE"
+			},
+			{
+				"ref_id": "SUSE CVE-2021-47131",
+				"ref_url": "https://www.suse.com/security/cve/CVE-2021-47131",
+				"source": "SUSE CVE"
+			},
+			{
+				"ref_id": "SUSE-SU-2024:1642-1",
+				"ref_url": "https://lists.suse.com/pipermail/sle-updates/2024-May/035265.html",
+				"source": "SUSE-SU"
+			},
+			{
+				"ref_id": "SUSE-SU-2024:1643-1",
+				"ref_url": "https://lists.suse.com/pipermail/sle-updates/2024-May/035264.html",
+				"source": "SUSE-SU"
+			},
+			{
+				"ref_id": "SUSE-SU-2024:1645-1",
+				"ref_url": "https://lists.suse.com/pipermail/sle-updates/2024-May/035262.html",
+				"source": "SUSE-SU"
+			},
+			{
+				"ref_id": "SUSE-SU-2024:1650-1",
+				"ref_url": "https://lists.suse.com/pipermail/sle-updates/2024-May/035272.html",
+				"source": "SUSE-SU"
+			},
+			{
+				"ref_id": "SUSE-SU-2024:1983-1",
+				"ref_url": "https://lists.suse.com/pipermail/sle-updates/2024-June/035554.html",
+				"source": "SUSE-SU"
+			},
+			{
+				"ref_id": "SUSE-SU-2024:2184-1",
+				"ref_url": "https://lists.suse.com/pipermail/sle-updates/2024-June/035716.html",
+				"source": "SUSE-SU"
+			}
+		],
+		"description": "\n    In the Linux kernel, the following vulnerability has been resolved:\n\nnet/tls: Fix use-after-free after the TLS device goes down and up\n\nWhen a netdev with active TLS offload goes down, tls_device_down is\ncalled to stop the offload and tear down the TLS context. However, the\nsocket stays alive, and it still points to the TLS context, which is now\ndeallocated. If a netdev goes up, while the connection is still active,\nand the data flow resumes after a number of TCP retransmissions, it will\nlead to a use-after-free of the TLS context.\n\nThis commit addresses this bug by keeping the context alive until its\nnormal destruction, and implements the necessary fallbacks, so that the\nconnection can resume in software (non-offloaded) kTLS mode.\n\nOn the TX side tls_sw_fallback is used to encrypt all packets. The RX\nside already has all the necessary fallbacks, because receiving\nnon-decrypted packets is supported. The thing needed on the RX side is\nto block resync requests, which are normally produced after receiving\nnon-decrypted packets.\n\nThe necessary synchronization is implemented for a graceful teardown:\nfirst the fallbacks are deployed, then the driver resources are released\n(it used to be possible to have a tls_dev_resync after tls_dev_del).\n\nA new flag called TLS_RX_DEV_DEGRADED is added to indicate the fallback\nmode. It's used to skip the RX resync logic completely, as it becomes\nuseless, and some objects may be released (for example, resync_async,\nwhich is allocated and freed by the driver).\n    ",
+		"advisory": {
+			"from": "security@suse.de",
+			"severity": "Important",
+			"cve": [
+				{
+					"text": "CVE-2021-47131 at SUSE",
+					"href": "https://www.suse.com/security/cve/CVE-2021-47131/",
+					"impact": "high",
+					"cvss3": "7.8/CVSS:3.1/AV:L/AC:L/PR:L/UI:N/S:U/C:H/I:H/A:H"
+				},
+				{
+					"text": "CVE-2021-47131 at NVD",
+					"href": "https://nvd.nist.gov/vuln/detail/CVE-2021-47131"
+				}
+			],
+			"bugzilla": [
+				{
+					"text": "SUSE bug 1221545",
+					"href": "https://bugzilla.suse.com/1221545"
+				},
+				{
+					"text": "SUSE bug 1222402",
+					"href": "https://bugzilla.suse.com/1222402"
+				}
+			],
+			"issued": {
+				"date": "2024-10-18"
+			},
+			"updated": {
+				"date": "2024-10-18"
+			},
+			"affected_cpe_list": {
+				"cpe": [
+					"cpe:/o:suse:suse-microos:5.1",
+					"cpe:/o:suse:suse-microos:5.2"
+				]
+			}
+		}
+	},
+	"criteria": {
+		"operator": "OR",
+		"criterias": [
+			{
+				"operator": "AND",
+				"criterias": [
+					{
+						"operator": "OR",
+						"criterions": [
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009861069",
+								"comment": "kernel-default-5.3.18-150300.59.161.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009860829",
+								"comment": "kernel-default-base-5.3.18-150300.59.161.1.150300.18.94.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009861071",
+								"comment": "kernel-rt-5.3.18-150300.169.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009861072",
+								"comment": "kernel-source-rt-5.3.18-150300.169.1 is installed"
+							}
+						]
+					}
+				],
+				"criterions": [
+					{
+						"test_ref": "oval:org.opensuse.security:tst:2009681300",
+						"comment": "SUSE Linux Enterprise Micro 5.2 is installed"
+					}
+				]
+			},
+			{
+				"operator": "AND",
+				"criterias": [
+					{
+						"operator": "OR",
+						"criterions": [
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009861069",
+								"comment": "kernel-default-5.3.18-150300.59.161.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009861070",
+								"comment": "kernel-default-base-5.3.18-150300.59.161.1.150300.18.94.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009861071",
+								"comment": "kernel-rt-5.3.18-150300.169.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009861072",
+								"comment": "kernel-source-rt-5.3.18-150300.169.1 is installed"
+							}
+						]
+					}
+				],
+				"criterions": [
+					{
+						"test_ref": "oval:org.opensuse.security:tst:2009669964",
+						"comment": "SUSE Linux Enterprise Micro 5.1 is installed"
+					}
+				]
+			}
+		]
+	}
+}

@@ -1,0 +1,120 @@
+{
+	"id": "oval:org.opensuse.security:def:202442085",
+	"version": "1",
+	"class": "vulnerability",
+	"metadata": {
+		"title": "CVE-2024-42085",
+		"affected": {
+			"family": "unix",
+			"platform": [
+				"SUSE Linux Enterprise Micro 5.4"
+			]
+		},
+		"reference": [
+			{
+				"ref_id": "Mitre CVE-2024-42085",
+				"ref_url": "https://cve.mitre.org/cgi-bin/cvename.cgi?name=CVE-2024-42085",
+				"source": "CVE"
+			},
+			{
+				"ref_id": "SUSE CVE-2024-42085",
+				"ref_url": "https://www.suse.com/security/cve/CVE-2024-42085",
+				"source": "SUSE CVE"
+			},
+			{
+				"ref_id": "SUSE-SU-2024:3190-1",
+				"ref_url": "https://lists.suse.com/pipermail/sle-security-updates/2024-September/019403.html",
+				"source": "SUSE-SU"
+			},
+			{
+				"ref_id": "SUSE-SU-2024:3194-1",
+				"ref_url": "https://lists.suse.com/pipermail/sle-updates/2024-September/036835.html",
+				"source": "SUSE-SU"
+			},
+			{
+				"ref_id": "SUSE-SU-2024:3195-1",
+				"ref_url": "https://lists.suse.com/pipermail/sle-updates/2024-September/036842.html",
+				"source": "SUSE-SU"
+			},
+			{
+				"ref_id": "SUSE-SU-2024:3209-1",
+				"ref_url": "https://lists.suse.com/pipermail/sle-updates/2024-September/036854.html",
+				"source": "SUSE-SU"
+			},
+			{
+				"ref_id": "SUSE-SU-2024:3383-1",
+				"ref_url": "https://lists.suse.com/pipermail/sle-security-updates/2024-September/019497.html",
+				"source": "SUSE-SU"
+			},
+			{
+				"ref_id": "SUSE-SU-2024:3483-1",
+				"ref_url": "https://lists.suse.com/pipermail/sle-updates/2024-September/037089.html",
+				"source": "SUSE-SU"
+			}
+		],
+		"description": "\n    In the Linux kernel, the following vulnerability has been resolved:\n\nusb: dwc3: core: remove lock of otg mode during gadget suspend/resume to avoid deadlock\n\nWhen config CONFIG_USB_DWC3_DUAL_ROLE is selected, and trigger system\nto enter suspend status with below command:\necho mem > /sys/power/state\nThere will be a deadlock issue occurring. Detailed invoking path as\nbelow:\ndwc3_suspend_common()\n    spin_lock_irqsave(&dwc->lock, flags);              <-- 1st\n    dwc3_gadget_suspend(dwc);\n        dwc3_gadget_soft_disconnect(dwc);\n            spin_lock_irqsave(&dwc->lock, flags);      <-- 2nd\nThis issue is exposed by commit c7ebd8149ee5 (\"usb: dwc3: gadget: Fix\nNULL pointer dereference in dwc3_gadget_suspend\") that removes the code\nof checking whether dwc->gadget_driver is NULL or not. It causes the\nfollowing code is executed and deadlock occurs when trying to get the\nspinlock. In fact, the root cause is the commit 5265397f9442(\"usb: dwc3:\nRemove DWC3 locking during gadget suspend/resume\") that forgot to remove\nthe lock of otg mode. So, remove the redundant lock of otg mode during\ngadget suspend/resume.\n    ",
+		"advisory": {
+			"from": "security@suse.de",
+			"severity": "Moderate",
+			"cve": [
+				{
+					"text": "CVE-2024-42085 at SUSE",
+					"href": "https://www.suse.com/security/cve/CVE-2024-42085/",
+					"impact": "medium",
+					"cvss3": "5.5/CVSS:3.1/AV:L/AC:L/PR:L/UI:N/S:U/C:N/I:N/A:H"
+				},
+				{
+					"text": "CVE-2024-42085 at NVD",
+					"href": "https://nvd.nist.gov/vuln/detail/CVE-2024-42085",
+					"impact": "medium",
+					"cvss3": "5.5/CVSS:3.1/AV:L/AC:L/PR:L/UI:N/S:U/C:N/I:N/A:H"
+				}
+			],
+			"bugzilla": [
+				{
+					"text": "SUSE bug 1228456",
+					"href": "https://bugzilla.suse.com/1228456"
+				}
+			],
+			"issued": {
+				"date": "2024-08-06"
+			},
+			"updated": {
+				"date": "2024-09-30"
+			},
+			"affected_cpe_list": {
+				"cpe": [
+					"cpe:/o:suse:sle-micro:5.4"
+				]
+			}
+		}
+	},
+	"criteria": {
+		"operator": "AND",
+		"criterias": [
+			{
+				"operator": "OR",
+				"criterions": [
+					{
+						"test_ref": "oval:org.opensuse.security:tst:2009334017",
+						"comment": "kernel-default is not affected"
+					},
+					{
+						"test_ref": "oval:org.opensuse.security:tst:2009705046",
+						"comment": "kernel-rt is not affected"
+					},
+					{
+						"test_ref": "oval:org.opensuse.security:tst:2009728712",
+						"comment": "kernel-source-rt is not affected"
+					}
+				]
+			}
+		],
+		"criterions": [
+			{
+				"test_ref": "oval:org.opensuse.security:tst:2009755086",
+				"comment": "SUSE Linux Enterprise Micro 5.4 is installed"
+			}
+		]
+	}
+}

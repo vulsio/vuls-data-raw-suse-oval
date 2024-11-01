@@ -1,0 +1,144 @@
+{
+	"id": "oval:org.opensuse.security:def:202352439",
+	"version": "1",
+	"class": "vulnerability",
+	"metadata": {
+		"title": "CVE-2023-52439",
+		"affected": {
+			"family": "unix",
+			"platform": [
+				"SUSE Linux Enterprise Micro 5.4"
+			]
+		},
+		"reference": [
+			{
+				"ref_id": "Mitre CVE-2023-52439",
+				"ref_url": "https://cve.mitre.org/cgi-bin/cvename.cgi?name=CVE-2023-52439",
+				"source": "CVE"
+			},
+			{
+				"ref_id": "SUSE CVE-2023-52439",
+				"ref_url": "https://www.suse.com/security/cve/CVE-2023-52439",
+				"source": "SUSE CVE"
+			},
+			{
+				"ref_id": "RHSA-2024:6997",
+				"ref_url": "https://lists.suse.com/pipermail/suse-liberty-linux-updates/2024-September/000081.html",
+				"source": "SUSE-SU"
+			},
+			{
+				"ref_id": "SUSE-SU-2024:0855-1",
+				"ref_url": "https://lists.suse.com/pipermail/sle-security-updates/2024-March/018151.html",
+				"source": "SUSE-SU"
+			},
+			{
+				"ref_id": "SUSE-SU-2024:0856-1",
+				"ref_url": "https://lists.suse.com/pipermail/sle-security-updates/2024-March/018155.html",
+				"source": "SUSE-SU"
+			},
+			{
+				"ref_id": "SUSE-SU-2024:0857-1",
+				"ref_url": "https://lists.suse.com/pipermail/sle-security-updates/2024-March/018154.html",
+				"source": "SUSE-SU"
+			},
+			{
+				"ref_id": "SUSE-SU-2024:0858-1",
+				"ref_url": "https://lists.suse.com/pipermail/sle-security-updates/2024-March/018153.html",
+				"source": "SUSE-SU"
+			},
+			{
+				"ref_id": "SUSE-SU-2024:0900-1",
+				"ref_url": "https://lists.suse.com/pipermail/sle-security-updates/2024-March/018167.html",
+				"source": "SUSE-SU"
+			},
+			{
+				"ref_id": "SUSE-SU-2024:0900-2",
+				"ref_url": "https://lists.suse.com/pipermail/sle-security-updates/2024-March/018182.html",
+				"source": "SUSE-SU"
+			},
+			{
+				"ref_id": "SUSE-SU-2024:0910-1",
+				"ref_url": "https://lists.suse.com/pipermail/sle-security-updates/2024-March/018181.html",
+				"source": "SUSE-SU"
+			},
+			{
+				"ref_id": "SUSE-SU-2024:0926-1",
+				"ref_url": "https://lists.suse.com/pipermail/sle-security-updates/2024-March/018204.html",
+				"source": "SUSE-SU"
+			},
+			{
+				"ref_id": "SUSE-SU-2024:0977-1",
+				"ref_url": "https://lists.suse.com/pipermail/sle-security-updates/2024-March/018210.html",
+				"source": "SUSE-SU"
+			}
+		],
+		"description": "\n    In the Linux kernel, the following vulnerability has been resolved:\n\nuio: Fix use-after-free in uio_open\n\ncore-1\t\t\t\tcore-2\n-------------------------------------------------------\nuio_unregister_device\t\tuio_open\n\t\t\t\tidev = idr_find()\ndevice_unregister(&idev->dev)\nput_device(&idev->dev)\nuio_device_release\n\t\t\t\tget_device(&idev->dev)\nkfree(idev)\nuio_free_minor(minor)\n\t\t\t\tuio_release\n\t\t\t\tput_device(&idev->dev)\n\t\t\t\tkfree(idev)\n-------------------------------------------------------\n\nIn the core-1 uio_unregister_device(), the device_unregister will kfree\nidev when the idev->dev kobject ref is 1. But after core-1\ndevice_unregister, put_device and before doing kfree, the core-2 may\nget_device. Then:\n1. After core-1 kfree idev, the core-2 will do use-after-free for idev.\n2. When core-2 do uio_release and put_device, the idev will be double\n   freed.\n\nTo address this issue, we can get idev atomic & inc idev reference with\nminor_lock.\n    ",
+		"advisory": {
+			"from": "security@suse.de",
+			"severity": "Moderate",
+			"cve": [
+				{
+					"text": "CVE-2023-52439 at SUSE",
+					"href": "https://www.suse.com/security/cve/CVE-2023-52439/",
+					"impact": "medium",
+					"cvss3": "6.7/CVSS:3.1/AV:L/AC:L/PR:H/UI:N/S:U/C:H/I:H/A:H"
+				},
+				{
+					"text": "CVE-2023-52439 at NVD",
+					"href": "https://nvd.nist.gov/vuln/detail/CVE-2023-52439",
+					"impact": "high",
+					"cvss3": "7.8/CVSS:3.1/AV:L/AC:L/PR:L/UI:N/S:U/C:H/I:H/A:H"
+				}
+			],
+			"bugzilla": [
+				{
+					"text": "SUSE bug 1220140",
+					"href": "https://bugzilla.suse.com/1220140"
+				}
+			],
+			"issued": {
+				"date": "2024-07-26"
+			},
+			"updated": {
+				"date": "2024-09-30"
+			},
+			"affected_cpe_list": {
+				"cpe": [
+					"cpe:/o:suse:sle-micro:5.4"
+				]
+			}
+		}
+	},
+	"criteria": {
+		"operator": "AND",
+		"criterias": [
+			{
+				"operator": "OR",
+				"criterions": [
+					{
+						"test_ref": "oval:org.opensuse.security:tst:2009851288",
+						"comment": "kernel-default-5.14.21-150400.24.111.2 is installed"
+					},
+					{
+						"test_ref": "oval:org.opensuse.security:tst:2009851097",
+						"comment": "kernel-default-base-5.14.21-150400.24.111.2.150400.24.52.1 is installed"
+					},
+					{
+						"test_ref": "oval:org.opensuse.security:tst:2009851903",
+						"comment": "kernel-rt-5.14.21-150400.15.71.1 is installed"
+					},
+					{
+						"test_ref": "oval:org.opensuse.security:tst:2009851904",
+						"comment": "kernel-source-rt-5.14.21-150400.15.71.1 is installed"
+					}
+				]
+			}
+		],
+		"criterions": [
+			{
+				"test_ref": "oval:org.opensuse.security:tst:2009755086",
+				"comment": "SUSE Linux Enterprise Micro 5.4 is installed"
+			}
+		]
+	}
+}

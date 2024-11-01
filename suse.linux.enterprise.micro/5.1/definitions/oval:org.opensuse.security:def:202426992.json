@@ -1,0 +1,107 @@
+{
+	"id": "oval:org.opensuse.security:def:202426992",
+	"version": "1",
+	"class": "vulnerability",
+	"metadata": {
+		"title": "CVE-2024-26992",
+		"affected": {
+			"family": "unix",
+			"platform": [
+				"SUSE Linux Enterprise Micro 5.1"
+			]
+		},
+		"reference": [
+			{
+				"ref_id": "Mitre CVE-2024-26992",
+				"ref_url": "https://cve.mitre.org/cgi-bin/cvename.cgi?name=CVE-2024-26992",
+				"source": "CVE"
+			},
+			{
+				"ref_id": "SUSE CVE-2024-26992",
+				"ref_url": "https://www.suse.com/security/cve/CVE-2024-26992",
+				"source": "SUSE CVE"
+			},
+			{
+				"ref_id": "SUSE-SU-2024:2135-1",
+				"ref_url": "https://lists.suse.com/pipermail/sle-updates/2024-June/035681.html",
+				"source": "SUSE-SU"
+			},
+			{
+				"ref_id": "SUSE-SU-2024:2203-1",
+				"ref_url": "https://lists.suse.com/pipermail/sle-security-updates/2024-August/019244.html",
+				"source": "SUSE-SU"
+			},
+			{
+				"ref_id": "SUSE-SU-2024:2973-1",
+				"ref_url": "https://lists.suse.com/pipermail/sle-security-updates/2024-August/019280.html",
+				"source": "SUSE-SU"
+			}
+		],
+		"description": "\n    In the Linux kernel, the following vulnerability has been resolved:\n\nKVM: x86/pmu: Disable support for adaptive PEBS\n\nDrop support for virtualizing adaptive PEBS, as KVM's implementation is\narchitecturally broken without an obvious/easy path forward, and because\nexposing adaptive PEBS can leak host LBRs to the guest, i.e. can leak\nhost kernel addresses to the guest.\n\nBug #1 is that KVM doesn't account for the upper 32 bits of\nIA32_FIXED_CTR_CTRL when (re)programming fixed counters, e.g\nfixed_ctrl_field() drops the upper bits, reprogram_fixed_counters()\nstores local variables as u8s and truncates the upper bits too, etc.\n\nBug #2 is that, because KVM _always_ sets precise_ip to a non-zero value\nfor PEBS events, perf will _always_ generate an adaptive record, even if\nthe guest requested a basic record.  Note, KVM will also enable adaptive\nPEBS in individual *counter*, even if adaptive PEBS isn't exposed to the\nguest, but this is benign as MSR_PEBS_DATA_CFG is guaranteed to be zero,\ni.e. the guest will only ever see Basic records.\n\nBug #3 is in perf.  intel_pmu_disable_fixed() doesn't clear the upper\nbits either, i.e. leaves ICL_FIXED_0_ADAPTIVE set, and\nintel_pmu_enable_fixed() effectively doesn't clear ICL_FIXED_0_ADAPTIVE\neither.  I.e. perf _always_ enables ADAPTIVE counters, regardless of what\nKVM requests.\n\nBug #4 is that adaptive PEBS *might* effectively bypass event filters set\nby the host, as \"Updated Memory Access Info Group\" records information\nthat might be disallowed by userspace via KVM_SET_PMU_EVENT_FILTER.\n\nBug #5 is that KVM doesn't ensure LBR MSRs hold guest values (or at least\nzeros) when entering a vCPU with adaptive PEBS, which allows the guest\nto read host LBRs, i.e. host RIPs/addresses, by enabling \"LBR Entries\"\nrecords.\n\nDisable adaptive PEBS support as an immediate fix due to the severity of\nthe LBR leak in particular, and because fixing all of the bugs will be\nnon-trivial, e.g. not suitable for backporting to stable kernels.\n\nNote!  This will break live migration, but trying to make KVM play nice\nwith live migration would be quite complicated, wouldn't be guaranteed to\nwork (i.e. KVM might still kill/confuse the guest), and it's not clear\nthat there are any publicly available VMMs that support adaptive PEBS,\nlet alone live migrate VMs that support adaptive PEBS, e.g. QEMU doesn't\nsupport PEBS in any capacity.\n    ",
+		"advisory": {
+			"from": "security@suse.de",
+			"severity": "Low",
+			"cve": [
+				{
+					"text": "CVE-2024-26992 at SUSE",
+					"href": "https://www.suse.com/security/cve/CVE-2024-26992/",
+					"impact": "low",
+					"cvss3": "3.3/CVSS:3.1/AV:L/AC:L/PR:L/UI:N/S:U/C:L/I:N/A:N"
+				},
+				{
+					"text": "CVE-2024-26992 at NVD",
+					"href": "https://nvd.nist.gov/vuln/detail/CVE-2024-26992"
+				}
+			],
+			"bugzilla": [
+				{
+					"text": "SUSE bug 1223692",
+					"href": "https://bugzilla.suse.com/1223692"
+				}
+			],
+			"issued": {
+				"date": "2024-05-03"
+			},
+			"updated": {
+				"date": "2024-10-09"
+			},
+			"affected_cpe_list": {
+				"cpe": [
+					"cpe:/o:suse:suse-microos:5.1"
+				]
+			}
+		}
+	},
+	"criteria": {
+		"operator": "AND",
+		"criterias": [
+			{
+				"operator": "OR",
+				"criterions": [
+					{
+						"test_ref": "oval:org.opensuse.security:tst:2009334017",
+						"comment": "kernel-default is not affected"
+					},
+					{
+						"test_ref": "oval:org.opensuse.security:tst:2009705046",
+						"comment": "kernel-rt is not affected"
+					},
+					{
+						"test_ref": "oval:org.opensuse.security:tst:2009333928",
+						"comment": "kernel-source is not affected"
+					},
+					{
+						"test_ref": "oval:org.opensuse.security:tst:2009728712",
+						"comment": "kernel-source-rt is not affected"
+					}
+				]
+			}
+		],
+		"criterions": [
+			{
+				"test_ref": "oval:org.opensuse.security:tst:2009669964",
+				"comment": "SUSE Linux Enterprise Micro 5.1 is installed"
+			}
+		]
+	}
+}

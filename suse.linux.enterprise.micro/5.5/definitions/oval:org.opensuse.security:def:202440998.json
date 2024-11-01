@@ -1,0 +1,147 @@
+{
+	"id": "oval:org.opensuse.security:def:202440998",
+	"version": "1",
+	"class": "vulnerability",
+	"metadata": {
+		"title": "CVE-2024-40998",
+		"affected": {
+			"family": "unix",
+			"platform": [
+				"SUSE Linux Enterprise Micro 5.5"
+			]
+		},
+		"reference": [
+			{
+				"ref_id": "Mitre CVE-2024-40998",
+				"ref_url": "https://cve.mitre.org/cgi-bin/cvename.cgi?name=CVE-2024-40998",
+				"source": "CVE"
+			},
+			{
+				"ref_id": "SUSE CVE-2024-40998",
+				"ref_url": "https://www.suse.com/security/cve/CVE-2024-40998",
+				"source": "SUSE CVE"
+			},
+			{
+				"ref_id": "RHSA-2024:7000",
+				"ref_url": "https://lists.suse.com/pipermail/suse-liberty-linux-updates/2024-September/000095.html",
+				"source": "SUSE-SU"
+			},
+			{
+				"ref_id": "RHSA-2024:8617",
+				"ref_url": "https://lists.suse.com/pipermail/suse-liberty-linux-updates/2024-October/000161.html",
+				"source": "SUSE-SU"
+			},
+			{
+				"ref_id": "SUSE-SU-2024:2802-1",
+				"ref_url": "https://lists.suse.com/pipermail/sle-security-updates/2024-August/019133.html",
+				"source": "SUSE-SU"
+			},
+			{
+				"ref_id": "SUSE-SU-2024:2892-1",
+				"ref_url": "https://lists.suse.com/pipermail/sle-security-updates/2024-August/019188.html",
+				"source": "SUSE-SU"
+			},
+			{
+				"ref_id": "SUSE-SU-2024:2894-1",
+				"ref_url": "https://lists.suse.com/pipermail/sle-updates/2024-August/036430.html",
+				"source": "SUSE-SU"
+			},
+			{
+				"ref_id": "SUSE-SU-2024:2896-1",
+				"ref_url": "https://lists.suse.com/pipermail/sle-security-updates/2024-August/019185.html",
+				"source": "SUSE-SU"
+			},
+			{
+				"ref_id": "SUSE-SU-2024:2901-1",
+				"ref_url": "https://lists.suse.com/pipermail/sle-updates/2024-August/036444.html",
+				"source": "SUSE-SU"
+			},
+			{
+				"ref_id": "SUSE-SU-2024:2939-1",
+				"ref_url": "https://lists.suse.com/pipermail/sle-security-updates/2024-August/019211.html",
+				"source": "SUSE-SU"
+			},
+			{
+				"ref_id": "SUSE-SU-2024:2940-1",
+				"ref_url": "https://lists.suse.com/pipermail/sle-updates/2024-August/036478.html",
+				"source": "SUSE-SU"
+			},
+			{
+				"ref_id": "SUSE-SU-2024:2947-1",
+				"ref_url": "https://lists.suse.com/pipermail/sle-updates/2024-August/036488.html",
+				"source": "SUSE-SU"
+			},
+			{
+				"ref_id": "SUSE-SU-2024:2973-1",
+				"ref_url": "https://lists.suse.com/pipermail/sle-security-updates/2024-August/019280.html",
+				"source": "SUSE-SU"
+			}
+		],
+		"description": "\n    In the Linux kernel, the following vulnerability has been resolved:\n\next4: fix uninitialized ratelimit_state->lock access in __ext4_fill_super()\n\nIn the following concurrency we will access the uninitialized rs->lock:\n\next4_fill_super\n  ext4_register_sysfs\n   // sysfs registered msg_ratelimit_interval_ms\n                             // Other processes modify rs->interval to\n                             // non-zero via msg_ratelimit_interval_ms\n  ext4_orphan_cleanup\n    ext4_msg(sb, KERN_INFO, \"Errors on filesystem, \"\n      __ext4_msg\n        ___ratelimit(&(EXT4_SB(sb)->s_msg_ratelimit_state)\n          if (!rs->interval)  // do nothing if interval is 0\n            return 1;\n          raw_spin_trylock_irqsave(&rs->lock, flags)\n            raw_spin_trylock(lock)\n              _raw_spin_trylock\n                __raw_spin_trylock\n                  spin_acquire(&lock->dep_map, 0, 1, _RET_IP_)\n                    lock_acquire\n                      __lock_acquire\n                        register_lock_class\n                          assign_lock_key\n                            dump_stack();\n  ratelimit_state_init(&sbi->s_msg_ratelimit_state, 5 * HZ, 10);\n    raw_spin_lock_init(&rs->lock);\n    // init rs->lock here\n\nand get the following dump_stack:\n\n=========================================================\nINFO: trying to register non-static key.\nThe code is fine but needs lockdep annotation, or maybe\nyou didn't initialize this object before use?\nturning off the locking correctness validator.\nCPU: 12 PID: 753 Comm: mount Tainted: G E 6.7.0-rc6-next-20231222 #504\n[...]\nCall Trace:\n dump_stack_lvl+0xc5/0x170\n dump_stack+0x18/0x30\n register_lock_class+0x740/0x7c0\n __lock_acquire+0x69/0x13a0\n lock_acquire+0x120/0x450\n _raw_spin_trylock+0x98/0xd0\n ___ratelimit+0xf6/0x220\n __ext4_msg+0x7f/0x160 [ext4]\n ext4_orphan_cleanup+0x665/0x740 [ext4]\n __ext4_fill_super+0x21ea/0x2b10 [ext4]\n ext4_fill_super+0x14d/0x360 [ext4]\n[...]\n=========================================================\n\nNormally interval is 0 until s_msg_ratelimit_state is initialized, so\n___ratelimit() does nothing. But registering sysfs precedes initializing\nrs->lock, so it is possible to change rs->interval to a non-zero value\nvia the msg_ratelimit_interval_ms interface of sysfs while rs->lock is\nuninitialized, and then a call to ext4_msg triggers the problem by\naccessing an uninitialized rs->lock. Therefore register sysfs after all\ninitializations are complete to avoid such problems.\n    ",
+		"advisory": {
+			"from": "security@suse.de",
+			"severity": "Moderate",
+			"cve": [
+				{
+					"text": "CVE-2024-40998 at SUSE",
+					"href": "https://www.suse.com/security/cve/CVE-2024-40998/",
+					"impact": "medium",
+					"cvss3": "5.5/CVSS:3.1/AV:L/AC:L/PR:L/UI:N/S:U/C:N/I:N/A:H"
+				},
+				{
+					"text": "CVE-2024-40998 at NVD",
+					"href": "https://nvd.nist.gov/vuln/detail/CVE-2024-40998"
+				}
+			],
+			"bugzilla": [
+				{
+					"text": "SUSE bug 1227866",
+					"href": "https://bugzilla.suse.com/1227866"
+				}
+			],
+			"issued": {
+				"date": "2024-08-14"
+			},
+			"updated": {
+				"date": "2024-11-01"
+			},
+			"affected_cpe_list": {
+				"cpe": [
+					"cpe:/o:suse:sle-micro:5.5"
+				]
+			}
+		}
+	},
+	"criteria": {
+		"operator": "AND",
+		"criterias": [
+			{
+				"operator": "OR",
+				"criterions": [
+					{
+						"test_ref": "oval:org.opensuse.security:tst:2009879879",
+						"comment": "kernel-default-5.14.21-150500.55.73.1 is installed"
+					},
+					{
+						"test_ref": "oval:org.opensuse.security:tst:2009880170",
+						"comment": "kernel-default-base-5.14.21-150500.55.73.1.150500.6.33.8 is installed"
+					},
+					{
+						"test_ref": "oval:org.opensuse.security:tst:2009879144",
+						"comment": "kernel-rt-5.14.21-150500.13.64.1 is installed"
+					},
+					{
+						"test_ref": "oval:org.opensuse.security:tst:2009879155",
+						"comment": "kernel-source-rt-5.14.21-150500.13.64.1 is installed"
+					}
+				]
+			}
+		],
+		"criterions": [
+			{
+				"test_ref": "oval:org.opensuse.security:tst:2009800388",
+				"comment": "SUSE Linux Enterprise Micro 5.5 is installed"
+			}
+		]
+	}
+}

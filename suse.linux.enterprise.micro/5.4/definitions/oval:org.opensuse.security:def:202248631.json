@@ -1,0 +1,132 @@
+{
+	"id": "oval:org.opensuse.security:def:202248631",
+	"version": "1",
+	"class": "vulnerability",
+	"metadata": {
+		"title": "CVE-2022-48631",
+		"affected": {
+			"family": "unix",
+			"platform": [
+				"SUSE Linux Enterprise Micro 5.4"
+			]
+		},
+		"reference": [
+			{
+				"ref_id": "Mitre CVE-2022-48631",
+				"ref_url": "https://cve.mitre.org/cgi-bin/cvename.cgi?name=CVE-2022-48631",
+				"source": "CVE"
+			},
+			{
+				"ref_id": "SUSE CVE-2022-48631",
+				"ref_url": "https://www.suse.com/security/cve/CVE-2022-48631",
+				"source": "SUSE CVE"
+			},
+			{
+				"ref_id": "SUSE-SU-2024:1641-1",
+				"ref_url": "https://lists.suse.com/pipermail/sle-updates/2024-May/035266.html",
+				"source": "SUSE-SU"
+			},
+			{
+				"ref_id": "SUSE-SU-2024:1642-1",
+				"ref_url": "https://lists.suse.com/pipermail/sle-updates/2024-May/035265.html",
+				"source": "SUSE-SU"
+			},
+			{
+				"ref_id": "SUSE-SU-2024:1644-1",
+				"ref_url": "https://lists.suse.com/pipermail/sle-updates/2024-May/035263.html",
+				"source": "SUSE-SU"
+			},
+			{
+				"ref_id": "SUSE-SU-2024:1645-1",
+				"ref_url": "https://lists.suse.com/pipermail/sle-updates/2024-May/035262.html",
+				"source": "SUSE-SU"
+			},
+			{
+				"ref_id": "SUSE-SU-2024:1647-1",
+				"ref_url": "https://lists.suse.com/pipermail/sle-updates/2024-May/035260.html",
+				"source": "SUSE-SU"
+			},
+			{
+				"ref_id": "SUSE-SU-2024:1650-1",
+				"ref_url": "https://lists.suse.com/pipermail/sle-updates/2024-May/035272.html",
+				"source": "SUSE-SU"
+			},
+			{
+				"ref_id": "SUSE-SU-2024:1659-1",
+				"ref_url": "https://lists.suse.com/pipermail/sle-updates/2024-May/035281.html",
+				"source": "SUSE-SU"
+			},
+			{
+				"ref_id": "SUSE-SU-2024:1663-1",
+				"ref_url": "https://lists.suse.com/pipermail/sle-security-updates/2024-August/019268.html",
+				"source": "SUSE-SU"
+			}
+		],
+		"description": "\n    In the Linux kernel, the following vulnerability has been resolved:\n\next4: fix bug in extents parsing when eh_entries == 0 and eh_depth > 0\n\nWhen walking through an inode extents, the ext4_ext_binsearch_idx() function\nassumes that the extent header has been previously validated.  However, there\nare no checks that verify that the number of entries (eh->eh_entries) is\nnon-zero when depth is > 0.  And this will lead to problems because the\nEXT_FIRST_INDEX() and EXT_LAST_INDEX() will return garbage and result in this:\n\n[  135.245946] ------------[ cut here ]------------\n[  135.247579] kernel BUG at fs/ext4/extents.c:2258!\n[  135.249045] invalid opcode: 0000 [#1] PREEMPT SMP\n[  135.250320] CPU: 2 PID: 238 Comm: tmp118 Not tainted 5.19.0-rc8+ #4\n[  135.252067] Hardware name: QEMU Standard PC (i440FX + PIIX, 1996), BIOS rel-1.15.0-0-g2dd4b9b-rebuilt.opensuse.org 04/01/2014\n[  135.255065] RIP: 0010:ext4_ext_map_blocks+0xc20/0xcb0\n[  135.256475] Code:\n[  135.261433] RSP: 0018:ffffc900005939f8 EFLAGS: 00010246\n[  135.262847] RAX: 0000000000000024 RBX: ffffc90000593b70 RCX: 0000000000000023\n[  135.264765] RDX: ffff8880038e5f10 RSI: 0000000000000003 RDI: ffff8880046e922c\n[  135.266670] RBP: ffff8880046e9348 R08: 0000000000000001 R09: ffff888002ca580c\n[  135.268576] R10: 0000000000002602 R11: 0000000000000000 R12: 0000000000000024\n[  135.270477] R13: 0000000000000000 R14: 0000000000000024 R15: 0000000000000000\n[  135.272394] FS:  00007fdabdc56740(0000) GS:ffff88807dd00000(0000) knlGS:0000000000000000\n[  135.274510] CS:  0010 DS: 0000 ES: 0000 CR0: 0000000080050033\n[  135.276075] CR2: 00007ffc26bd4f00 CR3: 0000000006261004 CR4: 0000000000170ea0\n[  135.277952] Call Trace:\n[  135.278635]  <TASK>\n[  135.279247]  ? preempt_count_add+0x6d/0xa0\n[  135.280358]  ? percpu_counter_add_batch+0x55/0xb0\n[  135.281612]  ? _raw_read_unlock+0x18/0x30\n[  135.282704]  ext4_map_blocks+0x294/0x5a0\n[  135.283745]  ? xa_load+0x6f/0xa0\n[  135.284562]  ext4_mpage_readpages+0x3d6/0x770\n[  135.285646]  read_pages+0x67/0x1d0\n[  135.286492]  ? folio_add_lru+0x51/0x80\n[  135.287441]  page_cache_ra_unbounded+0x124/0x170\n[  135.288510]  filemap_get_pages+0x23d/0x5a0\n[  135.289457]  ? path_openat+0xa72/0xdd0\n[  135.290332]  filemap_read+0xbf/0x300\n[  135.291158]  ? _raw_spin_lock_irqsave+0x17/0x40\n[  135.292192]  new_sync_read+0x103/0x170\n[  135.293014]  vfs_read+0x15d/0x180\n[  135.293745]  ksys_read+0xa1/0xe0\n[  135.294461]  do_syscall_64+0x3c/0x80\n[  135.295284]  entry_SYSCALL_64_after_hwframe+0x46/0xb0\n\nThis patch simply adds an extra check in __ext4_ext_check(), verifying that\neh_entries is not 0 when eh_depth is > 0.\n    ",
+		"advisory": {
+			"from": "security@suse.de",
+			"severity": "Moderate",
+			"cve": [
+				{
+					"text": "CVE-2022-48631 at SUSE",
+					"href": "https://www.suse.com/security/cve/CVE-2022-48631/",
+					"impact": "medium",
+					"cvss3": "5.5/CVSS:3.1/AV:L/AC:L/PR:L/UI:N/S:U/C:N/I:N/A:H"
+				},
+				{
+					"text": "CVE-2022-48631 at NVD",
+					"href": "https://nvd.nist.gov/vuln/detail/CVE-2022-48631"
+				}
+			],
+			"bugzilla": [
+				{
+					"text": "SUSE bug 1223475",
+					"href": "https://bugzilla.suse.com/1223475"
+				}
+			],
+			"issued": {
+				"date": "2024-07-26"
+			},
+			"updated": {
+				"date": "2024-08-20"
+			},
+			"affected_cpe_list": {
+				"cpe": [
+					"cpe:/o:suse:sle-micro:5.4"
+				]
+			}
+		}
+	},
+	"criteria": {
+		"operator": "AND",
+		"criterias": [
+			{
+				"operator": "OR",
+				"criterions": [
+					{
+						"test_ref": "oval:org.opensuse.security:tst:2009861083",
+						"comment": "kernel-default-5.14.21-150400.24.119.1 is installed"
+					},
+					{
+						"test_ref": "oval:org.opensuse.security:tst:2009860903",
+						"comment": "kernel-default-base-5.14.21-150400.24.119.1.150400.24.56.1 is installed"
+					},
+					{
+						"test_ref": "oval:org.opensuse.security:tst:2009861084",
+						"comment": "kernel-rt-5.14.21-150400.15.79.1 is installed"
+					},
+					{
+						"test_ref": "oval:org.opensuse.security:tst:2009861085",
+						"comment": "kernel-source-rt-5.14.21-150400.15.79.1 is installed"
+					}
+				]
+			}
+		],
+		"criterions": [
+			{
+				"test_ref": "oval:org.opensuse.security:tst:2009755086",
+				"comment": "SUSE Linux Enterprise Micro 5.4 is installed"
+			}
+		]
+	}
+}

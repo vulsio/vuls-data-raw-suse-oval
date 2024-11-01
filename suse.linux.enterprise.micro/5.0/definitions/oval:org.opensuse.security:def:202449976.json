@@ -1,0 +1,75 @@
+{
+	"id": "oval:org.opensuse.security:def:202449976",
+	"version": "1",
+	"class": "vulnerability",
+	"metadata": {
+		"title": "CVE-2024-49976",
+		"affected": {
+			"family": "unix",
+			"platform": [
+				"SUSE Linux Enterprise Micro 5.0"
+			]
+		},
+		"reference": [
+			{
+				"ref_id": "Mitre CVE-2024-49976",
+				"ref_url": "https://cve.mitre.org/cgi-bin/cvename.cgi?name=CVE-2024-49976",
+				"source": "CVE"
+			},
+			{
+				"ref_id": "SUSE CVE-2024-49976",
+				"ref_url": "https://www.suse.com/security/cve/CVE-2024-49976",
+				"source": "SUSE CVE"
+			}
+		],
+		"description": "\n    In the Linux kernel, the following vulnerability has been resolved:\n\ntracing/timerlat: Drop interface_lock in stop_kthread()\n\nstop_kthread() is the offline callback for \"trace/osnoise:online\", since\ncommit 5bfbcd1ee57b (\"tracing/timerlat: Add interface_lock around clearing\nof kthread in stop_kthread()\"), the following ABBA deadlock scenario is\nintroduced:\n\nT1                            | T2 [BP]               | T3 [AP]\nosnoise_hotplug_workfn()      | work_for_cpu_fn()     | cpuhp_thread_fun()\n                              |   _cpu_down()         |   osnoise_cpu_die()\n  mutex_lock(&interface_lock) |                       |     stop_kthread()\n                              |     cpus_write_lock() |       mutex_lock(&interface_lock)\n  cpus_read_lock()            |     cpuhp_kick_ap()   |\n\nAs the interface_lock here in just for protecting the \"kthread\" field of\nthe osn_var, use xchg() instead to fix this issue. Also use\nfor_each_online_cpu() back in stop_per_cpu_kthreads() as it can take\ncpu_read_lock() again.\n    ",
+		"advisory": {
+			"from": "security@suse.de",
+			"severity": "Moderate",
+			"cve": [
+				{
+					"text": "CVE-2024-49976 at SUSE",
+					"href": "https://www.suse.com/security/cve/CVE-2024-49976/",
+					"impact": "medium",
+					"cvss3": "5.5/CVSS:3.1/AV:L/AC:L/PR:L/UI:N/S:U/C:N/I:N/A:H"
+				},
+				{
+					"text": "CVE-2024-49976 at NVD",
+					"href": "https://nvd.nist.gov/vuln/detail/CVE-2024-49976",
+					"impact": "medium",
+					"cvss3": "5.5/CVSS:3.1/AV:L/AC:L/PR:L/UI:N/S:U/C:N/I:N/A:H"
+				}
+			],
+			"bugzilla": [
+				{
+					"text": "SUSE bug 1232103",
+					"href": "https://bugzilla.suse.com/1232103"
+				}
+			],
+			"issued": {
+				"date": "2024-10-27"
+			},
+			"updated": {
+				"date": "2024-10-27"
+			},
+			"affected_cpe_list": {
+				"cpe": [
+					"cpe:/o:suse:suse-microos:5.0"
+				]
+			}
+		}
+	},
+	"criteria": {
+		"operator": "AND",
+		"criterions": [
+			{
+				"test_ref": "oval:org.opensuse.security:tst:2009704855",
+				"comment": "SUSE Linux Enterprise Micro 5.0 is installed"
+			},
+			{
+				"test_ref": "oval:org.opensuse.security:tst:2009334017",
+				"comment": "kernel-default is not affected"
+			}
+		]
+	}
+}

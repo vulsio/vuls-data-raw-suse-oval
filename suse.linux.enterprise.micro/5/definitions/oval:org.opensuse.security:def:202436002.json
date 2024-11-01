@@ -1,0 +1,159 @@
+{
+	"id": "oval:org.opensuse.security:def:202436002",
+	"version": "1",
+	"class": "vulnerability",
+	"metadata": {
+		"title": "CVE-2024-36002",
+		"affected": {
+			"family": "unix",
+			"platform": [
+				"SUSE Linux Enterprise Micro 5.0",
+				"SUSE Linux Enterprise Micro 5.1",
+				"SUSE Linux Enterprise Micro 5.2",
+				"SUSE Linux Enterprise Micro 5.3",
+				"SUSE Linux Enterprise Micro 5.4",
+				"SUSE Linux Enterprise Micro 5.5"
+			]
+		},
+		"reference": [
+			{
+				"ref_id": "Mitre CVE-2024-36002",
+				"ref_url": "https://cve.mitre.org/cgi-bin/cvename.cgi?name=CVE-2024-36002",
+				"source": "CVE"
+			},
+			{
+				"ref_id": "SUSE CVE-2024-36002",
+				"ref_url": "https://www.suse.com/security/cve/CVE-2024-36002",
+				"source": "SUSE CVE"
+			},
+			{
+				"ref_id": "SUSE-SU-2024:2135-1",
+				"ref_url": "https://lists.suse.com/pipermail/sle-updates/2024-June/035681.html",
+				"source": "SUSE-SU"
+			},
+			{
+				"ref_id": "SUSE-SU-2024:2203-1",
+				"ref_url": "https://lists.suse.com/pipermail/sle-security-updates/2024-August/019244.html",
+				"source": "SUSE-SU"
+			},
+			{
+				"ref_id": "SUSE-SU-2024:2973-1",
+				"ref_url": "https://lists.suse.com/pipermail/sle-security-updates/2024-August/019280.html",
+				"source": "SUSE-SU"
+			}
+		],
+		"description": "\n    In the Linux kernel, the following vulnerability has been resolved:\n\ndpll: fix dpll_pin_on_pin_register() for multiple parent pins\n\nIn scenario where pin is registered with multiple parent pins via\ndpll_pin_on_pin_register(..), all belonging to the same dpll device.\nA second call to dpll_pin_on_pin_unregister(..) would cause a call trace,\nas it tries to use already released registration resources (due to fix\nintroduced in b446631f355e). In this scenario pin was registered twice,\nso resources are not yet expected to be release until each registered\npin/pin pair is unregistered.\n\nCurrently, the following crash/call trace is produced when ice driver is\nremoved on the system with installed E810T NIC which includes dpll device:\n\nWARNING: CPU: 51 PID: 9155 at drivers/dpll/dpll_core.c:809 dpll_pin_ops+0x20/0x30\nRIP: 0010:dpll_pin_ops+0x20/0x30\nCall Trace:\n ? __warn+0x7f/0x130\n ? dpll_pin_ops+0x20/0x30\n dpll_msg_add_pin_freq+0x37/0x1d0\n dpll_cmd_pin_get_one+0x1c0/0x400\n ? __nlmsg_put+0x63/0x80\n dpll_pin_event_send+0x93/0x140\n dpll_pin_on_pin_unregister+0x3f/0x100\n ice_dpll_deinit_pins+0xa1/0x230 [ice]\n ice_remove+0xf1/0x210 [ice]\n\nFix by adding a parent pointer as a cookie when creating a registration,\nalso when searching for it. For the regular pins pass NULL, this allows to\ncreate separated registration for each parent the pin is registered with.\n    ",
+		"advisory": {
+			"from": "security@suse.de",
+			"severity": "Moderate",
+			"cve": [
+				{
+					"text": "CVE-2024-36002 at SUSE",
+					"href": "https://www.suse.com/security/cve/CVE-2024-36002/",
+					"impact": "medium",
+					"cvss3": "5.5/CVSS:3.1/AV:L/AC:L/PR:L/UI:N/S:U/C:N/I:N/A:H"
+				},
+				{
+					"text": "CVE-2024-36002 at NVD",
+					"href": "https://nvd.nist.gov/vuln/detail/CVE-2024-36002"
+				}
+			],
+			"bugzilla": [
+				{
+					"text": "SUSE bug 1224546",
+					"href": "https://bugzilla.suse.com/1224546"
+				}
+			],
+			"issued": {
+				"date": "2024-10-18"
+			},
+			"updated": {
+				"date": "2024-10-18"
+			},
+			"affected_cpe_list": {
+				"cpe": [
+					"cpe:/o:suse:sle-micro:5.3",
+					"cpe:/o:suse:sle-micro:5.4",
+					"cpe:/o:suse:sle-micro:5.5",
+					"cpe:/o:suse:suse-microos:5.0",
+					"cpe:/o:suse:suse-microos:5.1",
+					"cpe:/o:suse:suse-microos:5.2"
+				]
+			}
+		}
+	},
+	"criteria": {
+		"operator": "OR",
+		"criterias": [
+			{
+				"operator": "AND",
+				"criterions": [
+					{
+						"test_ref": "oval:org.opensuse.security:tst:2009704855",
+						"comment": "SUSE Linux Enterprise Micro 5.0 is installed"
+					},
+					{
+						"test_ref": "oval:org.opensuse.security:tst:2009334017",
+						"comment": "kernel-default is not affected"
+					}
+				]
+			},
+			{
+				"operator": "AND",
+				"criterions": [
+					{
+						"test_ref": "oval:org.opensuse.security:tst:2009800388",
+						"comment": "SUSE Linux Enterprise Micro 5.5 is installed"
+					},
+					{
+						"test_ref": "oval:org.opensuse.security:tst:2009728712",
+						"comment": "kernel-source-rt is not affected"
+					}
+				]
+			},
+			{
+				"operator": "AND",
+				"criterias": [
+					{
+						"operator": "OR",
+						"criterions": [
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009669964",
+								"comment": "SUSE Linux Enterprise Micro 5.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009681300",
+								"comment": "SUSE Linux Enterprise Micro 5.2 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009728694",
+								"comment": "SUSE Linux Enterprise Micro 5.3 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009755086",
+								"comment": "SUSE Linux Enterprise Micro 5.4 is installed"
+							}
+						]
+					},
+					{
+						"operator": "OR",
+						"criterions": [
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009334017",
+								"comment": "kernel-default is not affected"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009705046",
+								"comment": "kernel-rt is not affected"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009728712",
+								"comment": "kernel-source-rt is not affected"
+							}
+						]
+					}
+				]
+			}
+		]
+	}
+}

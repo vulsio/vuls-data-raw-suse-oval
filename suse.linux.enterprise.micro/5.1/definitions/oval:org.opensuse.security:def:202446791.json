@@ -1,0 +1,129 @@
+{
+	"id": "oval:org.opensuse.security:def:202446791",
+	"version": "1",
+	"class": "vulnerability",
+	"metadata": {
+		"title": "CVE-2024-46791",
+		"affected": {
+			"family": "unix",
+			"platform": [
+				"SUSE Linux Enterprise Micro 5.1"
+			]
+		},
+		"reference": [
+			{
+				"ref_id": "Mitre CVE-2024-46791",
+				"ref_url": "https://cve.mitre.org/cgi-bin/cvename.cgi?name=CVE-2024-46791",
+				"source": "CVE"
+			},
+			{
+				"ref_id": "SUSE CVE-2024-46791",
+				"ref_url": "https://www.suse.com/security/cve/CVE-2024-46791",
+				"source": "SUSE CVE"
+			},
+			{
+				"ref_id": "SUSE-SU-2024:3551-1",
+				"ref_url": "https://lists.suse.com/pipermail/sle-updates/2024-October/037163.html",
+				"source": "SUSE-SU"
+			},
+			{
+				"ref_id": "SUSE-SU-2024:3553-1",
+				"ref_url": "https://lists.suse.com/pipermail/sle-updates/2024-October/037161.html",
+				"source": "SUSE-SU"
+			},
+			{
+				"ref_id": "SUSE-SU-2024:3561-1",
+				"ref_url": "https://lists.suse.com/pipermail/sle-security-updates/2024-October/019580.html",
+				"source": "SUSE-SU"
+			},
+			{
+				"ref_id": "SUSE-SU-2024:3564-1",
+				"ref_url": "https://lists.suse.com/pipermail/sle-updates/2024-October/037178.html",
+				"source": "SUSE-SU"
+			},
+			{
+				"ref_id": "SUSE-SU-2024:3569-1",
+				"ref_url": "https://lists.suse.com/pipermail/sle-security-updates/2024-October/019576.html",
+				"source": "SUSE-SU"
+			},
+			{
+				"ref_id": "SUSE-SU-2024:3587-1",
+				"ref_url": "https://lists.suse.com/pipermail/sle-security-updates/2024-October/019588.html",
+				"source": "SUSE-SU"
+			},
+			{
+				"ref_id": "SUSE-SU-2024:3592-1",
+				"ref_url": "https://lists.suse.com/pipermail/sle-updates/2024-October/037209.html",
+				"source": "SUSE-SU"
+			}
+		],
+		"description": "\n    In the Linux kernel, the following vulnerability has been resolved:\n\ncan: mcp251x: fix deadlock if an interrupt occurs during mcp251x_open\n\nThe mcp251x_hw_wake() function is called with the mpc_lock mutex held and\ndisables the interrupt handler so that no interrupts can be processed while\nwaking the device. If an interrupt has already occurred then waiting for\nthe interrupt handler to complete will deadlock because it will be trying\nto acquire the same mutex.\n\nCPU0                           CPU1\n----                           ----\nmcp251x_open()\n mutex_lock(&priv->mcp_lock)\n  request_threaded_irq()\n                               <interrupt>\n                               mcp251x_can_ist()\n                                mutex_lock(&priv->mcp_lock)\n  mcp251x_hw_wake()\n   disable_irq() <-- deadlock\n\nUse disable_irq_nosync() instead because the interrupt handler does\neverything while holding the mutex so it doesn't matter if it's still\nrunning.\n    ",
+		"advisory": {
+			"from": "security@suse.de",
+			"severity": "Moderate",
+			"cve": [
+				{
+					"text": "CVE-2024-46791 at SUSE",
+					"href": "https://www.suse.com/security/cve/CVE-2024-46791/",
+					"impact": "medium",
+					"cvss3": "5.5/CVSS:3.1/AV:L/AC:L/PR:L/UI:N/S:U/C:N/I:N/A:H"
+				},
+				{
+					"text": "CVE-2024-46791 at NVD",
+					"href": "https://nvd.nist.gov/vuln/detail/CVE-2024-46791",
+					"impact": "medium",
+					"cvss3": "5.5/CVSS:3.1/AV:L/AC:L/PR:L/UI:N/S:U/C:N/I:N/A:H"
+				}
+			],
+			"bugzilla": [
+				{
+					"text": "SUSE bug 1230821",
+					"href": "https://bugzilla.suse.com/1230821"
+				}
+			],
+			"issued": {
+				"date": "2024-09-20"
+			},
+			"updated": {
+				"date": "2024-10-11"
+			},
+			"affected_cpe_list": {
+				"cpe": [
+					"cpe:/o:suse:suse-microos:5.1"
+				]
+			}
+		}
+	},
+	"criteria": {
+		"operator": "AND",
+		"criterias": [
+			{
+				"operator": "OR",
+				"criterions": [
+					{
+						"test_ref": "oval:org.opensuse.security:tst:2009334017",
+						"comment": "kernel-default is not affected"
+					},
+					{
+						"test_ref": "oval:org.opensuse.security:tst:2009705046",
+						"comment": "kernel-rt is not affected"
+					},
+					{
+						"test_ref": "oval:org.opensuse.security:tst:2009333928",
+						"comment": "kernel-source is not affected"
+					},
+					{
+						"test_ref": "oval:org.opensuse.security:tst:2009728712",
+						"comment": "kernel-source-rt is not affected"
+					}
+				]
+			}
+		],
+		"criterions": [
+			{
+				"test_ref": "oval:org.opensuse.security:tst:2009669964",
+				"comment": "SUSE Linux Enterprise Micro 5.1 is installed"
+			}
+		]
+	}
+}

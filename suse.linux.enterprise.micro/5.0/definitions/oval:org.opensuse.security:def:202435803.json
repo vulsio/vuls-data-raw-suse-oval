@@ -1,0 +1,92 @@
+{
+	"id": "oval:org.opensuse.security:def:202435803",
+	"version": "1",
+	"class": "vulnerability",
+	"metadata": {
+		"title": "CVE-2024-35803",
+		"affected": {
+			"family": "unix",
+			"platform": [
+				"SUSE Linux Enterprise Micro 5.0"
+			]
+		},
+		"reference": [
+			{
+				"ref_id": "Mitre CVE-2024-35803",
+				"ref_url": "https://cve.mitre.org/cgi-bin/cvename.cgi?name=CVE-2024-35803",
+				"source": "CVE"
+			},
+			{
+				"ref_id": "SUSE CVE-2024-35803",
+				"ref_url": "https://www.suse.com/security/cve/CVE-2024-35803",
+				"source": "SUSE CVE"
+			},
+			{
+				"ref_id": "SUSE-SU-2024:2135-1",
+				"ref_url": "https://lists.suse.com/pipermail/sle-updates/2024-June/035681.html",
+				"source": "SUSE-SU"
+			},
+			{
+				"ref_id": "SUSE-SU-2024:2203-1",
+				"ref_url": "https://lists.suse.com/pipermail/sle-security-updates/2024-August/019244.html",
+				"source": "SUSE-SU"
+			},
+			{
+				"ref_id": "SUSE-SU-2024:2973-1",
+				"ref_url": "https://lists.suse.com/pipermail/sle-security-updates/2024-August/019280.html",
+				"source": "SUSE-SU"
+			}
+		],
+		"description": "\n    In the Linux kernel, the following vulnerability has been resolved:\n\nx86/efistub: Call mixed mode boot services on the firmware's stack\n\nNormally, the EFI stub calls into the EFI boot services using the stack\nthat was live when the stub was entered. According to the UEFI spec,\nthis stack needs to be at least 128k in size - this might seem large but\nall asynchronous processing and event handling in EFI runs from the same\nstack and so quite a lot of space may be used in practice.\n\nIn mixed mode, the situation is a bit different: the bootloader calls\nthe 32-bit EFI stub entry point, which calls the decompressor's 32-bit\nentry point, where the boot stack is set up, using a fixed allocation\nof 16k. This stack is still in use when the EFI stub is started in\n64-bit mode, and so all calls back into the EFI firmware will be using\nthe decompressor's limited boot stack.\n\nDue to the placement of the boot stack right after the boot heap, any\nstack overruns have gone unnoticed. However, commit\n\n  5c4feadb0011983b (\"x86/decompressor: Move global symbol references to C code\")\n\nmoved the definition of the boot heap into C code, and now the boot\nstack is placed right at the base of BSS, where any overruns will\ncorrupt the end of the .data section.\n\nWhile it would be possible to work around this by increasing the size of\nthe boot stack, doing so would affect all x86 systems, and mixed mode\nsystems are a tiny (and shrinking) fraction of the x86 installed base.\n\nSo instead, record the firmware stack pointer value when entering from\nthe 32-bit firmware, and switch to this stack every time a EFI boot\nservice call is made.\n    ",
+		"advisory": {
+			"from": "security@suse.de",
+			"severity": "Moderate",
+			"cve": [
+				{
+					"text": "CVE-2024-35803 at SUSE",
+					"href": "https://www.suse.com/security/cve/CVE-2024-35803/",
+					"impact": "high",
+					"cvss3": "7/CVSS:3.1/AV:L/AC:H/PR:L/UI:N/S:U/C:H/I:H/A:H"
+				},
+				{
+					"text": "CVE-2024-35803 at NVD",
+					"href": "https://nvd.nist.gov/vuln/detail/CVE-2024-35803"
+				}
+			],
+			"bugzilla": [
+				{
+					"text": "SUSE bug 1224742",
+					"href": "https://bugzilla.suse.com/1224742"
+				},
+				{
+					"text": "SUSE bug 1225314",
+					"href": "https://bugzilla.suse.com/1225314"
+				}
+			],
+			"issued": {
+				"date": "2024-05-25"
+			},
+			"updated": {
+				"date": "2024-08-21"
+			},
+			"affected_cpe_list": {
+				"cpe": [
+					"cpe:/o:suse:suse-microos:5.0"
+				]
+			}
+		}
+	},
+	"criteria": {
+		"operator": "AND",
+		"criterions": [
+			{
+				"test_ref": "oval:org.opensuse.security:tst:2009704855",
+				"comment": "SUSE Linux Enterprise Micro 5.0 is installed"
+			},
+			{
+				"test_ref": "oval:org.opensuse.security:tst:2009334017",
+				"comment": "kernel-default is not affected"
+			}
+		]
+	}
+}

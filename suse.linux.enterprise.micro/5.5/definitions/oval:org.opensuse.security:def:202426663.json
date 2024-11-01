@@ -1,0 +1,137 @@
+{
+	"id": "oval:org.opensuse.security:def:202426663",
+	"version": "1",
+	"class": "vulnerability",
+	"metadata": {
+		"title": "CVE-2024-26663",
+		"affected": {
+			"family": "unix",
+			"platform": [
+				"SUSE Linux Enterprise Micro 5.5"
+			]
+		},
+		"reference": [
+			{
+				"ref_id": "Mitre CVE-2024-26663",
+				"ref_url": "https://cve.mitre.org/cgi-bin/cvename.cgi?name=CVE-2024-26663",
+				"source": "CVE"
+			},
+			{
+				"ref_id": "SUSE CVE-2024-26663",
+				"ref_url": "https://www.suse.com/security/cve/CVE-2024-26663",
+				"source": "SUSE CVE"
+			},
+			{
+				"ref_id": "SUSE-SU-2024:2802-1",
+				"ref_url": "https://lists.suse.com/pipermail/sle-security-updates/2024-August/019133.html",
+				"source": "SUSE-SU"
+			},
+			{
+				"ref_id": "SUSE-SU-2024:2892-1",
+				"ref_url": "https://lists.suse.com/pipermail/sle-security-updates/2024-August/019188.html",
+				"source": "SUSE-SU"
+			},
+			{
+				"ref_id": "SUSE-SU-2024:2894-1",
+				"ref_url": "https://lists.suse.com/pipermail/sle-updates/2024-August/036430.html",
+				"source": "SUSE-SU"
+			},
+			{
+				"ref_id": "SUSE-SU-2024:2896-1",
+				"ref_url": "https://lists.suse.com/pipermail/sle-security-updates/2024-August/019185.html",
+				"source": "SUSE-SU"
+			},
+			{
+				"ref_id": "SUSE-SU-2024:2901-1",
+				"ref_url": "https://lists.suse.com/pipermail/sle-updates/2024-August/036444.html",
+				"source": "SUSE-SU"
+			},
+			{
+				"ref_id": "SUSE-SU-2024:2939-1",
+				"ref_url": "https://lists.suse.com/pipermail/sle-security-updates/2024-August/019211.html",
+				"source": "SUSE-SU"
+			},
+			{
+				"ref_id": "SUSE-SU-2024:2940-1",
+				"ref_url": "https://lists.suse.com/pipermail/sle-updates/2024-August/036478.html",
+				"source": "SUSE-SU"
+			},
+			{
+				"ref_id": "SUSE-SU-2024:2947-1",
+				"ref_url": "https://lists.suse.com/pipermail/sle-updates/2024-August/036488.html",
+				"source": "SUSE-SU"
+			},
+			{
+				"ref_id": "SUSE-SU-2024:2973-1",
+				"ref_url": "https://lists.suse.com/pipermail/sle-security-updates/2024-August/019280.html",
+				"source": "SUSE-SU"
+			}
+		],
+		"description": "\n    In the Linux kernel, the following vulnerability has been resolved:\n\ntipc: Check the bearer type before calling tipc_udp_nl_bearer_add()\n\nsyzbot reported the following general protection fault [1]:\n\ngeneral protection fault, probably for non-canonical address 0xdffffc0000000010: 0000 [#1] PREEMPT SMP KASAN\nKASAN: null-ptr-deref in range [0x0000000000000080-0x0000000000000087]\n...\nRIP: 0010:tipc_udp_is_known_peer+0x9c/0x250 net/tipc/udp_media.c:291\n...\nCall Trace:\n <TASK>\n tipc_udp_nl_bearer_add+0x212/0x2f0 net/tipc/udp_media.c:646\n tipc_nl_bearer_add+0x21e/0x360 net/tipc/bearer.c:1089\n genl_family_rcv_msg_doit+0x1fc/0x2e0 net/netlink/genetlink.c:972\n genl_family_rcv_msg net/netlink/genetlink.c:1052 [inline]\n genl_rcv_msg+0x561/0x800 net/netlink/genetlink.c:1067\n netlink_rcv_skb+0x16b/0x440 net/netlink/af_netlink.c:2544\n genl_rcv+0x28/0x40 net/netlink/genetlink.c:1076\n netlink_unicast_kernel net/netlink/af_netlink.c:1341 [inline]\n netlink_unicast+0x53b/0x810 net/netlink/af_netlink.c:1367\n netlink_sendmsg+0x8b7/0xd70 net/netlink/af_netlink.c:1909\n sock_sendmsg_nosec net/socket.c:730 [inline]\n __sock_sendmsg+0xd5/0x180 net/socket.c:745\n ____sys_sendmsg+0x6ac/0x940 net/socket.c:2584\n ___sys_sendmsg+0x135/0x1d0 net/socket.c:2638\n __sys_sendmsg+0x117/0x1e0 net/socket.c:2667\n do_syscall_x64 arch/x86/entry/common.c:52 [inline]\n do_syscall_64+0x40/0x110 arch/x86/entry/common.c:83\n entry_SYSCALL_64_after_hwframe+0x63/0x6b\n\nThe cause of this issue is that when tipc_nl_bearer_add() is called with\nthe TIPC_NLA_BEARER_UDP_OPTS attribute, tipc_udp_nl_bearer_add() is called\neven if the bearer is not UDP.\n\ntipc_udp_is_known_peer() called by tipc_udp_nl_bearer_add() assumes that\nthe media_ptr field of the tipc_bearer has an udp_bearer type object, so\nthe function goes crazy for non-UDP bearers.\n\nThis patch fixes the issue by checking the bearer type before calling\ntipc_udp_nl_bearer_add() in tipc_nl_bearer_add().\n    ",
+		"advisory": {
+			"from": "security@suse.de",
+			"severity": "Moderate",
+			"cve": [
+				{
+					"text": "CVE-2024-26663 at SUSE",
+					"href": "https://www.suse.com/security/cve/CVE-2024-26663/",
+					"impact": "medium",
+					"cvss3": "5.5/CVSS:3.1/AV:L/AC:L/PR:L/UI:N/S:U/C:N/I:N/A:H"
+				},
+				{
+					"text": "CVE-2024-26663 at NVD",
+					"href": "https://nvd.nist.gov/vuln/detail/CVE-2024-26663"
+				}
+			],
+			"bugzilla": [
+				{
+					"text": "SUSE bug 1222326",
+					"href": "https://bugzilla.suse.com/1222326"
+				}
+			],
+			"issued": {
+				"date": "2024-08-14"
+			},
+			"updated": {
+				"date": "2024-08-21"
+			},
+			"affected_cpe_list": {
+				"cpe": [
+					"cpe:/o:suse:sle-micro:5.5"
+				]
+			}
+		}
+	},
+	"criteria": {
+		"operator": "AND",
+		"criterias": [
+			{
+				"operator": "OR",
+				"criterions": [
+					{
+						"test_ref": "oval:org.opensuse.security:tst:2009879879",
+						"comment": "kernel-default-5.14.21-150500.55.73.1 is installed"
+					},
+					{
+						"test_ref": "oval:org.opensuse.security:tst:2009880170",
+						"comment": "kernel-default-base-5.14.21-150500.55.73.1.150500.6.33.8 is installed"
+					},
+					{
+						"test_ref": "oval:org.opensuse.security:tst:2009879144",
+						"comment": "kernel-rt-5.14.21-150500.13.64.1 is installed"
+					},
+					{
+						"test_ref": "oval:org.opensuse.security:tst:2009879155",
+						"comment": "kernel-source-rt-5.14.21-150500.13.64.1 is installed"
+					}
+				]
+			}
+		],
+		"criterions": [
+			{
+				"test_ref": "oval:org.opensuse.security:tst:2009800388",
+				"comment": "SUSE Linux Enterprise Micro 5.5 is installed"
+			}
+		]
+	}
+}

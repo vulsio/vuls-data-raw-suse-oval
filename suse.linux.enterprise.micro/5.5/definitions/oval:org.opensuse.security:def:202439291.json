@@ -1,0 +1,105 @@
+{
+	"id": "oval:org.opensuse.security:def:202439291",
+	"version": "1",
+	"class": "vulnerability",
+	"metadata": {
+		"title": "CVE-2024-39291",
+		"affected": {
+			"family": "unix",
+			"platform": [
+				"SUSE Linux Enterprise Micro 5.5"
+			]
+		},
+		"reference": [
+			{
+				"ref_id": "Mitre CVE-2024-39291",
+				"ref_url": "https://cve.mitre.org/cgi-bin/cvename.cgi?name=CVE-2024-39291",
+				"source": "CVE"
+			},
+			{
+				"ref_id": "SUSE CVE-2024-39291",
+				"ref_url": "https://www.suse.com/security/cve/CVE-2024-39291",
+				"source": "SUSE CVE"
+			},
+			{
+				"ref_id": "SUSE-SU-2024:2571-1",
+				"ref_url": "https://lists.suse.com/pipermail/sle-updates/2024-July/036103.html",
+				"source": "SUSE-SU"
+			},
+			{
+				"ref_id": "SUSE-SU-2024:2896-1",
+				"ref_url": "https://lists.suse.com/pipermail/sle-security-updates/2024-August/019185.html",
+				"source": "SUSE-SU"
+			},
+			{
+				"ref_id": "SUSE-SU-2024:2973-1",
+				"ref_url": "https://lists.suse.com/pipermail/sle-security-updates/2024-August/019280.html",
+				"source": "SUSE-SU"
+			}
+		],
+		"description": "\n    In the Linux kernel, the following vulnerability has been resolved:\n\ndrm/amdgpu: Fix buffer size in gfx_v9_4_3_init_ cp_compute_microcode() and rlc_microcode()\n\nThe function gfx_v9_4_3_init_microcode in gfx_v9_4_3.c was generating\nabout potential truncation of output when using the snprintf function.\nThe issue was due to the size of the buffer 'ucode_prefix' being too\nsmall to accommodate the maximum possible length of the string being\nwritten into it.\n\nThe string being written is \"amdgpu/%s_mec.bin\" or \"amdgpu/%s_rlc.bin\",\nwhere %s is replaced by the value of 'chip_name'. The length of this\nstring without the %s is 16 characters. The warning message indicated\nthat 'chip_name' could be up to 29 characters long, resulting in a total\nof 45 characters, which exceeds the buffer size of 30 characters.\n\nTo resolve this issue, the size of the 'ucode_prefix' buffer has been\nreduced from 30 to 15. This ensures that the maximum possible length of\nthe string being written into the buffer will not exceed its size, thus\npreventing potential buffer overflow and truncation issues.\n\nFixes the below with gcc W=1:\ndrivers/gpu/drm/amd/amdgpu/gfx_v9_4_3.c: In function 'gfx_v9_4_3_early_init':\ndrivers/gpu/drm/amd/amdgpu/gfx_v9_4_3.c:379:52: warning: '%s' directive output may be truncated writing up to 29 bytes into a region of size 23 [-Wformat-truncation=]\n  379 |         snprintf(fw_name, sizeof(fw_name), \"amdgpu/%s_rlc.bin\", chip_name);\n      |                                                    ^~\n......\n  439 |         r = gfx_v9_4_3_init_rlc_microcode(adev, ucode_prefix);\n      |                                                 ~~~~~~~~~~~~\ndrivers/gpu/drm/amd/amdgpu/gfx_v9_4_3.c:379:9: note: 'snprintf' output between 16 and 45 bytes into a destination of size 30\n  379 |         snprintf(fw_name, sizeof(fw_name), \"amdgpu/%s_rlc.bin\", chip_name);\n      |         ^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\ndrivers/gpu/drm/amd/amdgpu/gfx_v9_4_3.c:413:52: warning: '%s' directive output may be truncated writing up to 29 bytes into a region of size 23 [-Wformat-truncation=]\n  413 |         snprintf(fw_name, sizeof(fw_name), \"amdgpu/%s_mec.bin\", chip_name);\n      |                                                    ^~\n......\n  443 |         r = gfx_v9_4_3_init_cp_compute_microcode(adev, ucode_prefix);\n      |                                                        ~~~~~~~~~~~~\ndrivers/gpu/drm/amd/amdgpu/gfx_v9_4_3.c:413:9: note: 'snprintf' output between 16 and 45 bytes into a destination of size 30\n  413 |         snprintf(fw_name, sizeof(fw_name), \"amdgpu/%s_mec.bin\", chip_name);\n      |         ^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n    ",
+		"advisory": {
+			"from": "security@suse.de",
+			"severity": "Moderate",
+			"cve": [
+				{
+					"text": "CVE-2024-39291 at SUSE",
+					"href": "https://www.suse.com/security/cve/CVE-2024-39291/",
+					"impact": "medium",
+					"cvss3": "4.7/CVSS:3.1/AV:L/AC:H/PR:L/UI:N/S:U/C:N/I:N/A:H"
+				},
+				{
+					"text": "CVE-2024-39291 at NVD",
+					"href": "https://nvd.nist.gov/vuln/detail/CVE-2024-39291",
+					"impact": "high",
+					"cvss3": "7.8/CVSS:3.1/AV:L/AC:L/PR:L/UI:N/S:U/C:H/I:H/A:H"
+				}
+			],
+			"bugzilla": [
+				{
+					"text": "SUSE bug 1226934",
+					"href": "https://bugzilla.suse.com/1226934"
+				}
+			],
+			"issued": {
+				"date": "2024-06-26"
+			},
+			"updated": {
+				"date": "2024-10-09"
+			},
+			"affected_cpe_list": {
+				"cpe": [
+					"cpe:/o:suse:sle-micro:5.5"
+				]
+			}
+		}
+	},
+	"criteria": {
+		"operator": "AND",
+		"criterias": [
+			{
+				"operator": "OR",
+				"criterions": [
+					{
+						"test_ref": "oval:org.opensuse.security:tst:2009334017",
+						"comment": "kernel-default is not affected"
+					},
+					{
+						"test_ref": "oval:org.opensuse.security:tst:2009333928",
+						"comment": "kernel-source is not affected"
+					},
+					{
+						"test_ref": "oval:org.opensuse.security:tst:2009728712",
+						"comment": "kernel-source-rt is not affected"
+					}
+				]
+			}
+		],
+		"criterions": [
+			{
+				"test_ref": "oval:org.opensuse.security:tst:2009800388",
+				"comment": "SUSE Linux Enterprise Micro 5.5 is installed"
+			}
+		]
+	}
+}

@@ -1,0 +1,105 @@
+{
+	"id": "oval:org.opensuse.security:def:202352909",
+	"version": "1",
+	"class": "vulnerability",
+	"metadata": {
+		"title": "CVE-2023-52909",
+		"affected": {
+			"family": "unix",
+			"platform": [
+				"SUSE Linux Enterprise Micro 5.1"
+			]
+		},
+		"reference": [
+			{
+				"ref_id": "Mitre CVE-2023-52909",
+				"ref_url": "https://cve.mitre.org/cgi-bin/cvename.cgi?name=CVE-2023-52909",
+				"source": "CVE"
+			},
+			{
+				"ref_id": "SUSE CVE-2023-52909",
+				"ref_url": "https://www.suse.com/security/cve/CVE-2023-52909",
+				"source": "SUSE CVE"
+			},
+			{
+				"ref_id": "SUSE-SU-2024:3190-1",
+				"ref_url": "https://lists.suse.com/pipermail/sle-security-updates/2024-September/019403.html",
+				"source": "SUSE-SU"
+			},
+			{
+				"ref_id": "SUSE-SU-2024:3209-1",
+				"ref_url": "https://lists.suse.com/pipermail/sle-updates/2024-September/036854.html",
+				"source": "SUSE-SU"
+			},
+			{
+				"ref_id": "SUSE-SU-2024:3483-1",
+				"ref_url": "https://lists.suse.com/pipermail/sle-updates/2024-September/037089.html",
+				"source": "SUSE-SU"
+			}
+		],
+		"description": "\n    In the Linux kernel, the following vulnerability has been resolved:\n\nnfsd: fix handling of cached open files in nfsd4_open codepath\n\nCommit fb70bf124b05 (\"NFSD: Instantiate a struct file when creating a\nregular NFSv4 file\") added the ability to cache an open fd over a\ncompound. There are a couple of problems with the way this currently\nworks:\n\nIt's racy, as a newly-created nfsd_file can end up with its PENDING bit\ncleared while the nf is hashed, and the nf_file pointer is still zeroed\nout. Other tasks can find it in this state and they expect to see a\nvalid nf_file, and can oops if nf_file is NULL.\n\nAlso, there is no guarantee that we'll end up creating a new nfsd_file\nif one is already in the hash. If an extant entry is in the hash with a\nvalid nf_file, nfs4_get_vfs_file will clobber its nf_file pointer with\nthe value of op_file and the old nf_file will leak.\n\nFix both issues by making a new nfsd_file_acquirei_opened variant that\ntakes an optional file pointer. If one is present when this is called,\nwe'll take a new reference to it instead of trying to open the file. If\nthe nfsd_file already has a valid nf_file, we'll just ignore the\noptional file and pass the nfsd_file back as-is.\n\nAlso rework the tracepoints a bit to allow for an \"opened\" variant and\ndon't try to avoid counting acquisitions in the case where we already\nhave a cached open file.\n    ",
+		"advisory": {
+			"from": "security@suse.de",
+			"severity": "Moderate",
+			"cve": [
+				{
+					"text": "CVE-2023-52909 at SUSE",
+					"href": "https://www.suse.com/security/cve/CVE-2023-52909/",
+					"impact": "medium",
+					"cvss3": "5.5/CVSS:3.1/AV:L/AC:L/PR:L/UI:N/S:U/C:N/I:N/A:H"
+				},
+				{
+					"text": "CVE-2023-52909 at NVD",
+					"href": "https://nvd.nist.gov/vuln/detail/CVE-2023-52909",
+					"impact": "medium",
+					"cvss3": "4.7/CVSS:3.1/AV:L/AC:H/PR:L/UI:N/S:U/C:N/I:N/A:H"
+				}
+			],
+			"bugzilla": [
+				{
+					"text": "SUSE bug 1229524",
+					"href": "https://bugzilla.suse.com/1229524"
+				}
+			],
+			"issued": {
+				"date": "2024-09-08"
+			},
+			"updated": {
+				"date": "2024-09-30"
+			},
+			"affected_cpe_list": {
+				"cpe": [
+					"cpe:/o:suse:suse-microos:5.1"
+				]
+			}
+		}
+	},
+	"criteria": {
+		"operator": "AND",
+		"criterias": [
+			{
+				"operator": "OR",
+				"criterions": [
+					{
+						"test_ref": "oval:org.opensuse.security:tst:2009334017",
+						"comment": "kernel-default is not affected"
+					},
+					{
+						"test_ref": "oval:org.opensuse.security:tst:2009705046",
+						"comment": "kernel-rt is not affected"
+					},
+					{
+						"test_ref": "oval:org.opensuse.security:tst:2009728712",
+						"comment": "kernel-source-rt is not affected"
+					}
+				]
+			}
+		],
+		"criterions": [
+			{
+				"test_ref": "oval:org.opensuse.security:tst:2009669964",
+				"comment": "SUSE Linux Enterprise Micro 5.1 is installed"
+			}
+		]
+	}
+}

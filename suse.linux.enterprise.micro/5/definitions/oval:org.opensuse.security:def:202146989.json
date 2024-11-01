@@ -1,0 +1,161 @@
+{
+	"id": "oval:org.opensuse.security:def:202146989",
+	"version": "1",
+	"class": "vulnerability",
+	"metadata": {
+		"title": "CVE-2021-46989",
+		"affected": {
+			"family": "unix",
+			"platform": [
+				"SUSE Linux Enterprise Micro 5.0",
+				"SUSE Linux Enterprise Micro 5.1",
+				"SUSE Linux Enterprise Micro 5.2"
+			]
+		},
+		"reference": [
+			{
+				"ref_id": "Mitre CVE-2021-46989",
+				"ref_url": "https://cve.mitre.org/cgi-bin/cvename.cgi?name=CVE-2021-46989",
+				"source": "CVE"
+			},
+			{
+				"ref_id": "SUSE CVE-2021-46989",
+				"ref_url": "https://www.suse.com/security/cve/CVE-2021-46989",
+				"source": "SUSE CVE"
+			},
+			{
+				"ref_id": "SUSE-SU-2024:0856-1",
+				"ref_url": "https://lists.suse.com/pipermail/sle-security-updates/2024-March/018155.html",
+				"source": "SUSE-SU"
+			},
+			{
+				"ref_id": "SUSE-SU-2024:0857-1",
+				"ref_url": "https://lists.suse.com/pipermail/sle-security-updates/2024-March/018154.html",
+				"source": "SUSE-SU"
+			},
+			{
+				"ref_id": "SUSE-SU-2024:0926-1",
+				"ref_url": "https://lists.suse.com/pipermail/sle-security-updates/2024-March/018204.html",
+				"source": "SUSE-SU"
+			}
+		],
+		"description": "\n    In the Linux kernel, the following vulnerability has been resolved:\n\nhfsplus: prevent corruption in shrinking truncate\n\nI believe there are some issues introduced by commit 31651c607151\n(\"hfsplus: avoid deadlock on file truncation\")\n\nHFS+ has extent records which always contains 8 extents.  In case the\nfirst extent record in catalog file gets full, new ones are allocated from\nextents overflow file.\n\nIn case shrinking truncate happens to middle of an extent record which\nlocates in extents overflow file, the logic in hfsplus_file_truncate() was\nchanged so that call to hfs_brec_remove() is not guarded any more.\n\nRight action would be just freeing the extents that exceed the new size\ninside extent record by calling hfsplus_free_extents(), and then check if\nthe whole extent record should be removed.  However since the guard\n(blk_cnt > start) is now after the call to hfs_brec_remove(), this has\nunfortunate effect that the last matching extent record is removed\nunconditionally.\n\nTo reproduce this issue, create a file which has at least 10 extents, and\nthen perform shrinking truncate into middle of the last extent record, so\nthat the number of remaining extents is not under or divisible by 8.  This\ncauses the last extent record (8 extents) to be removed totally instead of\ntruncating into middle of it.  Thus this causes corruption, and lost data.\n\nFix for this is simply checking if the new truncated end is below the\nstart of this extent record, making it safe to remove the full extent\nrecord.  However call to hfs_brec_remove() can't be moved to it's previous\nplace since we're dropping ->tree_lock and it can cause a race condition\nand the cached info being invalidated possibly corrupting the node data.\n\nAnother issue is related to this one.  When entering into the block\n(blk_cnt > start) we are not holding the ->tree_lock.  We break out from\nthe loop not holding the lock, but hfs_find_exit() does unlock it.  Not\nsure if it's possible for someone else to take the lock under our feet,\nbut it can cause hard to debug errors and premature unlocking.  Even if\nthere's no real risk of it, the locking should still always be kept in\nbalance.  Thus taking the lock now just before the check.\n    ",
+		"advisory": {
+			"from": "security@suse.de",
+			"severity": "Moderate",
+			"cve": [
+				{
+					"text": "CVE-2021-46989 at SUSE",
+					"href": "https://www.suse.com/security/cve/CVE-2021-46989/",
+					"impact": "medium",
+					"cvss3": "5.5/CVSS:3.1/AV:L/AC:L/PR:L/UI:N/S:U/C:N/I:N/A:H"
+				},
+				{
+					"text": "CVE-2021-46989 at NVD",
+					"href": "https://nvd.nist.gov/vuln/detail/CVE-2021-46989"
+				}
+			],
+			"bugzilla": [
+				{
+					"text": "SUSE bug 1220737",
+					"href": "https://bugzilla.suse.com/1220737"
+				}
+			],
+			"issued": {
+				"date": "2024-10-18"
+			},
+			"updated": {
+				"date": "2024-10-18"
+			},
+			"affected_cpe_list": {
+				"cpe": [
+					"cpe:/o:suse:suse-microos:5.0",
+					"cpe:/o:suse:suse-microos:5.1",
+					"cpe:/o:suse:suse-microos:5.2"
+				]
+			}
+		}
+	},
+	"criteria": {
+		"operator": "OR",
+		"criterias": [
+			{
+				"operator": "AND",
+				"criterions": [
+					{
+						"test_ref": "oval:org.opensuse.security:tst:2009704855",
+						"comment": "SUSE Linux Enterprise Micro 5.0 is installed"
+					},
+					{
+						"test_ref": "oval:org.opensuse.security:tst:2009334017",
+						"comment": "kernel-default is not affected"
+					}
+				]
+			},
+			{
+				"operator": "AND",
+				"criterias": [
+					{
+						"operator": "OR",
+						"criterions": [
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009850757",
+								"comment": "kernel-default-5.3.18-150300.59.153.2 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009850579",
+								"comment": "kernel-default-base-5.3.18-150300.59.153.2.150300.18.90.2 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009850755",
+								"comment": "kernel-rt-5.3.18-150300.161.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009850756",
+								"comment": "kernel-source-rt-5.3.18-150300.161.1 is installed"
+							}
+						]
+					}
+				],
+				"criterions": [
+					{
+						"test_ref": "oval:org.opensuse.security:tst:2009681300",
+						"comment": "SUSE Linux Enterprise Micro 5.2 is installed"
+					}
+				]
+			},
+			{
+				"operator": "AND",
+				"criterias": [
+					{
+						"operator": "OR",
+						"criterions": [
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009850757",
+								"comment": "kernel-default-5.3.18-150300.59.153.2 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009850758",
+								"comment": "kernel-default-base-5.3.18-150300.59.153.2.150300.18.90.2 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009850755",
+								"comment": "kernel-rt-5.3.18-150300.161.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009850756",
+								"comment": "kernel-source-rt-5.3.18-150300.161.1 is installed"
+							}
+						]
+					}
+				],
+				"criterions": [
+					{
+						"test_ref": "oval:org.opensuse.security:tst:2009669964",
+						"comment": "SUSE Linux Enterprise Micro 5.1 is installed"
+					}
+				]
+			}
+		]
+	}
+}

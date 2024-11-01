@@ -1,0 +1,144 @@
+{
+	"id": "oval:org.opensuse.security:def:202147546",
+	"version": "1",
+	"class": "vulnerability",
+	"metadata": {
+		"title": "CVE-2021-47546",
+		"affected": {
+			"family": "unix",
+			"platform": [
+				"SUSE Linux Enterprise Micro 5.0",
+				"SUSE Linux Enterprise Micro 5.5"
+			]
+		},
+		"reference": [
+			{
+				"ref_id": "Mitre CVE-2021-47546",
+				"ref_url": "https://cve.mitre.org/cgi-bin/cvename.cgi?name=CVE-2021-47546",
+				"source": "CVE"
+			},
+			{
+				"ref_id": "SUSE CVE-2021-47546",
+				"ref_url": "https://www.suse.com/security/cve/CVE-2021-47546",
+				"source": "SUSE CVE"
+			},
+			{
+				"ref_id": "SUSE-SU-2024:2894-1",
+				"ref_url": "https://lists.suse.com/pipermail/sle-updates/2024-August/036430.html",
+				"source": "SUSE-SU"
+			},
+			{
+				"ref_id": "SUSE-SU-2024:2939-1",
+				"ref_url": "https://lists.suse.com/pipermail/sle-security-updates/2024-August/019211.html",
+				"source": "SUSE-SU"
+			},
+			{
+				"ref_id": "SUSE-SU-2024:2947-1",
+				"ref_url": "https://lists.suse.com/pipermail/sle-updates/2024-August/036488.html",
+				"source": "SUSE-SU"
+			},
+			{
+				"ref_id": "SUSE-SU-2024:3190-1",
+				"ref_url": "https://lists.suse.com/pipermail/sle-security-updates/2024-September/019403.html",
+				"source": "SUSE-SU"
+			},
+			{
+				"ref_id": "SUSE-SU-2024:3209-1",
+				"ref_url": "https://lists.suse.com/pipermail/sle-updates/2024-September/036854.html",
+				"source": "SUSE-SU"
+			},
+			{
+				"ref_id": "SUSE-SU-2024:3483-1",
+				"ref_url": "https://lists.suse.com/pipermail/sle-updates/2024-September/037089.html",
+				"source": "SUSE-SU"
+			}
+		],
+		"description": "\n    In the Linux kernel, the following vulnerability has been resolved:\n\nipv6: fix memory leak in fib6_rule_suppress\n\nThe kernel leaks memory when a `fib` rule is present in IPv6 nftables\nfirewall rules and a suppress_prefix rule is present in the IPv6 routing\nrules (used by certain tools such as wg-quick). In such scenarios, every\nincoming packet will leak an allocation in `ip6_dst_cache` slab cache.\n\nAfter some hours of `bpftrace`-ing and source code reading, I tracked\ndown the issue to ca7a03c41753 (\"ipv6: do not free rt if\nFIB_LOOKUP_NOREF is set on suppress rule\").\n\nThe problem with that change is that the generic `args->flags` always have\n`FIB_LOOKUP_NOREF` set[1][2] but the IPv6-specific flag\n`RT6_LOOKUP_F_DST_NOREF` might not be, leading to `fib6_rule_suppress` not\ndecreasing the refcount when needed.\n\nHow to reproduce:\n - Add the following nftables rule to a prerouting chain:\n     meta nfproto ipv6 fib saddr . mark . iif oif missing drop\n   This can be done with:\n     sudo nft create table inet test\n     sudo nft create chain inet test test_chain '{ type filter hook prerouting priority filter + 10; policy accept; }'\n     sudo nft add rule inet test test_chain meta nfproto ipv6 fib saddr . mark . iif oif missing drop\n - Run:\n     sudo ip -6 rule add table main suppress_prefixlength 0\n - Watch `sudo slabtop -o | grep ip6_dst_cache` to see memory usage increase\n   with every incoming ipv6 packet.\n\nThis patch exposes the protocol-specific flags to the protocol\nspecific `suppress` function, and check the protocol-specific `flags`\nargument for RT6_LOOKUP_F_DST_NOREF instead of the generic\nFIB_LOOKUP_NOREF when decreasing the refcount, like this.\n\n[1]: https://github.com/torvalds/linux/blob/ca7a03c4175366a92cee0ccc4fec0038c3266e26/net/ipv6/fib6_rules.c#L71\n[2]: https://github.com/torvalds/linux/blob/ca7a03c4175366a92cee0ccc4fec0038c3266e26/net/ipv6/fib6_rules.c#L99\n    ",
+		"advisory": {
+			"from": "security@suse.de",
+			"severity": "Low",
+			"cve": [
+				{
+					"text": "CVE-2021-47546 at SUSE",
+					"href": "https://www.suse.com/security/cve/CVE-2021-47546/",
+					"impact": "low",
+					"cvss3": "2.3/CVSS:3.1/AV:L/AC:L/PR:H/UI:N/S:U/C:N/I:N/A:L"
+				},
+				{
+					"text": "CVE-2021-47546 at NVD",
+					"href": "https://nvd.nist.gov/vuln/detail/CVE-2021-47546",
+					"impact": "medium",
+					"cvss3": "5.5/CVSS:3.1/AV:L/AC:L/PR:L/UI:N/S:U/C:N/I:N/A:H"
+				}
+			],
+			"bugzilla": [
+				{
+					"text": "SUSE bug 1225504",
+					"href": "https://bugzilla.suse.com/1225504"
+				}
+			],
+			"issued": {
+				"date": "2024-10-18"
+			},
+			"updated": {
+				"date": "2024-10-18"
+			},
+			"affected_cpe_list": {
+				"cpe": [
+					"cpe:/o:suse:sle-micro:5.5",
+					"cpe:/o:suse:suse-microos:5.0"
+				]
+			}
+		}
+	},
+	"criteria": {
+		"operator": "OR",
+		"criterias": [
+			{
+				"operator": "AND",
+				"criterions": [
+					{
+						"test_ref": "oval:org.opensuse.security:tst:2009704855",
+						"comment": "SUSE Linux Enterprise Micro 5.0 is installed"
+					},
+					{
+						"test_ref": "oval:org.opensuse.security:tst:2009334017",
+						"comment": "kernel-default is not affected"
+					}
+				]
+			},
+			{
+				"operator": "AND",
+				"criterias": [
+					{
+						"operator": "OR",
+						"criterions": [
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009945068",
+								"comment": "kernel-default-5.14.21-150500.55.80.2 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009945182",
+								"comment": "kernel-default-base-5.14.21-150500.55.80.2.150500.6.35.6 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009942305",
+								"comment": "kernel-rt-5.14.21-150500.13.67.3 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009942316",
+								"comment": "kernel-source-rt-5.14.21-150500.13.67.3 is installed"
+							}
+						]
+					}
+				],
+				"criterions": [
+					{
+						"test_ref": "oval:org.opensuse.security:tst:2009800388",
+						"comment": "SUSE Linux Enterprise Micro 5.5 is installed"
+					}
+				]
+			}
+		]
+	}
+}

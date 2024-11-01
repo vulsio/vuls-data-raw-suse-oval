@@ -1,0 +1,181 @@
+{
+	"id": "oval:org.opensuse.security:def:202147069",
+	"version": "1",
+	"class": "vulnerability",
+	"metadata": {
+		"title": "CVE-2021-47069",
+		"affected": {
+			"family": "unix",
+			"platform": [
+				"SUSE Linux Enterprise Micro 5.0",
+				"SUSE Linux Enterprise Micro 5.1",
+				"SUSE Linux Enterprise Micro 5.2"
+			]
+		},
+		"reference": [
+			{
+				"ref_id": "Mitre CVE-2021-47069",
+				"ref_url": "https://cve.mitre.org/cgi-bin/cvename.cgi?name=CVE-2021-47069",
+				"source": "CVE"
+			},
+			{
+				"ref_id": "SUSE CVE-2021-47069",
+				"ref_url": "https://www.suse.com/security/cve/CVE-2021-47069",
+				"source": "SUSE CVE"
+			},
+			{
+				"ref_id": "SUSE-SU-2024:0856-1",
+				"ref_url": "https://lists.suse.com/pipermail/sle-security-updates/2024-March/018155.html",
+				"source": "SUSE-SU"
+			},
+			{
+				"ref_id": "SUSE-SU-2024:0857-1",
+				"ref_url": "https://lists.suse.com/pipermail/sle-security-updates/2024-March/018154.html",
+				"source": "SUSE-SU"
+			},
+			{
+				"ref_id": "SUSE-SU-2024:0926-1",
+				"ref_url": "https://lists.suse.com/pipermail/sle-security-updates/2024-March/018204.html",
+				"source": "SUSE-SU"
+			},
+			{
+				"ref_id": "SUSE-SU-2024:1454-1",
+				"ref_url": "https://lists.suse.com/pipermail/sle-updates/2024-April/035109.html",
+				"source": "SUSE-SU"
+			},
+			{
+				"ref_id": "SUSE-SU-2024:1489-1",
+				"ref_url": "https://lists.suse.com/pipermail/sle-security-updates/2024-August/019270.html",
+				"source": "SUSE-SU"
+			},
+			{
+				"ref_id": "SUSE-SU-2024:3565-1",
+				"ref_url": "https://lists.suse.com/pipermail/sle-security-updates/2024-October/019573.html",
+				"source": "SUSE-SU"
+			},
+			{
+				"ref_id": "SUSE-SU-2024:3585-1",
+				"ref_url": "https://lists.suse.com/pipermail/sle-updates/2024-October/037202.html",
+				"source": "SUSE-SU"
+			}
+		],
+		"description": "\n    In the Linux kernel, the following vulnerability has been resolved:\n\nipc/mqueue, msg, sem: avoid relying on a stack reference past its expiry\n\ndo_mq_timedreceive calls wq_sleep with a stack local address.  The\nsender (do_mq_timedsend) uses this address to later call pipelined_send.\n\nThis leads to a very hard to trigger race where a do_mq_timedreceive\ncall might return and leave do_mq_timedsend to rely on an invalid\naddress, causing the following crash:\n\n  RIP: 0010:wake_q_add_safe+0x13/0x60\n  Call Trace:\n   __x64_sys_mq_timedsend+0x2a9/0x490\n   do_syscall_64+0x80/0x680\n   entry_SYSCALL_64_after_hwframe+0x44/0xa9\n  RIP: 0033:0x7f5928e40343\n\nThe race occurs as:\n\n1. do_mq_timedreceive calls wq_sleep with the address of `struct\n   ext_wait_queue` on function stack (aliased as `ewq_addr` here) - it\n   holds a valid `struct ext_wait_queue *` as long as the stack has not\n   been overwritten.\n\n2. `ewq_addr` gets added to info->e_wait_q[RECV].list in wq_add, and\n   do_mq_timedsend receives it via wq_get_first_waiter(info, RECV) to call\n   __pipelined_op.\n\n3. Sender calls __pipelined_op::smp_store_release(&this->state,\n   STATE_READY).  Here is where the race window begins.  (`this` is\n   `ewq_addr`.)\n\n4. If the receiver wakes up now in do_mq_timedreceive::wq_sleep, it\n   will see `state == STATE_READY` and break.\n\n5. do_mq_timedreceive returns, and `ewq_addr` is no longer guaranteed\n   to be a `struct ext_wait_queue *` since it was on do_mq_timedreceive's\n   stack.  (Although the address may not get overwritten until another\n   function happens to touch it, which means it can persist around for an\n   indefinite time.)\n\n6. do_mq_timedsend::__pipelined_op() still believes `ewq_addr` is a\n   `struct ext_wait_queue *`, and uses it to find a task_struct to pass to\n   the wake_q_add_safe call.  In the lucky case where nothing has\n   overwritten `ewq_addr` yet, `ewq_addr->task` is the right task_struct.\n   In the unlucky case, __pipelined_op::wake_q_add_safe gets handed a\n   bogus address as the receiver's task_struct causing the crash.\n\ndo_mq_timedsend::__pipelined_op() should not dereference `this` after\nsetting STATE_READY, as the receiver counterpart is now free to return.\nChange __pipelined_op to call wake_q_add_safe on the receiver's\ntask_struct returned by get_task_struct, instead of dereferencing `this`\nwhich sits on the receiver's stack.\n\nAs Manfred pointed out, the race potentially also exists in\nipc/msg.c::expunge_all and ipc/sem.c::wake_up_sem_queue_prepare.  Fix\nthose in the same way.\n    ",
+		"advisory": {
+			"from": "security@suse.de",
+			"severity": "Moderate",
+			"cve": [
+				{
+					"text": "CVE-2021-47069 at SUSE",
+					"href": "https://www.suse.com/security/cve/CVE-2021-47069/",
+					"impact": "medium",
+					"cvss3": "4.7/CVSS:3.1/AV:L/AC:H/PR:L/UI:N/S:U/C:N/I:N/A:H"
+				},
+				{
+					"text": "CVE-2021-47069 at NVD",
+					"href": "https://nvd.nist.gov/vuln/detail/CVE-2021-47069"
+				}
+			],
+			"bugzilla": [
+				{
+					"text": "SUSE bug 1220826",
+					"href": "https://bugzilla.suse.com/1220826"
+				}
+			],
+			"issued": {
+				"date": "2024-10-18"
+			},
+			"updated": {
+				"date": "2024-10-18"
+			},
+			"affected_cpe_list": {
+				"cpe": [
+					"cpe:/o:suse:suse-microos:5.0",
+					"cpe:/o:suse:suse-microos:5.1",
+					"cpe:/o:suse:suse-microos:5.2"
+				]
+			}
+		}
+	},
+	"criteria": {
+		"operator": "OR",
+		"criterias": [
+			{
+				"operator": "AND",
+				"criterions": [
+					{
+						"test_ref": "oval:org.opensuse.security:tst:2009704855",
+						"comment": "SUSE Linux Enterprise Micro 5.0 is installed"
+					},
+					{
+						"test_ref": "oval:org.opensuse.security:tst:2009334017",
+						"comment": "kernel-default is not affected"
+					}
+				]
+			},
+			{
+				"operator": "AND",
+				"criterias": [
+					{
+						"operator": "OR",
+						"criterions": [
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009947245",
+								"comment": "kernel-default-5.3.18-150300.59.179.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009946685",
+								"comment": "kernel-default-base-5.3.18-150300.59.179.1.150300.18.105.2 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009850755",
+								"comment": "kernel-rt-5.3.18-150300.161.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009850756",
+								"comment": "kernel-source-rt-5.3.18-150300.161.1 is installed"
+							}
+						]
+					}
+				],
+				"criterions": [
+					{
+						"test_ref": "oval:org.opensuse.security:tst:2009681300",
+						"comment": "SUSE Linux Enterprise Micro 5.2 is installed"
+					}
+				]
+			},
+			{
+				"operator": "AND",
+				"criterias": [
+					{
+						"operator": "OR",
+						"criterions": [
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009947245",
+								"comment": "kernel-default-5.3.18-150300.59.179.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009947246",
+								"comment": "kernel-default-base-5.3.18-150300.59.179.1.150300.18.105.2 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009850755",
+								"comment": "kernel-rt-5.3.18-150300.161.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009850756",
+								"comment": "kernel-source-rt-5.3.18-150300.161.1 is installed"
+							}
+						]
+					}
+				],
+				"criterions": [
+					{
+						"test_ref": "oval:org.opensuse.security:tst:2009669964",
+						"comment": "SUSE Linux Enterprise Micro 5.1 is installed"
+					}
+				]
+			}
+		]
+	}
+}

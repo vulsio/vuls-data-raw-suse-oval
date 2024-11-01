@@ -1,0 +1,147 @@
+{
+	"id": "oval:org.opensuse.security:def:202147436",
+	"version": "1",
+	"class": "vulnerability",
+	"metadata": {
+		"title": "CVE-2021-47436",
+		"affected": {
+			"family": "unix",
+			"platform": [
+				"SUSE Linux Enterprise Micro 5.3"
+			]
+		},
+		"reference": [
+			{
+				"ref_id": "Mitre CVE-2021-47436",
+				"ref_url": "https://cve.mitre.org/cgi-bin/cvename.cgi?name=CVE-2021-47436",
+				"source": "CVE"
+			},
+			{
+				"ref_id": "SUSE CVE-2021-47436",
+				"ref_url": "https://www.suse.com/security/cve/CVE-2021-47436",
+				"source": "SUSE CVE"
+			},
+			{
+				"ref_id": "SUSE-SU-2024:1979-1",
+				"ref_url": "https://lists.suse.com/pipermail/sle-updates/2024-June/035536.html",
+				"source": "SUSE-SU"
+			},
+			{
+				"ref_id": "SUSE-SU-2024:1983-1",
+				"ref_url": "https://lists.suse.com/pipermail/sle-updates/2024-June/035554.html",
+				"source": "SUSE-SU"
+			},
+			{
+				"ref_id": "SUSE-SU-2024:2008-1",
+				"ref_url": "https://lists.suse.com/pipermail/sle-updates/2024-June/035569.html",
+				"source": "SUSE-SU"
+			},
+			{
+				"ref_id": "SUSE-SU-2024:2010-1",
+				"ref_url": "https://lists.suse.com/pipermail/sle-updates/2024-June/035576.html",
+				"source": "SUSE-SU"
+			},
+			{
+				"ref_id": "SUSE-SU-2024:2011-1",
+				"ref_url": "https://lists.suse.com/pipermail/sle-updates/2024-June/035575.html",
+				"source": "SUSE-SU"
+			},
+			{
+				"ref_id": "SUSE-SU-2024:2019-1",
+				"ref_url": "https://lists.suse.com/pipermail/sle-updates/2024-June/035578.html",
+				"source": "SUSE-SU"
+			},
+			{
+				"ref_id": "SUSE-SU-2024:2183-1",
+				"ref_url": "https://lists.suse.com/pipermail/sle-updates/2024-June/035717.html",
+				"source": "SUSE-SU"
+			},
+			{
+				"ref_id": "SUSE-SU-2024:2184-1",
+				"ref_url": "https://lists.suse.com/pipermail/sle-updates/2024-June/035716.html",
+				"source": "SUSE-SU"
+			},
+			{
+				"ref_id": "SUSE-SU-2024:2185-1",
+				"ref_url": "https://lists.suse.com/pipermail/sle-updates/2024-June/035718.html",
+				"source": "SUSE-SU"
+			},
+			{
+				"ref_id": "SUSE-SU-2024:2189-1",
+				"ref_url": "https://lists.suse.com/pipermail/sle-updates/2024-June/035721.html",
+				"source": "SUSE-SU"
+			},
+			{
+				"ref_id": "SUSE-SU-2024:2190-1",
+				"ref_url": "https://lists.suse.com/pipermail/sle-updates/2024-June/035732.html",
+				"source": "SUSE-SU"
+			}
+		],
+		"description": "\n    In the Linux kernel, the following vulnerability has been resolved:\n\nusb: musb: dsps: Fix the probe error path\n\nCommit 7c75bde329d7 (\"usb: musb: musb_dsps: request_irq() after\ninitializing musb\") has inverted the calls to\ndsps_setup_optional_vbus_irq() and dsps_create_musb_pdev() without\nupdating correctly the error path. dsps_create_musb_pdev() allocates and\nregisters a new platform device which must be unregistered and freed\nwith platform_device_unregister(), and this is missing upon\ndsps_setup_optional_vbus_irq() error.\n\nWhile on the master branch it seems not to trigger any issue, I observed\na kernel crash because of a NULL pointer dereference with a v5.10.70\nstable kernel where the patch mentioned above was backported. With this\nkernel version, -EPROBE_DEFER is returned the first time\ndsps_setup_optional_vbus_irq() is called which triggers the probe to\nerror out without unregistering the platform device. Unfortunately, on\nthe Beagle Bone Black Wireless, the platform device still living in the\nsystem is being used by the USB Ethernet gadget driver, which during the\nboot phase triggers the crash.\n\nMy limited knowledge of the musb world prevents me to revert this commit\nwhich was sent to silence a robot warning which, as far as I understand,\ndoes not make sense. The goal of this patch was to prevent an IRQ to\nfire before the platform device being registered. I think this cannot\never happen due to the fact that enabling the interrupts is done by the\n->enable() callback of the platform musb device, and this platform\ndevice must be already registered in order for the core or any other\nuser to use this callback.\n\nHence, I decided to fix the error path, which might prevent future\nerrors on mainline kernels while also fixing older ones.\n    ",
+		"advisory": {
+			"from": "security@suse.de",
+			"severity": "Moderate",
+			"cve": [
+				{
+					"text": "CVE-2021-47436 at SUSE",
+					"href": "https://www.suse.com/security/cve/CVE-2021-47436/",
+					"impact": "medium",
+					"cvss3": "5.5/CVSS:3.1/AV:L/AC:L/PR:L/UI:N/S:U/C:N/I:N/A:H"
+				},
+				{
+					"text": "CVE-2021-47436 at NVD",
+					"href": "https://nvd.nist.gov/vuln/detail/CVE-2021-47436"
+				}
+			],
+			"bugzilla": [
+				{
+					"text": "SUSE bug 1225244",
+					"href": "https://bugzilla.suse.com/1225244"
+				}
+			],
+			"issued": {
+				"date": "2024-07-26"
+			},
+			"updated": {
+				"date": "2024-07-26"
+			},
+			"affected_cpe_list": {
+				"cpe": [
+					"cpe:/o:suse:sle-micro:5.3"
+				]
+			}
+		}
+	},
+	"criteria": {
+		"operator": "AND",
+		"criterias": [
+			{
+				"operator": "OR",
+				"criterions": [
+					{
+						"test_ref": "oval:org.opensuse.security:tst:2009869879",
+						"comment": "kernel-default-5.14.21-150400.24.122.2 is installed"
+					},
+					{
+						"test_ref": "oval:org.opensuse.security:tst:2009869533",
+						"comment": "kernel-default-base-5.14.21-150400.24.122.2.150400.24.58.2 is installed"
+					},
+					{
+						"test_ref": "oval:org.opensuse.security:tst:2009865707",
+						"comment": "kernel-rt-5.14.21-150400.15.82.1 is installed"
+					},
+					{
+						"test_ref": "oval:org.opensuse.security:tst:2009865708",
+						"comment": "kernel-source-rt-5.14.21-150400.15.82.1 is installed"
+					}
+				]
+			}
+		],
+		"criterions": [
+			{
+				"test_ref": "oval:org.opensuse.security:tst:2009728694",
+				"comment": "SUSE Linux Enterprise Micro 5.3 is installed"
+			}
+		]
+	}
+}

@@ -1,0 +1,105 @@
+{
+	"id": "oval:org.opensuse.security:def:202439510",
+	"version": "1",
+	"class": "vulnerability",
+	"metadata": {
+		"title": "CVE-2024-39510",
+		"affected": {
+			"family": "unix",
+			"platform": [
+				"SUSE Linux Enterprise Micro 5.2"
+			]
+		},
+		"reference": [
+			{
+				"ref_id": "Mitre CVE-2024-39510",
+				"ref_url": "https://cve.mitre.org/cgi-bin/cvename.cgi?name=CVE-2024-39510",
+				"source": "CVE"
+			},
+			{
+				"ref_id": "SUSE CVE-2024-39510",
+				"ref_url": "https://www.suse.com/security/cve/CVE-2024-39510",
+				"source": "SUSE CVE"
+			},
+			{
+				"ref_id": "SUSE-SU-2024:3194-1",
+				"ref_url": "https://lists.suse.com/pipermail/sle-updates/2024-September/036835.html",
+				"source": "SUSE-SU"
+			},
+			{
+				"ref_id": "SUSE-SU-2024:3195-1",
+				"ref_url": "https://lists.suse.com/pipermail/sle-updates/2024-September/036842.html",
+				"source": "SUSE-SU"
+			},
+			{
+				"ref_id": "SUSE-SU-2024:3383-1",
+				"ref_url": "https://lists.suse.com/pipermail/sle-security-updates/2024-September/019497.html",
+				"source": "SUSE-SU"
+			}
+		],
+		"description": "\n    In the Linux kernel, the following vulnerability has been resolved:\n\ncachefiles: fix slab-use-after-free in cachefiles_ondemand_daemon_read()\n\nWe got the following issue in a fuzz test of randomly issuing the restore\ncommand:\n\n==================================================================\nBUG: KASAN: slab-use-after-free in cachefiles_ondemand_daemon_read+0xb41/0xb60\nRead of size 8 at addr ffff888122e84088 by task ondemand-04-dae/963\n\nCPU: 13 PID: 963 Comm: ondemand-04-dae Not tainted 6.8.0-dirty #564\nCall Trace:\n kasan_report+0x93/0xc0\n cachefiles_ondemand_daemon_read+0xb41/0xb60\n vfs_read+0x169/0xb50\n ksys_read+0xf5/0x1e0\n\nAllocated by task 116:\n kmem_cache_alloc+0x140/0x3a0\n cachefiles_lookup_cookie+0x140/0xcd0\n fscache_cookie_state_machine+0x43c/0x1230\n [...]\n\nFreed by task 792:\n kmem_cache_free+0xfe/0x390\n cachefiles_put_object+0x241/0x480\n fscache_cookie_state_machine+0x5c8/0x1230\n [...]\n==================================================================\n\nFollowing is the process that triggers the issue:\n\n     mount  |   daemon_thread1    |    daemon_thread2\n------------------------------------------------------------\ncachefiles_withdraw_cookie\n cachefiles_ondemand_clean_object(object)\n  cachefiles_ondemand_send_req\n   REQ_A = kzalloc(sizeof(*req) + data_len)\n   wait_for_completion(&REQ_A->done)\n\n            cachefiles_daemon_read\n             cachefiles_ondemand_daemon_read\n              REQ_A = cachefiles_ondemand_select_req\n              msg->object_id = req->object->ondemand->ondemand_id\n                                  ------ restore ------\n                                  cachefiles_ondemand_restore\n                                  xas_for_each(&xas, req, ULONG_MAX)\n                                   xas_set_mark(&xas, CACHEFILES_REQ_NEW)\n\n                                  cachefiles_daemon_read\n                                   cachefiles_ondemand_daemon_read\n                                    REQ_A = cachefiles_ondemand_select_req\n              copy_to_user(_buffer, msg, n)\n               xa_erase(&cache->reqs, id)\n               complete(&REQ_A->done)\n              ------ close(fd) ------\n              cachefiles_ondemand_fd_release\n               cachefiles_put_object\n cachefiles_put_object\n  kmem_cache_free(cachefiles_object_jar, object)\n                                    REQ_A->object->ondemand->ondemand_id\n                                     // object UAF !!!\n\nWhen we see the request within xa_lock, req->object must not have been\nfreed yet, so grab the reference count of object before xa_unlock to\navoid the above issue.\n    ",
+		"advisory": {
+			"from": "security@suse.de",
+			"severity": "Moderate",
+			"cve": [
+				{
+					"text": "CVE-2024-39510 at SUSE",
+					"href": "https://www.suse.com/security/cve/CVE-2024-39510/",
+					"impact": "medium",
+					"cvss3": "5.3/CVSS:3.1/AV:L/AC:H/PR:L/UI:N/S:U/C:L/I:N/A:H"
+				},
+				{
+					"text": "CVE-2024-39510 at NVD",
+					"href": "https://nvd.nist.gov/vuln/detail/CVE-2024-39510",
+					"impact": "high",
+					"cvss3": "7.8/CVSS:3.1/AV:L/AC:L/PR:L/UI:N/S:U/C:H/I:H/A:H"
+				}
+			],
+			"bugzilla": [
+				{
+					"text": "SUSE bug 1227734",
+					"href": "https://bugzilla.suse.com/1227734"
+				}
+			],
+			"issued": {
+				"date": "2024-07-13"
+			},
+			"updated": {
+				"date": "2024-09-24"
+			},
+			"affected_cpe_list": {
+				"cpe": [
+					"cpe:/o:suse:suse-microos:5.2"
+				]
+			}
+		}
+	},
+	"criteria": {
+		"operator": "AND",
+		"criterias": [
+			{
+				"operator": "OR",
+				"criterions": [
+					{
+						"test_ref": "oval:org.opensuse.security:tst:2009334017",
+						"comment": "kernel-default is not affected"
+					},
+					{
+						"test_ref": "oval:org.opensuse.security:tst:2009705046",
+						"comment": "kernel-rt is not affected"
+					},
+					{
+						"test_ref": "oval:org.opensuse.security:tst:2009728712",
+						"comment": "kernel-source-rt is not affected"
+					}
+				]
+			}
+		],
+		"criterions": [
+			{
+				"test_ref": "oval:org.opensuse.security:tst:2009681300",
+				"comment": "SUSE Linux Enterprise Micro 5.2 is installed"
+			}
+		]
+	}
+}

@@ -1,0 +1,88 @@
+{
+	"id": "oval:org.opensuse.security:def:202440917",
+	"version": "1",
+	"class": "vulnerability",
+	"metadata": {
+		"title": "CVE-2024-40917",
+		"affected": {
+			"family": "unix",
+			"platform": [
+				"SUSE Linux Enterprise Micro 5.2"
+			]
+		},
+		"reference": [
+			{
+				"ref_id": "Mitre CVE-2024-40917",
+				"ref_url": "https://cve.mitre.org/cgi-bin/cvename.cgi?name=CVE-2024-40917",
+				"source": "CVE"
+			},
+			{
+				"ref_id": "SUSE CVE-2024-40917",
+				"ref_url": "https://www.suse.com/security/cve/CVE-2024-40917",
+				"source": "SUSE CVE"
+			}
+		],
+		"description": "\n    In the Linux kernel, the following vulnerability has been resolved:\n\nmemblock: make memblock_set_node() also warn about use of MAX_NUMNODES\n\nOn an (old) x86 system with SRAT just covering space above 4Gb:\n\n    ACPI: SRAT: Node 0 PXM 0 [mem 0x100000000-0xfffffffff] hotplug\n\nthe commit referenced below leads to this NUMA configuration no longer\nbeing refused by a CONFIG_NUMA=y kernel (previously\n\n    NUMA: nodes only cover 6144MB of your 8185MB e820 RAM. Not used.\n    No NUMA configuration found\n    Faking a node at [mem 0x0000000000000000-0x000000027fffffff]\n\nwas seen in the log directly after the message quoted above), because of\nmemblock_validate_numa_coverage() checking for NUMA_NO_NODE (only). This\nin turn led to memblock_alloc_range_nid()'s warning about MAX_NUMNODES\ntriggering, followed by a NULL deref in memmap_init() when trying to\naccess node 64's (NODE_SHIFT=6) node data.\n\nTo compensate said change, make memblock_set_node() warn on and adjust\na passed in value of MAX_NUMNODES, just like various other functions\nalready do.\n    ",
+		"advisory": {
+			"from": "security@suse.de",
+			"severity": "Moderate",
+			"cve": [
+				{
+					"text": "CVE-2024-40917 at SUSE",
+					"href": "https://www.suse.com/security/cve/CVE-2024-40917/",
+					"impact": "medium",
+					"cvss3": "5.5/CVSS:3.1/AV:L/AC:L/PR:L/UI:N/S:U/C:N/I:N/A:H"
+				},
+				{
+					"text": "CVE-2024-40917 at NVD",
+					"href": "https://nvd.nist.gov/vuln/detail/CVE-2024-40917"
+				}
+			],
+			"bugzilla": [
+				{
+					"text": "SUSE bug 1227847",
+					"href": "https://bugzilla.suse.com/1227847"
+				}
+			],
+			"issued": {
+				"date": "2024-07-16"
+			},
+			"updated": {
+				"date": "2024-07-16"
+			},
+			"affected_cpe_list": {
+				"cpe": [
+					"cpe:/o:suse:suse-microos:5.2"
+				]
+			}
+		}
+	},
+	"criteria": {
+		"operator": "AND",
+		"criterias": [
+			{
+				"operator": "OR",
+				"criterions": [
+					{
+						"test_ref": "oval:org.opensuse.security:tst:2009334017",
+						"comment": "kernel-default is not affected"
+					},
+					{
+						"test_ref": "oval:org.opensuse.security:tst:2009705046",
+						"comment": "kernel-rt is not affected"
+					},
+					{
+						"test_ref": "oval:org.opensuse.security:tst:2009728712",
+						"comment": "kernel-source-rt is not affected"
+					}
+				]
+			}
+		],
+		"criterions": [
+			{
+				"test_ref": "oval:org.opensuse.security:tst:2009681300",
+				"comment": "SUSE Linux Enterprise Micro 5.2 is installed"
+			}
+		]
+	}
+}

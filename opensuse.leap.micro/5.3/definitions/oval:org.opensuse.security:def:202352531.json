@@ -1,0 +1,185 @@
+{
+	"id": "oval:org.opensuse.security:def:202352531",
+	"version": "1",
+	"class": "vulnerability",
+	"metadata": {
+		"title": "CVE-2023-52531",
+		"affected": {
+			"family": "unix",
+			"platform": [
+				"openSUSE Leap Micro 5.3"
+			]
+		},
+		"reference": [
+			{
+				"ref_id": "Mitre CVE-2023-52531",
+				"ref_url": "https://cve.mitre.org/cgi-bin/cvename.cgi?name=CVE-2023-52531",
+				"source": "CVE"
+			},
+			{
+				"ref_id": "SUSE CVE-2023-52531",
+				"ref_url": "https://www.suse.com/security/cve/CVE-2023-52531",
+				"source": "SUSE CVE"
+			},
+			{
+				"ref_id": "SUSE-SU-2024:0855-1",
+				"ref_url": "https://lists.suse.com/pipermail/sle-security-updates/2024-March/018151.html",
+				"source": "SUSE-SU"
+			},
+			{
+				"ref_id": "SUSE-SU-2024:0856-1",
+				"ref_url": "https://lists.suse.com/pipermail/sle-security-updates/2024-March/018155.html",
+				"source": "SUSE-SU"
+			},
+			{
+				"ref_id": "SUSE-SU-2024:0857-1",
+				"ref_url": "https://lists.suse.com/pipermail/sle-security-updates/2024-March/018154.html",
+				"source": "SUSE-SU"
+			},
+			{
+				"ref_id": "SUSE-SU-2024:0900-1",
+				"ref_url": "https://lists.suse.com/pipermail/sle-security-updates/2024-March/018167.html",
+				"source": "SUSE-SU"
+			},
+			{
+				"ref_id": "SUSE-SU-2024:0900-2",
+				"ref_url": "https://lists.suse.com/pipermail/sle-security-updates/2024-March/018182.html",
+				"source": "SUSE-SU"
+			},
+			{
+				"ref_id": "SUSE-SU-2024:0925-1",
+				"ref_url": "https://lists.suse.com/pipermail/sle-security-updates/2024-March/018205.html",
+				"source": "SUSE-SU"
+			},
+			{
+				"ref_id": "SUSE-SU-2024:0926-1",
+				"ref_url": "https://lists.suse.com/pipermail/sle-security-updates/2024-March/018204.html",
+				"source": "SUSE-SU"
+			},
+			{
+				"ref_id": "SUSE-SU-2024:0975-1",
+				"ref_url": "https://lists.suse.com/pipermail/sle-security-updates/2024-March/018186.html",
+				"source": "SUSE-SU"
+			},
+			{
+				"ref_id": "SUSE-SU-2024:0976-1",
+				"ref_url": "https://lists.suse.com/pipermail/sle-security-updates/2024-March/018185.html",
+				"source": "SUSE-SU"
+			},
+			{
+				"ref_id": "SUSE-SU-2024:0977-1",
+				"ref_url": "https://lists.suse.com/pipermail/sle-security-updates/2024-March/018210.html",
+				"source": "SUSE-SU"
+			},
+			{
+				"ref_id": "SUSE-SU-2024:1322-1",
+				"ref_url": "https://lists.suse.com/pipermail/sle-updates/2024-April/035002.html",
+				"source": "SUSE-SU"
+			},
+			{
+				"ref_id": "SUSE-SU-2024:1322-2",
+				"ref_url": "https://lists.suse.com/pipermail/sle-security-updates/2024-April/018377.html",
+				"source": "SUSE-SU"
+			},
+			{
+				"ref_id": "SUSE-SU-2024:1466-1",
+				"ref_url": "https://lists.suse.com/pipermail/sle-updates/2024-April/035122.html",
+				"source": "SUSE-SU"
+			},
+			{
+				"ref_id": "SUSE-SU-2024:1480-1",
+				"ref_url": "https://lists.suse.com/pipermail/sle-updates/2024-April/035134.html",
+				"source": "SUSE-SU"
+			}
+		],
+		"description": "\n    In the Linux kernel, the following vulnerability has been resolved:\n\nwifi: iwlwifi: mvm: Fix a memory corruption issue\n\nA few lines above, space is kzalloc()'ed for:\n\tsizeof(struct iwl_nvm_data) +\n\tsizeof(struct ieee80211_channel) +\n\tsizeof(struct ieee80211_rate)\n\n'mvm->nvm_data' is a 'struct iwl_nvm_data', so it is fine.\n\nAt the end of this structure, there is the 'channels' flex array.\nEach element is of type 'struct ieee80211_channel'.\nSo only 1 element is allocated in this array.\n\nWhen doing:\n  mvm->nvm_data->bands[0].channels = mvm->nvm_data->channels;\nWe point at the first element of the 'channels' flex array.\nSo this is fine.\n\nHowever, when doing:\n  mvm->nvm_data->bands[0].bitrates =\n\t\t\t(void *)((u8 *)mvm->nvm_data->channels + 1);\nbecause of the \"(u8 *)\" cast, we add only 1 to the address of the beginning\nof the flex array.\n\nIt is likely that we want point at the 'struct ieee80211_rate' allocated\njust after.\n\nRemove the spurious casting so that the pointer arithmetic works as\nexpected.\n    ",
+		"advisory": {
+			"from": "security@suse.de",
+			"severity": "Moderate",
+			"cve": [
+				{
+					"text": "CVE-2023-52531 at SUSE",
+					"href": "https://www.suse.com/security/cve/CVE-2023-52531/",
+					"impact": "medium",
+					"cvss3": "5.5/CVSS:3.1/AV:L/AC:L/PR:L/UI:N/S:U/C:N/I:N/A:H"
+				},
+				{
+					"text": "CVE-2023-52531 at NVD",
+					"href": "https://nvd.nist.gov/vuln/detail/CVE-2023-52531"
+				}
+			],
+			"bugzilla": [
+				{
+					"text": "SUSE bug 1220931",
+					"href": "https://bugzilla.suse.com/1220931"
+				}
+			],
+			"issued": {
+				"date": "2024-03-15"
+			},
+			"updated": {
+				"date": "2024-05-01"
+			},
+			"affected_cpe_list": {
+				"cpe": [
+					"cpe:/o:opensuse:leap-micro:5.3"
+				]
+			}
+		}
+	},
+	"criteria": {
+		"operator": "AND",
+		"criterias": [
+			{
+				"operator": "OR",
+				"criterias": [
+					{
+						"operator": "AND",
+						"criterions": [
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009851096",
+								"comment": "kernel-default-5.14.21-150400.24.111.2 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009151354",
+								"comment": "kernel-default is signed with openSUSE key"
+							}
+						]
+					},
+					{
+						"operator": "AND",
+						"criterions": [
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009851097",
+								"comment": "kernel-default-base-5.14.21-150400.24.111.2.150400.24.52.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009151960",
+								"comment": "kernel-default-base is signed with openSUSE key"
+							}
+						]
+					},
+					{
+						"operator": "AND",
+						"criterions": [
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009851903",
+								"comment": "kernel-rt-5.14.21-150400.15.71.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009342860",
+								"comment": "kernel-rt is signed with openSUSE key"
+							}
+						]
+					}
+				]
+			}
+		],
+		"criterions": [
+			{
+				"test_ref": "oval:org.opensuse.security:tst:2009728915",
+				"comment": "openSUSE Leap Micro 5.3 is installed"
+			}
+		]
+	}
+}

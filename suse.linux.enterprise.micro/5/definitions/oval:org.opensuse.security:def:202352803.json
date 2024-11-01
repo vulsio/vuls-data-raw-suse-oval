@@ -1,0 +1,137 @@
+{
+	"id": "oval:org.opensuse.security:def:202352803",
+	"version": "1",
+	"class": "vulnerability",
+	"metadata": {
+		"title": "CVE-2023-52803",
+		"affected": {
+			"family": "unix",
+			"platform": [
+				"SUSE Linux Enterprise Micro 5.5"
+			]
+		},
+		"reference": [
+			{
+				"ref_id": "Mitre CVE-2023-52803",
+				"ref_url": "https://cve.mitre.org/cgi-bin/cvename.cgi?name=CVE-2023-52803",
+				"source": "CVE"
+			},
+			{
+				"ref_id": "SUSE CVE-2023-52803",
+				"ref_url": "https://www.suse.com/security/cve/CVE-2023-52803",
+				"source": "SUSE CVE"
+			},
+			{
+				"ref_id": "SUSE-SU-2024:1979-1",
+				"ref_url": "https://lists.suse.com/pipermail/sle-updates/2024-June/035536.html",
+				"source": "SUSE-SU"
+			},
+			{
+				"ref_id": "SUSE-SU-2024:1983-1",
+				"ref_url": "https://lists.suse.com/pipermail/sle-updates/2024-June/035554.html",
+				"source": "SUSE-SU"
+			},
+			{
+				"ref_id": "SUSE-SU-2024:2008-1",
+				"ref_url": "https://lists.suse.com/pipermail/sle-updates/2024-June/035569.html",
+				"source": "SUSE-SU"
+			},
+			{
+				"ref_id": "SUSE-SU-2024:2019-1",
+				"ref_url": "https://lists.suse.com/pipermail/sle-updates/2024-June/035578.html",
+				"source": "SUSE-SU"
+			},
+			{
+				"ref_id": "SUSE-SU-2024:2184-1",
+				"ref_url": "https://lists.suse.com/pipermail/sle-updates/2024-June/035716.html",
+				"source": "SUSE-SU"
+			},
+			{
+				"ref_id": "SUSE-SU-2024:2190-1",
+				"ref_url": "https://lists.suse.com/pipermail/sle-updates/2024-June/035732.html",
+				"source": "SUSE-SU"
+			},
+			{
+				"ref_id": "SUSE-SU-2024:2571-1",
+				"ref_url": "https://lists.suse.com/pipermail/sle-updates/2024-July/036103.html",
+				"source": "SUSE-SU"
+			},
+			{
+				"ref_id": "SUSE-SU-2024:2896-1",
+				"ref_url": "https://lists.suse.com/pipermail/sle-security-updates/2024-August/019185.html",
+				"source": "SUSE-SU"
+			},
+			{
+				"ref_id": "SUSE-SU-2024:2973-1",
+				"ref_url": "https://lists.suse.com/pipermail/sle-security-updates/2024-August/019280.html",
+				"source": "SUSE-SU"
+			}
+		],
+		"description": "\n    In the Linux kernel, the following vulnerability has been resolved:\n\nSUNRPC: Fix RPC client cleaned up the freed pipefs dentries\n\nRPC client pipefs dentries cleanup is in separated rpc_remove_pipedir()\nworkqueue,which takes care about pipefs superblock locking.\nIn some special scenarios, when kernel frees the pipefs sb of the\ncurrent client and immediately alloctes a new pipefs sb,\nrpc_remove_pipedir function would misjudge the existence of pipefs\nsb which is not the one it used to hold. As a result,\nthe rpc_remove_pipedir would clean the released freed pipefs dentries.\n\nTo fix this issue, rpc_remove_pipedir should check whether the\ncurrent pipefs sb is consistent with the original pipefs sb.\n\nThis error can be catched by KASAN:\n=========================================================\n[  250.497700] BUG: KASAN: slab-use-after-free in dget_parent+0x195/0x200\n[  250.498315] Read of size 4 at addr ffff88800a2ab804 by task kworker/0:18/106503\n[  250.500549] Workqueue: events rpc_free_client_work\n[  250.501001] Call Trace:\n[  250.502880]  kasan_report+0xb6/0xf0\n[  250.503209]  ? dget_parent+0x195/0x200\n[  250.503561]  dget_parent+0x195/0x200\n[  250.503897]  ? __pfx_rpc_clntdir_depopulate+0x10/0x10\n[  250.504384]  rpc_rmdir_depopulate+0x1b/0x90\n[  250.504781]  rpc_remove_client_dir+0xf5/0x150\n[  250.505195]  rpc_free_client_work+0xe4/0x230\n[  250.505598]  process_one_work+0x8ee/0x13b0\n...\n[   22.039056] Allocated by task 244:\n[   22.039390]  kasan_save_stack+0x22/0x50\n[   22.039758]  kasan_set_track+0x25/0x30\n[   22.040109]  __kasan_slab_alloc+0x59/0x70\n[   22.040487]  kmem_cache_alloc_lru+0xf0/0x240\n[   22.040889]  __d_alloc+0x31/0x8e0\n[   22.041207]  d_alloc+0x44/0x1f0\n[   22.041514]  __rpc_lookup_create_exclusive+0x11c/0x140\n[   22.041987]  rpc_mkdir_populate.constprop.0+0x5f/0x110\n[   22.042459]  rpc_create_client_dir+0x34/0x150\n[   22.042874]  rpc_setup_pipedir_sb+0x102/0x1c0\n[   22.043284]  rpc_client_register+0x136/0x4e0\n[   22.043689]  rpc_new_client+0x911/0x1020\n[   22.044057]  rpc_create_xprt+0xcb/0x370\n[   22.044417]  rpc_create+0x36b/0x6c0\n...\n[   22.049524] Freed by task 0:\n[   22.049803]  kasan_save_stack+0x22/0x50\n[   22.050165]  kasan_set_track+0x25/0x30\n[   22.050520]  kasan_save_free_info+0x2b/0x50\n[   22.050921]  __kasan_slab_free+0x10e/0x1a0\n[   22.051306]  kmem_cache_free+0xa5/0x390\n[   22.051667]  rcu_core+0x62c/0x1930\n[   22.051995]  __do_softirq+0x165/0x52a\n[   22.052347]\n[   22.052503] Last potentially related work creation:\n[   22.052952]  kasan_save_stack+0x22/0x50\n[   22.053313]  __kasan_record_aux_stack+0x8e/0xa0\n[   22.053739]  __call_rcu_common.constprop.0+0x6b/0x8b0\n[   22.054209]  dentry_free+0xb2/0x140\n[   22.054540]  __dentry_kill+0x3be/0x540\n[   22.054900]  shrink_dentry_list+0x199/0x510\n[   22.055293]  shrink_dcache_parent+0x190/0x240\n[   22.055703]  do_one_tree+0x11/0x40\n[   22.056028]  shrink_dcache_for_umount+0x61/0x140\n[   22.056461]  generic_shutdown_super+0x70/0x590\n[   22.056879]  kill_anon_super+0x3a/0x60\n[   22.057234]  rpc_kill_sb+0x121/0x200\n    ",
+		"advisory": {
+			"from": "security@suse.de",
+			"severity": "Moderate",
+			"cve": [
+				{
+					"text": "CVE-2023-52803 at SUSE",
+					"href": "https://www.suse.com/security/cve/CVE-2023-52803/",
+					"impact": "medium",
+					"cvss3": "6.4/CVSS:3.1/AV:L/AC:H/PR:H/UI:N/S:U/C:H/I:H/A:H"
+				},
+				{
+					"text": "CVE-2023-52803 at NVD",
+					"href": "https://nvd.nist.gov/vuln/detail/CVE-2023-52803"
+				}
+			],
+			"bugzilla": [
+				{
+					"text": "SUSE bug 1225008",
+					"href": "https://bugzilla.suse.com/1225008"
+				}
+			],
+			"issued": {
+				"date": "2024-10-18"
+			},
+			"updated": {
+				"date": "2024-10-18"
+			},
+			"affected_cpe_list": {
+				"cpe": [
+					"cpe:/o:suse:sle-micro:5.5"
+				]
+			}
+		}
+	},
+	"criteria": {
+		"operator": "AND",
+		"criterias": [
+			{
+				"operator": "OR",
+				"criterions": [
+					{
+						"test_ref": "oval:org.opensuse.security:tst:2009869880",
+						"comment": "kernel-default-5.14.21-150500.55.68.1 is installed"
+					},
+					{
+						"test_ref": "oval:org.opensuse.security:tst:2009869881",
+						"comment": "kernel-default-base-5.14.21-150500.55.68.1.150500.6.31.1 is installed"
+					},
+					{
+						"test_ref": "oval:org.opensuse.security:tst:2009865619",
+						"comment": "kernel-rt-5.14.21-150500.13.58.1 is installed"
+					},
+					{
+						"test_ref": "oval:org.opensuse.security:tst:2009865630",
+						"comment": "kernel-source-rt-5.14.21-150500.13.58.1 is installed"
+					}
+				]
+			}
+		],
+		"criterions": [
+			{
+				"test_ref": "oval:org.opensuse.security:tst:2009800388",
+				"comment": "SUSE Linux Enterprise Micro 5.5 is installed"
+			}
+		]
+	}
+}

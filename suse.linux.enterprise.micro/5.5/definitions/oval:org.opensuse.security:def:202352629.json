@@ -1,0 +1,73 @@
+{
+	"id": "oval:org.opensuse.security:def:202352629",
+	"version": "1",
+	"class": "vulnerability",
+	"metadata": {
+		"title": "CVE-2023-52629",
+		"affected": {
+			"family": "unix",
+			"platform": [
+				"SUSE Linux Enterprise Micro 5.5"
+			]
+		},
+		"reference": [
+			{
+				"ref_id": "Mitre CVE-2023-52629",
+				"ref_url": "https://cve.mitre.org/cgi-bin/cvename.cgi?name=CVE-2023-52629",
+				"source": "CVE"
+			},
+			{
+				"ref_id": "SUSE CVE-2023-52629",
+				"ref_url": "https://www.suse.com/security/cve/CVE-2023-52629",
+				"source": "SUSE CVE"
+			}
+		],
+		"description": "\n    In the Linux kernel, the following vulnerability has been resolved:\n\nsh: push-switch: Reorder cleanup operations to avoid use-after-free bug\n\nThe original code puts flush_work() before timer_shutdown_sync()\nin switch_drv_remove(). Although we use flush_work() to stop\nthe worker, it could be rescheduled in switch_timer(). As a result,\na use-after-free bug can occur. The details are shown below:\n\n      (cpu 0)                    |      (cpu 1)\nswitch_drv_remove()              |\n flush_work()                    |\n  ...                            |  switch_timer // timer\n                                 |   schedule_work(&psw->work)\n timer_shutdown_sync()           |\n ...                             |  switch_work_handler // worker\n kfree(psw) // free              |\n                                 |   psw->state = 0 // use\n\nThis patch puts timer_shutdown_sync() before flush_work() to\nmitigate the bugs. As a result, the worker and timer will be\nstopped safely before the deallocate operations.\n    ",
+		"advisory": {
+			"from": "security@suse.de",
+			"severity": "Moderate",
+			"cve": [
+				{
+					"text": "CVE-2023-52629 at SUSE",
+					"href": "https://www.suse.com/security/cve/CVE-2023-52629/",
+					"impact": "medium",
+					"cvss3": "5.5/CVSS:3.1/AV:L/AC:L/PR:L/UI:N/S:U/C:N/I:N/A:H"
+				},
+				{
+					"text": "CVE-2023-52629 at NVD",
+					"href": "https://nvd.nist.gov/vuln/detail/CVE-2023-52629"
+				}
+			],
+			"bugzilla": [
+				{
+					"text": "SUSE bug 1222231",
+					"href": "https://bugzilla.suse.com/1222231"
+				}
+			],
+			"issued": {
+				"date": "2024-04-30"
+			},
+			"updated": {
+				"date": "2024-04-30"
+			},
+			"affected_cpe_list": {
+				"cpe": [
+					"cpe:/o:suse:sle-micro:5.5"
+				]
+			}
+		}
+	},
+	"criteria": {
+		"operator": "AND",
+		"criterions": [
+			{
+				"test_ref": "oval:org.opensuse.security:tst:2009800388",
+				"comment": "SUSE Linux Enterprise Micro 5.5 is installed"
+			},
+			{
+				"test_ref": "oval:org.opensuse.security:tst:2009728712",
+				"comment": "kernel-source-rt is not affected"
+			}
+		]
+	}
+}

@@ -1,0 +1,86 @@
+{
+	"id": "oval:org.opensuse.security:def:202352609",
+	"version": "1",
+	"class": "vulnerability",
+	"metadata": {
+		"title": "CVE-2023-52609",
+		"affected": {
+			"family": "unix",
+			"platform": [
+				"SUSE Linux Enterprise Micro 5.1"
+			]
+		},
+		"reference": [
+			{
+				"ref_id": "Mitre CVE-2023-52609",
+				"ref_url": "https://cve.mitre.org/cgi-bin/cvename.cgi?name=CVE-2023-52609",
+				"source": "CVE"
+			},
+			{
+				"ref_id": "SUSE CVE-2023-52609",
+				"ref_url": "https://www.suse.com/security/cve/CVE-2023-52609",
+				"source": "SUSE CVE"
+			}
+		],
+		"description": "\n    In the Linux kernel, the following vulnerability has been resolved:\n\nbinder: fix race between mmput() and do_exit()\n\nTask A calls binder_update_page_range() to allocate and insert pages on\na remote address space from Task B. For this, Task A pins the remote mm\nvia mmget_not_zero() first. This can race with Task B do_exit() and the\nfinal mmput() refcount decrement will come from Task A.\n\n  Task A            | Task B\n  ------------------+------------------\n  mmget_not_zero()  |\n                    |  do_exit()\n                    |    exit_mm()\n                    |      mmput()\n  mmput()           |\n    exit_mmap()     |\n      remove_vma()  |\n        fput()      |\n\nIn this case, the work of ____fput() from Task B is queued up in Task A\nas TWA_RESUME. So in theory, Task A returns to userspace and the cleanup\nwork gets executed. However, Task A instead sleep, waiting for a reply\nfrom Task B that never comes (it's dead).\n\nThis means the binder_deferred_release() is blocked until an unrelated\nbinder event forces Task A to go back to userspace. All the associated\ndeath notifications will also be delayed until then.\n\nIn order to fix this use mmput_async() that will schedule the work in\nthe corresponding mm->async_put_work WQ instead of Task A.\n    ",
+		"advisory": {
+			"from": "security@suse.de",
+			"severity": "Moderate",
+			"cve": [
+				{
+					"text": "CVE-2023-52609 at SUSE",
+					"href": "https://www.suse.com/security/cve/CVE-2023-52609/"
+				},
+				{
+					"text": "CVE-2023-52609 at NVD",
+					"href": "https://nvd.nist.gov/vuln/detail/CVE-2023-52609"
+				}
+			],
+			"bugzilla": [
+				{
+					"text": "SUSE bug 1221609",
+					"href": "https://bugzilla.suse.com/1221609"
+				}
+			],
+			"issued": {
+				"date": "2024-03-19"
+			},
+			"updated": {
+				"date": "2024-04-26"
+			},
+			"affected_cpe_list": {
+				"cpe": [
+					"cpe:/o:suse:suse-microos:5.1"
+				]
+			}
+		}
+	},
+	"criteria": {
+		"operator": "AND",
+		"criterias": [
+			{
+				"operator": "OR",
+				"criterions": [
+					{
+						"test_ref": "oval:org.opensuse.security:tst:2009334017",
+						"comment": "kernel-default is not affected"
+					},
+					{
+						"test_ref": "oval:org.opensuse.security:tst:2009705046",
+						"comment": "kernel-rt is not affected"
+					},
+					{
+						"test_ref": "oval:org.opensuse.security:tst:2009728712",
+						"comment": "kernel-source-rt is not affected"
+					}
+				]
+			}
+		],
+		"criterions": [
+			{
+				"test_ref": "oval:org.opensuse.security:tst:2009669964",
+				"comment": "SUSE Linux Enterprise Micro 5.1 is installed"
+			}
+		]
+	}
+}

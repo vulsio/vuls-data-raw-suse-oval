@@ -1,0 +1,130 @@
+{
+	"id": "oval:org.opensuse.security:def:202426748",
+	"version": "1",
+	"class": "vulnerability",
+	"metadata": {
+		"title": "CVE-2024-26748",
+		"affected": {
+			"family": "unix",
+			"platform": [
+				"openSUSE Leap Micro 5.5"
+			]
+		},
+		"reference": [
+			{
+				"ref_id": "Mitre CVE-2024-26748",
+				"ref_url": "https://cve.mitre.org/cgi-bin/cvename.cgi?name=CVE-2024-26748",
+				"source": "CVE"
+			},
+			{
+				"ref_id": "SUSE CVE-2024-26748",
+				"ref_url": "https://www.suse.com/security/cve/CVE-2024-26748",
+				"source": "SUSE CVE"
+			},
+			{
+				"ref_id": "SUSE-SU-2024:2008-1",
+				"ref_url": "https://lists.suse.com/pipermail/sle-updates/2024-June/035569.html",
+				"source": "SUSE-SU"
+			},
+			{
+				"ref_id": "SUSE-SU-2024:2019-1",
+				"ref_url": "https://lists.suse.com/pipermail/sle-updates/2024-June/035578.html",
+				"source": "SUSE-SU"
+			},
+			{
+				"ref_id": "SUSE-SU-2024:2190-1",
+				"ref_url": "https://lists.suse.com/pipermail/sle-updates/2024-June/035732.html",
+				"source": "SUSE-SU"
+			}
+		],
+		"description": "\n    In the Linux kernel, the following vulnerability has been resolved:\n\nusb: cdns3: fix memory double free when handle zero packet\n\n829  if (request->complete) {\n830          spin_unlock(&priv_dev->lock);\n831          usb_gadget_giveback_request(&priv_ep->endpoint,\n832                                    request);\n833          spin_lock(&priv_dev->lock);\n834  }\n835\n836  if (request->buf == priv_dev->zlp_buf)\n837      cdns3_gadget_ep_free_request(&priv_ep->endpoint, request);\n\nDriver append an additional zero packet request when queue a packet, which\nlength mod max packet size is 0. When transfer complete, run to line 831,\nusb_gadget_giveback_request() will free this requestion. 836 condition is\ntrue, so cdns3_gadget_ep_free_request() free this request again.\n\nLog:\n\n[ 1920.140696][  T150] BUG: KFENCE: use-after-free read in cdns3_gadget_giveback+0x134/0x2c0 [cdns3]\n[ 1920.140696][  T150]\n[ 1920.151837][  T150] Use-after-free read at 0x000000003d1cd10b (in kfence-#36):\n[ 1920.159082][  T150]  cdns3_gadget_giveback+0x134/0x2c0 [cdns3]\n[ 1920.164988][  T150]  cdns3_transfer_completed+0x438/0x5f8 [cdns3]\n\nAdd check at line 829, skip call usb_gadget_giveback_request() if it is\nadditional zero length packet request. Needn't call\nusb_gadget_giveback_request() because it is allocated in this driver.\n    ",
+		"advisory": {
+			"from": "security@suse.de",
+			"severity": "Moderate",
+			"cve": [
+				{
+					"text": "CVE-2024-26748 at SUSE",
+					"href": "https://www.suse.com/security/cve/CVE-2024-26748/",
+					"impact": "medium",
+					"cvss3": "5.5/CVSS:3.1/AV:L/AC:L/PR:L/UI:N/S:U/C:N/I:N/A:H"
+				},
+				{
+					"text": "CVE-2024-26748 at NVD",
+					"href": "https://nvd.nist.gov/vuln/detail/CVE-2024-26748"
+				}
+			],
+			"bugzilla": [
+				{
+					"text": "SUSE bug 1222513",
+					"href": "https://bugzilla.suse.com/1222513"
+				}
+			],
+			"issued": {
+				"date": "2024-06-13"
+			},
+			"updated": {
+				"date": "2024-07-17"
+			},
+			"affected_cpe_list": {
+				"cpe": [
+					"cpe:/o:opensuse:leap-micro:5.5"
+				]
+			}
+		}
+	},
+	"criteria": {
+		"operator": "AND",
+		"criterias": [
+			{
+				"operator": "OR",
+				"criterias": [
+					{
+						"operator": "AND",
+						"criterions": [
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009869880",
+								"comment": "kernel-default-5.14.21-150500.55.68.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009151354",
+								"comment": "kernel-default is signed with openSUSE key"
+							}
+						]
+					},
+					{
+						"operator": "AND",
+						"criterions": [
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009869881",
+								"comment": "kernel-default-base-5.14.21-150500.55.68.1.150500.6.31.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009151960",
+								"comment": "kernel-default-base is signed with openSUSE key"
+							}
+						]
+					},
+					{
+						"operator": "AND",
+						"criterions": [
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009865619",
+								"comment": "kernel-rt-5.14.21-150500.13.58.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009342860",
+								"comment": "kernel-rt is signed with openSUSE key"
+							}
+						]
+					}
+				]
+			}
+		],
+		"criterions": [
+			{
+				"test_ref": "oval:org.opensuse.security:tst:2009799821",
+				"comment": "openSUSE Leap Micro 5.5 is installed"
+			}
+		]
+	}
+}

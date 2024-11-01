@@ -1,0 +1,88 @@
+{
+	"id": "oval:org.opensuse.security:def:202147066",
+	"version": "1",
+	"class": "vulnerability",
+	"metadata": {
+		"title": "CVE-2021-47066",
+		"affected": {
+			"family": "unix",
+			"platform": [
+				"SUSE Linux Enterprise Micro 5.2"
+			]
+		},
+		"reference": [
+			{
+				"ref_id": "Mitre CVE-2021-47066",
+				"ref_url": "https://cve.mitre.org/cgi-bin/cvename.cgi?name=CVE-2021-47066",
+				"source": "CVE"
+			},
+			{
+				"ref_id": "SUSE CVE-2021-47066",
+				"ref_url": "https://www.suse.com/security/cve/CVE-2021-47066",
+				"source": "SUSE CVE"
+			}
+		],
+		"description": "\n    In the Linux kernel, the following vulnerability has been resolved:\n\nasync_xor: increase src_offs when dropping destination page\n\nNow we support sharing one page if PAGE_SIZE is not equal stripe size. To\nsupport this, it needs to support calculating xor value with different\noffsets for each r5dev. One offset array is used to record those offsets.\n\nIn RMW mode, parity page is used as a source page. It sets\nASYNC_TX_XOR_DROP_DST before calculating xor value in ops_run_prexor5.\nSo it needs to add src_list and src_offs at the same time. Now it only\nneeds src_list. So the xor value which is calculated is wrong. It can\ncause data corruption problem.\n\nI can reproduce this problem 100% on a POWER8 machine. The steps are:\n\n  mdadm -CR /dev/md0 -l5 -n3 /dev/sdb1 /dev/sdc1 /dev/sdd1 --size=3G\n  mkfs.xfs /dev/md0\n  mount /dev/md0 /mnt/test\n  mount: /mnt/test: mount(2) system call failed: Structure needs cleaning.\n    ",
+		"advisory": {
+			"from": "security@suse.de",
+			"severity": "Moderate",
+			"cve": [
+				{
+					"text": "CVE-2021-47066 at SUSE",
+					"href": "https://www.suse.com/security/cve/CVE-2021-47066/",
+					"impact": "medium",
+					"cvss3": "5.1/CVSS:3.1/AV:L/AC:L/PR:H/UI:N/S:U/C:N/I:L/A:H"
+				},
+				{
+					"text": "CVE-2021-47066 at NVD",
+					"href": "https://nvd.nist.gov/vuln/detail/CVE-2021-47066"
+				}
+			],
+			"bugzilla": [
+				{
+					"text": "SUSE bug 1220782",
+					"href": "https://bugzilla.suse.com/1220782"
+				}
+			],
+			"issued": {
+				"date": "2024-03-07"
+			},
+			"updated": {
+				"date": "2024-04-26"
+			},
+			"affected_cpe_list": {
+				"cpe": [
+					"cpe:/o:suse:suse-microos:5.2"
+				]
+			}
+		}
+	},
+	"criteria": {
+		"operator": "AND",
+		"criterias": [
+			{
+				"operator": "OR",
+				"criterions": [
+					{
+						"test_ref": "oval:org.opensuse.security:tst:2009334017",
+						"comment": "kernel-default is not affected"
+					},
+					{
+						"test_ref": "oval:org.opensuse.security:tst:2009705046",
+						"comment": "kernel-rt is not affected"
+					},
+					{
+						"test_ref": "oval:org.opensuse.security:tst:2009728712",
+						"comment": "kernel-source-rt is not affected"
+					}
+				]
+			}
+		],
+		"criterions": [
+			{
+				"test_ref": "oval:org.opensuse.security:tst:2009681300",
+				"comment": "SUSE Linux Enterprise Micro 5.2 is installed"
+			}
+		]
+	}
+}

@@ -1,0 +1,142 @@
+{
+	"id": "oval:org.opensuse.security:def:202431076",
+	"version": "1",
+	"class": "vulnerability",
+	"metadata": {
+		"title": "CVE-2024-31076",
+		"affected": {
+			"family": "unix",
+			"platform": [
+				"SUSE Linux Enterprise Micro 5.0",
+				"SUSE Linux Enterprise Micro 5.5"
+			]
+		},
+		"reference": [
+			{
+				"ref_id": "Mitre CVE-2024-31076",
+				"ref_url": "https://cve.mitre.org/cgi-bin/cvename.cgi?name=CVE-2024-31076",
+				"source": "CVE"
+			},
+			{
+				"ref_id": "SUSE CVE-2024-31076",
+				"ref_url": "https://www.suse.com/security/cve/CVE-2024-31076",
+				"source": "SUSE CVE"
+			},
+			{
+				"ref_id": "SUSE-SU-2024:3190-1",
+				"ref_url": "https://lists.suse.com/pipermail/sle-security-updates/2024-September/019403.html",
+				"source": "SUSE-SU"
+			},
+			{
+				"ref_id": "SUSE-SU-2024:3194-1",
+				"ref_url": "https://lists.suse.com/pipermail/sle-updates/2024-September/036835.html",
+				"source": "SUSE-SU"
+			},
+			{
+				"ref_id": "SUSE-SU-2024:3195-1",
+				"ref_url": "https://lists.suse.com/pipermail/sle-updates/2024-September/036842.html",
+				"source": "SUSE-SU"
+			},
+			{
+				"ref_id": "SUSE-SU-2024:3209-1",
+				"ref_url": "https://lists.suse.com/pipermail/sle-updates/2024-September/036854.html",
+				"source": "SUSE-SU"
+			},
+			{
+				"ref_id": "SUSE-SU-2024:3383-1",
+				"ref_url": "https://lists.suse.com/pipermail/sle-security-updates/2024-September/019497.html",
+				"source": "SUSE-SU"
+			},
+			{
+				"ref_id": "SUSE-SU-2024:3483-1",
+				"ref_url": "https://lists.suse.com/pipermail/sle-updates/2024-September/037089.html",
+				"source": "SUSE-SU"
+			}
+		],
+		"description": "\n    In the Linux kernel, the following vulnerability has been resolved:\n\ngenirq/cpuhotplug, x86/vector: Prevent vector leak during CPU offline\n\nThe absence of IRQD_MOVE_PCNTXT prevents immediate effectiveness of\ninterrupt affinity reconfiguration via procfs. Instead, the change is\ndeferred until the next instance of the interrupt being triggered on the\noriginal CPU.\n\nWhen the interrupt next triggers on the original CPU, the new affinity is\nenforced within __irq_move_irq(). A vector is allocated from the new CPU,\nbut the old vector on the original CPU remains and is not immediately\nreclaimed. Instead, apicd->move_in_progress is flagged, and the reclaiming\nprocess is delayed until the next trigger of the interrupt on the new CPU.\n\nUpon the subsequent triggering of the interrupt on the new CPU,\nirq_complete_move() adds a task to the old CPU's vector_cleanup list if it\nremains online. Subsequently, the timer on the old CPU iterates over its\nvector_cleanup list, reclaiming old vectors.\n\nHowever, a rare scenario arises if the old CPU is outgoing before the\ninterrupt triggers again on the new CPU.\n\nIn that case irq_force_complete_move() is not invoked on the outgoing CPU\nto reclaim the old apicd->prev_vector because the interrupt isn't currently\naffine to the outgoing CPU, and irq_needs_fixup() returns false. Even\nthough __vector_schedule_cleanup() is later called on the new CPU, it\ndoesn't reclaim apicd->prev_vector; instead, it simply resets both\napicd->move_in_progress and apicd->prev_vector to 0.\n\nAs a result, the vector remains unreclaimed in vector_matrix, leading to a\nCPU vector leak.\n\nTo address this issue, move the invocation of irq_force_complete_move()\nbefore the irq_needs_fixup() call to reclaim apicd->prev_vector, if the\ninterrupt is currently or used to be affine to the outgoing CPU.\n\nAdditionally, reclaim the vector in __vector_schedule_cleanup() as well,\nfollowing a warning message, although theoretically it should never see\napicd->move_in_progress with apicd->prev_cpu pointing to an offline CPU.\n    ",
+		"advisory": {
+			"from": "security@suse.de",
+			"severity": "Moderate",
+			"cve": [
+				{
+					"text": "CVE-2024-31076 at SUSE",
+					"href": "https://www.suse.com/security/cve/CVE-2024-31076/",
+					"impact": "medium",
+					"cvss3": "4.4/CVSS:3.1/AV:L/AC:L/PR:H/UI:N/S:U/C:N/I:N/A:H"
+				},
+				{
+					"text": "CVE-2024-31076 at NVD",
+					"href": "https://nvd.nist.gov/vuln/detail/CVE-2024-31076"
+				}
+			],
+			"bugzilla": [
+				{
+					"text": "SUSE bug 1226765",
+					"href": "https://bugzilla.suse.com/1226765"
+				}
+			],
+			"issued": {
+				"date": "2024-10-18"
+			},
+			"updated": {
+				"date": "2024-10-18"
+			},
+			"affected_cpe_list": {
+				"cpe": [
+					"cpe:/o:suse:sle-micro:5.5",
+					"cpe:/o:suse:suse-microos:5.0"
+				]
+			}
+		}
+	},
+	"criteria": {
+		"operator": "OR",
+		"criterias": [
+			{
+				"operator": "AND",
+				"criterions": [
+					{
+						"test_ref": "oval:org.opensuse.security:tst:2009704855",
+						"comment": "SUSE Linux Enterprise Micro 5.0 is installed"
+					},
+					{
+						"test_ref": "oval:org.opensuse.security:tst:2009334017",
+						"comment": "kernel-default is not affected"
+					}
+				]
+			},
+			{
+				"operator": "AND",
+				"criterias": [
+					{
+						"operator": "OR",
+						"criterions": [
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009945068",
+								"comment": "kernel-default-5.14.21-150500.55.80.2 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009945182",
+								"comment": "kernel-default-base-5.14.21-150500.55.80.2.150500.6.35.6 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009942305",
+								"comment": "kernel-rt-5.14.21-150500.13.67.3 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009942316",
+								"comment": "kernel-source-rt-5.14.21-150500.13.67.3 is installed"
+							}
+						]
+					}
+				],
+				"criterions": [
+					{
+						"test_ref": "oval:org.opensuse.security:tst:2009800388",
+						"comment": "SUSE Linux Enterprise Micro 5.5 is installed"
+					}
+				]
+			}
+		]
+	}
+}

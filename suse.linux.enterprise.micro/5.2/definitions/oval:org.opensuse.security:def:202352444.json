@@ -1,0 +1,88 @@
+{
+	"id": "oval:org.opensuse.security:def:202352444",
+	"version": "1",
+	"class": "vulnerability",
+	"metadata": {
+		"title": "CVE-2023-52444",
+		"affected": {
+			"family": "unix",
+			"platform": [
+				"SUSE Linux Enterprise Micro 5.2"
+			]
+		},
+		"reference": [
+			{
+				"ref_id": "Mitre CVE-2023-52444",
+				"ref_url": "https://cve.mitre.org/cgi-bin/cvename.cgi?name=CVE-2023-52444",
+				"source": "CVE"
+			},
+			{
+				"ref_id": "SUSE CVE-2023-52444",
+				"ref_url": "https://www.suse.com/security/cve/CVE-2023-52444",
+				"source": "SUSE CVE"
+			}
+		],
+		"description": "\n    In the Linux kernel, the following vulnerability has been resolved:\n\nf2fs: fix to avoid dirent corruption\n\nAs Al reported in link[1]:\n\nf2fs_rename()\n...\n\tif (old_dir != new_dir && !whiteout)\n\t\tf2fs_set_link(old_inode, old_dir_entry,\n\t\t\t\t\told_dir_page, new_dir);\n\telse\n\t\tf2fs_put_page(old_dir_page, 0);\n\nYou want correct inumber in the \"..\" link.  And cross-directory\nrename does move the source to new parent, even if you'd been asked\nto leave a whiteout in the old place.\n\n[1] https://lore.kernel.org/all/20231017055040.GN800259@ZenIV/\n\nWith below testcase, it may cause dirent corruption, due to it missed\nto call f2fs_set_link() to update \"..\" link to new directory.\n- mkdir -p dir/foo\n- renameat2 -w dir/foo bar\n\n[ASSERT] (__chk_dots_dentries:1421)  --> Bad inode number[0x4] for '..', parent parent ino is [0x3]\n[FSCK] other corrupted bugs                           [Fail]\n    ",
+		"advisory": {
+			"from": "security@suse.de",
+			"severity": "Important",
+			"cve": [
+				{
+					"text": "CVE-2023-52444 at SUSE",
+					"href": "https://www.suse.com/security/cve/CVE-2023-52444/"
+				},
+				{
+					"text": "CVE-2023-52444 at NVD",
+					"href": "https://nvd.nist.gov/vuln/detail/CVE-2023-52444",
+					"impact": "high",
+					"cvss3": "7.8/CVSS:3.1/AV:L/AC:L/PR:L/UI:N/S:U/C:H/I:H/A:H"
+				}
+			],
+			"bugzilla": [
+				{
+					"text": "SUSE bug 1220234",
+					"href": "https://bugzilla.suse.com/1220234"
+				}
+			],
+			"issued": {
+				"date": "2024-02-24"
+			},
+			"updated": {
+				"date": "2024-04-26"
+			},
+			"affected_cpe_list": {
+				"cpe": [
+					"cpe:/o:suse:suse-microos:5.2"
+				]
+			}
+		}
+	},
+	"criteria": {
+		"operator": "AND",
+		"criterias": [
+			{
+				"operator": "OR",
+				"criterions": [
+					{
+						"test_ref": "oval:org.opensuse.security:tst:2009334017",
+						"comment": "kernel-default is not affected"
+					},
+					{
+						"test_ref": "oval:org.opensuse.security:tst:2009705046",
+						"comment": "kernel-rt is not affected"
+					},
+					{
+						"test_ref": "oval:org.opensuse.security:tst:2009728712",
+						"comment": "kernel-source-rt is not affected"
+					}
+				]
+			}
+		],
+		"criterions": [
+			{
+				"test_ref": "oval:org.opensuse.security:tst:2009681300",
+				"comment": "SUSE Linux Enterprise Micro 5.2 is installed"
+			}
+		]
+	}
+}

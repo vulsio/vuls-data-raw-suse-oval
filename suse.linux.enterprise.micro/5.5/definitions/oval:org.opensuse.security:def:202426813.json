@@ -1,0 +1,147 @@
+{
+	"id": "oval:org.opensuse.security:def:202426813",
+	"version": "1",
+	"class": "vulnerability",
+	"metadata": {
+		"title": "CVE-2024-26813",
+		"affected": {
+			"family": "unix",
+			"platform": [
+				"SUSE Linux Enterprise Micro 5.5"
+			]
+		},
+		"reference": [
+			{
+				"ref_id": "Mitre CVE-2024-26813",
+				"ref_url": "https://cve.mitre.org/cgi-bin/cvename.cgi?name=CVE-2024-26813",
+				"source": "CVE"
+			},
+			{
+				"ref_id": "SUSE CVE-2024-26813",
+				"ref_url": "https://www.suse.com/security/cve/CVE-2024-26813",
+				"source": "SUSE CVE"
+			},
+			{
+				"ref_id": "SUSE-SU-2024:2360-1",
+				"ref_url": "https://lists.suse.com/pipermail/sle-updates/2024-July/035874.html",
+				"source": "SUSE-SU"
+			},
+			{
+				"ref_id": "SUSE-SU-2024:2381-1",
+				"ref_url": "https://lists.suse.com/pipermail/sle-updates/2024-July/035895.html",
+				"source": "SUSE-SU"
+			},
+			{
+				"ref_id": "SUSE-SU-2024:2561-1",
+				"ref_url": "https://lists.suse.com/pipermail/sle-security-updates/2024-July/019001.html",
+				"source": "SUSE-SU"
+			},
+			{
+				"ref_id": "SUSE-SU-2024:2571-1",
+				"ref_url": "https://lists.suse.com/pipermail/sle-updates/2024-July/036103.html",
+				"source": "SUSE-SU"
+			},
+			{
+				"ref_id": "SUSE-SU-2024:2894-1",
+				"ref_url": "https://lists.suse.com/pipermail/sle-updates/2024-August/036430.html",
+				"source": "SUSE-SU"
+			},
+			{
+				"ref_id": "SUSE-SU-2024:2896-1",
+				"ref_url": "https://lists.suse.com/pipermail/sle-security-updates/2024-August/019185.html",
+				"source": "SUSE-SU"
+			},
+			{
+				"ref_id": "SUSE-SU-2024:2902-1",
+				"ref_url": "https://lists.suse.com/pipermail/sle-updates/2024-August/036443.html",
+				"source": "SUSE-SU"
+			},
+			{
+				"ref_id": "SUSE-SU-2024:2929-1",
+				"ref_url": "https://lists.suse.com/pipermail/sle-updates/2024-August/036473.html",
+				"source": "SUSE-SU"
+			},
+			{
+				"ref_id": "SUSE-SU-2024:2939-1",
+				"ref_url": "https://lists.suse.com/pipermail/sle-security-updates/2024-August/019211.html",
+				"source": "SUSE-SU"
+			},
+			{
+				"ref_id": "SUSE-SU-2024:2947-1",
+				"ref_url": "https://lists.suse.com/pipermail/sle-updates/2024-August/036488.html",
+				"source": "SUSE-SU"
+			},
+			{
+				"ref_id": "SUSE-SU-2024:2973-1",
+				"ref_url": "https://lists.suse.com/pipermail/sle-security-updates/2024-August/019280.html",
+				"source": "SUSE-SU"
+			}
+		],
+		"description": "\n    In the Linux kernel, the following vulnerability has been resolved:\n\nvfio/platform: Create persistent IRQ handlers\n\nThe vfio-platform SET_IRQS ioctl currently allows loopback triggering of\nan interrupt before a signaling eventfd has been configured by the user,\nwhich thereby allows a NULL pointer dereference.\n\nRather than register the IRQ relative to a valid trigger, register all\nIRQs in a disabled state in the device open path.  This allows mask\noperations on the IRQ to nest within the overall enable state governed\nby a valid eventfd signal.  This decouples @masked, protected by the\n@locked spinlock from @trigger, protected via the @igate mutex.\n\nIn doing so, it's guaranteed that changes to @trigger cannot race the\nIRQ handlers because the IRQ handler is synchronously disabled before\nmodifying the trigger, and loopback triggering of the IRQ via ioctl is\nsafe due to serialization with trigger changes via igate.\n\nFor compatibility, request_irq() failures are maintained to be local to\nthe SET_IRQS ioctl rather than a fatal error in the open device path.\nThis allows, for example, a userspace driver with polling mode support\nto continue to work regardless of moving the request_irq() call site.\nThis necessarily blocks all SET_IRQS access to the failed index.\n    ",
+		"advisory": {
+			"from": "security@suse.de",
+			"severity": "Moderate",
+			"cve": [
+				{
+					"text": "CVE-2024-26813 at SUSE",
+					"href": "https://www.suse.com/security/cve/CVE-2024-26813/",
+					"impact": "medium",
+					"cvss3": "4.4/CVSS:3.1/AV:L/AC:L/PR:H/UI:N/S:U/C:N/I:N/A:H"
+				},
+				{
+					"text": "CVE-2024-26813 at NVD",
+					"href": "https://nvd.nist.gov/vuln/detail/CVE-2024-26813"
+				}
+			],
+			"bugzilla": [
+				{
+					"text": "SUSE bug 1222809",
+					"href": "https://bugzilla.suse.com/1222809"
+				}
+			],
+			"issued": {
+				"date": "2024-08-14"
+			},
+			"updated": {
+				"date": "2024-08-21"
+			},
+			"affected_cpe_list": {
+				"cpe": [
+					"cpe:/o:suse:sle-micro:5.5"
+				]
+			}
+		}
+	},
+	"criteria": {
+		"operator": "AND",
+		"criterias": [
+			{
+				"operator": "OR",
+				"criterions": [
+					{
+						"test_ref": "oval:org.opensuse.security:tst:2009879879",
+						"comment": "kernel-default-5.14.21-150500.55.73.1 is installed"
+					},
+					{
+						"test_ref": "oval:org.opensuse.security:tst:2009880170",
+						"comment": "kernel-default-base-5.14.21-150500.55.73.1.150500.6.33.8 is installed"
+					},
+					{
+						"test_ref": "oval:org.opensuse.security:tst:2009879144",
+						"comment": "kernel-rt-5.14.21-150500.13.64.1 is installed"
+					},
+					{
+						"test_ref": "oval:org.opensuse.security:tst:2009879155",
+						"comment": "kernel-source-rt-5.14.21-150500.13.64.1 is installed"
+					}
+				]
+			}
+		],
+		"criterions": [
+			{
+				"test_ref": "oval:org.opensuse.security:tst:2009800388",
+				"comment": "SUSE Linux Enterprise Micro 5.5 is installed"
+			}
+		]
+	}
+}

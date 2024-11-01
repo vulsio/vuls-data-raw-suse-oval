@@ -1,0 +1,117 @@
+{
+	"id": "oval:org.opensuse.security:def:202147282",
+	"version": "1",
+	"class": "vulnerability",
+	"metadata": {
+		"title": "CVE-2021-47282",
+		"affected": {
+			"family": "unix",
+			"platform": [
+				"SUSE Linux Enterprise Micro 5.0",
+				"SUSE Linux Enterprise Micro 5.1",
+				"SUSE Linux Enterprise Micro 5.2"
+			]
+		},
+		"reference": [
+			{
+				"ref_id": "Mitre CVE-2021-47282",
+				"ref_url": "https://cve.mitre.org/cgi-bin/cvename.cgi?name=CVE-2021-47282",
+				"source": "CVE"
+			},
+			{
+				"ref_id": "SUSE CVE-2021-47282",
+				"ref_url": "https://www.suse.com/security/cve/CVE-2021-47282",
+				"source": "SUSE CVE"
+			}
+		],
+		"description": "\n    In the Linux kernel, the following vulnerability has been resolved:\n\nspi: bcm2835: Fix out-of-bounds access with more than 4 slaves\n\nCommit 571e31fa60b3 (\"spi: bcm2835: Cache CS register value for\n->prepare_message()\") limited the number of slaves to 3 at compile-time.\nThe limitation was necessitated by a statically-sized array prepare_cs[]\nin the driver private data which contains a per-slave register value.\n\nThe commit sought to enforce the limitation at run-time by setting the\ncontroller's num_chipselect to 3:  Slaves with a higher chipselect are\nrejected by spi_add_device().\n\nHowever the commit neglected that num_chipselect only limits the number\nof *native* chipselects.  If GPIO chipselects are specified in the\ndevice tree for more than 3 slaves, num_chipselect is silently raised by\nof_spi_get_gpio_numbers() and the result are out-of-bounds accesses to\nthe statically-sized array prepare_cs[].\n\nAs a bandaid fix which is backportable to stable, raise the number of\nallowed slaves to 24 (which \"ought to be enough for anybody\"), enforce\nthe limitation on slave ->setup and revert num_chipselect to 3 (which is\nthe number of native chipselects supported by the controller).\nAn upcoming for-next commit will allow an arbitrary number of slaves.\n    ",
+		"advisory": {
+			"from": "security@suse.de",
+			"severity": "Moderate",
+			"cve": [
+				{
+					"text": "CVE-2021-47282 at SUSE",
+					"href": "https://www.suse.com/security/cve/CVE-2021-47282/",
+					"impact": "medium",
+					"cvss3": "5.5/CVSS:3.1/AV:L/AC:L/PR:L/UI:N/S:U/C:N/I:N/A:H"
+				},
+				{
+					"text": "CVE-2021-47282 at NVD",
+					"href": "https://nvd.nist.gov/vuln/detail/CVE-2021-47282"
+				}
+			],
+			"bugzilla": [
+				{
+					"text": "SUSE bug 1224986",
+					"href": "https://bugzilla.suse.com/1224986"
+				}
+			],
+			"issued": {
+				"date": "2024-10-18"
+			},
+			"updated": {
+				"date": "2024-10-18"
+			},
+			"affected_cpe_list": {
+				"cpe": [
+					"cpe:/o:suse:suse-microos:5.0",
+					"cpe:/o:suse:suse-microos:5.1",
+					"cpe:/o:suse:suse-microos:5.2"
+				]
+			}
+		}
+	},
+	"criteria": {
+		"operator": "OR",
+		"criterias": [
+			{
+				"operator": "AND",
+				"criterions": [
+					{
+						"test_ref": "oval:org.opensuse.security:tst:2009704855",
+						"comment": "SUSE Linux Enterprise Micro 5.0 is installed"
+					},
+					{
+						"test_ref": "oval:org.opensuse.security:tst:2009334017",
+						"comment": "kernel-default is not affected"
+					}
+				]
+			},
+			{
+				"operator": "AND",
+				"criterias": [
+					{
+						"operator": "OR",
+						"criterions": [
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009669964",
+								"comment": "SUSE Linux Enterprise Micro 5.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009681300",
+								"comment": "SUSE Linux Enterprise Micro 5.2 is installed"
+							}
+						]
+					},
+					{
+						"operator": "OR",
+						"criterions": [
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009334017",
+								"comment": "kernel-default is not affected"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009705046",
+								"comment": "kernel-rt is not affected"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009728712",
+								"comment": "kernel-source-rt is not affected"
+							}
+						]
+					}
+				]
+			}
+		]
+	}
+}

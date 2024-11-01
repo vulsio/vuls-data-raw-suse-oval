@@ -1,0 +1,219 @@
+{
+	"id": "oval:org.opensuse.security:def:202248797",
+	"version": "1",
+	"class": "vulnerability",
+	"metadata": {
+		"title": "CVE-2022-48797",
+		"affected": {
+			"family": "unix",
+			"platform": [
+				"SUSE Linux Enterprise Micro 5.0",
+				"SUSE Linux Enterprise Micro 5.1",
+				"SUSE Linux Enterprise Micro 5.2",
+				"SUSE Linux Enterprise Micro 5.3",
+				"SUSE Linux Enterprise Micro 5.4",
+				"SUSE Linux Enterprise Micro 5.5"
+			]
+		},
+		"reference": [
+			{
+				"ref_id": "Mitre CVE-2022-48797",
+				"ref_url": "https://cve.mitre.org/cgi-bin/cvename.cgi?name=CVE-2022-48797",
+				"source": "CVE"
+			},
+			{
+				"ref_id": "SUSE CVE-2022-48797",
+				"ref_url": "https://www.suse.com/security/cve/CVE-2022-48797",
+				"source": "SUSE CVE"
+			},
+			{
+				"ref_id": "SUSE-SU-2024:2894-1",
+				"ref_url": "https://lists.suse.com/pipermail/sle-updates/2024-August/036430.html",
+				"source": "SUSE-SU"
+			},
+			{
+				"ref_id": "SUSE-SU-2024:2902-1",
+				"ref_url": "https://lists.suse.com/pipermail/sle-updates/2024-August/036443.html",
+				"source": "SUSE-SU"
+			},
+			{
+				"ref_id": "SUSE-SU-2024:2929-1",
+				"ref_url": "https://lists.suse.com/pipermail/sle-updates/2024-August/036473.html",
+				"source": "SUSE-SU"
+			},
+			{
+				"ref_id": "SUSE-SU-2024:2939-1",
+				"ref_url": "https://lists.suse.com/pipermail/sle-security-updates/2024-August/019211.html",
+				"source": "SUSE-SU"
+			},
+			{
+				"ref_id": "SUSE-SU-2024:2947-1",
+				"ref_url": "https://lists.suse.com/pipermail/sle-updates/2024-August/036488.html",
+				"source": "SUSE-SU"
+			}
+		],
+		"description": "\n    In the Linux kernel, the following vulnerability has been resolved:\n\nmm: don't try to NUMA-migrate COW pages that have other uses\n\nOded Gabbay reports that enabling NUMA balancing causes corruption with\nhis Gaudi accelerator test load:\n\n \"All the details are in the bug, but the bottom line is that somehow,\n  this patch causes corruption when the numa balancing feature is\n  enabled AND we don't use process affinity AND we use GUP to pin pages\n  so our accelerator can DMA to/from system memory.\n\n  Either disabling numa balancing, using process affinity to bind to\n  specific numa-node or reverting this patch causes the bug to\n  disappear\"\n\nand Oded bisected the issue to commit 09854ba94c6a (\"mm: do_wp_page()\nsimplification\").\n\nNow, the NUMA balancing shouldn't actually be changing the writability\nof a page, and as such shouldn't matter for COW.  But it appears it\ndoes.  Suspicious.\n\nHowever, regardless of that, the condition for enabling NUMA faults in\nchange_pte_range() is nonsensical.  It uses \"page_mapcount(page)\" to\ndecide if a COW page should be NUMA-protected or not, and that makes\nabsolutely no sense.\n\nThe number of mappings a page has is irrelevant: not only does GUP get a\nreference to a page as in Oded's case, but the other mappings migth be\npaged out and the only reference to them would be in the page count.\n\nSince we should never try to NUMA-balance a page that we can't move\nanyway due to other references, just fix the code to use 'page_count()'.\nOded confirms that that fixes his issue.\n\nNow, this does imply that something in NUMA balancing ends up changing\npage protections (other than the obvious one of making the page\ninaccessible to get the NUMA faulting information).  Otherwise the COW\nsimplification wouldn't matter - since doing the GUP on the page would\nmake sure it's writable.\n\nThe cause of that permission change would be good to figure out too,\nsince it clearly results in spurious COW events - but fixing the\nnonsensical test that just happened to work before is obviously the\nCorrectThing(tm) to do regardless.\n    ",
+		"advisory": {
+			"from": "security@suse.de",
+			"severity": "Moderate",
+			"cve": [
+				{
+					"text": "CVE-2022-48797 at SUSE",
+					"href": "https://www.suse.com/security/cve/CVE-2022-48797/",
+					"impact": "medium",
+					"cvss3": "5.5/CVSS:3.1/AV:L/AC:L/PR:L/UI:N/S:U/C:N/I:H/A:N"
+				},
+				{
+					"text": "CVE-2022-48797 at NVD",
+					"href": "https://nvd.nist.gov/vuln/detail/CVE-2022-48797"
+				}
+			],
+			"bugzilla": [
+				{
+					"text": "SUSE bug 1228035",
+					"href": "https://bugzilla.suse.com/1228035"
+				}
+			],
+			"issued": {
+				"date": "2024-10-18"
+			},
+			"updated": {
+				"date": "2024-10-18"
+			},
+			"affected_cpe_list": {
+				"cpe": [
+					"cpe:/o:suse:sle-micro:5.3",
+					"cpe:/o:suse:sle-micro:5.4",
+					"cpe:/o:suse:sle-micro:5.5",
+					"cpe:/o:suse:suse-microos:5.0",
+					"cpe:/o:suse:suse-microos:5.1",
+					"cpe:/o:suse:suse-microos:5.2"
+				]
+			}
+		}
+	},
+	"criteria": {
+		"operator": "OR",
+		"criterias": [
+			{
+				"operator": "AND",
+				"criterions": [
+					{
+						"test_ref": "oval:org.opensuse.security:tst:2009704855",
+						"comment": "SUSE Linux Enterprise Micro 5.0 is installed"
+					},
+					{
+						"test_ref": "oval:org.opensuse.security:tst:2009334017",
+						"comment": "kernel-default is not affected"
+					}
+				]
+			},
+			{
+				"operator": "AND",
+				"criterias": [
+					{
+						"operator": "OR",
+						"criterions": [
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009669964",
+								"comment": "SUSE Linux Enterprise Micro 5.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009681300",
+								"comment": "SUSE Linux Enterprise Micro 5.2 is installed"
+							}
+						]
+					},
+					{
+						"operator": "OR",
+						"criterions": [
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009334017",
+								"comment": "kernel-default is not affected"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009705046",
+								"comment": "kernel-rt is not affected"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009728712",
+								"comment": "kernel-source-rt is not affected"
+							}
+						]
+					}
+				]
+			},
+			{
+				"operator": "AND",
+				"criterias": [
+					{
+						"operator": "OR",
+						"criterions": [
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009728694",
+								"comment": "SUSE Linux Enterprise Micro 5.3 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009755086",
+								"comment": "SUSE Linux Enterprise Micro 5.4 is installed"
+							}
+						]
+					},
+					{
+						"operator": "OR",
+						"criterions": [
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009879796",
+								"comment": "kernel-default-5.14.21-150400.24.128.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009879678",
+								"comment": "kernel-default-base-5.14.21-150400.24.128.1.150400.24.62.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009879551",
+								"comment": "kernel-rt-5.14.21-150400.15.88.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009879552",
+								"comment": "kernel-source-rt-5.14.21-150400.15.88.1 is installed"
+							}
+						]
+					}
+				]
+			},
+			{
+				"operator": "AND",
+				"criterias": [
+					{
+						"operator": "OR",
+						"criterions": [
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009879879",
+								"comment": "kernel-default-5.14.21-150500.55.73.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009880170",
+								"comment": "kernel-default-base-5.14.21-150500.55.73.1.150500.6.33.8 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009879144",
+								"comment": "kernel-rt-5.14.21-150500.13.64.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009879155",
+								"comment": "kernel-source-rt-5.14.21-150500.13.64.1 is installed"
+							}
+						]
+					}
+				],
+				"criterions": [
+					{
+						"test_ref": "oval:org.opensuse.security:tst:2009800388",
+						"comment": "SUSE Linux Enterprise Micro 5.5 is installed"
+					}
+				]
+			}
+		]
+	}
+}

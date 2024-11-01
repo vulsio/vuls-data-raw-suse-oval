@@ -1,0 +1,120 @@
+{
+	"id": "oval:org.opensuse.security:def:202442302",
+	"version": "1",
+	"class": "vulnerability",
+	"metadata": {
+		"title": "CVE-2024-42302",
+		"affected": {
+			"family": "unix",
+			"platform": [
+				"SUSE Linux Enterprise Micro 5.2"
+			]
+		},
+		"reference": [
+			{
+				"ref_id": "Mitre CVE-2024-42302",
+				"ref_url": "https://cve.mitre.org/cgi-bin/cvename.cgi?name=CVE-2024-42302",
+				"source": "CVE"
+			},
+			{
+				"ref_id": "SUSE CVE-2024-42302",
+				"ref_url": "https://www.suse.com/security/cve/CVE-2024-42302",
+				"source": "SUSE CVE"
+			},
+			{
+				"ref_id": "SUSE-SU-2024:3190-1",
+				"ref_url": "https://lists.suse.com/pipermail/sle-security-updates/2024-September/019403.html",
+				"source": "SUSE-SU"
+			},
+			{
+				"ref_id": "SUSE-SU-2024:3194-1",
+				"ref_url": "https://lists.suse.com/pipermail/sle-updates/2024-September/036835.html",
+				"source": "SUSE-SU"
+			},
+			{
+				"ref_id": "SUSE-SU-2024:3195-1",
+				"ref_url": "https://lists.suse.com/pipermail/sle-updates/2024-September/036842.html",
+				"source": "SUSE-SU"
+			},
+			{
+				"ref_id": "SUSE-SU-2024:3209-1",
+				"ref_url": "https://lists.suse.com/pipermail/sle-updates/2024-September/036854.html",
+				"source": "SUSE-SU"
+			},
+			{
+				"ref_id": "SUSE-SU-2024:3383-1",
+				"ref_url": "https://lists.suse.com/pipermail/sle-security-updates/2024-September/019497.html",
+				"source": "SUSE-SU"
+			},
+			{
+				"ref_id": "SUSE-SU-2024:3483-1",
+				"ref_url": "https://lists.suse.com/pipermail/sle-updates/2024-September/037089.html",
+				"source": "SUSE-SU"
+			}
+		],
+		"description": "\n    In the Linux kernel, the following vulnerability has been resolved:\n\nPCI/DPC: Fix use-after-free on concurrent DPC and hot-removal\n\nKeith reports a use-after-free when a DPC event occurs concurrently to\nhot-removal of the same portion of the hierarchy:\n\nThe dpc_handler() awaits readiness of the secondary bus below the\nDownstream Port where the DPC event occurred.  To do so, it polls the\nconfig space of the first child device on the secondary bus.  If that\nchild device is concurrently removed, accesses to its struct pci_dev\ncause the kernel to oops.\n\nThat's because pci_bridge_wait_for_secondary_bus() neglects to hold a\nreference on the child device.  Before v6.3, the function was only\ncalled on resume from system sleep or on runtime resume.  Holding a\nreference wasn't necessary back then because the pciehp IRQ thread\ncould never run concurrently.  (On resume from system sleep, IRQs are\nnot enabled until after the resume_noirq phase.  And runtime resume is\nalways awaited before a PCI device is removed.)\n\nHowever starting with v6.3, pci_bridge_wait_for_secondary_bus() is also\ncalled on a DPC event.  Commit 53b54ad074de (\"PCI/DPC: Await readiness\nof secondary bus after reset\"), which introduced that, failed to\nappreciate that pci_bridge_wait_for_secondary_bus() now needs to hold a\nreference on the child device because dpc_handler() and pciehp may\nindeed run concurrently.  The commit was backported to v5.10+ stable\nkernels, so that's the oldest one affected.\n\nAdd the missing reference acquisition.\n\nAbridged stack trace:\n\n  BUG: unable to handle page fault for address: 00000000091400c0\n  CPU: 15 PID: 2464 Comm: irq/53-pcie-dpc 6.9.0\n  RIP: pci_bus_read_config_dword+0x17/0x50\n  pci_dev_wait()\n  pci_bridge_wait_for_secondary_bus()\n  dpc_reset_link()\n  pcie_do_recovery()\n  dpc_handler()\n    ",
+		"advisory": {
+			"from": "security@suse.de",
+			"severity": "Moderate",
+			"cve": [
+				{
+					"text": "CVE-2024-42302 at SUSE",
+					"href": "https://www.suse.com/security/cve/CVE-2024-42302/",
+					"impact": "medium",
+					"cvss3": "5.5/CVSS:3.1/AV:L/AC:L/PR:L/UI:N/S:U/C:N/I:N/A:H"
+				},
+				{
+					"text": "CVE-2024-42302 at NVD",
+					"href": "https://nvd.nist.gov/vuln/detail/CVE-2024-42302",
+					"impact": "high",
+					"cvss3": "7.8/CVSS:3.1/AV:L/AC:L/PR:L/UI:N/S:U/C:H/I:H/A:H"
+				}
+			],
+			"bugzilla": [
+				{
+					"text": "SUSE bug 1229366",
+					"href": "https://bugzilla.suse.com/1229366"
+				}
+			],
+			"issued": {
+				"date": "2024-08-20"
+			},
+			"updated": {
+				"date": "2024-09-30"
+			},
+			"affected_cpe_list": {
+				"cpe": [
+					"cpe:/o:suse:suse-microos:5.2"
+				]
+			}
+		}
+	},
+	"criteria": {
+		"operator": "AND",
+		"criterias": [
+			{
+				"operator": "OR",
+				"criterions": [
+					{
+						"test_ref": "oval:org.opensuse.security:tst:2009334017",
+						"comment": "kernel-default is not affected"
+					},
+					{
+						"test_ref": "oval:org.opensuse.security:tst:2009705046",
+						"comment": "kernel-rt is not affected"
+					},
+					{
+						"test_ref": "oval:org.opensuse.security:tst:2009728712",
+						"comment": "kernel-source-rt is not affected"
+					}
+				]
+			}
+		],
+		"criterions": [
+			{
+				"test_ref": "oval:org.opensuse.security:tst:2009681300",
+				"comment": "SUSE Linux Enterprise Micro 5.2 is installed"
+			}
+		]
+	}
+}

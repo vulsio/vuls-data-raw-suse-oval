@@ -1,0 +1,103 @@
+{
+	"id": "oval:org.opensuse.security:def:202436977",
+	"version": "1",
+	"class": "vulnerability",
+	"metadata": {
+		"title": "CVE-2024-36977",
+		"affected": {
+			"family": "unix",
+			"platform": [
+				"SUSE Linux Enterprise Micro 5.3"
+			]
+		},
+		"reference": [
+			{
+				"ref_id": "Mitre CVE-2024-36977",
+				"ref_url": "https://cve.mitre.org/cgi-bin/cvename.cgi?name=CVE-2024-36977",
+				"source": "CVE"
+			},
+			{
+				"ref_id": "SUSE CVE-2024-36977",
+				"ref_url": "https://www.suse.com/security/cve/CVE-2024-36977",
+				"source": "SUSE CVE"
+			},
+			{
+				"ref_id": "SUSE-SU-2024:2571-1",
+				"ref_url": "https://lists.suse.com/pipermail/sle-updates/2024-July/036103.html",
+				"source": "SUSE-SU"
+			},
+			{
+				"ref_id": "SUSE-SU-2024:2896-1",
+				"ref_url": "https://lists.suse.com/pipermail/sle-security-updates/2024-August/019185.html",
+				"source": "SUSE-SU"
+			},
+			{
+				"ref_id": "SUSE-SU-2024:2973-1",
+				"ref_url": "https://lists.suse.com/pipermail/sle-security-updates/2024-August/019280.html",
+				"source": "SUSE-SU"
+			}
+		],
+		"description": "\n    In the Linux kernel, the following vulnerability has been resolved:\n\nusb: dwc3: Wait unconditionally after issuing EndXfer command\n\nCurrently all controller IP/revisions except DWC3_usb3 >= 310a\nwait 1ms unconditionally for ENDXFER completion when IOC is not\nset. This is because DWC_usb3 controller revisions >= 3.10a\nsupports GUCTL2[14: Rst_actbitlater] bit which allows polling\nCMDACT bit to know whether ENDXFER command is completed.\n\nConsider a case where an IN request was queued, and parallelly\nsoft_disconnect was called (due to ffs_epfile_release). This\neventually calls stop_active_transfer with IOC cleared, hence\nsend_gadget_ep_cmd() skips waiting for CMDACT cleared during\nEndXfer. For DWC3 controllers with revisions >= 310a, we don't\nforcefully wait for 1ms either, and we proceed by unmapping the\nrequests. If ENDXFER didn't complete by this time, it leads to\nSMMU faults since the controller would still be accessing those\nrequests.\n\nFix this by ensuring ENDXFER completion by adding 1ms delay in\n__dwc3_stop_active_transfer() unconditionally.\n    ",
+		"advisory": {
+			"from": "security@suse.de",
+			"severity": "Moderate",
+			"cve": [
+				{
+					"text": "CVE-2024-36977 at SUSE",
+					"href": "https://www.suse.com/security/cve/CVE-2024-36977/",
+					"impact": "medium",
+					"cvss3": "4.7/CVSS:3.1/AV:L/AC:H/PR:L/UI:N/S:U/C:N/I:N/A:H"
+				},
+				{
+					"text": "CVE-2024-36977 at NVD",
+					"href": "https://nvd.nist.gov/vuln/detail/CVE-2024-36977"
+				}
+			],
+			"bugzilla": [
+				{
+					"text": "SUSE bug 1226513",
+					"href": "https://bugzilla.suse.com/1226513"
+				}
+			],
+			"issued": {
+				"date": "2024-06-20"
+			},
+			"updated": {
+				"date": "2024-08-21"
+			},
+			"affected_cpe_list": {
+				"cpe": [
+					"cpe:/o:suse:sle-micro:5.3"
+				]
+			}
+		}
+	},
+	"criteria": {
+		"operator": "AND",
+		"criterias": [
+			{
+				"operator": "OR",
+				"criterions": [
+					{
+						"test_ref": "oval:org.opensuse.security:tst:2009334017",
+						"comment": "kernel-default is not affected"
+					},
+					{
+						"test_ref": "oval:org.opensuse.security:tst:2009705046",
+						"comment": "kernel-rt is not affected"
+					},
+					{
+						"test_ref": "oval:org.opensuse.security:tst:2009728712",
+						"comment": "kernel-source-rt is not affected"
+					}
+				]
+			}
+		],
+		"criterions": [
+			{
+				"test_ref": "oval:org.opensuse.security:tst:2009728694",
+				"comment": "SUSE Linux Enterprise Micro 5.3 is installed"
+			}
+		]
+	}
+}

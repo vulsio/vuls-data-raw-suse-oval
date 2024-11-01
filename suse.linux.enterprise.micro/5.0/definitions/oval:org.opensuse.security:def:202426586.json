@@ -1,0 +1,120 @@
+{
+	"id": "oval:org.opensuse.security:def:202426586",
+	"version": "1",
+	"class": "vulnerability",
+	"metadata": {
+		"title": "CVE-2024-26586",
+		"affected": {
+			"family": "unix",
+			"platform": [
+				"SUSE Linux Enterprise Micro 5.0"
+			]
+		},
+		"reference": [
+			{
+				"ref_id": "Mitre CVE-2024-26586",
+				"ref_url": "https://cve.mitre.org/cgi-bin/cvename.cgi?name=CVE-2024-26586",
+				"source": "CVE"
+			},
+			{
+				"ref_id": "SUSE CVE-2024-26586",
+				"ref_url": "https://www.suse.com/security/cve/CVE-2024-26586",
+				"source": "SUSE CVE"
+			},
+			{
+				"ref_id": "SUSE-SU-2024:0855-1",
+				"ref_url": "https://lists.suse.com/pipermail/sle-security-updates/2024-March/018151.html",
+				"source": "SUSE-SU"
+			},
+			{
+				"ref_id": "SUSE-SU-2024:0856-1",
+				"ref_url": "https://lists.suse.com/pipermail/sle-security-updates/2024-March/018155.html",
+				"source": "SUSE-SU"
+			},
+			{
+				"ref_id": "SUSE-SU-2024:0857-1",
+				"ref_url": "https://lists.suse.com/pipermail/sle-security-updates/2024-March/018154.html",
+				"source": "SUSE-SU"
+			},
+			{
+				"ref_id": "SUSE-SU-2024:0858-1",
+				"ref_url": "https://lists.suse.com/pipermail/sle-security-updates/2024-March/018153.html",
+				"source": "SUSE-SU"
+			},
+			{
+				"ref_id": "SUSE-SU-2024:0900-1",
+				"ref_url": "https://lists.suse.com/pipermail/sle-security-updates/2024-March/018167.html",
+				"source": "SUSE-SU"
+			},
+			{
+				"ref_id": "SUSE-SU-2024:0900-2",
+				"ref_url": "https://lists.suse.com/pipermail/sle-security-updates/2024-March/018182.html",
+				"source": "SUSE-SU"
+			},
+			{
+				"ref_id": "SUSE-SU-2024:0910-1",
+				"ref_url": "https://lists.suse.com/pipermail/sle-security-updates/2024-March/018181.html",
+				"source": "SUSE-SU"
+			},
+			{
+				"ref_id": "SUSE-SU-2024:0926-1",
+				"ref_url": "https://lists.suse.com/pipermail/sle-security-updates/2024-March/018204.html",
+				"source": "SUSE-SU"
+			},
+			{
+				"ref_id": "SUSE-SU-2024:0977-1",
+				"ref_url": "https://lists.suse.com/pipermail/sle-security-updates/2024-March/018210.html",
+				"source": "SUSE-SU"
+			}
+		],
+		"description": "\n    In the Linux kernel, the following vulnerability has been resolved:\n\nmlxsw: spectrum_acl_tcam: Fix stack corruption\n\nWhen tc filters are first added to a net device, the corresponding local\nport gets bound to an ACL group in the device. The group contains a list\nof ACLs. In turn, each ACL points to a different TCAM region where the\nfilters are stored. During forwarding, the ACLs are sequentially\nevaluated until a match is found.\n\nOne reason to place filters in different regions is when they are added\nwith decreasing priorities and in an alternating order so that two\nconsecutive filters can never fit in the same region because of their\nkey usage.\n\nIn Spectrum-2 and newer ASICs the firmware started to report that the\nmaximum number of ACLs in a group is more than 16, but the layout of the\nregister that configures ACL groups (PAGT) was not updated to account\nfor that. It is therefore possible to hit stack corruption [1] in the\nrare case where more than 16 ACLs in a group are required.\n\nFix by limiting the maximum ACL group size to the minimum between what\nthe firmware reports and the maximum ACLs that fit in the PAGT register.\n\nAdd a test case to make sure the machine does not crash when this\ncondition is hit.\n\n[1]\nKernel panic - not syncing: stack-protector: Kernel stack is corrupted in: mlxsw_sp_acl_tcam_group_update+0x116/0x120\n[...]\n dump_stack_lvl+0x36/0x50\n panic+0x305/0x330\n __stack_chk_fail+0x15/0x20\n mlxsw_sp_acl_tcam_group_update+0x116/0x120\n mlxsw_sp_acl_tcam_group_region_attach+0x69/0x110\n mlxsw_sp_acl_tcam_vchunk_get+0x492/0xa20\n mlxsw_sp_acl_tcam_ventry_add+0x25/0xe0\n mlxsw_sp_acl_rule_add+0x47/0x240\n mlxsw_sp_flower_replace+0x1a9/0x1d0\n tc_setup_cb_add+0xdc/0x1c0\n fl_hw_replace_filter+0x146/0x1f0\n fl_change+0xc17/0x1360\n tc_new_tfilter+0x472/0xb90\n rtnetlink_rcv_msg+0x313/0x3b0\n netlink_rcv_skb+0x58/0x100\n netlink_unicast+0x244/0x390\n netlink_sendmsg+0x1e4/0x440\n ____sys_sendmsg+0x164/0x260\n ___sys_sendmsg+0x9a/0xe0\n __sys_sendmsg+0x7a/0xc0\n do_syscall_64+0x40/0xe0\n entry_SYSCALL_64_after_hwframe+0x63/0x6b\n    ",
+		"advisory": {
+			"from": "security@suse.de",
+			"severity": "Moderate",
+			"cve": [
+				{
+					"text": "CVE-2024-26586 at SUSE",
+					"href": "https://www.suse.com/security/cve/CVE-2024-26586/",
+					"impact": "medium",
+					"cvss3": "6.7/CVSS:3.1/AV:L/AC:L/PR:H/UI:N/S:U/C:H/I:H/A:H"
+				},
+				{
+					"text": "CVE-2024-26586 at NVD",
+					"href": "https://nvd.nist.gov/vuln/detail/CVE-2024-26586",
+					"impact": "medium",
+					"cvss3": "6.7/CVSS:3.1/AV:L/AC:L/PR:H/UI:N/S:U/C:H/I:H/A:H"
+				}
+			],
+			"bugzilla": [
+				{
+					"text": "SUSE bug 1220243",
+					"href": "https://bugzilla.suse.com/1220243"
+				}
+			],
+			"issued": {
+				"date": "2024-02-24"
+			},
+			"updated": {
+				"date": "2024-04-27"
+			},
+			"affected_cpe_list": {
+				"cpe": [
+					"cpe:/o:suse:suse-microos:5.0"
+				]
+			}
+		}
+	},
+	"criteria": {
+		"operator": "AND",
+		"criterions": [
+			{
+				"test_ref": "oval:org.opensuse.security:tst:2009704855",
+				"comment": "SUSE Linux Enterprise Micro 5.0 is installed"
+			},
+			{
+				"test_ref": "oval:org.opensuse.security:tst:2009334017",
+				"comment": "kernel-default is not affected"
+			}
+		]
+	}
+}

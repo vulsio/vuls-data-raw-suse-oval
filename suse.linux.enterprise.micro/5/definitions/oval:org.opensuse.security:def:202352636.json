@@ -1,0 +1,178 @@
+{
+	"id": "oval:org.opensuse.security:def:202352636",
+	"version": "1",
+	"class": "vulnerability",
+	"metadata": {
+		"title": "CVE-2023-52636",
+		"affected": {
+			"family": "unix",
+			"platform": [
+				"SUSE Linux Enterprise Micro 5.0",
+				"SUSE Linux Enterprise Micro 5.1",
+				"SUSE Linux Enterprise Micro 5.2",
+				"SUSE Linux Enterprise Micro 5.3",
+				"SUSE Linux Enterprise Micro 5.4",
+				"SUSE Linux Enterprise Micro 5.5"
+			]
+		},
+		"reference": [
+			{
+				"ref_id": "Mitre CVE-2023-52636",
+				"ref_url": "https://cve.mitre.org/cgi-bin/cvename.cgi?name=CVE-2023-52636",
+				"source": "CVE"
+			},
+			{
+				"ref_id": "SUSE CVE-2023-52636",
+				"ref_url": "https://www.suse.com/security/cve/CVE-2023-52636",
+				"source": "SUSE CVE"
+			},
+			{
+				"ref_id": "SUSE-SU-2024:1490-1",
+				"ref_url": "https://lists.suse.com/pipermail/sle-updates/2024-May/035140.html",
+				"source": "SUSE-SU"
+			},
+			{
+				"ref_id": "SUSE-SU-2024:1659-1",
+				"ref_url": "https://lists.suse.com/pipermail/sle-updates/2024-May/035281.html",
+				"source": "SUSE-SU"
+			},
+			{
+				"ref_id": "SUSE-SU-2024:1663-1",
+				"ref_url": "https://lists.suse.com/pipermail/sle-security-updates/2024-August/019268.html",
+				"source": "SUSE-SU"
+			}
+		],
+		"description": "\n    In the Linux kernel, the following vulnerability has been resolved:\n\nlibceph: just wait for more data to be available on the socket\n\nA short read may occur while reading the message footer from the\nsocket.  Later, when the socket is ready for another read, the\nmessenger invokes all read_partial_*() handlers, including\nread_partial_sparse_msg_data().  The expectation is that\nread_partial_sparse_msg_data() would bail, allowing the messenger to\ninvoke read_partial() for the footer and pick up where it left off.\n\nHowever read_partial_sparse_msg_data() violates that and ends up\ncalling into the state machine in the OSD client.  The sparse-read\nstate machine assumes that it's a new op and interprets some piece of\nthe footer as the sparse-read header and returns bogus extents/data\nlength, etc.\n\nTo determine whether read_partial_sparse_msg_data() should bail, let's\nreuse cursor->total_resid.  Because once it reaches to zero that means\nall the extents and data have been successfully received in last read,\nelse it could break out when partially reading any of the extents and\ndata.  And then osd_sparse_read() could continue where it left off.\n\n[ idryomov: changelog ]\n    ",
+		"advisory": {
+			"from": "security@suse.de",
+			"severity": "Moderate",
+			"cve": [
+				{
+					"text": "CVE-2023-52636 at SUSE",
+					"href": "https://www.suse.com/security/cve/CVE-2023-52636/",
+					"impact": "medium",
+					"cvss3": "5.5/CVSS:3.1/AV:L/AC:L/PR:L/UI:N/S:U/C:N/I:N/A:H"
+				},
+				{
+					"text": "CVE-2023-52636 at NVD",
+					"href": "https://nvd.nist.gov/vuln/detail/CVE-2023-52636"
+				}
+			],
+			"bugzilla": [
+				{
+					"text": "SUSE bug 1222247",
+					"href": "https://bugzilla.suse.com/1222247"
+				}
+			],
+			"issued": {
+				"date": "2024-10-18"
+			},
+			"updated": {
+				"date": "2024-10-18"
+			},
+			"affected_cpe_list": {
+				"cpe": [
+					"cpe:/o:suse:sle-micro:5.3",
+					"cpe:/o:suse:sle-micro:5.4",
+					"cpe:/o:suse:sle-micro:5.5",
+					"cpe:/o:suse:suse-microos:5.0",
+					"cpe:/o:suse:suse-microos:5.1",
+					"cpe:/o:suse:suse-microos:5.2"
+				]
+			}
+		}
+	},
+	"criteria": {
+		"operator": "OR",
+		"criterias": [
+			{
+				"operator": "AND",
+				"criterions": [
+					{
+						"test_ref": "oval:org.opensuse.security:tst:2009704855",
+						"comment": "SUSE Linux Enterprise Micro 5.0 is installed"
+					},
+					{
+						"test_ref": "oval:org.opensuse.security:tst:2009334017",
+						"comment": "kernel-default is not affected"
+					}
+				]
+			},
+			{
+				"operator": "AND",
+				"criterias": [
+					{
+						"operator": "OR",
+						"criterions": [
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009669964",
+								"comment": "SUSE Linux Enterprise Micro 5.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009681300",
+								"comment": "SUSE Linux Enterprise Micro 5.2 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009728694",
+								"comment": "SUSE Linux Enterprise Micro 5.3 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009755086",
+								"comment": "SUSE Linux Enterprise Micro 5.4 is installed"
+							}
+						]
+					},
+					{
+						"operator": "OR",
+						"criterions": [
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009334017",
+								"comment": "kernel-default is not affected"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009705046",
+								"comment": "kernel-rt is not affected"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009728712",
+								"comment": "kernel-source-rt is not affected"
+							}
+						]
+					}
+				]
+			},
+			{
+				"operator": "AND",
+				"criterias": [
+					{
+						"operator": "OR",
+						"criterions": [
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009861403",
+								"comment": "kernel-default-5.14.21-150500.55.62.2 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009861404",
+								"comment": "kernel-default-base-5.14.21-150500.55.62.2.150500.6.27.2 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009861193",
+								"comment": "kernel-rt-5.14.21-150500.13.52.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009861204",
+								"comment": "kernel-source-rt-5.14.21-150500.13.52.1 is installed"
+							}
+						]
+					}
+				],
+				"criterions": [
+					{
+						"test_ref": "oval:org.opensuse.security:tst:2009800388",
+						"comment": "SUSE Linux Enterprise Micro 5.5 is installed"
+					}
+				]
+			}
+		]
+	}
+}

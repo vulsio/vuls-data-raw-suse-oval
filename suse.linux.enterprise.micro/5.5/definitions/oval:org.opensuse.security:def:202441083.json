@@ -1,0 +1,75 @@
+{
+	"id": "oval:org.opensuse.security:def:202441083",
+	"version": "1",
+	"class": "vulnerability",
+	"metadata": {
+		"title": "CVE-2024-41083",
+		"affected": {
+			"family": "unix",
+			"platform": [
+				"SUSE Linux Enterprise Micro 5.5"
+			]
+		},
+		"reference": [
+			{
+				"ref_id": "Mitre CVE-2024-41083",
+				"ref_url": "https://cve.mitre.org/cgi-bin/cvename.cgi?name=CVE-2024-41083",
+				"source": "CVE"
+			},
+			{
+				"ref_id": "SUSE CVE-2024-41083",
+				"ref_url": "https://www.suse.com/security/cve/CVE-2024-41083",
+				"source": "SUSE CVE"
+			}
+		],
+		"description": "\n    In the Linux kernel, the following vulnerability has been resolved:\n\nnetfs: Fix netfs_page_mkwrite() to check folio->mapping is valid\n\nFix netfs_page_mkwrite() to check that folio->mapping is valid once it has\ntaken the folio lock (as filemap_page_mkwrite() does).  Without this,\ngeneric/247 occasionally oopses with something like the following:\n\n    BUG: kernel NULL pointer dereference, address: 0000000000000000\n    #PF: supervisor read access in kernel mode\n    #PF: error_code(0x0000) - not-present page\n\n    RIP: 0010:trace_event_raw_event_netfs_folio+0x61/0xc0\n    ...\n    Call Trace:\n     <TASK>\n     ? __die_body+0x1a/0x60\n     ? page_fault_oops+0x6e/0xa0\n     ? exc_page_fault+0xc2/0xe0\n     ? asm_exc_page_fault+0x22/0x30\n     ? trace_event_raw_event_netfs_folio+0x61/0xc0\n     trace_netfs_folio+0x39/0x40\n     netfs_page_mkwrite+0x14c/0x1d0\n     do_page_mkwrite+0x50/0x90\n     do_pte_missing+0x184/0x200\n     __handle_mm_fault+0x42d/0x500\n     handle_mm_fault+0x121/0x1f0\n     do_user_addr_fault+0x23e/0x3c0\n     exc_page_fault+0xc2/0xe0\n     asm_exc_page_fault+0x22/0x30\n\nThis is due to the invalidate_inode_pages2_range() issued at the end of the\nDIO write interfering with the mmap'd writes.\n    ",
+		"advisory": {
+			"from": "security@suse.de",
+			"severity": "Moderate",
+			"cve": [
+				{
+					"text": "CVE-2024-41083 at SUSE",
+					"href": "https://www.suse.com/security/cve/CVE-2024-41083/",
+					"impact": "medium",
+					"cvss3": "5.5/CVSS:3.1/AV:L/AC:L/PR:L/UI:N/S:U/C:N/I:N/A:H"
+				},
+				{
+					"text": "CVE-2024-41083 at NVD",
+					"href": "https://nvd.nist.gov/vuln/detail/CVE-2024-41083",
+					"impact": "medium",
+					"cvss3": "5.5/CVSS:3.1/AV:L/AC:L/PR:L/UI:N/S:U/C:N/I:N/A:H"
+				}
+			],
+			"bugzilla": [
+				{
+					"text": "SUSE bug 1228476",
+					"href": "https://bugzilla.suse.com/1228476"
+				}
+			],
+			"issued": {
+				"date": "2024-08-06"
+			},
+			"updated": {
+				"date": "2024-08-28"
+			},
+			"affected_cpe_list": {
+				"cpe": [
+					"cpe:/o:suse:sle-micro:5.5"
+				]
+			}
+		}
+	},
+	"criteria": {
+		"operator": "AND",
+		"criterions": [
+			{
+				"test_ref": "oval:org.opensuse.security:tst:2009800388",
+				"comment": "SUSE Linux Enterprise Micro 5.5 is installed"
+			},
+			{
+				"test_ref": "oval:org.opensuse.security:tst:2009728712",
+				"comment": "kernel-source-rt is not affected"
+			}
+		]
+	}
+}

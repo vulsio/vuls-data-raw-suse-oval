@@ -1,0 +1,146 @@
+{
+	"id": "oval:org.opensuse.security:def:202446793",
+	"version": "1",
+	"class": "vulnerability",
+	"metadata": {
+		"title": "CVE-2024-46793",
+		"affected": {
+			"family": "unix",
+			"platform": [
+				"SUSE Linux Enterprise Micro 5.0",
+				"SUSE Linux Enterprise Micro 5.1",
+				"SUSE Linux Enterprise Micro 5.2",
+				"SUSE Linux Enterprise Micro 5.3",
+				"SUSE Linux Enterprise Micro 5.4",
+				"SUSE Linux Enterprise Micro 5.5"
+			]
+		},
+		"reference": [
+			{
+				"ref_id": "Mitre CVE-2024-46793",
+				"ref_url": "https://cve.mitre.org/cgi-bin/cvename.cgi?name=CVE-2024-46793",
+				"source": "CVE"
+			},
+			{
+				"ref_id": "SUSE CVE-2024-46793",
+				"ref_url": "https://www.suse.com/security/cve/CVE-2024-46793",
+				"source": "SUSE CVE"
+			}
+		],
+		"description": "\n    In the Linux kernel, the following vulnerability has been resolved:\n\nASoC: Intel: Boards: Fix NULL pointer deref in BYT/CHT boards harder\n\nSince commit 13f58267cda3 (\"ASoC: soc.h: don't create dummy Component\nvia COMP_DUMMY()\") dummy codecs declared like this:\n\nSND_SOC_DAILINK_DEF(dummy,\n        DAILINK_COMP_ARRAY(COMP_DUMMY()));\n\nexpand to:\n\nstatic struct snd_soc_dai_link_component dummy[] = {\n};\n\nWhich means that dummy is a zero sized array and thus dais[i].codecs should\nnot be dereferenced *at all* since it points to the address of the next\nvariable stored in the data section as the \"dummy\" variable has an address\nbut no size, so even dereferencing dais[0] is already an out of bounds\narray reference.\n\nWhich means that the if (dais[i].codecs->name) check added in\ncommit 7d99a70b6595 (\"ASoC: Intel: Boards: Fix NULL pointer deref\nin BYT/CHT boards\") relies on that the part of the next variable which\nthe name member maps to just happens to be NULL.\n\nWhich apparently so far it usually is, except when it isn't\nand then it results in crashes like this one:\n\n[   28.795659] BUG: unable to handle page fault for address: 0000000000030011\n...\n[   28.795780] Call Trace:\n[   28.795787]  <TASK>\n...\n[   28.795862]  ? strcmp+0x18/0x40\n[   28.795872]  0xffffffffc150c605\n[   28.795887]  platform_probe+0x40/0xa0\n...\n[   28.795979]  ? __pfx_init_module+0x10/0x10 [snd_soc_sst_bytcr_wm5102]\n\nReally fix things this time around by checking dais.num_codecs != 0.\n    ",
+		"advisory": {
+			"from": "security@suse.de",
+			"severity": "Moderate",
+			"cve": [
+				{
+					"text": "CVE-2024-46793 at SUSE",
+					"href": "https://www.suse.com/security/cve/CVE-2024-46793/",
+					"impact": "medium",
+					"cvss3": "5.5/CVSS:3.1/AV:L/AC:L/PR:L/UI:N/S:U/C:N/I:N/A:H"
+				},
+				{
+					"text": "CVE-2024-46793 at NVD",
+					"href": "https://nvd.nist.gov/vuln/detail/CVE-2024-46793",
+					"impact": "medium",
+					"cvss3": "5.5/CVSS:3.1/AV:L/AC:L/PR:L/UI:N/S:U/C:N/I:N/A:H"
+				}
+			],
+			"bugzilla": [
+				{
+					"text": "SUSE bug 1230824",
+					"href": "https://bugzilla.suse.com/1230824"
+				}
+			],
+			"issued": {
+				"date": "2024-10-18"
+			},
+			"updated": {
+				"date": "2024-10-18"
+			},
+			"affected_cpe_list": {
+				"cpe": [
+					"cpe:/o:suse:sle-micro:5.3",
+					"cpe:/o:suse:sle-micro:5.4",
+					"cpe:/o:suse:sle-micro:5.5",
+					"cpe:/o:suse:suse-microos:5.0",
+					"cpe:/o:suse:suse-microos:5.1",
+					"cpe:/o:suse:suse-microos:5.2"
+				]
+			}
+		}
+	},
+	"criteria": {
+		"operator": "OR",
+		"criterias": [
+			{
+				"operator": "AND",
+				"criterions": [
+					{
+						"test_ref": "oval:org.opensuse.security:tst:2009704855",
+						"comment": "SUSE Linux Enterprise Micro 5.0 is installed"
+					},
+					{
+						"test_ref": "oval:org.opensuse.security:tst:2009334017",
+						"comment": "kernel-default is not affected"
+					}
+				]
+			},
+			{
+				"operator": "AND",
+				"criterions": [
+					{
+						"test_ref": "oval:org.opensuse.security:tst:2009800388",
+						"comment": "SUSE Linux Enterprise Micro 5.5 is installed"
+					},
+					{
+						"test_ref": "oval:org.opensuse.security:tst:2009728712",
+						"comment": "kernel-source-rt is not affected"
+					}
+				]
+			},
+			{
+				"operator": "AND",
+				"criterias": [
+					{
+						"operator": "OR",
+						"criterions": [
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009669964",
+								"comment": "SUSE Linux Enterprise Micro 5.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009681300",
+								"comment": "SUSE Linux Enterprise Micro 5.2 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009728694",
+								"comment": "SUSE Linux Enterprise Micro 5.3 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009755086",
+								"comment": "SUSE Linux Enterprise Micro 5.4 is installed"
+							}
+						]
+					},
+					{
+						"operator": "OR",
+						"criterions": [
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009334017",
+								"comment": "kernel-default is not affected"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009705046",
+								"comment": "kernel-rt is not affected"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009728712",
+								"comment": "kernel-source-rt is not affected"
+							}
+						]
+					}
+				]
+			}
+		]
+	}
+}

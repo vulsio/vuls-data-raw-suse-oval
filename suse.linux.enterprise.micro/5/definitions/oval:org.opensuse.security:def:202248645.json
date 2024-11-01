@@ -1,0 +1,127 @@
+{
+	"id": "oval:org.opensuse.security:def:202248645",
+	"version": "1",
+	"class": "vulnerability",
+	"metadata": {
+		"title": "CVE-2022-48645",
+		"affected": {
+			"family": "unix",
+			"platform": [
+				"SUSE Linux Enterprise Micro 5.0",
+				"SUSE Linux Enterprise Micro 5.5"
+			]
+		},
+		"reference": [
+			{
+				"ref_id": "Mitre CVE-2022-48645",
+				"ref_url": "https://cve.mitre.org/cgi-bin/cvename.cgi?name=CVE-2022-48645",
+				"source": "CVE"
+			},
+			{
+				"ref_id": "SUSE CVE-2022-48645",
+				"ref_url": "https://www.suse.com/security/cve/CVE-2022-48645",
+				"source": "SUSE CVE"
+			},
+			{
+				"ref_id": "SUSE-SU-2024:3190-1",
+				"ref_url": "https://lists.suse.com/pipermail/sle-security-updates/2024-September/019403.html",
+				"source": "SUSE-SU"
+			},
+			{
+				"ref_id": "SUSE-SU-2024:3209-1",
+				"ref_url": "https://lists.suse.com/pipermail/sle-updates/2024-September/036854.html",
+				"source": "SUSE-SU"
+			},
+			{
+				"ref_id": "SUSE-SU-2024:3483-1",
+				"ref_url": "https://lists.suse.com/pipermail/sle-updates/2024-September/037089.html",
+				"source": "SUSE-SU"
+			}
+		],
+		"description": "\n    In the Linux kernel, the following vulnerability has been resolved:\n\nnet: enetc: deny offload of tc-based TSN features on VF interfaces\n\nTSN features on the ENETC (taprio, cbs, gate, police) are configured\nthrough a mix of command BD ring messages and port registers:\nenetc_port_rd(), enetc_port_wr().\n\nPort registers are a region of the ENETC memory map which are only\naccessible from the PCIe Physical Function. They are not accessible from\nthe Virtual Functions.\n\nMoreover, attempting to access these registers crashes the kernel:\n\n$ echo 1 > /sys/bus/pci/devices/0000\\:00\\:00.0/sriov_numvfs\npci 0000:00:01.0: [1957:ef00] type 00 class 0x020001\nfsl_enetc_vf 0000:00:01.0: Adding to iommu group 15\nfsl_enetc_vf 0000:00:01.0: enabling device (0000 -> 0002)\nfsl_enetc_vf 0000:00:01.0 eno0vf0: renamed from eth0\n$ tc qdisc replace dev eno0vf0 root taprio num_tc 8 map 0 1 2 3 4 5 6 7 \\\n\tqueues 1@0 1@1 1@2 1@3 1@4 1@5 1@6 1@7 base-time 0 \\\n\tsched-entry S 0x7f 900000 sched-entry S 0x80 100000 flags 0x2\nUnable to handle kernel paging request at virtual address ffff800009551a08\nInternal error: Oops: 96000007 [#1] PREEMPT SMP\npc : enetc_setup_tc_taprio+0x170/0x47c\nlr : enetc_setup_tc_taprio+0x16c/0x47c\nCall trace:\n enetc_setup_tc_taprio+0x170/0x47c\n enetc_setup_tc+0x38/0x2dc\n taprio_change+0x43c/0x970\n taprio_init+0x188/0x1e0\n qdisc_create+0x114/0x470\n tc_modify_qdisc+0x1fc/0x6c0\n rtnetlink_rcv_msg+0x12c/0x390\n\nSplit enetc_setup_tc() into separate functions for the PF and for the\nVF drivers. Also remove enetc_qos.o from being included into\nenetc-vf.ko, since it serves absolutely no purpose there.\n    ",
+		"advisory": {
+			"from": "security@suse.de",
+			"severity": "Moderate",
+			"cve": [
+				{
+					"text": "CVE-2022-48645 at SUSE",
+					"href": "https://www.suse.com/security/cve/CVE-2022-48645/",
+					"impact": "medium",
+					"cvss3": "5.5/CVSS:3.1/AV:L/AC:L/PR:L/UI:N/S:U/C:N/I:N/A:H"
+				},
+				{
+					"text": "CVE-2022-48645 at NVD",
+					"href": "https://nvd.nist.gov/vuln/detail/CVE-2022-48645"
+				}
+			],
+			"bugzilla": [
+				{
+					"text": "SUSE bug 1223508",
+					"href": "https://bugzilla.suse.com/1223508"
+				}
+			],
+			"issued": {
+				"date": "2024-10-18"
+			},
+			"updated": {
+				"date": "2024-10-18"
+			},
+			"affected_cpe_list": {
+				"cpe": [
+					"cpe:/o:suse:sle-micro:5.5",
+					"cpe:/o:suse:suse-microos:5.0"
+				]
+			}
+		}
+	},
+	"criteria": {
+		"operator": "OR",
+		"criterias": [
+			{
+				"operator": "AND",
+				"criterions": [
+					{
+						"test_ref": "oval:org.opensuse.security:tst:2009704855",
+						"comment": "SUSE Linux Enterprise Micro 5.0 is installed"
+					},
+					{
+						"test_ref": "oval:org.opensuse.security:tst:2009334017",
+						"comment": "kernel-default is not affected"
+					}
+				]
+			},
+			{
+				"operator": "AND",
+				"criterias": [
+					{
+						"operator": "OR",
+						"criterions": [
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009945068",
+								"comment": "kernel-default-5.14.21-150500.55.80.2 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009945182",
+								"comment": "kernel-default-base-5.14.21-150500.55.80.2.150500.6.35.6 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009942305",
+								"comment": "kernel-rt-5.14.21-150500.13.67.3 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009942316",
+								"comment": "kernel-source-rt-5.14.21-150500.13.67.3 is installed"
+							}
+						]
+					}
+				],
+				"criterions": [
+					{
+						"test_ref": "oval:org.opensuse.security:tst:2009800388",
+						"comment": "SUSE Linux Enterprise Micro 5.5 is installed"
+					}
+				]
+			}
+		]
+	}
+}

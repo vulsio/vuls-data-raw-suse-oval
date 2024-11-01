@@ -1,0 +1,142 @@
+{
+	"id": "oval:org.opensuse.security:def:202147585",
+	"version": "1",
+	"class": "vulnerability",
+	"metadata": {
+		"title": "CVE-2021-47585",
+		"affected": {
+			"family": "unix",
+			"platform": [
+				"openSUSE Leap Micro 5.5"
+			]
+		},
+		"reference": [
+			{
+				"ref_id": "Mitre CVE-2021-47585",
+				"ref_url": "https://cve.mitre.org/cgi-bin/cvename.cgi?name=CVE-2021-47585",
+				"source": "CVE"
+			},
+			{
+				"ref_id": "SUSE CVE-2021-47585",
+				"ref_url": "https://www.suse.com/security/cve/CVE-2021-47585",
+				"source": "SUSE CVE"
+			},
+			{
+				"ref_id": "SUSE-SU-2024:2372-1",
+				"ref_url": "https://lists.suse.com/pipermail/sle-updates/2024-July/035868.html",
+				"source": "SUSE-SU"
+			},
+			{
+				"ref_id": "SUSE-SU-2024:2394-1",
+				"ref_url": "https://lists.suse.com/pipermail/sle-updates/2024-July/035907.html",
+				"source": "SUSE-SU"
+			},
+			{
+				"ref_id": "SUSE-SU-2024:2902-1",
+				"ref_url": "https://lists.suse.com/pipermail/sle-updates/2024-August/036443.html",
+				"source": "SUSE-SU"
+			},
+			{
+				"ref_id": "SUSE-SU-2024:2929-1",
+				"ref_url": "https://lists.suse.com/pipermail/sle-updates/2024-August/036473.html",
+				"source": "SUSE-SU"
+			},
+			{
+				"ref_id": "SUSE-SU-2024:2939-1",
+				"ref_url": "https://lists.suse.com/pipermail/sle-security-updates/2024-August/019211.html",
+				"source": "SUSE-SU"
+			}
+		],
+		"description": "\n    In the Linux kernel, the following vulnerability has been resolved:\n\nbtrfs: fix memory leak in __add_inode_ref()\n\nLine 1169 (#3) allocates a memory chunk for victim_name by kmalloc(),\nbut  when the function returns in line 1184 (#4) victim_name allocated\nby line 1169 (#3) is not freed, which will lead to a memory leak.\nThere is a similar snippet of code in this function as allocating a memory\nchunk for victim_name in line 1104 (#1) as well as releasing the memory\nin line 1116 (#2).\n\nWe should kfree() victim_name when the return value of backref_in_log()\nis less than zero and before the function returns in line 1184 (#4).\n\n1057 static inline int __add_inode_ref(struct btrfs_trans_handle *trans,\n1058 \t\t\t\t  struct btrfs_root *root,\n1059 \t\t\t\t  struct btrfs_path *path,\n1060 \t\t\t\t  struct btrfs_root *log_root,\n1061 \t\t\t\t  struct btrfs_inode *dir,\n1062 \t\t\t\t  struct btrfs_inode *inode,\n1063 \t\t\t\t  u64 inode_objectid, u64 parent_objectid,\n1064 \t\t\t\t  u64 ref_index, char *name, int namelen,\n1065 \t\t\t\t  int *search_done)\n1066 {\n\n1104 \tvictim_name = kmalloc(victim_name_len, GFP_NOFS);\n\t// #1: kmalloc (victim_name-1)\n1105 \tif (!victim_name)\n1106 \t\treturn -ENOMEM;\n\n1112\tret = backref_in_log(log_root, &search_key,\n1113\t\t\tparent_objectid, victim_name,\n1114\t\t\tvictim_name_len);\n1115\tif (ret < 0) {\n1116\t\tkfree(victim_name); // #2: kfree (victim_name-1)\n1117\t\treturn ret;\n1118\t} else if (!ret) {\n\n1169 \tvictim_name = kmalloc(victim_name_len, GFP_NOFS);\n\t// #3: kmalloc (victim_name-2)\n1170 \tif (!victim_name)\n1171 \t\treturn -ENOMEM;\n\n1180 \tret = backref_in_log(log_root, &search_key,\n1181 \t\t\tparent_objectid, victim_name,\n1182 \t\t\tvictim_name_len);\n1183 \tif (ret < 0) {\n1184 \t\treturn ret; // #4: missing kfree (victim_name-2)\n1185 \t} else if (!ret) {\n\n1241 \treturn 0;\n1242 }\n    ",
+		"advisory": {
+			"from": "security@suse.de",
+			"severity": "Moderate",
+			"cve": [
+				{
+					"text": "CVE-2021-47585 at SUSE",
+					"href": "https://www.suse.com/security/cve/CVE-2021-47585/",
+					"impact": "medium",
+					"cvss3": "5.5/CVSS:3.1/AV:L/AC:L/PR:L/UI:N/S:U/C:N/I:N/A:H"
+				},
+				{
+					"text": "CVE-2021-47585 at NVD",
+					"href": "https://nvd.nist.gov/vuln/detail/CVE-2021-47585",
+					"impact": "medium",
+					"cvss3": "5.5/CVSS:3.1/AV:L/AC:L/PR:L/UI:N/S:U/C:N/I:N/A:H"
+				}
+			],
+			"bugzilla": [
+				{
+					"text": "SUSE bug 1226556",
+					"href": "https://bugzilla.suse.com/1226556"
+				}
+			],
+			"issued": {
+				"date": "2024-07-11"
+			},
+			"updated": {
+				"date": "2024-08-20"
+			},
+			"affected_cpe_list": {
+				"cpe": [
+					"cpe:/o:opensuse:leap-micro:5.5"
+				]
+			}
+		}
+	},
+	"criteria": {
+		"operator": "AND",
+		"criterias": [
+			{
+				"operator": "OR",
+				"criterias": [
+					{
+						"operator": "AND",
+						"criterions": [
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009880171",
+								"comment": "kernel-default-5.14.21-150500.55.73.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009151354",
+								"comment": "kernel-default is signed with openSUSE key"
+							}
+						]
+					},
+					{
+						"operator": "AND",
+						"criterions": [
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009880170",
+								"comment": "kernel-default-base-5.14.21-150500.55.73.1.150500.6.33.8 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009151960",
+								"comment": "kernel-default-base is signed with openSUSE key"
+							}
+						]
+					},
+					{
+						"operator": "AND",
+						"criterions": [
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009872349",
+								"comment": "kernel-rt-5.14.21-150500.13.61.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009342860",
+								"comment": "kernel-rt is signed with openSUSE key"
+							}
+						]
+					}
+				]
+			}
+		],
+		"criterions": [
+			{
+				"test_ref": "oval:org.opensuse.security:tst:2009799821",
+				"comment": "openSUSE Leap Micro 5.5 is installed"
+			}
+		]
+	}
+}

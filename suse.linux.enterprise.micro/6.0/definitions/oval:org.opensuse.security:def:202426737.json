@@ -1,0 +1,138 @@
+{
+	"id": "oval:org.opensuse.security:def:202426737",
+	"version": "1",
+	"class": "vulnerability",
+	"metadata": {
+		"title": "CVE-2024-26737",
+		"affected": {
+			"family": "unix",
+			"platform": [
+				"SUSE Linux Enterprise Micro 6.0"
+			]
+		},
+		"reference": [
+			{
+				"ref_id": "Mitre CVE-2024-26737",
+				"ref_url": "https://cve.mitre.org/cgi-bin/cvename.cgi?name=CVE-2024-26737",
+				"source": "CVE"
+			},
+			{
+				"ref_id": "SUSE CVE-2024-26737",
+				"ref_url": "https://www.suse.com/security/cve/CVE-2024-26737",
+				"source": "SUSE CVE"
+			},
+			{
+				"ref_id": "SUSE-SU-2024:1490-1",
+				"ref_url": "https://lists.suse.com/pipermail/sle-updates/2024-May/035140.html",
+				"source": "SUSE-SU"
+			},
+			{
+				"ref_id": "SUSE-SU-2024:1659-1",
+				"ref_url": "https://lists.suse.com/pipermail/sle-updates/2024-May/035281.html",
+				"source": "SUSE-SU"
+			},
+			{
+				"ref_id": "SUSE-SU-2024:1663-1",
+				"ref_url": "https://lists.suse.com/pipermail/sle-security-updates/2024-August/019268.html",
+				"source": "SUSE-SU"
+			},
+			{
+				"ref_id": "SUSE-SU-2024:2135-1",
+				"ref_url": "https://lists.suse.com/pipermail/sle-updates/2024-June/035681.html",
+				"source": "SUSE-SU"
+			},
+			{
+				"ref_id": "SUSE-SU-2024:2203-1",
+				"ref_url": "https://lists.suse.com/pipermail/sle-security-updates/2024-August/019244.html",
+				"source": "SUSE-SU"
+			},
+			{
+				"ref_id": "SUSE-SU-2024:2973-1",
+				"ref_url": "https://lists.suse.com/pipermail/sle-security-updates/2024-August/019280.html",
+				"source": "SUSE-SU"
+			}
+		],
+		"description": "\n    In the Linux kernel, the following vulnerability has been resolved:\n\nbpf: Fix racing between bpf_timer_cancel_and_free and bpf_timer_cancel\n\nThe following race is possible between bpf_timer_cancel_and_free\nand bpf_timer_cancel. It will lead a UAF on the timer->timer.\n\nbpf_timer_cancel();\n\tspin_lock();\n\tt = timer->time;\n\tspin_unlock();\n\n\t\t\t\t\tbpf_timer_cancel_and_free();\n\t\t\t\t\t\tspin_lock();\n\t\t\t\t\t\tt = timer->timer;\n\t\t\t\t\t\ttimer->timer = NULL;\n\t\t\t\t\t\tspin_unlock();\n\t\t\t\t\t\thrtimer_cancel(&t->timer);\n\t\t\t\t\t\tkfree(t);\n\n\t/* UAF on t */\n\thrtimer_cancel(&t->timer);\n\nIn bpf_timer_cancel_and_free, this patch frees the timer->timer\nafter a rcu grace period. This requires a rcu_head addition\nto the \"struct bpf_hrtimer\". Another kfree(t) happens in bpf_timer_init,\nthis does not need a kfree_rcu because it is still under the\nspin_lock and timer->timer has not been visible by others yet.\n\nIn bpf_timer_cancel, rcu_read_lock() is added because this helper\ncan be used in a non rcu critical section context (e.g. from\na sleepable bpf prog). Other timer->timer usages in helpers.c\nhave been audited, bpf_timer_cancel() is the only place where\ntimer->timer is used outside of the spin_lock.\n\nAnother solution considered is to mark a t->flag in bpf_timer_cancel\nand clear it after hrtimer_cancel() is done.  In bpf_timer_cancel_and_free,\nit busy waits for the flag to be cleared before kfree(t). This patch\ngoes with a straight forward solution and frees timer->timer after\na rcu grace period.\n    ",
+		"advisory": {
+			"from": "security@suse.de",
+			"severity": "Moderate",
+			"cve": [
+				{
+					"text": "CVE-2024-26737 at SUSE",
+					"href": "https://www.suse.com/security/cve/CVE-2024-26737/",
+					"impact": "medium",
+					"cvss3": "6.4/CVSS:3.1/AV:L/AC:H/PR:H/UI:N/S:U/C:H/I:H/A:H"
+				},
+				{
+					"text": "CVE-2024-26737 at NVD",
+					"href": "https://nvd.nist.gov/vuln/detail/CVE-2024-26737"
+				}
+			],
+			"bugzilla": [
+				{
+					"text": "SUSE bug 1222557",
+					"href": "https://bugzilla.suse.com/1222557"
+				}
+			],
+			"issued": {
+				"date": "2024-06-08"
+			},
+			"updated": {
+				"date": "2024-09-01"
+			},
+			"affected_cpe_list": {
+				"cpe": [
+					"cpe:/o:suse:sl-micro:6.0"
+				]
+			}
+		}
+	},
+	"criteria": {
+		"operator": "AND",
+		"criterias": [
+			{
+				"operator": "OR",
+				"criterions": [
+					{
+						"test_ref": "oval:org.opensuse.security:tst:2009881568",
+						"comment": "kernel-default-6.4.0-18.1 is installed"
+					},
+					{
+						"test_ref": "oval:org.opensuse.security:tst:2009881569",
+						"comment": "kernel-default-base-6.4.0-17.1.1.51 is installed"
+					},
+					{
+						"test_ref": "oval:org.opensuse.security:tst:2009881570",
+						"comment": "kernel-default-extra-6.4.0-18.1 is installed"
+					},
+					{
+						"test_ref": "oval:org.opensuse.security:tst:2009881571",
+						"comment": "kernel-devel-6.4.0-18.1 is installed"
+					},
+					{
+						"test_ref": "oval:org.opensuse.security:tst:2009881572",
+						"comment": "kernel-kvmsmall-6.4.0-18.1 is installed"
+					},
+					{
+						"test_ref": "oval:org.opensuse.security:tst:2009881573",
+						"comment": "kernel-macros-6.4.0-18.1 is installed"
+					},
+					{
+						"test_ref": "oval:org.opensuse.security:tst:2009905215",
+						"comment": "kernel-rt-6.4.0-8.1 is installed"
+					},
+					{
+						"test_ref": "oval:org.opensuse.security:tst:2009881574",
+						"comment": "kernel-source-6.4.0-18.1 is installed"
+					}
+				]
+			}
+		],
+		"criterions": [
+			{
+				"test_ref": "oval:org.opensuse.security:tst:2009864179",
+				"comment": "SUSE Linux Enterprise Micro 6.0 is installed"
+			}
+		]
+	}
+}

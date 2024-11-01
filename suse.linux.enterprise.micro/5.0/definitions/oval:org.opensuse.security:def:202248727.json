@@ -1,0 +1,98 @@
+{
+	"id": "oval:org.opensuse.security:def:202248727",
+	"version": "1",
+	"class": "vulnerability",
+	"metadata": {
+		"title": "CVE-2022-48727",
+		"affected": {
+			"family": "unix",
+			"platform": [
+				"SUSE Linux Enterprise Micro 5.0"
+			]
+		},
+		"reference": [
+			{
+				"ref_id": "Mitre CVE-2022-48727",
+				"ref_url": "https://cve.mitre.org/cgi-bin/cvename.cgi?name=CVE-2022-48727",
+				"source": "CVE"
+			},
+			{
+				"ref_id": "SUSE CVE-2022-48727",
+				"ref_url": "https://www.suse.com/security/cve/CVE-2022-48727",
+				"source": "SUSE CVE"
+			},
+			{
+				"ref_id": "SUSE-SU-2024:2372-1",
+				"ref_url": "https://lists.suse.com/pipermail/sle-updates/2024-July/035868.html",
+				"source": "SUSE-SU"
+			},
+			{
+				"ref_id": "SUSE-SU-2024:2394-1",
+				"ref_url": "https://lists.suse.com/pipermail/sle-updates/2024-July/035907.html",
+				"source": "SUSE-SU"
+			},
+			{
+				"ref_id": "SUSE-SU-2024:2902-1",
+				"ref_url": "https://lists.suse.com/pipermail/sle-updates/2024-August/036443.html",
+				"source": "SUSE-SU"
+			},
+			{
+				"ref_id": "SUSE-SU-2024:2929-1",
+				"ref_url": "https://lists.suse.com/pipermail/sle-updates/2024-August/036473.html",
+				"source": "SUSE-SU"
+			},
+			{
+				"ref_id": "SUSE-SU-2024:2939-1",
+				"ref_url": "https://lists.suse.com/pipermail/sle-security-updates/2024-August/019211.html",
+				"source": "SUSE-SU"
+			}
+		],
+		"description": "\n    In the Linux kernel, the following vulnerability has been resolved:\n\nKVM: arm64: Avoid consuming a stale esr value when SError occur\n\nWhen any exception other than an IRQ occurs, the CPU updates the ESR_EL2\nregister with the exception syndrome. An SError may also become pending,\nand will be synchronised by KVM. KVM notes the exception type, and whether\nan SError was synchronised in exit_code.\n\nWhen an exception other than an IRQ occurs, fixup_guest_exit() updates\nvcpu->arch.fault.esr_el2 from the hardware register. When an SError was\nsynchronised, the vcpu esr value is used to determine if the exception\nwas due to an HVC. If so, ELR_EL2 is moved back one instruction. This\nis so that KVM can process the SError first, and re-execute the HVC if\nthe guest survives the SError.\n\nBut if an IRQ synchronises an SError, the vcpu's esr value is stale.\nIf the previous non-IRQ exception was an HVC, KVM will corrupt ELR_EL2,\ncausing an unrelated guest instruction to be executed twice.\n\nCheck ARM_EXCEPTION_CODE() before messing with ELR_EL2, IRQs don't\nupdate this register so don't need to check.\n    ",
+		"advisory": {
+			"from": "security@suse.de",
+			"severity": "Moderate",
+			"cve": [
+				{
+					"text": "CVE-2022-48727 at SUSE",
+					"href": "https://www.suse.com/security/cve/CVE-2022-48727/",
+					"impact": "medium",
+					"cvss3": "4.5/CVSS:3.1/AV:L/AC:H/PR:L/UI:N/S:U/C:L/I:L/A:L"
+				},
+				{
+					"text": "CVE-2022-48727 at NVD",
+					"href": "https://nvd.nist.gov/vuln/detail/CVE-2022-48727"
+				}
+			],
+			"bugzilla": [
+				{
+					"text": "SUSE bug 1226690",
+					"href": "https://bugzilla.suse.com/1226690"
+				}
+			],
+			"issued": {
+				"date": "2024-06-22"
+			},
+			"updated": {
+				"date": "2024-08-17"
+			},
+			"affected_cpe_list": {
+				"cpe": [
+					"cpe:/o:suse:suse-microos:5.0"
+				]
+			}
+		}
+	},
+	"criteria": {
+		"operator": "AND",
+		"criterions": [
+			{
+				"test_ref": "oval:org.opensuse.security:tst:2009704855",
+				"comment": "SUSE Linux Enterprise Micro 5.0 is installed"
+			},
+			{
+				"test_ref": "oval:org.opensuse.security:tst:2009334017",
+				"comment": "kernel-default is not affected"
+			}
+		]
+	}
+}

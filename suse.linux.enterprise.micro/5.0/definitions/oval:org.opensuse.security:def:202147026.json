@@ -1,0 +1,83 @@
+{
+	"id": "oval:org.opensuse.security:def:202147026",
+	"version": "1",
+	"class": "vulnerability",
+	"metadata": {
+		"title": "CVE-2021-47026",
+		"affected": {
+			"family": "unix",
+			"platform": [
+				"SUSE Linux Enterprise Micro 5.0"
+			]
+		},
+		"reference": [
+			{
+				"ref_id": "Mitre CVE-2021-47026",
+				"ref_url": "https://cve.mitre.org/cgi-bin/cvename.cgi?name=CVE-2021-47026",
+				"source": "CVE"
+			},
+			{
+				"ref_id": "SUSE CVE-2021-47026",
+				"ref_url": "https://www.suse.com/security/cve/CVE-2021-47026",
+				"source": "SUSE CVE"
+			},
+			{
+				"ref_id": "SUSE-SU-2024:1465-1",
+				"ref_url": "https://lists.suse.com/pipermail/sle-security-updates/2024-August/019273.html",
+				"source": "SUSE-SU"
+			},
+			{
+				"ref_id": "SUSE-SU-2024:1489-1",
+				"ref_url": "https://lists.suse.com/pipermail/sle-security-updates/2024-August/019270.html",
+				"source": "SUSE-SU"
+			}
+		],
+		"description": "\n    In the Linux kernel, the following vulnerability has been resolved:\n\nRDMA/rtrs-clt: destroy sysfs after removing session from active list\n\nA session can be removed dynamically by sysfs interface \"remove_path\" that\neventually calls rtrs_clt_remove_path_from_sysfs function.  The current\nrtrs_clt_remove_path_from_sysfs first removes the sysfs interfaces and\nfrees sess->stats object. Second it removes the session from the active\nlist.\n\nTherefore some functions could access non-connected session and access the\nfreed sess->stats object even-if they check the session status before\naccessing the session.\n\nFor instance rtrs_clt_request and get_next_path_min_inflight check the\nsession status and try to send IO to the session.  The session status\ncould be changed when they are trying to send IO but they could not catch\nthe change and update the statistics information in sess->stats object,\nand generate use-after-free problem.\n(see: \"RDMA/rtrs-clt: Check state of the rtrs_clt_sess before reading its\nstats\")\n\nThis patch changes the rtrs_clt_remove_path_from_sysfs to remove the\nsession from the active session list and then destroy the sysfs\ninterfaces.\n\nEach function still should check the session status because closing or\nerror recovery paths can change the status.\n    ",
+		"advisory": {
+			"from": "security@suse.de",
+			"severity": "Moderate",
+			"cve": [
+				{
+					"text": "CVE-2021-47026 at SUSE",
+					"href": "https://www.suse.com/security/cve/CVE-2021-47026/",
+					"impact": "medium",
+					"cvss3": "4.4/CVSS:3.1/AV:L/AC:L/PR:H/UI:N/S:U/C:N/I:N/A:H"
+				},
+				{
+					"text": "CVE-2021-47026 at NVD",
+					"href": "https://nvd.nist.gov/vuln/detail/CVE-2021-47026"
+				}
+			],
+			"bugzilla": [
+				{
+					"text": "SUSE bug 1220685",
+					"href": "https://bugzilla.suse.com/1220685"
+				}
+			],
+			"issued": {
+				"date": "2024-03-01"
+			},
+			"updated": {
+				"date": "2024-08-20"
+			},
+			"affected_cpe_list": {
+				"cpe": [
+					"cpe:/o:suse:suse-microos:5.0"
+				]
+			}
+		}
+	},
+	"criteria": {
+		"operator": "AND",
+		"criterions": [
+			{
+				"test_ref": "oval:org.opensuse.security:tst:2009704855",
+				"comment": "SUSE Linux Enterprise Micro 5.0 is installed"
+			},
+			{
+				"test_ref": "oval:org.opensuse.security:tst:2009334017",
+				"comment": "kernel-default is not affected"
+			}
+		]
+	}
+}

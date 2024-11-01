@@ -1,0 +1,88 @@
+{
+	"id": "oval:org.opensuse.security:def:202426998",
+	"version": "1",
+	"class": "vulnerability",
+	"metadata": {
+		"title": "CVE-2024-26998",
+		"affected": {
+			"family": "unix",
+			"platform": [
+				"SUSE Linux Enterprise Micro 5.1"
+			]
+		},
+		"reference": [
+			{
+				"ref_id": "Mitre CVE-2024-26998",
+				"ref_url": "https://cve.mitre.org/cgi-bin/cvename.cgi?name=CVE-2024-26998",
+				"source": "CVE"
+			},
+			{
+				"ref_id": "SUSE CVE-2024-26998",
+				"ref_url": "https://www.suse.com/security/cve/CVE-2024-26998",
+				"source": "SUSE CVE"
+			}
+		],
+		"description": "\n    In the Linux kernel, the following vulnerability has been resolved:\n\nserial: core: Clearing the circular buffer before NULLifying it\n\nThe circular buffer is NULLified in uart_tty_port_shutdown()\nunder the spin lock. However, the PM or other timer based callbacks\nmay still trigger after this event without knowning that buffer pointer\nis not valid. Since the serial code is a bit inconsistent in checking\nthe buffer state (some rely on the head-tail positions, some on the\nbuffer pointer), it's better to have both aligned, i.e. buffer pointer\nto be NULL and head-tail possitions to be the same, meaning it's empty.\nThis will prevent asynchronous calls to dereference NULL pointer as\nreported recently in 8250 case:\n\n  BUG: kernel NULL pointer dereference, address: 00000cf5\n  Workqueue: pm pm_runtime_work\n  EIP: serial8250_tx_chars (drivers/tty/serial/8250/8250_port.c:1809)\n  ...\n  ? serial8250_tx_chars (drivers/tty/serial/8250/8250_port.c:1809)\n  __start_tx (drivers/tty/serial/8250/8250_port.c:1551)\n  serial8250_start_tx (drivers/tty/serial/8250/8250_port.c:1654)\n  serial_port_runtime_suspend (include/linux/serial_core.h:667 drivers/tty/serial/serial_port.c:63)\n  __rpm_callback (drivers/base/power/runtime.c:393)\n  ? serial_port_remove (drivers/tty/serial/serial_port.c:50)\n  rpm_suspend (drivers/base/power/runtime.c:447)\n\nThe proposed change will prevent ->start_tx() to be called during\nsuspend on shut down port.\n    ",
+		"advisory": {
+			"from": "security@suse.de",
+			"severity": "Moderate",
+			"cve": [
+				{
+					"text": "CVE-2024-26998 at SUSE",
+					"href": "https://www.suse.com/security/cve/CVE-2024-26998/",
+					"impact": "medium",
+					"cvss3": "5.5/CVSS:3.1/AV:L/AC:L/PR:L/UI:N/S:U/C:N/I:N/A:H"
+				},
+				{
+					"text": "CVE-2024-26998 at NVD",
+					"href": "https://nvd.nist.gov/vuln/detail/CVE-2024-26998"
+				}
+			],
+			"bugzilla": [
+				{
+					"text": "SUSE bug 1223736",
+					"href": "https://bugzilla.suse.com/1223736"
+				}
+			],
+			"issued": {
+				"date": "2024-05-03"
+			},
+			"updated": {
+				"date": "2024-05-03"
+			},
+			"affected_cpe_list": {
+				"cpe": [
+					"cpe:/o:suse:suse-microos:5.1"
+				]
+			}
+		}
+	},
+	"criteria": {
+		"operator": "AND",
+		"criterias": [
+			{
+				"operator": "OR",
+				"criterions": [
+					{
+						"test_ref": "oval:org.opensuse.security:tst:2009334017",
+						"comment": "kernel-default is not affected"
+					},
+					{
+						"test_ref": "oval:org.opensuse.security:tst:2009705046",
+						"comment": "kernel-rt is not affected"
+					},
+					{
+						"test_ref": "oval:org.opensuse.security:tst:2009728712",
+						"comment": "kernel-source-rt is not affected"
+					}
+				]
+			}
+		],
+		"criterions": [
+			{
+				"test_ref": "oval:org.opensuse.security:tst:2009669964",
+				"comment": "SUSE Linux Enterprise Micro 5.1 is installed"
+			}
+		]
+	}
+}

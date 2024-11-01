@@ -1,0 +1,78 @@
+{
+	"id": "oval:org.opensuse.security:def:202426757",
+	"version": "1",
+	"class": "vulnerability",
+	"metadata": {
+		"title": "CVE-2024-26757",
+		"affected": {
+			"family": "unix",
+			"platform": [
+				"SUSE Linux Enterprise Micro 5.5"
+			]
+		},
+		"reference": [
+			{
+				"ref_id": "Mitre CVE-2024-26757",
+				"ref_url": "https://cve.mitre.org/cgi-bin/cvename.cgi?name=CVE-2024-26757",
+				"source": "CVE"
+			},
+			{
+				"ref_id": "SUSE CVE-2024-26757",
+				"ref_url": "https://www.suse.com/security/cve/CVE-2024-26757",
+				"source": "SUSE CVE"
+			},
+			{
+				"ref_id": "SUSE-SU-2024:2135-1",
+				"ref_url": "https://lists.suse.com/pipermail/sle-updates/2024-June/035681.html",
+				"source": "SUSE-SU"
+			}
+		],
+		"description": "\n    In the Linux kernel, the following vulnerability has been resolved:\n\nmd: Don't ignore read-only array in md_check_recovery()\n\nUsually if the array is not read-write, md_check_recovery() won't\nregister new sync_thread in the first place. And if the array is\nread-write and sync_thread is registered, md_set_readonly() will\nunregister sync_thread before setting the array read-only. md/raid\nfollow this behavior hence there is no problem.\n\nAfter commit f52f5c71f3d4 (\"md: fix stopping sync thread\"), following\nhang can be triggered by test shell/integrity-caching.sh:\n\n1) array is read-only. dm-raid update super block:\nrs_update_sbs\n ro = mddev->ro\n mddev->ro = 0\n  -> set array read-write\n md_update_sb\n\n2) register new sync thread concurrently.\n\n3) dm-raid set array back to read-only:\nrs_update_sbs\n mddev->ro = ro\n\n4) stop the array:\nraid_dtr\n md_stop\n  stop_sync_thread\n    set_bit(MD_RECOVERY_INTR, &mddev->recovery);\n    md_wakeup_thread_directly(mddev->sync_thread);\n    wait_event(..., !test_bit(MD_RECOVERY_RUNNING, &mddev->recovery))\n\n5) sync thread done:\n md_do_sync\n set_bit(MD_RECOVERY_DONE, &mddev->recovery);\n md_wakeup_thread(mddev->thread);\n\n6) daemon thread can't unregister sync thread:\n md_check_recovery\n  if (!md_is_rdwr(mddev) &&\n      !test_bit(MD_RECOVERY_NEEDED, &mddev->recovery))\n   return;\n  -> -> MD_RECOVERY_RUNNING can't be cleared, hence step 4 hang;\n\nThe root cause is that dm-raid manipulate 'mddev->ro' by itself,\nhowever, dm-raid really should stop sync thread before setting the\narray read-only. Unfortunately, I need to read more code before I\ncan refacter the handler of 'mddev->ro' in dm-raid, hence let's fix\nthe problem the easy way for now to prevent dm-raid regression.\n    ",
+		"advisory": {
+			"from": "security@suse.de",
+			"severity": "Moderate",
+			"cve": [
+				{
+					"text": "CVE-2024-26757 at SUSE",
+					"href": "https://www.suse.com/security/cve/CVE-2024-26757/",
+					"impact": "medium",
+					"cvss3": "5.5/CVSS:3.1/AV:L/AC:L/PR:L/UI:N/S:U/C:N/I:N/A:H"
+				},
+				{
+					"text": "CVE-2024-26757 at NVD",
+					"href": "https://nvd.nist.gov/vuln/detail/CVE-2024-26757"
+				}
+			],
+			"bugzilla": [
+				{
+					"text": "SUSE bug 1222527",
+					"href": "https://bugzilla.suse.com/1222527"
+				}
+			],
+			"issued": {
+				"date": "2024-10-18"
+			},
+			"updated": {
+				"date": "2024-10-18"
+			},
+			"affected_cpe_list": {
+				"cpe": [
+					"cpe:/o:suse:sle-micro:5.5"
+				]
+			}
+		}
+	},
+	"criteria": {
+		"operator": "AND",
+		"criterions": [
+			{
+				"test_ref": "oval:org.opensuse.security:tst:2009800388",
+				"comment": "SUSE Linux Enterprise Micro 5.5 is installed"
+			},
+			{
+				"test_ref": "oval:org.opensuse.security:tst:2009728712",
+				"comment": "kernel-source-rt is not affected"
+			}
+		]
+	}
+}

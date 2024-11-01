@@ -1,0 +1,90 @@
+{
+	"id": "oval:org.opensuse.security:def:202146935",
+	"version": "1",
+	"class": "vulnerability",
+	"metadata": {
+		"title": "CVE-2021-46935",
+		"affected": {
+			"family": "unix",
+			"platform": [
+				"SUSE Linux Enterprise Micro 5.1"
+			]
+		},
+		"reference": [
+			{
+				"ref_id": "Mitre CVE-2021-46935",
+				"ref_url": "https://cve.mitre.org/cgi-bin/cvename.cgi?name=CVE-2021-46935",
+				"source": "CVE"
+			},
+			{
+				"ref_id": "SUSE CVE-2021-46935",
+				"ref_url": "https://www.suse.com/security/cve/CVE-2021-46935",
+				"source": "SUSE CVE"
+			}
+		],
+		"description": "\n    In the Linux kernel, the following vulnerability has been resolved:\n\nbinder: fix async_free_space accounting for empty parcels\n\nIn 4.13, commit 74310e06be4d (\"android: binder: Move buffer out of area shared with user space\")\nfixed a kernel structure visibility issue. As part of that patch,\nsizeof(void *) was used as the buffer size for 0-length data payloads so\nthe driver could detect abusive clients sending 0-length asynchronous\ntransactions to a server by enforcing limits on async_free_size.\n\nUnfortunately, on the \"free\" side, the accounting of async_free_space\ndid not add the sizeof(void *) back. The result was that up to 8-bytes of\nasync_free_space were leaked on every async transaction of 8-bytes or\nless.  These small transactions are uncommon, so this accounting issue\nhas gone undetected for several years.\n\nThe fix is to use \"buffer_size\" (the allocated buffer size) instead of\n\"size\" (the logical buffer size) when updating the async_free_space\nduring the free operation. These are the same except for this\ncorner case of asynchronous transactions with payloads < 8 bytes.\n    ",
+		"advisory": {
+			"from": "security@suse.de",
+			"severity": "Moderate",
+			"cve": [
+				{
+					"text": "CVE-2021-46935 at SUSE",
+					"href": "https://www.suse.com/security/cve/CVE-2021-46935/",
+					"impact": "medium",
+					"cvss3": "4.7/CVSS:3.1/AV:L/AC:H/PR:L/UI:N/S:U/C:N/I:N/A:H"
+				},
+				{
+					"text": "CVE-2021-46935 at NVD",
+					"href": "https://nvd.nist.gov/vuln/detail/CVE-2021-46935",
+					"impact": "medium",
+					"cvss3": "5.5/CVSS:3.1/AV:L/AC:L/PR:L/UI:N/S:U/C:H/I:N/A:N"
+				}
+			],
+			"bugzilla": [
+				{
+					"text": "SUSE bug 1220438",
+					"href": "https://bugzilla.suse.com/1220438"
+				}
+			],
+			"issued": {
+				"date": "2024-02-28"
+			},
+			"updated": {
+				"date": "2024-04-26"
+			},
+			"affected_cpe_list": {
+				"cpe": [
+					"cpe:/o:suse:suse-microos:5.1"
+				]
+			}
+		}
+	},
+	"criteria": {
+		"operator": "AND",
+		"criterias": [
+			{
+				"operator": "OR",
+				"criterions": [
+					{
+						"test_ref": "oval:org.opensuse.security:tst:2009334017",
+						"comment": "kernel-default is not affected"
+					},
+					{
+						"test_ref": "oval:org.opensuse.security:tst:2009705046",
+						"comment": "kernel-rt is not affected"
+					},
+					{
+						"test_ref": "oval:org.opensuse.security:tst:2009728712",
+						"comment": "kernel-source-rt is not affected"
+					}
+				]
+			}
+		],
+		"criterions": [
+			{
+				"test_ref": "oval:org.opensuse.security:tst:2009669964",
+				"comment": "SUSE Linux Enterprise Micro 5.1 is installed"
+			}
+		]
+	}
+}

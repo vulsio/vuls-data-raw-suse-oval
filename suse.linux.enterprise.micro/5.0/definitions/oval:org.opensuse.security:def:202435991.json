@@ -1,0 +1,88 @@
+{
+	"id": "oval:org.opensuse.security:def:202435991",
+	"version": "1",
+	"class": "vulnerability",
+	"metadata": {
+		"title": "CVE-2024-35991",
+		"affected": {
+			"family": "unix",
+			"platform": [
+				"SUSE Linux Enterprise Micro 5.0"
+			]
+		},
+		"reference": [
+			{
+				"ref_id": "Mitre CVE-2024-35991",
+				"ref_url": "https://cve.mitre.org/cgi-bin/cvename.cgi?name=CVE-2024-35991",
+				"source": "CVE"
+			},
+			{
+				"ref_id": "SUSE CVE-2024-35991",
+				"ref_url": "https://www.suse.com/security/cve/CVE-2024-35991",
+				"source": "SUSE CVE"
+			},
+			{
+				"ref_id": "SUSE-SU-2024:2135-1",
+				"ref_url": "https://lists.suse.com/pipermail/sle-updates/2024-June/035681.html",
+				"source": "SUSE-SU"
+			},
+			{
+				"ref_id": "SUSE-SU-2024:2203-1",
+				"ref_url": "https://lists.suse.com/pipermail/sle-security-updates/2024-August/019244.html",
+				"source": "SUSE-SU"
+			},
+			{
+				"ref_id": "SUSE-SU-2024:2973-1",
+				"ref_url": "https://lists.suse.com/pipermail/sle-security-updates/2024-August/019280.html",
+				"source": "SUSE-SU"
+			}
+		],
+		"description": "\n    In the Linux kernel, the following vulnerability has been resolved:\n\ndmaengine: idxd: Convert spinlock to mutex to lock evl workqueue\n\ndrain_workqueue() cannot be called safely in a spinlocked context due to\npossible task rescheduling. In the multi-task scenario, calling\nqueue_work() while drain_workqueue() will lead to a Call Trace as\npushing a work on a draining workqueue is not permitted in spinlocked\ncontext.\n    Call Trace:\n    <TASK>\n    ? __warn+0x7d/0x140\n    ? __queue_work+0x2b2/0x440\n    ? report_bug+0x1f8/0x200\n    ? handle_bug+0x3c/0x70\n    ? exc_invalid_op+0x18/0x70\n    ? asm_exc_invalid_op+0x1a/0x20\n    ? __queue_work+0x2b2/0x440\n    queue_work_on+0x28/0x30\n    idxd_misc_thread+0x303/0x5a0 [idxd]\n    ? __schedule+0x369/0xb40\n    ? __pfx_irq_thread_fn+0x10/0x10\n    ? irq_thread+0xbc/0x1b0\n    irq_thread_fn+0x21/0x70\n    irq_thread+0x102/0x1b0\n    ? preempt_count_add+0x74/0xa0\n    ? __pfx_irq_thread_dtor+0x10/0x10\n    ? __pfx_irq_thread+0x10/0x10\n    kthread+0x103/0x140\n    ? __pfx_kthread+0x10/0x10\n    ret_from_fork+0x31/0x50\n    ? __pfx_kthread+0x10/0x10\n    ret_from_fork_asm+0x1b/0x30\n    </TASK>\n\nThe current implementation uses a spinlock to protect event log workqueue\nand will lead to the Call Trace due to potential task rescheduling.\n\nTo address the locking issue, convert the spinlock to mutex, allowing\nthe drain_workqueue() to be called in a safe mutex-locked context.\n\nThis change ensures proper synchronization when accessing the event log\nworkqueue, preventing potential Call Trace and improving the overall\nrobustness of the code.\n    ",
+		"advisory": {
+			"from": "security@suse.de",
+			"severity": "Moderate",
+			"cve": [
+				{
+					"text": "CVE-2024-35991 at SUSE",
+					"href": "https://www.suse.com/security/cve/CVE-2024-35991/",
+					"impact": "medium",
+					"cvss3": "5.5/CVSS:3.1/AV:L/AC:L/PR:L/UI:N/S:U/C:N/I:N/A:H"
+				},
+				{
+					"text": "CVE-2024-35991 at NVD",
+					"href": "https://nvd.nist.gov/vuln/detail/CVE-2024-35991"
+				}
+			],
+			"bugzilla": [
+				{
+					"text": "SUSE bug 1224553",
+					"href": "https://bugzilla.suse.com/1224553"
+				}
+			],
+			"issued": {
+				"date": "2024-05-21"
+			},
+			"updated": {
+				"date": "2024-08-21"
+			},
+			"affected_cpe_list": {
+				"cpe": [
+					"cpe:/o:suse:suse-microos:5.0"
+				]
+			}
+		}
+	},
+	"criteria": {
+		"operator": "AND",
+		"criterions": [
+			{
+				"test_ref": "oval:org.opensuse.security:tst:2009704855",
+				"comment": "SUSE Linux Enterprise Micro 5.0 is installed"
+			},
+			{
+				"test_ref": "oval:org.opensuse.security:tst:2009334017",
+				"comment": "kernel-default is not affected"
+			}
+		]
+	}
+}

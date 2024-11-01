@@ -1,0 +1,94 @@
+{
+	"id": "oval:org.opensuse.security:def:202447702",
+	"version": "1",
+	"class": "vulnerability",
+	"metadata": {
+		"title": "CVE-2024-47702",
+		"affected": {
+			"family": "unix",
+			"platform": [
+				"SUSE Linux Enterprise Micro 5.2"
+			]
+		},
+		"reference": [
+			{
+				"ref_id": "Mitre CVE-2024-47702",
+				"ref_url": "https://cve.mitre.org/cgi-bin/cvename.cgi?name=CVE-2024-47702",
+				"source": "CVE"
+			},
+			{
+				"ref_id": "SUSE CVE-2024-47702",
+				"ref_url": "https://www.suse.com/security/cve/CVE-2024-47702",
+				"source": "SUSE CVE"
+			}
+		],
+		"description": "\n    In the Linux kernel, the following vulnerability has been resolved:\n\nbpf: Fail verification for sign-extension of packet data/data_end/data_meta\n\nsyzbot reported a kernel crash due to\n  commit 1f1e864b6555 (\"bpf: Handle sign-extenstin ctx member accesses\").\nThe reason is due to sign-extension of 32-bit load for\npacket data/data_end/data_meta uapi field.\n\nThe original code looks like:\n        r2 = *(s32 *)(r1 + 76) /* load __sk_buff->data */\n        r3 = *(u32 *)(r1 + 80) /* load __sk_buff->data_end */\n        r0 = r2\n        r0 += 8\n        if r3 > r0 goto +1\n        ...\nNote that __sk_buff->data load has 32-bit sign extension.\n\nAfter verification and convert_ctx_accesses(), the final asm code looks like:\n        r2 = *(u64 *)(r1 +208)\n        r2 = (s32)r2\n        r3 = *(u64 *)(r1 +80)\n        r0 = r2\n        r0 += 8\n        if r3 > r0 goto pc+1\n        ...\nNote that 'r2 = (s32)r2' may make the kernel __sk_buff->data address invalid\nwhich may cause runtime failure.\n\nCurrently, in C code, typically we have\n        void *data = (void *)(long)skb->data;\n        void *data_end = (void *)(long)skb->data_end;\n        ...\nand it will generate\n        r2 = *(u64 *)(r1 +208)\n        r3 = *(u64 *)(r1 +80)\n        r0 = r2\n        r0 += 8\n        if r3 > r0 goto pc+1\n\nIf we allow sign-extension,\n        void *data = (void *)(long)(int)skb->data;\n        void *data_end = (void *)(long)skb->data_end;\n        ...\nthe generated code looks like\n        r2 = *(u64 *)(r1 +208)\n        r2 <<= 32\n        r2 s>>= 32\n        r3 = *(u64 *)(r1 +80)\n        r0 = r2\n        r0 += 8\n        if r3 > r0 goto pc+1\nand this will cause verification failure since \"r2 <<= 32\" is not allowed\nas \"r2\" is a packet pointer.\n\nTo fix this issue for case\n  r2 = *(s32 *)(r1 + 76) /* load __sk_buff->data */\nthis patch added additional checking in is_valid_access() callback\nfunction for packet data/data_end/data_meta access. If those accesses\nare with sign-extenstion, the verification will fail.\n\n  [1] https://lore.kernel.org/bpf/000000000000c90eee061d236d37@google.com/\n    ",
+		"advisory": {
+			"from": "security@suse.de",
+			"severity": "Moderate",
+			"cve": [
+				{
+					"text": "CVE-2024-47702 at SUSE",
+					"href": "https://www.suse.com/security/cve/CVE-2024-47702/",
+					"impact": "medium",
+					"cvss3": "5.5/CVSS:3.1/AV:L/AC:L/PR:L/UI:N/S:U/C:N/I:N/A:H"
+				},
+				{
+					"text": "CVE-2024-47702 at NVD",
+					"href": "https://nvd.nist.gov/vuln/detail/CVE-2024-47702",
+					"impact": "medium",
+					"cvss3": "5.5/CVSS:3.1/AV:L/AC:L/PR:L/UI:N/S:U/C:N/I:N/A:H"
+				}
+			],
+			"bugzilla": [
+				{
+					"text": "SUSE bug 1231924",
+					"href": "https://bugzilla.suse.com/1231924"
+				}
+			],
+			"issued": {
+				"date": "2024-10-23"
+			},
+			"updated": {
+				"date": "2024-10-27"
+			},
+			"affected_cpe_list": {
+				"cpe": [
+					"cpe:/o:suse:suse-microos:5.2"
+				]
+			}
+		}
+	},
+	"criteria": {
+		"operator": "AND",
+		"criterias": [
+			{
+				"operator": "OR",
+				"criterions": [
+					{
+						"test_ref": "oval:org.opensuse.security:tst:2009334017",
+						"comment": "kernel-default is not affected"
+					},
+					{
+						"test_ref": "oval:org.opensuse.security:tst:2009705046",
+						"comment": "kernel-rt is not affected"
+					},
+					{
+						"test_ref": "oval:org.opensuse.security:tst:2009333928",
+						"comment": "kernel-source is not affected"
+					},
+					{
+						"test_ref": "oval:org.opensuse.security:tst:2009728712",
+						"comment": "kernel-source-rt is not affected"
+					}
+				]
+			}
+		],
+		"criterions": [
+			{
+				"test_ref": "oval:org.opensuse.security:tst:2009681300",
+				"comment": "SUSE Linux Enterprise Micro 5.2 is installed"
+			}
+		]
+	}
+}

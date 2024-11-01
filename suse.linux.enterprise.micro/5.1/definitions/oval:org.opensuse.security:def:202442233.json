@@ -1,0 +1,90 @@
+{
+	"id": "oval:org.opensuse.security:def:202442233",
+	"version": "1",
+	"class": "vulnerability",
+	"metadata": {
+		"title": "CVE-2024-42233",
+		"affected": {
+			"family": "unix",
+			"platform": [
+				"SUSE Linux Enterprise Micro 5.1"
+			]
+		},
+		"reference": [
+			{
+				"ref_id": "Mitre CVE-2024-42233",
+				"ref_url": "https://cve.mitre.org/cgi-bin/cvename.cgi?name=CVE-2024-42233",
+				"source": "CVE"
+			},
+			{
+				"ref_id": "SUSE CVE-2024-42233",
+				"ref_url": "https://www.suse.com/security/cve/CVE-2024-42233",
+				"source": "SUSE CVE"
+			}
+		],
+		"description": "\n    In the Linux kernel, the following vulnerability has been resolved:\n\nfilemap: replace pte_offset_map() with pte_offset_map_nolock()\n\nThe vmf->ptl in filemap_fault_recheck_pte_none() is still set from\nhandle_pte_fault().  But at the same time, we did a pte_unmap(vmf->pte). \nAfter a pte_unmap(vmf->pte) unmap and rcu_read_unlock(), the page table\nmay be racily changed and vmf->ptl maybe fails to protect the actual page\ntable.  Fix this by replacing pte_offset_map() with\npte_offset_map_nolock().\n\nAs David said, the PTL pointer might be stale so if we continue to use\nit infilemap_fault_recheck_pte_none(), it might trigger UAF.  Also, if\nthe PTL fails, the issue fixed by commit 58f327f2ce80 (\"filemap: avoid\nunnecessary major faults in filemap_fault()\") might reappear.\n    ",
+		"advisory": {
+			"from": "security@suse.de",
+			"severity": "Important",
+			"cve": [
+				{
+					"text": "CVE-2024-42233 at SUSE",
+					"href": "https://www.suse.com/security/cve/CVE-2024-42233/",
+					"impact": "high",
+					"cvss3": "7/CVSS:3.1/AV:L/AC:H/PR:L/UI:N/S:U/C:H/I:H/A:H"
+				},
+				{
+					"text": "CVE-2024-42233 at NVD",
+					"href": "https://nvd.nist.gov/vuln/detail/CVE-2024-42233",
+					"impact": "low",
+					"cvss3": "3.3/CVSS:3.1/AV:L/AC:L/PR:L/UI:N/S:U/C:N/I:L/A:N"
+				}
+			],
+			"bugzilla": [
+				{
+					"text": "SUSE bug 1228960",
+					"href": "https://bugzilla.suse.com/1228960"
+				}
+			],
+			"issued": {
+				"date": "2024-08-09"
+			},
+			"updated": {
+				"date": "2024-08-09"
+			},
+			"affected_cpe_list": {
+				"cpe": [
+					"cpe:/o:suse:suse-microos:5.1"
+				]
+			}
+		}
+	},
+	"criteria": {
+		"operator": "AND",
+		"criterias": [
+			{
+				"operator": "OR",
+				"criterions": [
+					{
+						"test_ref": "oval:org.opensuse.security:tst:2009334017",
+						"comment": "kernel-default is not affected"
+					},
+					{
+						"test_ref": "oval:org.opensuse.security:tst:2009705046",
+						"comment": "kernel-rt is not affected"
+					},
+					{
+						"test_ref": "oval:org.opensuse.security:tst:2009728712",
+						"comment": "kernel-source-rt is not affected"
+					}
+				]
+			}
+		],
+		"criterions": [
+			{
+				"test_ref": "oval:org.opensuse.security:tst:2009669964",
+				"comment": "SUSE Linux Enterprise Micro 5.1 is installed"
+			}
+		]
+	}
+}

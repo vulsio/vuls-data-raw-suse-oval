@@ -1,0 +1,102 @@
+{
+	"id": "oval:org.opensuse.security:def:202147227",
+	"version": "1",
+	"class": "vulnerability",
+	"metadata": {
+		"title": "CVE-2021-47227",
+		"affected": {
+			"family": "unix",
+			"platform": [
+				"SUSE Linux Enterprise Micro 5.2"
+			]
+		},
+		"reference": [
+			{
+				"ref_id": "Mitre CVE-2021-47227",
+				"ref_url": "https://cve.mitre.org/cgi-bin/cvename.cgi?name=CVE-2021-47227",
+				"source": "CVE"
+			},
+			{
+				"ref_id": "SUSE CVE-2021-47227",
+				"ref_url": "https://www.suse.com/security/cve/CVE-2021-47227",
+				"source": "SUSE CVE"
+			},
+			{
+				"ref_id": "SUSE-SU-2024:2010-1",
+				"ref_url": "https://lists.suse.com/pipermail/sle-updates/2024-June/035576.html",
+				"source": "SUSE-SU"
+			},
+			{
+				"ref_id": "SUSE-SU-2024:2185-1",
+				"ref_url": "https://lists.suse.com/pipermail/sle-updates/2024-June/035718.html",
+				"source": "SUSE-SU"
+			}
+		],
+		"description": "\n    In the Linux kernel, the following vulnerability has been resolved:\n\nx86/fpu: Prevent state corruption in __fpu__restore_sig()\n\nThe non-compacted slowpath uses __copy_from_user() and copies the entire\nuser buffer into the kernel buffer, verbatim.  This means that the kernel\nbuffer may now contain entirely invalid state on which XRSTOR will #GP.\nvalidate_user_xstate_header() can detect some of that corruption, but that\nleaves the onus on callers to clear the buffer.\n\nPrior to XSAVES support, it was possible just to reinitialize the buffer,\ncompletely, but with supervisor states that is not longer possible as the\nbuffer clearing code split got it backwards. Fixing that is possible but\nnot corrupting the state in the first place is more robust.\n\nAvoid corruption of the kernel XSAVE buffer by using copy_user_to_xstate()\nwhich validates the XSAVE header contents before copying the actual states\nto the kernel. copy_user_to_xstate() was previously only called for\ncompacted-format kernel buffers, but it works for both compacted and\nnon-compacted forms.\n\nUsing it for the non-compacted form is slower because of multiple\n__copy_from_user() operations, but that cost is less important than robust\ncode in an already slow path.\n\n[ Changelog polished by Dave Hansen ]\n    ",
+		"advisory": {
+			"from": "security@suse.de",
+			"severity": "Moderate",
+			"cve": [
+				{
+					"text": "CVE-2021-47227 at SUSE",
+					"href": "https://www.suse.com/security/cve/CVE-2021-47227/",
+					"impact": "medium",
+					"cvss3": "5.5/CVSS:3.1/AV:L/AC:L/PR:L/UI:N/S:U/C:N/I:N/A:H"
+				},
+				{
+					"text": "CVE-2021-47227 at NVD",
+					"href": "https://nvd.nist.gov/vuln/detail/CVE-2021-47227"
+				}
+			],
+			"bugzilla": [
+				{
+					"text": "SUSE bug 1224852",
+					"href": "https://bugzilla.suse.com/1224852"
+				}
+			],
+			"issued": {
+				"date": "2024-06-13"
+			},
+			"updated": {
+				"date": "2024-06-25"
+			},
+			"affected_cpe_list": {
+				"cpe": [
+					"cpe:/o:suse:suse-microos:5.2"
+				]
+			}
+		}
+	},
+	"criteria": {
+		"operator": "AND",
+		"criterias": [
+			{
+				"operator": "OR",
+				"criterions": [
+					{
+						"test_ref": "oval:org.opensuse.security:tst:2009868905",
+						"comment": "kernel-default-5.3.18-150300.59.164.1 is installed"
+					},
+					{
+						"test_ref": "oval:org.opensuse.security:tst:2009868822",
+						"comment": "kernel-default-base-5.3.18-150300.59.164.1.150300.18.96.1 is installed"
+					},
+					{
+						"test_ref": "oval:org.opensuse.security:tst:2009865703",
+						"comment": "kernel-rt-5.3.18-150300.172.1 is installed"
+					},
+					{
+						"test_ref": "oval:org.opensuse.security:tst:2009865704",
+						"comment": "kernel-source-rt-5.3.18-150300.172.1 is installed"
+					}
+				]
+			}
+		],
+		"criterions": [
+			{
+				"test_ref": "oval:org.opensuse.security:tst:2009681300",
+				"comment": "SUSE Linux Enterprise Micro 5.2 is installed"
+			}
+		]
+	}
+}

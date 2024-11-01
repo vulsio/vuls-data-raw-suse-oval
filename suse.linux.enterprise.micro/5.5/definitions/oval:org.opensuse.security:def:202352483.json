@@ -1,0 +1,97 @@
+{
+	"id": "oval:org.opensuse.security:def:202352483",
+	"version": "1",
+	"class": "vulnerability",
+	"metadata": {
+		"title": "CVE-2023-52483",
+		"affected": {
+			"family": "unix",
+			"platform": [
+				"SUSE Linux Enterprise Micro 5.5"
+			]
+		},
+		"reference": [
+			{
+				"ref_id": "Mitre CVE-2023-52483",
+				"ref_url": "https://cve.mitre.org/cgi-bin/cvename.cgi?name=CVE-2023-52483",
+				"source": "CVE"
+			},
+			{
+				"ref_id": "SUSE CVE-2023-52483",
+				"ref_url": "https://www.suse.com/security/cve/CVE-2023-52483",
+				"source": "SUSE CVE"
+			},
+			{
+				"ref_id": "SUSE-SU-2024:2135-1",
+				"ref_url": "https://lists.suse.com/pipermail/sle-updates/2024-June/035681.html",
+				"source": "SUSE-SU"
+			}
+		],
+		"description": "\n    In the Linux kernel, the following vulnerability has been resolved:\n\nmctp: perform route lookups under a RCU read-side lock\n\nOur current route lookups (mctp_route_lookup and mctp_route_lookup_null)\ntraverse the net's route list without the RCU read lock held. This means\nthe route lookup is subject to preemption, resulting in an potential\ngrace period expiry, and so an eventual kfree() while we still have the\nroute pointer.\n\nAdd the proper read-side critical section locks around the route\nlookups, preventing premption and a possible parallel kfree.\n\nThe remaining net->mctp.routes accesses are already under a\nrcu_read_lock, or protected by the RTNL for updates.\n\nBased on an analysis from Sili Luo <rootlab@huawei.com>, where\nintroducing a delay in the route lookup could cause a UAF on\nsimultaneous sendmsg() and route deletion.\n    ",
+		"advisory": {
+			"from": "security@suse.de",
+			"severity": "Moderate",
+			"cve": [
+				{
+					"text": "CVE-2023-52483 at SUSE",
+					"href": "https://www.suse.com/security/cve/CVE-2023-52483/",
+					"impact": "high",
+					"cvss3": "7/CVSS:3.1/AV:L/AC:H/PR:L/UI:N/S:U/C:H/I:H/A:H"
+				},
+				{
+					"text": "CVE-2023-52483 at NVD",
+					"href": "https://nvd.nist.gov/vuln/detail/CVE-2023-52483"
+				}
+			],
+			"bugzilla": [
+				{
+					"text": "SUSE bug 1220738",
+					"href": "https://bugzilla.suse.com/1220738"
+				},
+				{
+					"text": "SUSE bug 1223291",
+					"href": "https://bugzilla.suse.com/1223291"
+				}
+			],
+			"issued": {
+				"date": "2024-03-07"
+			},
+			"updated": {
+				"date": "2024-10-09"
+			},
+			"affected_cpe_list": {
+				"cpe": [
+					"cpe:/o:suse:sle-micro:5.5"
+				]
+			}
+		}
+	},
+	"criteria": {
+		"operator": "AND",
+		"criterias": [
+			{
+				"operator": "OR",
+				"criterions": [
+					{
+						"test_ref": "oval:org.opensuse.security:tst:2009334017",
+						"comment": "kernel-default is not affected"
+					},
+					{
+						"test_ref": "oval:org.opensuse.security:tst:2009333928",
+						"comment": "kernel-source is not affected"
+					},
+					{
+						"test_ref": "oval:org.opensuse.security:tst:2009728712",
+						"comment": "kernel-source-rt is not affected"
+					}
+				]
+			}
+		],
+		"criterions": [
+			{
+				"test_ref": "oval:org.opensuse.security:tst:2009800388",
+				"comment": "SUSE Linux Enterprise Micro 5.5 is installed"
+			}
+		]
+	}
+}

@@ -1,0 +1,122 @@
+{
+	"id": "oval:org.opensuse.security:def:202147231",
+	"version": "1",
+	"class": "vulnerability",
+	"metadata": {
+		"title": "CVE-2021-47231",
+		"affected": {
+			"family": "unix",
+			"platform": [
+				"SUSE Linux Enterprise Micro 5.2"
+			]
+		},
+		"reference": [
+			{
+				"ref_id": "Mitre CVE-2021-47231",
+				"ref_url": "https://cve.mitre.org/cgi-bin/cvename.cgi?name=CVE-2021-47231",
+				"source": "CVE"
+			},
+			{
+				"ref_id": "SUSE CVE-2021-47231",
+				"ref_url": "https://www.suse.com/security/cve/CVE-2021-47231",
+				"source": "SUSE CVE"
+			},
+			{
+				"ref_id": "SUSE-SU-2024:1979-1",
+				"ref_url": "https://lists.suse.com/pipermail/sle-updates/2024-June/035536.html",
+				"source": "SUSE-SU"
+			},
+			{
+				"ref_id": "SUSE-SU-2024:1983-1",
+				"ref_url": "https://lists.suse.com/pipermail/sle-updates/2024-June/035554.html",
+				"source": "SUSE-SU"
+			},
+			{
+				"ref_id": "SUSE-SU-2024:2010-1",
+				"ref_url": "https://lists.suse.com/pipermail/sle-updates/2024-June/035576.html",
+				"source": "SUSE-SU"
+			},
+			{
+				"ref_id": "SUSE-SU-2024:2183-1",
+				"ref_url": "https://lists.suse.com/pipermail/sle-updates/2024-June/035717.html",
+				"source": "SUSE-SU"
+			},
+			{
+				"ref_id": "SUSE-SU-2024:2184-1",
+				"ref_url": "https://lists.suse.com/pipermail/sle-updates/2024-June/035716.html",
+				"source": "SUSE-SU"
+			},
+			{
+				"ref_id": "SUSE-SU-2024:2185-1",
+				"ref_url": "https://lists.suse.com/pipermail/sle-updates/2024-June/035718.html",
+				"source": "SUSE-SU"
+			}
+		],
+		"description": "\n    In the Linux kernel, the following vulnerability has been resolved:\n\ncan: mcba_usb: fix memory leak in mcba_usb\n\nSyzbot reported memory leak in SocketCAN driver for Microchip CAN BUS\nAnalyzer Tool. The problem was in unfreed usb_coherent.\n\nIn mcba_usb_start() 20 coherent buffers are allocated and there is\nnothing, that frees them:\n\n1) In callback function the urb is resubmitted and that's all\n2) In disconnect function urbs are simply killed, but URB_FREE_BUFFER\n   is not set (see mcba_usb_start) and this flag cannot be used with\n   coherent buffers.\n\nFail log:\n| [ 1354.053291][ T8413] mcba_usb 1-1:0.0 can0: device disconnected\n| [ 1367.059384][ T8420] kmemleak: 20 new suspected memory leaks (see /sys/kernel/debug/kmem)\n\nSo, all allocated buffers should be freed with usb_free_coherent()\nexplicitly\n\nNOTE:\nThe same pattern for allocating and freeing coherent buffers\nis used in drivers/net/can/usb/kvaser_usb/kvaser_usb_core.c\n    ",
+		"advisory": {
+			"from": "security@suse.de",
+			"severity": "Moderate",
+			"cve": [
+				{
+					"text": "CVE-2021-47231 at SUSE",
+					"href": "https://www.suse.com/security/cve/CVE-2021-47231/",
+					"impact": "medium",
+					"cvss3": "5.5/CVSS:3.1/AV:L/AC:L/PR:L/UI:N/S:U/C:N/I:N/A:H"
+				},
+				{
+					"text": "CVE-2021-47231 at NVD",
+					"href": "https://nvd.nist.gov/vuln/detail/CVE-2021-47231"
+				}
+			],
+			"bugzilla": [
+				{
+					"text": "SUSE bug 1224849",
+					"href": "https://bugzilla.suse.com/1224849"
+				}
+			],
+			"issued": {
+				"date": "2024-06-13"
+			},
+			"updated": {
+				"date": "2024-06-25"
+			},
+			"affected_cpe_list": {
+				"cpe": [
+					"cpe:/o:suse:suse-microos:5.2"
+				]
+			}
+		}
+	},
+	"criteria": {
+		"operator": "AND",
+		"criterias": [
+			{
+				"operator": "OR",
+				"criterions": [
+					{
+						"test_ref": "oval:org.opensuse.security:tst:2009868905",
+						"comment": "kernel-default-5.3.18-150300.59.164.1 is installed"
+					},
+					{
+						"test_ref": "oval:org.opensuse.security:tst:2009868822",
+						"comment": "kernel-default-base-5.3.18-150300.59.164.1.150300.18.96.1 is installed"
+					},
+					{
+						"test_ref": "oval:org.opensuse.security:tst:2009865703",
+						"comment": "kernel-rt-5.3.18-150300.172.1 is installed"
+					},
+					{
+						"test_ref": "oval:org.opensuse.security:tst:2009865704",
+						"comment": "kernel-source-rt-5.3.18-150300.172.1 is installed"
+					}
+				]
+			}
+		],
+		"criterions": [
+			{
+				"test_ref": "oval:org.opensuse.security:tst:2009681300",
+				"comment": "SUSE Linux Enterprise Micro 5.2 is installed"
+			}
+		]
+	}
+}

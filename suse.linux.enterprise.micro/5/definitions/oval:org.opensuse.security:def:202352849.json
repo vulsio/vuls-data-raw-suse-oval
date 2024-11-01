@@ -1,0 +1,136 @@
+{
+	"id": "oval:org.opensuse.security:def:202352849",
+	"version": "1",
+	"class": "vulnerability",
+	"metadata": {
+		"title": "CVE-2023-52849",
+		"affected": {
+			"family": "unix",
+			"platform": [
+				"SUSE Linux Enterprise Micro 5.0",
+				"SUSE Linux Enterprise Micro 5.1",
+				"SUSE Linux Enterprise Micro 5.2"
+			]
+		},
+		"reference": [
+			{
+				"ref_id": "Mitre CVE-2023-52849",
+				"ref_url": "https://cve.mitre.org/cgi-bin/cvename.cgi?name=CVE-2023-52849",
+				"source": "CVE"
+			},
+			{
+				"ref_id": "SUSE CVE-2023-52849",
+				"ref_url": "https://www.suse.com/security/cve/CVE-2023-52849",
+				"source": "SUSE CVE"
+			},
+			{
+				"ref_id": "SUSE-SU-2024:2571-1",
+				"ref_url": "https://lists.suse.com/pipermail/sle-updates/2024-July/036103.html",
+				"source": "SUSE-SU"
+			},
+			{
+				"ref_id": "SUSE-SU-2024:2896-1",
+				"ref_url": "https://lists.suse.com/pipermail/sle-security-updates/2024-August/019185.html",
+				"source": "SUSE-SU"
+			},
+			{
+				"ref_id": "SUSE-SU-2024:2973-1",
+				"ref_url": "https://lists.suse.com/pipermail/sle-security-updates/2024-August/019280.html",
+				"source": "SUSE-SU"
+			}
+		],
+		"description": "\n    In the Linux kernel, the following vulnerability has been resolved:\n\ncxl/mem: Fix shutdown order\n\nIra reports that removing cxl_mock_mem causes a crash with the following\ntrace:\n\n BUG: kernel NULL pointer dereference, address: 0000000000000044\n [..]\n RIP: 0010:cxl_region_decode_reset+0x7f/0x180 [cxl_core]\n [..]\n Call Trace:\n  <TASK>\n  cxl_region_detach+0xe8/0x210 [cxl_core]\n  cxl_decoder_kill_region+0x27/0x40 [cxl_core]\n  cxld_unregister+0x29/0x40 [cxl_core]\n  devres_release_all+0xb8/0x110\n  device_unbind_cleanup+0xe/0x70\n  device_release_driver_internal+0x1d2/0x210\n  bus_remove_device+0xd7/0x150\n  device_del+0x155/0x3e0\n  device_unregister+0x13/0x60\n  devm_release_action+0x4d/0x90\n  ? __pfx_unregister_port+0x10/0x10 [cxl_core]\n  delete_endpoint+0x121/0x130 [cxl_core]\n  devres_release_all+0xb8/0x110\n  device_unbind_cleanup+0xe/0x70\n  device_release_driver_internal+0x1d2/0x210\n  bus_remove_device+0xd7/0x150\n  device_del+0x155/0x3e0\n  ? lock_release+0x142/0x290\n  cdev_device_del+0x15/0x50\n  cxl_memdev_unregister+0x54/0x70 [cxl_core]\n\nThis crash is due to the clearing out the cxl_memdev's driver context\n(@cxlds) before the subsystem is done with it. This is ultimately due to\nthe region(s), that this memdev is a member, being torn down and expecting\nto be able to de-reference @cxlds, like here:\n\nstatic int cxl_region_decode_reset(struct cxl_region *cxlr, int count)\n...\n                if (cxlds->rcd)\n                        goto endpoint_reset;\n...\n\nFix it by keeping the driver context valid until memdev-device\nunregistration, and subsequently the entire stack of related\ndependencies, unwinds.\n    ",
+		"advisory": {
+			"from": "security@suse.de",
+			"severity": "Moderate",
+			"cve": [
+				{
+					"text": "CVE-2023-52849 at SUSE",
+					"href": "https://www.suse.com/security/cve/CVE-2023-52849/",
+					"impact": "medium",
+					"cvss3": "4.4/CVSS:3.1/AV:L/AC:L/PR:H/UI:N/S:U/C:N/I:N/A:H"
+				},
+				{
+					"text": "CVE-2023-52849 at NVD",
+					"href": "https://nvd.nist.gov/vuln/detail/CVE-2023-52849"
+				}
+			],
+			"bugzilla": [
+				{
+					"text": "SUSE bug 1224949",
+					"href": "https://bugzilla.suse.com/1224949"
+				}
+			],
+			"issued": {
+				"date": "2024-10-18"
+			},
+			"updated": {
+				"date": "2024-10-18"
+			},
+			"affected_cpe_list": {
+				"cpe": [
+					"cpe:/o:suse:suse-microos:5.0",
+					"cpe:/o:suse:suse-microos:5.1",
+					"cpe:/o:suse:suse-microos:5.2"
+				]
+			}
+		}
+	},
+	"criteria": {
+		"operator": "OR",
+		"criterias": [
+			{
+				"operator": "AND",
+				"criterions": [
+					{
+						"test_ref": "oval:org.opensuse.security:tst:2009704855",
+						"comment": "SUSE Linux Enterprise Micro 5.0 is installed"
+					},
+					{
+						"test_ref": "oval:org.opensuse.security:tst:2009334017",
+						"comment": "kernel-default is not affected"
+					}
+				]
+			},
+			{
+				"operator": "AND",
+				"criterias": [
+					{
+						"operator": "OR",
+						"criterions": [
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009669964",
+								"comment": "SUSE Linux Enterprise Micro 5.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009681300",
+								"comment": "SUSE Linux Enterprise Micro 5.2 is installed"
+							}
+						]
+					},
+					{
+						"operator": "OR",
+						"criterions": [
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009334017",
+								"comment": "kernel-default is not affected"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009705046",
+								"comment": "kernel-rt is not affected"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009333928",
+								"comment": "kernel-source is not affected"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009728712",
+								"comment": "kernel-source-rt is not affected"
+							}
+						]
+					}
+				]
+			}
+		]
+	}
+}

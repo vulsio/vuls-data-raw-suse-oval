@@ -1,0 +1,168 @@
+{
+	"id": "oval:org.opensuse.security:def:202352885",
+	"version": "1",
+	"class": "vulnerability",
+	"metadata": {
+		"title": "CVE-2023-52885",
+		"affected": {
+			"family": "unix",
+			"platform": [
+				"SUSE Linux Enterprise Micro 5.1"
+			]
+		},
+		"reference": [
+			{
+				"ref_id": "Mitre CVE-2023-52885",
+				"ref_url": "https://cve.mitre.org/cgi-bin/cvename.cgi?name=CVE-2023-52885",
+				"source": "CVE"
+			},
+			{
+				"ref_id": "SUSE CVE-2023-52885",
+				"ref_url": "https://www.suse.com/security/cve/CVE-2023-52885",
+				"source": "SUSE CVE"
+			},
+			{
+				"ref_id": "SUSE-SU-2024:2892-1",
+				"ref_url": "https://lists.suse.com/pipermail/sle-security-updates/2024-August/019188.html",
+				"source": "SUSE-SU"
+			},
+			{
+				"ref_id": "SUSE-SU-2024:2893-1",
+				"ref_url": "https://lists.suse.com/pipermail/sle-security-updates/2024-August/019187.html",
+				"source": "SUSE-SU"
+			},
+			{
+				"ref_id": "SUSE-SU-2024:2894-1",
+				"ref_url": "https://lists.suse.com/pipermail/sle-updates/2024-August/036430.html",
+				"source": "SUSE-SU"
+			},
+			{
+				"ref_id": "SUSE-SU-2024:2901-1",
+				"ref_url": "https://lists.suse.com/pipermail/sle-updates/2024-August/036444.html",
+				"source": "SUSE-SU"
+			},
+			{
+				"ref_id": "SUSE-SU-2024:2902-1",
+				"ref_url": "https://lists.suse.com/pipermail/sle-updates/2024-August/036443.html",
+				"source": "SUSE-SU"
+			},
+			{
+				"ref_id": "SUSE-SU-2024:2923-1",
+				"ref_url": "https://lists.suse.com/pipermail/sle-security-updates/2024-August/019201.html",
+				"source": "SUSE-SU"
+			},
+			{
+				"ref_id": "SUSE-SU-2024:2929-1",
+				"ref_url": "https://lists.suse.com/pipermail/sle-updates/2024-August/036473.html",
+				"source": "SUSE-SU"
+			},
+			{
+				"ref_id": "SUSE-SU-2024:2939-1",
+				"ref_url": "https://lists.suse.com/pipermail/sle-security-updates/2024-August/019211.html",
+				"source": "SUSE-SU"
+			},
+			{
+				"ref_id": "SUSE-SU-2024:2940-1",
+				"ref_url": "https://lists.suse.com/pipermail/sle-updates/2024-August/036478.html",
+				"source": "SUSE-SU"
+			},
+			{
+				"ref_id": "SUSE-SU-2024:2947-1",
+				"ref_url": "https://lists.suse.com/pipermail/sle-updates/2024-August/036488.html",
+				"source": "SUSE-SU"
+			},
+			{
+				"ref_id": "SUSE-SU-2024:2948-1",
+				"ref_url": "https://lists.suse.com/pipermail/sle-security-updates/2024-August/019219.html",
+				"source": "SUSE-SU"
+			},
+			{
+				"ref_id": "SUSE-SU-2024:3194-1",
+				"ref_url": "https://lists.suse.com/pipermail/sle-updates/2024-September/036835.html",
+				"source": "SUSE-SU"
+			},
+			{
+				"ref_id": "SUSE-SU-2024:3195-1",
+				"ref_url": "https://lists.suse.com/pipermail/sle-updates/2024-September/036842.html",
+				"source": "SUSE-SU"
+			},
+			{
+				"ref_id": "SUSE-SU-2024:3383-1",
+				"ref_url": "https://lists.suse.com/pipermail/sle-security-updates/2024-September/019497.html",
+				"source": "SUSE-SU"
+			}
+		],
+		"description": "\n    In the Linux kernel, the following vulnerability has been resolved:\n\nSUNRPC: Fix UAF in svc_tcp_listen_data_ready()\n\nAfter the listener svc_sock is freed, and before invoking svc_tcp_accept()\nfor the established child sock, there is a window that the newsock\nretaining a freed listener svc_sock in sk_user_data which cloning from\nparent. In the race window, if data is received on the newsock, we will\nobserve use-after-free report in svc_tcp_listen_data_ready().\n\nReproduce by two tasks:\n\n1. while :; do rpc.nfsd 0 ; rpc.nfsd; done\n2. while :; do echo \"\" | ncat -4 127.0.0.1 2049 ; done\n\nKASAN report:\n\n  ==================================================================\n  BUG: KASAN: slab-use-after-free in svc_tcp_listen_data_ready+0x1cf/0x1f0 [sunrpc]\n  Read of size 8 at addr ffff888139d96228 by task nc/102553\n  CPU: 7 PID: 102553 Comm: nc Not tainted 6.3.0+ #18\n  Hardware name: VMware, Inc. VMware Virtual Platform/440BX Desktop Reference Platform, BIOS 6.00 11/12/2020\n  Call Trace:\n   <IRQ>\n   dump_stack_lvl+0x33/0x50\n   print_address_description.constprop.0+0x27/0x310\n   print_report+0x3e/0x70\n   kasan_report+0xae/0xe0\n   svc_tcp_listen_data_ready+0x1cf/0x1f0 [sunrpc]\n   tcp_data_queue+0x9f4/0x20e0\n   tcp_rcv_established+0x666/0x1f60\n   tcp_v4_do_rcv+0x51c/0x850\n   tcp_v4_rcv+0x23fc/0x2e80\n   ip_protocol_deliver_rcu+0x62/0x300\n   ip_local_deliver_finish+0x267/0x350\n   ip_local_deliver+0x18b/0x2d0\n   ip_rcv+0x2fb/0x370\n   __netif_receive_skb_one_core+0x166/0x1b0\n   process_backlog+0x24c/0x5e0\n   __napi_poll+0xa2/0x500\n   net_rx_action+0x854/0xc90\n   __do_softirq+0x1bb/0x5de\n   do_softirq+0xcb/0x100\n   </IRQ>\n   <TASK>\n   ...\n   </TASK>\n\n  Allocated by task 102371:\n   kasan_save_stack+0x1e/0x40\n   kasan_set_track+0x21/0x30\n   __kasan_kmalloc+0x7b/0x90\n   svc_setup_socket+0x52/0x4f0 [sunrpc]\n   svc_addsock+0x20d/0x400 [sunrpc]\n   __write_ports_addfd+0x209/0x390 [nfsd]\n   write_ports+0x239/0x2c0 [nfsd]\n   nfsctl_transaction_write+0xac/0x110 [nfsd]\n   vfs_write+0x1c3/0xae0\n   ksys_write+0xed/0x1c0\n   do_syscall_64+0x38/0x90\n   entry_SYSCALL_64_after_hwframe+0x72/0xdc\n\n  Freed by task 102551:\n   kasan_save_stack+0x1e/0x40\n   kasan_set_track+0x21/0x30\n   kasan_save_free_info+0x2a/0x50\n   __kasan_slab_free+0x106/0x190\n   __kmem_cache_free+0x133/0x270\n   svc_xprt_free+0x1e2/0x350 [sunrpc]\n   svc_xprt_destroy_all+0x25a/0x440 [sunrpc]\n   nfsd_put+0x125/0x240 [nfsd]\n   nfsd_svc+0x2cb/0x3c0 [nfsd]\n   write_threads+0x1ac/0x2a0 [nfsd]\n   nfsctl_transaction_write+0xac/0x110 [nfsd]\n   vfs_write+0x1c3/0xae0\n   ksys_write+0xed/0x1c0\n   do_syscall_64+0x38/0x90\n   entry_SYSCALL_64_after_hwframe+0x72/0xdc\n\nFix the UAF by simply doing nothing in svc_tcp_listen_data_ready()\nif state != TCP_LISTEN, that will avoid dereferencing svsk for all\nchild socket.\n    ",
+		"advisory": {
+			"from": "security@suse.de",
+			"severity": "Important",
+			"cve": [
+				{
+					"text": "CVE-2023-52885 at SUSE",
+					"href": "https://www.suse.com/security/cve/CVE-2023-52885/",
+					"impact": "high",
+					"cvss3": "8.1/CVSS:3.1/AV:N/AC:H/PR:N/UI:N/S:U/C:H/I:H/A:H"
+				},
+				{
+					"text": "CVE-2023-52885 at NVD",
+					"href": "https://nvd.nist.gov/vuln/detail/CVE-2023-52885",
+					"impact": "high",
+					"cvss3": "7.8/CVSS:3.1/AV:L/AC:L/PR:L/UI:N/S:U/C:H/I:H/A:H"
+				}
+			],
+			"bugzilla": [
+				{
+					"text": "SUSE bug 1227750",
+					"href": "https://bugzilla.suse.com/1227750"
+				},
+				{
+					"text": "SUSE bug 1227753",
+					"href": "https://bugzilla.suse.com/1227753"
+				}
+			],
+			"issued": {
+				"date": "2024-08-14"
+			},
+			"updated": {
+				"date": "2024-09-24"
+			},
+			"affected_cpe_list": {
+				"cpe": [
+					"cpe:/o:suse:suse-microos:5.1"
+				]
+			}
+		}
+	},
+	"criteria": {
+		"operator": "AND",
+		"criterias": [
+			{
+				"operator": "OR",
+				"criterions": [
+					{
+						"test_ref": "oval:org.opensuse.security:tst:2009880168",
+						"comment": "kernel-default-5.3.18-150300.59.170.1 is installed"
+					},
+					{
+						"test_ref": "oval:org.opensuse.security:tst:2009880169",
+						"comment": "kernel-default-base-5.3.18-150300.59.170.1.150300.18.100.1 is installed"
+					},
+					{
+						"test_ref": "oval:org.opensuse.security:tst:2009879396",
+						"comment": "kernel-rt-5.3.18-150300.178.1 is installed"
+					},
+					{
+						"test_ref": "oval:org.opensuse.security:tst:2009879397",
+						"comment": "kernel-source-rt-5.3.18-150300.178.1 is installed"
+					}
+				]
+			}
+		],
+		"criterions": [
+			{
+				"test_ref": "oval:org.opensuse.security:tst:2009669964",
+				"comment": "SUSE Linux Enterprise Micro 5.1 is installed"
+			}
+		]
+	}
+}

@@ -1,0 +1,115 @@
+{
+	"id": "oval:org.opensuse.security:def:202128687",
+	"version": "1",
+	"class": "vulnerability",
+	"metadata": {
+		"title": "CVE-2021-28687",
+		"affected": {
+			"family": "unix",
+			"platform": [
+				"SUSE Linux Enterprise Micro 5.2"
+			]
+		},
+		"reference": [
+			{
+				"ref_id": "Mitre CVE-2021-28687",
+				"ref_url": "https://cve.mitre.org/cgi-bin/cvename.cgi?name=CVE-2021-28687",
+				"source": "CVE"
+			},
+			{
+				"ref_id": "SUSE CVE-2021-28687",
+				"ref_url": "https://www.suse.com/security/cve/CVE-2021-28687",
+				"source": "SUSE CVE"
+			},
+			{
+				"ref_id": "SUSE-CU-2021:233-1",
+				"ref_url": "https://lists.suse.com/pipermail/sle-security-updates/2021-June/008902.html",
+				"source": "SUSE-SU"
+			},
+			{
+				"ref_id": "SUSE-IU-2021:442-1",
+				"ref_url": "https://lists.suse.com/pipermail/sle-security-updates/2021-May/008751.html",
+				"source": "SUSE-SU"
+			},
+			{
+				"ref_id": "SUSE-IU-2021:443-1",
+				"ref_url": "https://lists.suse.com/pipermail/sle-security-updates/2021-May/008747.html",
+				"source": "SUSE-SU"
+			},
+			{
+				"ref_id": "SUSE-IU-2021:444-1",
+				"ref_url": "https://lists.suse.com/pipermail/sle-security-updates/2021-May/008752.html",
+				"source": "SUSE-SU"
+			},
+			{
+				"ref_id": "SUSE-IU-2022:149-1",
+				"ref_url": "https://lists.suse.com/pipermail/sle-security-updates/2022-January/010137.html",
+				"source": "SUSE-SU"
+			},
+			{
+				"ref_id": "SUSE-SU-2021:1023-1",
+				"ref_url": "https://lists.suse.com/pipermail/sle-security-updates/2021-April/008585.html",
+				"source": "SUSE-SU"
+			},
+			{
+				"ref_id": "SUSE-SU-2021:1028-1",
+				"ref_url": "https://lists.suse.com/pipermail/sle-security-updates/2021-April/008586.html",
+				"source": "SUSE-SU"
+			},
+			{
+				"ref_id": "SUSE-SU-2021:1460-1",
+				"ref_url": "https://lists.suse.com/pipermail/sle-security-updates/2021-April/008718.html",
+				"source": "SUSE-SU"
+			}
+		],
+		"description": "\n    HVM soft-reset crashes toolstack libxl requires all data structures passed across its public interface to be initialized before use and disposed of afterwards by calling a specific set of functions. Many internal data structures also require this initialize / dispose discipline, but not all of them. When the \"soft reset\" feature was implemented, the libxl__domain_suspend_state structure didn't require any initialization or disposal. At some point later, an initialization function was introduced for the structure; but the \"soft reset\" path wasn't refactored to call the initialization function. When a guest nwo initiates a \"soft reboot\", uninitialized data structure leads to an assert() when later code finds the structure in an unexpected state. The effect of this is to crash the process monitoring the guest. How this affects the system depends on the structure of the toolstack. For xl, this will have no security-relevant effect: every VM has its own independent monitoring process, which contains no state. The domain in question will hang in a crashed state, but can be destroyed by `xl destroy` just like any other non-cooperating domain. For daemon-based toolstacks linked against libxl, such as libvirt, this will crash the toolstack, losing the state of any in-progress operations (localized DoS), and preventing further administrator operations unless the daemon is configured to restart automatically (system-wide DoS). If crashes \"leak\" resources, then repeated crashes could use up resources, also causing a system-wide DoS.\n    ",
+		"advisory": {
+			"from": "security@suse.de",
+			"severity": "Moderate",
+			"cve": [
+				{
+					"text": "CVE-2021-28687 at SUSE",
+					"href": "https://www.suse.com/security/cve/CVE-2021-28687/",
+					"impact": "medium",
+					"cvss3": "5.5/CVSS:3.1/AV:L/AC:L/PR:L/UI:N/S:U/C:N/I:N/A:H"
+				},
+				{
+					"text": "CVE-2021-28687 at NVD",
+					"href": "https://nvd.nist.gov/vuln/detail/CVE-2021-28687",
+					"impact": "medium",
+					"cvss3": "5.5/CVSS:3.1/AV:L/AC:L/PR:L/UI:N/S:U/C:N/I:N/A:H"
+				}
+			],
+			"bugzilla": [
+				{
+					"text": "SUSE bug 1183072",
+					"href": "https://bugzilla.suse.com/1183072"
+				}
+			],
+			"issued": {
+				"date": "2023-05-23"
+			},
+			"updated": {
+				"date": "2024-09-01"
+			},
+			"affected_cpe_list": {
+				"cpe": [
+					"cpe:/o:suse:suse-microos:5.2"
+				]
+			}
+		}
+	},
+	"criteria": {
+		"operator": "AND",
+		"criterions": [
+			{
+				"test_ref": "oval:org.opensuse.security:tst:2009681300",
+				"comment": "SUSE Linux Enterprise Micro 5.2 is installed"
+			},
+			{
+				"test_ref": "oval:org.opensuse.security:tst:2009904725",
+				"comment": "xen-libs-4.14.3_06-150300.3.18.2 is installed"
+			}
+		]
+	}
+}

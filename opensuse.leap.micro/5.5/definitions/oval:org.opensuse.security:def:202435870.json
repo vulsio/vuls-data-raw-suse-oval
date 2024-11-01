@@ -1,0 +1,155 @@
+{
+	"id": "oval:org.opensuse.security:def:202435870",
+	"version": "1",
+	"class": "vulnerability",
+	"metadata": {
+		"title": "CVE-2024-35870",
+		"affected": {
+			"family": "unix",
+			"platform": [
+				"openSUSE Leap Micro 5.5"
+			]
+		},
+		"reference": [
+			{
+				"ref_id": "Mitre CVE-2024-35870",
+				"ref_url": "https://cve.mitre.org/cgi-bin/cvename.cgi?name=CVE-2024-35870",
+				"source": "CVE"
+			},
+			{
+				"ref_id": "SUSE CVE-2024-35870",
+				"ref_url": "https://www.suse.com/security/cve/CVE-2024-35870",
+				"source": "SUSE CVE"
+			},
+			{
+				"ref_id": "SUSE-SU-2024:2008-1",
+				"ref_url": "https://lists.suse.com/pipermail/sle-updates/2024-June/035569.html",
+				"source": "SUSE-SU"
+			},
+			{
+				"ref_id": "SUSE-SU-2024:2019-1",
+				"ref_url": "https://lists.suse.com/pipermail/sle-updates/2024-June/035578.html",
+				"source": "SUSE-SU"
+			},
+			{
+				"ref_id": "SUSE-SU-2024:2135-1",
+				"ref_url": "https://lists.suse.com/pipermail/sle-updates/2024-June/035681.html",
+				"source": "SUSE-SU"
+			},
+			{
+				"ref_id": "SUSE-SU-2024:2190-1",
+				"ref_url": "https://lists.suse.com/pipermail/sle-updates/2024-June/035732.html",
+				"source": "SUSE-SU"
+			},
+			{
+				"ref_id": "SUSE-SU-2024:2203-1",
+				"ref_url": "https://lists.suse.com/pipermail/sle-security-updates/2024-August/019244.html",
+				"source": "SUSE-SU"
+			},
+			{
+				"ref_id": "SUSE-SU-2024:2360-1",
+				"ref_url": "https://lists.suse.com/pipermail/sle-updates/2024-July/035874.html",
+				"source": "SUSE-SU"
+			},
+			{
+				"ref_id": "SUSE-SU-2024:2381-1",
+				"ref_url": "https://lists.suse.com/pipermail/sle-updates/2024-July/035895.html",
+				"source": "SUSE-SU"
+			},
+			{
+				"ref_id": "SUSE-SU-2024:2561-1",
+				"ref_url": "https://lists.suse.com/pipermail/sle-security-updates/2024-July/019001.html",
+				"source": "SUSE-SU"
+			}
+		],
+		"description": "\n    In the Linux kernel, the following vulnerability has been resolved:\n\nsmb: client: fix UAF in smb2_reconnect_server()\n\nThe UAF bug is due to smb2_reconnect_server() accessing a session that\nis already being teared down by another thread that is executing\n__cifs_put_smb_ses().  This can happen when (a) the client has\nconnection to the server but no session or (b) another thread ends up\nsetting @ses->ses_status again to something different than\nSES_EXITING.\n\nTo fix this, we need to make sure to unconditionally set\n@ses->ses_status to SES_EXITING and prevent any other threads from\nsetting a new status while we're still tearing it down.\n\nThe following can be reproduced by adding some delay to right after\nthe ipc is freed in __cifs_put_smb_ses() - which will give\nsmb2_reconnect_server() worker a chance to run and then accessing\n@ses->ipc:\n\nkinit ...\nmount.cifs //srv/share /mnt/1 -o sec=krb5,nohandlecache,echo_interval=10\n[disconnect srv]\nls /mnt/1 &>/dev/null\nsleep 30\nkdestroy\n[reconnect srv]\nsleep 10\numount /mnt/1\n...\nCIFS: VFS: Verify user has a krb5 ticket and keyutils is installed\nCIFS: VFS: \\\\srv Send error in SessSetup = -126\nCIFS: VFS: Verify user has a krb5 ticket and keyutils is installed\nCIFS: VFS: \\\\srv Send error in SessSetup = -126\ngeneral protection fault, probably for non-canonical address\n0x6b6b6b6b6b6b6b6b: 0000 [#1] PREEMPT SMP NOPTI\nCPU: 3 PID: 50 Comm: kworker/3:1 Not tainted 6.9.0-rc2 #1\nHardware name: QEMU Standard PC (Q35 + ICH9, 2009), BIOS 1.16.3-1.fc39\n04/01/2014\nWorkqueue: cifsiod smb2_reconnect_server [cifs]\nRIP: 0010:__list_del_entry_valid_or_report+0x33/0xf0\nCode: 4f 08 48 85 d2 74 42 48 85 c9 74 59 48 b8 00 01 00 00 00 00 ad\nde 48 39 c2 74 61 48 b8 22 01 00 00 00 00 74 69 <48> 8b 01 48 39 f8 75\n7b 48 8b 72 08 48 39 c6 0f 85 88 00 00 00 b8\nRSP: 0018:ffffc900001bfd70 EFLAGS: 00010a83\nRAX: dead000000000122 RBX: ffff88810da53838 RCX: 6b6b6b6b6b6b6b6b\nRDX: 6b6b6b6b6b6b6b6b RSI: ffffffffc02f6878 RDI: ffff88810da53800\nRBP: ffff88810da53800 R08: 0000000000000001 R09: 0000000000000000\nR10: 0000000000000000 R11: 0000000000000001 R12: ffff88810c064000\nR13: 0000000000000001 R14: ffff88810c064000 R15: ffff8881039cc000\nFS: 0000000000000000(0000) GS:ffff888157c00000(0000)\nknlGS:0000000000000000\nCS:  0010 DS: 0000 ES: 0000 CR0: 0000000080050033\nCR2: 00007fe3728b1000 CR3: 000000010caa4000 CR4: 0000000000750ef0\nPKRU: 55555554\nCall Trace:\n <TASK>\n ? die_addr+0x36/0x90\n ? exc_general_protection+0x1c1/0x3f0\n ? asm_exc_general_protection+0x26/0x30\n ? __list_del_entry_valid_or_report+0x33/0xf0\n __cifs_put_smb_ses+0x1ae/0x500 [cifs]\n smb2_reconnect_server+0x4ed/0x710 [cifs]\n process_one_work+0x205/0x6b0\n worker_thread+0x191/0x360\n ? __pfx_worker_thread+0x10/0x10\n kthread+0xe2/0x110\n ? __pfx_kthread+0x10/0x10\n ret_from_fork+0x34/0x50\n ? __pfx_kthread+0x10/0x10\n ret_from_fork_asm+0x1a/0x30\n </TASK>\n    ",
+		"advisory": {
+			"from": "security@suse.de",
+			"severity": "Moderate",
+			"cve": [
+				{
+					"text": "CVE-2024-35870 at SUSE",
+					"href": "https://www.suse.com/security/cve/CVE-2024-35870/",
+					"impact": "medium",
+					"cvss3": "5.5/CVSS:3.1/AV:L/AC:L/PR:L/UI:N/S:U/C:N/I:N/A:H"
+				},
+				{
+					"text": "CVE-2024-35870 at NVD",
+					"href": "https://nvd.nist.gov/vuln/detail/CVE-2024-35870"
+				}
+			],
+			"bugzilla": [
+				{
+					"text": "SUSE bug 1224672",
+					"href": "https://bugzilla.suse.com/1224672"
+				}
+			],
+			"issued": {
+				"date": "2024-06-13"
+			},
+			"updated": {
+				"date": "2024-08-20"
+			},
+			"affected_cpe_list": {
+				"cpe": [
+					"cpe:/o:opensuse:leap-micro:5.5"
+				]
+			}
+		}
+	},
+	"criteria": {
+		"operator": "AND",
+		"criterias": [
+			{
+				"operator": "OR",
+				"criterias": [
+					{
+						"operator": "AND",
+						"criterions": [
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009869880",
+								"comment": "kernel-default-5.14.21-150500.55.68.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009151354",
+								"comment": "kernel-default is signed with openSUSE key"
+							}
+						]
+					},
+					{
+						"operator": "AND",
+						"criterions": [
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009869881",
+								"comment": "kernel-default-base-5.14.21-150500.55.68.1.150500.6.31.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009151960",
+								"comment": "kernel-default-base is signed with openSUSE key"
+							}
+						]
+					},
+					{
+						"operator": "AND",
+						"criterions": [
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009865619",
+								"comment": "kernel-rt-5.14.21-150500.13.58.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009342860",
+								"comment": "kernel-rt is signed with openSUSE key"
+							}
+						]
+					}
+				]
+			}
+		],
+		"criterions": [
+			{
+				"test_ref": "oval:org.opensuse.security:tst:2009799821",
+				"comment": "openSUSE Leap Micro 5.5 is installed"
+			}
+		]
+	}
+}

@@ -1,0 +1,88 @@
+{
+	"id": "oval:org.opensuse.security:def:202426690",
+	"version": "1",
+	"class": "vulnerability",
+	"metadata": {
+		"title": "CVE-2024-26690",
+		"affected": {
+			"family": "unix",
+			"platform": [
+				"SUSE Linux Enterprise Micro 5.3"
+			]
+		},
+		"reference": [
+			{
+				"ref_id": "Mitre CVE-2024-26690",
+				"ref_url": "https://cve.mitre.org/cgi-bin/cvename.cgi?name=CVE-2024-26690",
+				"source": "CVE"
+			},
+			{
+				"ref_id": "SUSE CVE-2024-26690",
+				"ref_url": "https://www.suse.com/security/cve/CVE-2024-26690",
+				"source": "SUSE CVE"
+			}
+		],
+		"description": "\n    In the Linux kernel, the following vulnerability has been resolved:\n\nnet: stmmac: protect updates of 64-bit statistics counters\n\nAs explained by a comment in <linux/u64_stats_sync.h>, write side of struct\nu64_stats_sync must ensure mutual exclusion, or one seqcount update could\nbe lost on 32-bit platforms, thus blocking readers forever. Such lockups\nhave been observed in real world after stmmac_xmit() on one CPU raced with\nstmmac_napi_poll_tx() on another CPU.\n\nTo fix the issue without introducing a new lock, split the statics into\nthree parts:\n\n1. fields updated only under the tx queue lock,\n2. fields updated only during NAPI poll,\n3. fields updated only from interrupt context,\n\nUpdates to fields in the first two groups are already serialized through\nother locks. It is sufficient to split the existing struct u64_stats_sync\nso that each group has its own.\n\nNote that tx_set_ic_bit is updated from both contexts. Split this counter\nso that each context gets its own, and calculate their sum to get the total\nvalue in stmmac_get_ethtool_stats().\n\nFor the third group, multiple interrupts may be processed by different CPUs\nat the same time, but interrupts on the same CPU will not nest. Move fields\nfrom this group to a newly created per-cpu struct stmmac_pcpu_stats.\n    ",
+		"advisory": {
+			"from": "security@suse.de",
+			"severity": "Moderate",
+			"cve": [
+				{
+					"text": "CVE-2024-26690 at SUSE",
+					"href": "https://www.suse.com/security/cve/CVE-2024-26690/",
+					"impact": "medium",
+					"cvss3": "5.5/CVSS:3.1/AV:L/AC:L/PR:L/UI:N/S:U/C:N/I:N/A:H"
+				},
+				{
+					"text": "CVE-2024-26690 at NVD",
+					"href": "https://nvd.nist.gov/vuln/detail/CVE-2024-26690"
+				}
+			],
+			"bugzilla": [
+				{
+					"text": "SUSE bug 1222462",
+					"href": "https://bugzilla.suse.com/1222462"
+				}
+			],
+			"issued": {
+				"date": "2024-04-09"
+			},
+			"updated": {
+				"date": "2024-04-26"
+			},
+			"affected_cpe_list": {
+				"cpe": [
+					"cpe:/o:suse:sle-micro:5.3"
+				]
+			}
+		}
+	},
+	"criteria": {
+		"operator": "AND",
+		"criterias": [
+			{
+				"operator": "OR",
+				"criterions": [
+					{
+						"test_ref": "oval:org.opensuse.security:tst:2009334017",
+						"comment": "kernel-default is not affected"
+					},
+					{
+						"test_ref": "oval:org.opensuse.security:tst:2009705046",
+						"comment": "kernel-rt is not affected"
+					},
+					{
+						"test_ref": "oval:org.opensuse.security:tst:2009728712",
+						"comment": "kernel-source-rt is not affected"
+					}
+				]
+			}
+		],
+		"criterions": [
+			{
+				"test_ref": "oval:org.opensuse.security:tst:2009728694",
+				"comment": "SUSE Linux Enterprise Micro 5.3 is installed"
+			}
+		]
+	}
+}

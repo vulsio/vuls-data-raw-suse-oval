@@ -1,0 +1,73 @@
+{
+	"id": "oval:org.opensuse.security:def:202147036",
+	"version": "1",
+	"class": "vulnerability",
+	"metadata": {
+		"title": "CVE-2021-47036",
+		"affected": {
+			"family": "unix",
+			"platform": [
+				"SUSE Linux Enterprise Micro 5.0"
+			]
+		},
+		"reference": [
+			{
+				"ref_id": "Mitre CVE-2021-47036",
+				"ref_url": "https://cve.mitre.org/cgi-bin/cvename.cgi?name=CVE-2021-47036",
+				"source": "CVE"
+			},
+			{
+				"ref_id": "SUSE CVE-2021-47036",
+				"ref_url": "https://www.suse.com/security/cve/CVE-2021-47036",
+				"source": "SUSE CVE"
+			}
+		],
+		"description": "\n    In the Linux kernel, the following vulnerability has been resolved:\n\nudp: skip L4 aggregation for UDP tunnel packets\n\nIf NETIF_F_GRO_FRAGLIST or NETIF_F_GRO_UDP_FWD are enabled, and there\nare UDP tunnels available in the system, udp_gro_receive() could end-up\ndoing L4 aggregation (either SKB_GSO_UDP_L4 or SKB_GSO_FRAGLIST) at\nthe outer UDP tunnel level for packets effectively carrying and UDP\ntunnel header.\n\nThat could cause inner protocol corruption. If e.g. the relevant\npackets carry a vxlan header, different vxlan ids will be ignored/\naggregated to the same GSO packet. Inner headers will be ignored, too,\nso that e.g. TCP over vxlan push packets will be held in the GRO\nengine till the next flush, etc.\n\nJust skip the SKB_GSO_UDP_L4 and SKB_GSO_FRAGLIST code path if the\ncurrent packet could land in a UDP tunnel, and let udp_gro_receive()\ndo GRO via udp_sk(sk)->gro_receive.\n\nThe check implemented in this patch is broader than what is strictly\nneeded, as the existing UDP tunnel could be e.g. configured on top of\na different device: we could end-up skipping GRO at-all for some packets.\n\nAnyhow, that is a very thin corner case and covering it will add quite\na bit of complexity.\n\nv1 -> v2:\n - hopefully clarify the commit message\n    ",
+		"advisory": {
+			"from": "security@suse.de",
+			"severity": "Moderate",
+			"cve": [
+				{
+					"text": "CVE-2021-47036 at SUSE",
+					"href": "https://www.suse.com/security/cve/CVE-2021-47036/",
+					"impact": "medium",
+					"cvss3": "6.5/CVSS:3.1/AV:N/AC:L/PR:N/UI:R/S:U/C:N/I:N/A:H"
+				},
+				{
+					"text": "CVE-2021-47036 at NVD",
+					"href": "https://nvd.nist.gov/vuln/detail/CVE-2021-47036"
+				}
+			],
+			"bugzilla": [
+				{
+					"text": "SUSE bug 1220671",
+					"href": "https://bugzilla.suse.com/1220671"
+				}
+			],
+			"issued": {
+				"date": "2024-03-01"
+			},
+			"updated": {
+				"date": "2024-04-26"
+			},
+			"affected_cpe_list": {
+				"cpe": [
+					"cpe:/o:suse:suse-microos:5.0"
+				]
+			}
+		}
+	},
+	"criteria": {
+		"operator": "AND",
+		"criterions": [
+			{
+				"test_ref": "oval:org.opensuse.security:tst:2009704855",
+				"comment": "SUSE Linux Enterprise Micro 5.0 is installed"
+			},
+			{
+				"test_ref": "oval:org.opensuse.security:tst:2009334017",
+				"comment": "kernel-default is not affected"
+			}
+		]
+	}
+}

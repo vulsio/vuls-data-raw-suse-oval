@@ -1,0 +1,117 @@
+{
+	"id": "oval:org.opensuse.security:def:202147290",
+	"version": "1",
+	"class": "vulnerability",
+	"metadata": {
+		"title": "CVE-2021-47290",
+		"affected": {
+			"family": "unix",
+			"platform": [
+				"SUSE Linux Enterprise Micro 5.0",
+				"SUSE Linux Enterprise Micro 5.1",
+				"SUSE Linux Enterprise Micro 5.2"
+			]
+		},
+		"reference": [
+			{
+				"ref_id": "Mitre CVE-2021-47290",
+				"ref_url": "https://cve.mitre.org/cgi-bin/cvename.cgi?name=CVE-2021-47290",
+				"source": "CVE"
+			},
+			{
+				"ref_id": "SUSE CVE-2021-47290",
+				"ref_url": "https://www.suse.com/security/cve/CVE-2021-47290",
+				"source": "SUSE CVE"
+			}
+		],
+		"description": "\n    In the Linux kernel, the following vulnerability has been resolved:\n\nscsi: target: Fix NULL dereference on XCOPY completion\n\nCPU affinity control added with commit 39ae3edda325 (\"scsi: target: core:\nMake completion affinity configurable\") makes target_complete_cmd() queue\nwork on a CPU based on se_tpg->se_tpg_wwn->cmd_compl_affinity state.\n\nLIO's EXTENDED COPY worker is a special case in that read/write cmds are\ndispatched using the global xcopy_pt_tpg, which carries a NULL se_tpg_wwn\npointer following initialization in target_xcopy_setup_pt().\n\nThe NULL xcopy_pt_tpg->se_tpg_wwn pointer is dereferenced on completion of\nany EXTENDED COPY initiated read/write cmds. E.g using the libiscsi\nSCSI.ExtendedCopy.Simple test:\n\n  BUG: kernel NULL pointer dereference, address: 00000000000001a8\n  RIP: 0010:target_complete_cmd+0x9d/0x130 [target_core_mod]\n  Call Trace:\n   fd_execute_rw+0x148/0x42a [target_core_file]\n   ? __dynamic_pr_debug+0xa7/0xe0\n   ? target_check_reservation+0x5b/0x940 [target_core_mod]\n   __target_execute_cmd+0x1e/0x90 [target_core_mod]\n   transport_generic_new_cmd+0x17c/0x330 [target_core_mod]\n   target_xcopy_issue_pt_cmd+0x9/0x60 [target_core_mod]\n   target_xcopy_read_source.isra.7+0x10b/0x1b0 [target_core_mod]\n   ? target_check_fua+0x40/0x40 [target_core_mod]\n   ? transport_complete_task_attr+0x130/0x130 [target_core_mod]\n   target_xcopy_do_work+0x61f/0xc00 [target_core_mod]\n\nThis fix makes target_complete_cmd() queue work on se_cmd->cpuid if\nse_tpg_wwn is NULL.\n    ",
+		"advisory": {
+			"from": "security@suse.de",
+			"severity": "Moderate",
+			"cve": [
+				{
+					"text": "CVE-2021-47290 at SUSE",
+					"href": "https://www.suse.com/security/cve/CVE-2021-47290/",
+					"impact": "medium",
+					"cvss3": "5.5/CVSS:3.1/AV:L/AC:L/PR:L/UI:N/S:U/C:N/I:N/A:H"
+				},
+				{
+					"text": "CVE-2021-47290 at NVD",
+					"href": "https://nvd.nist.gov/vuln/detail/CVE-2021-47290"
+				}
+			],
+			"bugzilla": [
+				{
+					"text": "SUSE bug 1224884",
+					"href": "https://bugzilla.suse.com/1224884"
+				}
+			],
+			"issued": {
+				"date": "2024-10-18"
+			},
+			"updated": {
+				"date": "2024-10-18"
+			},
+			"affected_cpe_list": {
+				"cpe": [
+					"cpe:/o:suse:suse-microos:5.0",
+					"cpe:/o:suse:suse-microos:5.1",
+					"cpe:/o:suse:suse-microos:5.2"
+				]
+			}
+		}
+	},
+	"criteria": {
+		"operator": "OR",
+		"criterias": [
+			{
+				"operator": "AND",
+				"criterions": [
+					{
+						"test_ref": "oval:org.opensuse.security:tst:2009704855",
+						"comment": "SUSE Linux Enterprise Micro 5.0 is installed"
+					},
+					{
+						"test_ref": "oval:org.opensuse.security:tst:2009334017",
+						"comment": "kernel-default is not affected"
+					}
+				]
+			},
+			{
+				"operator": "AND",
+				"criterias": [
+					{
+						"operator": "OR",
+						"criterions": [
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009669964",
+								"comment": "SUSE Linux Enterprise Micro 5.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009681300",
+								"comment": "SUSE Linux Enterprise Micro 5.2 is installed"
+							}
+						]
+					},
+					{
+						"operator": "OR",
+						"criterions": [
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009334017",
+								"comment": "kernel-default is not affected"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009705046",
+								"comment": "kernel-rt is not affected"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009728712",
+								"comment": "kernel-source-rt is not affected"
+							}
+						]
+					}
+				]
+			}
+		]
+	}
+}

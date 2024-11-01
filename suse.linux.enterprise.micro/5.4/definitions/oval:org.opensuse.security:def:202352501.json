@@ -1,0 +1,137 @@
+{
+	"id": "oval:org.opensuse.security:def:202352501",
+	"version": "1",
+	"class": "vulnerability",
+	"metadata": {
+		"title": "CVE-2023-52501",
+		"affected": {
+			"family": "unix",
+			"platform": [
+				"SUSE Linux Enterprise Micro 5.4"
+			]
+		},
+		"reference": [
+			{
+				"ref_id": "Mitre CVE-2023-52501",
+				"ref_url": "https://cve.mitre.org/cgi-bin/cvename.cgi?name=CVE-2023-52501",
+				"source": "CVE"
+			},
+			{
+				"ref_id": "SUSE CVE-2023-52501",
+				"ref_url": "https://www.suse.com/security/cve/CVE-2023-52501",
+				"source": "SUSE CVE"
+			},
+			{
+				"ref_id": "SUSE-SU-2024:1320-1",
+				"ref_url": "https://lists.suse.com/pipermail/sle-updates/2024-April/035000.html",
+				"source": "SUSE-SU"
+			},
+			{
+				"ref_id": "SUSE-SU-2024:1321-1",
+				"ref_url": "https://lists.suse.com/pipermail/sle-updates/2024-April/035005.html",
+				"source": "SUSE-SU"
+			},
+			{
+				"ref_id": "SUSE-SU-2024:1322-1",
+				"ref_url": "https://lists.suse.com/pipermail/sle-updates/2024-April/035002.html",
+				"source": "SUSE-SU"
+			},
+			{
+				"ref_id": "SUSE-SU-2024:1322-2",
+				"ref_url": "https://lists.suse.com/pipermail/sle-security-updates/2024-April/018377.html",
+				"source": "SUSE-SU"
+			},
+			{
+				"ref_id": "SUSE-SU-2024:1332-1",
+				"ref_url": "https://lists.suse.com/pipermail/sle-updates/2024-April/035014.html",
+				"source": "SUSE-SU"
+			},
+			{
+				"ref_id": "SUSE-SU-2024:1332-2",
+				"ref_url": "https://lists.suse.com/pipermail/sle-security-updates/2024-April/018378.html",
+				"source": "SUSE-SU"
+			},
+			{
+				"ref_id": "SUSE-SU-2024:1466-1",
+				"ref_url": "https://lists.suse.com/pipermail/sle-updates/2024-April/035122.html",
+				"source": "SUSE-SU"
+			},
+			{
+				"ref_id": "SUSE-SU-2024:1480-1",
+				"ref_url": "https://lists.suse.com/pipermail/sle-updates/2024-April/035134.html",
+				"source": "SUSE-SU"
+			},
+			{
+				"ref_id": "SUSE-SU-2024:1490-1",
+				"ref_url": "https://lists.suse.com/pipermail/sle-updates/2024-May/035140.html",
+				"source": "SUSE-SU"
+			}
+		],
+		"description": "\n    In the Linux kernel, the following vulnerability has been resolved:\n\nring-buffer: Do not attempt to read past \"commit\"\n\nWhen iterating over the ring buffer while the ring buffer is active, the\nwriter can corrupt the reader. There's barriers to help detect this and\nhandle it, but that code missed the case where the last event was at the\nvery end of the page and has only 4 bytes left.\n\nThe checks to detect the corruption by the writer to reads needs to see the\nlength of the event. If the length in the first 4 bytes is zero then the\nlength is stored in the second 4 bytes. But if the writer is in the process\nof updating that code, there's a small window where the length in the first\n4 bytes could be zero even though the length is only 4 bytes. That will\ncause rb_event_length() to read the next 4 bytes which could happen to be off the\nallocated page.\n\nTo protect against this, fail immediately if the next event pointer is\nless than 8 bytes from the end of the commit (last byte of data), as all\nevents must be a minimum of 8 bytes anyway.\n    ",
+		"advisory": {
+			"from": "security@suse.de",
+			"severity": "Moderate",
+			"cve": [
+				{
+					"text": "CVE-2023-52501 at SUSE",
+					"href": "https://www.suse.com/security/cve/CVE-2023-52501/",
+					"impact": "medium",
+					"cvss3": "5.5/CVSS:3.1/AV:L/AC:L/PR:L/UI:N/S:U/C:H/I:N/A:N"
+				},
+				{
+					"text": "CVE-2023-52501 at NVD",
+					"href": "https://nvd.nist.gov/vuln/detail/CVE-2023-52501"
+				}
+			],
+			"bugzilla": [
+				{
+					"text": "SUSE bug 1220885",
+					"href": "https://bugzilla.suse.com/1220885"
+				}
+			],
+			"issued": {
+				"date": "2024-07-26"
+			},
+			"updated": {
+				"date": "2024-07-26"
+			},
+			"affected_cpe_list": {
+				"cpe": [
+					"cpe:/o:suse:sle-micro:5.4"
+				]
+			}
+		}
+	},
+	"criteria": {
+		"operator": "AND",
+		"criterias": [
+			{
+				"operator": "OR",
+				"criterions": [
+					{
+						"test_ref": "oval:org.opensuse.security:tst:2009855250",
+						"comment": "kernel-default-5.14.21-150400.24.116.1 is installed"
+					},
+					{
+						"test_ref": "oval:org.opensuse.security:tst:2009855166",
+						"comment": "kernel-default-base-5.14.21-150400.24.116.1.150400.24.54.5 is installed"
+					},
+					{
+						"test_ref": "oval:org.opensuse.security:tst:2009855248",
+						"comment": "kernel-rt-5.14.21-150400.15.76.1 is installed"
+					},
+					{
+						"test_ref": "oval:org.opensuse.security:tst:2009855249",
+						"comment": "kernel-source-rt-5.14.21-150400.15.76.1 is installed"
+					}
+				]
+			}
+		],
+		"criterions": [
+			{
+				"test_ref": "oval:org.opensuse.security:tst:2009755086",
+				"comment": "SUSE Linux Enterprise Micro 5.4 is installed"
+			}
+		]
+	}
+}

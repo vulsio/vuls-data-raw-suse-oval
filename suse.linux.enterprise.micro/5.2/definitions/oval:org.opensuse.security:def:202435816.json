@@ -1,0 +1,88 @@
+{
+	"id": "oval:org.opensuse.security:def:202435816",
+	"version": "1",
+	"class": "vulnerability",
+	"metadata": {
+		"title": "CVE-2024-35816",
+		"affected": {
+			"family": "unix",
+			"platform": [
+				"SUSE Linux Enterprise Micro 5.2"
+			]
+		},
+		"reference": [
+			{
+				"ref_id": "Mitre CVE-2024-35816",
+				"ref_url": "https://cve.mitre.org/cgi-bin/cvename.cgi?name=CVE-2024-35816",
+				"source": "CVE"
+			},
+			{
+				"ref_id": "SUSE CVE-2024-35816",
+				"ref_url": "https://www.suse.com/security/cve/CVE-2024-35816",
+				"source": "SUSE CVE"
+			}
+		],
+		"description": "\n    In the Linux kernel, the following vulnerability has been resolved:\n\nfirewire: ohci: prevent leak of left-over IRQ on unbind\n\nCommit 5a95f1ded28691e6 (\"firewire: ohci: use devres for requested IRQ\")\nalso removed the call to free_irq() in pci_remove(), leading to a\nleftover irq of devm_request_irq() at pci_disable_msi() in pci_remove()\nwhen unbinding the driver from the device\n\nremove_proc_entry: removing non-empty directory 'irq/136', leaking at\nleast 'firewire_ohci'\nCall Trace:\n ? remove_proc_entry+0x19c/0x1c0\n ? __warn+0x81/0x130\n ? remove_proc_entry+0x19c/0x1c0\n ? report_bug+0x171/0x1a0\n ? console_unlock+0x78/0x120\n ? handle_bug+0x3c/0x80\n ? exc_invalid_op+0x17/0x70\n ? asm_exc_invalid_op+0x1a/0x20\n ? remove_proc_entry+0x19c/0x1c0\n unregister_irq_proc+0xf4/0x120\n free_desc+0x3d/0xe0\n ? kfree+0x29f/0x2f0\n irq_free_descs+0x47/0x70\n msi_domain_free_locked.part.0+0x19d/0x1d0\n msi_domain_free_irqs_all_locked+0x81/0xc0\n pci_free_msi_irqs+0x12/0x40\n pci_disable_msi+0x4c/0x60\n pci_remove+0x9d/0xc0 [firewire_ohci\n     01b483699bebf9cb07a3d69df0aa2bee71db1b26]\n pci_device_remove+0x37/0xa0\n device_release_driver_internal+0x19f/0x200\n unbind_store+0xa1/0xb0\n\nremove irq with devm_free_irq() before pci_disable_msi()\nalso remove it in fail_msi: of pci_probe() as this would lead to\nan identical leak\n    ",
+		"advisory": {
+			"from": "security@suse.de",
+			"severity": "Moderate",
+			"cve": [
+				{
+					"text": "CVE-2024-35816 at SUSE",
+					"href": "https://www.suse.com/security/cve/CVE-2024-35816/",
+					"impact": "medium",
+					"cvss3": "5.5/CVSS:3.1/AV:L/AC:L/PR:L/UI:N/S:U/C:N/I:N/A:H"
+				},
+				{
+					"text": "CVE-2024-35816 at NVD",
+					"href": "https://nvd.nist.gov/vuln/detail/CVE-2024-35816"
+				}
+			],
+			"bugzilla": [
+				{
+					"text": "SUSE bug 1224616",
+					"href": "https://bugzilla.suse.com/1224616"
+				}
+			],
+			"issued": {
+				"date": "2024-05-21"
+			},
+			"updated": {
+				"date": "2024-05-21"
+			},
+			"affected_cpe_list": {
+				"cpe": [
+					"cpe:/o:suse:suse-microos:5.2"
+				]
+			}
+		}
+	},
+	"criteria": {
+		"operator": "AND",
+		"criterias": [
+			{
+				"operator": "OR",
+				"criterions": [
+					{
+						"test_ref": "oval:org.opensuse.security:tst:2009334017",
+						"comment": "kernel-default is not affected"
+					},
+					{
+						"test_ref": "oval:org.opensuse.security:tst:2009705046",
+						"comment": "kernel-rt is not affected"
+					},
+					{
+						"test_ref": "oval:org.opensuse.security:tst:2009728712",
+						"comment": "kernel-source-rt is not affected"
+					}
+				]
+			}
+		],
+		"criterions": [
+			{
+				"test_ref": "oval:org.opensuse.security:tst:2009681300",
+				"comment": "SUSE Linux Enterprise Micro 5.2 is installed"
+			}
+		]
+	}
+}

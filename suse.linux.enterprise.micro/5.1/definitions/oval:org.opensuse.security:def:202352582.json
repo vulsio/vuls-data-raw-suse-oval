@@ -1,0 +1,133 @@
+{
+	"id": "oval:org.opensuse.security:def:202352582",
+	"version": "1",
+	"class": "vulnerability",
+	"metadata": {
+		"title": "CVE-2023-52582",
+		"affected": {
+			"family": "unix",
+			"platform": [
+				"SUSE Linux Enterprise Micro 5.1"
+			]
+		},
+		"reference": [
+			{
+				"ref_id": "Mitre CVE-2023-52582",
+				"ref_url": "https://cve.mitre.org/cgi-bin/cvename.cgi?name=CVE-2023-52582",
+				"source": "CVE"
+			},
+			{
+				"ref_id": "SUSE CVE-2023-52582",
+				"ref_url": "https://www.suse.com/security/cve/CVE-2023-52582",
+				"source": "SUSE CVE"
+			},
+			{
+				"ref_id": "SUSE-SU-2024:1320-1",
+				"ref_url": "https://lists.suse.com/pipermail/sle-updates/2024-April/035000.html",
+				"source": "SUSE-SU"
+			},
+			{
+				"ref_id": "SUSE-SU-2024:1321-1",
+				"ref_url": "https://lists.suse.com/pipermail/sle-updates/2024-April/035005.html",
+				"source": "SUSE-SU"
+			},
+			{
+				"ref_id": "SUSE-SU-2024:1322-1",
+				"ref_url": "https://lists.suse.com/pipermail/sle-updates/2024-April/035002.html",
+				"source": "SUSE-SU"
+			},
+			{
+				"ref_id": "SUSE-SU-2024:1322-2",
+				"ref_url": "https://lists.suse.com/pipermail/sle-security-updates/2024-April/018377.html",
+				"source": "SUSE-SU"
+			},
+			{
+				"ref_id": "SUSE-SU-2024:1332-1",
+				"ref_url": "https://lists.suse.com/pipermail/sle-updates/2024-April/035014.html",
+				"source": "SUSE-SU"
+			},
+			{
+				"ref_id": "SUSE-SU-2024:1332-2",
+				"ref_url": "https://lists.suse.com/pipermail/sle-security-updates/2024-April/018378.html",
+				"source": "SUSE-SU"
+			},
+			{
+				"ref_id": "SUSE-SU-2024:1466-1",
+				"ref_url": "https://lists.suse.com/pipermail/sle-updates/2024-April/035122.html",
+				"source": "SUSE-SU"
+			},
+			{
+				"ref_id": "SUSE-SU-2024:1480-1",
+				"ref_url": "https://lists.suse.com/pipermail/sle-updates/2024-April/035134.html",
+				"source": "SUSE-SU"
+			},
+			{
+				"ref_id": "SUSE-SU-2024:1490-1",
+				"ref_url": "https://lists.suse.com/pipermail/sle-updates/2024-May/035140.html",
+				"source": "SUSE-SU"
+			}
+		],
+		"description": "\n    In the Linux kernel, the following vulnerability has been resolved:\n\nnetfs: Only call folio_start_fscache() one time for each folio\n\nIf a network filesystem using netfs implements a clamp_length()\nfunction, it can set subrequest lengths smaller than a page size.\n\nWhen we loop through the folios in netfs_rreq_unlock_folios() to\nset any folios to be written back, we need to make sure we only\ncall folio_start_fscache() once for each folio.\n\nOtherwise, this simple testcase:\n\n  mount -o fsc,rsize=1024,wsize=1024 127.0.0.1:/export /mnt/nfs\n  dd if=/dev/zero of=/mnt/nfs/file.bin bs=4096 count=1\n  1+0 records in\n  1+0 records out\n  4096 bytes (4.1 kB, 4.0 KiB) copied, 0.0126359 s, 324 kB/s\n  echo 3 > /proc/sys/vm/drop_caches\n  cat /mnt/nfs/file.bin > /dev/null\n\nwill trigger an oops similar to the following:\n\n  page dumped because: VM_BUG_ON_FOLIO(folio_test_private_2(folio))\n  ------------[ cut here ]------------\n  kernel BUG at include/linux/netfs.h:44!\n  ...\n  CPU: 5 PID: 134 Comm: kworker/u16:5 Kdump: loaded Not tainted 6.4.0-rc5\n  ...\n  RIP: 0010:netfs_rreq_unlock_folios+0x68e/0x730 [netfs]\n  ...\n  Call Trace:\n    netfs_rreq_assess+0x497/0x660 [netfs]\n    netfs_subreq_terminated+0x32b/0x610 [netfs]\n    nfs_netfs_read_completion+0x14e/0x1a0 [nfs]\n    nfs_read_completion+0x2f9/0x330 [nfs]\n    rpc_free_task+0x72/0xa0 [sunrpc]\n    rpc_async_release+0x46/0x70 [sunrpc]\n    process_one_work+0x3bd/0x710\n    worker_thread+0x89/0x610\n    kthread+0x181/0x1c0\n    ret_from_fork+0x29/0x50\n    ",
+		"advisory": {
+			"from": "security@suse.de",
+			"severity": "Moderate",
+			"cve": [
+				{
+					"text": "CVE-2023-52582 at SUSE",
+					"href": "https://www.suse.com/security/cve/CVE-2023-52582/",
+					"impact": "medium",
+					"cvss3": "5.5/CVSS:3.1/AV:L/AC:L/PR:L/UI:N/S:U/C:N/I:N/A:H"
+				},
+				{
+					"text": "CVE-2023-52582 at NVD",
+					"href": "https://nvd.nist.gov/vuln/detail/CVE-2023-52582"
+				}
+			],
+			"bugzilla": [
+				{
+					"text": "SUSE bug 1220878",
+					"href": "https://bugzilla.suse.com/1220878"
+				}
+			],
+			"issued": {
+				"date": "2024-03-07"
+			},
+			"updated": {
+				"date": "2024-05-04"
+			},
+			"affected_cpe_list": {
+				"cpe": [
+					"cpe:/o:suse:suse-microos:5.1"
+				]
+			}
+		}
+	},
+	"criteria": {
+		"operator": "AND",
+		"criterias": [
+			{
+				"operator": "OR",
+				"criterions": [
+					{
+						"test_ref": "oval:org.opensuse.security:tst:2009334017",
+						"comment": "kernel-default is not affected"
+					},
+					{
+						"test_ref": "oval:org.opensuse.security:tst:2009705046",
+						"comment": "kernel-rt is not affected"
+					},
+					{
+						"test_ref": "oval:org.opensuse.security:tst:2009728712",
+						"comment": "kernel-source-rt is not affected"
+					}
+				]
+			}
+		],
+		"criterions": [
+			{
+				"test_ref": "oval:org.opensuse.security:tst:2009669964",
+				"comment": "SUSE Linux Enterprise Micro 5.1 is installed"
+			}
+		]
+	}
+}

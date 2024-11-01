@@ -1,0 +1,73 @@
+{
+	"id": "oval:org.opensuse.security:def:202427023",
+	"version": "1",
+	"class": "vulnerability",
+	"metadata": {
+		"title": "CVE-2024-27023",
+		"affected": {
+			"family": "unix",
+			"platform": [
+				"SUSE Linux Enterprise Micro 5.0"
+			]
+		},
+		"reference": [
+			{
+				"ref_id": "Mitre CVE-2024-27023",
+				"ref_url": "https://cve.mitre.org/cgi-bin/cvename.cgi?name=CVE-2024-27023",
+				"source": "CVE"
+			},
+			{
+				"ref_id": "SUSE CVE-2024-27023",
+				"ref_url": "https://www.suse.com/security/cve/CVE-2024-27023",
+				"source": "SUSE CVE"
+			}
+		],
+		"description": "\n    In the Linux kernel, the following vulnerability has been resolved:\n\nmd: Fix missing release of 'active_io' for flush\n\nsubmit_flushes\n atomic_set(&mddev->flush_pending, 1);\n rdev_for_each_rcu(rdev, mddev)\n  atomic_inc(&mddev->flush_pending);\n  bi->bi_end_io = md_end_flush\n  submit_bio(bi);\n                        /* flush io is done first */\n                        md_end_flush\n                         if (atomic_dec_and_test(&mddev->flush_pending))\n                          percpu_ref_put(&mddev->active_io)\n                          -> active_io is not released\n\n if (atomic_dec_and_test(&mddev->flush_pending))\n  -> missing release of active_io\n\nFor consequence, mddev_suspend() will wait for 'active_io' to be zero\nforever.\n\nFix this problem by releasing 'active_io' in submit_flushes() if\n'flush_pending' is decreased to zero.\n    ",
+		"advisory": {
+			"from": "security@suse.de",
+			"severity": "Moderate",
+			"cve": [
+				{
+					"text": "CVE-2024-27023 at SUSE",
+					"href": "https://www.suse.com/security/cve/CVE-2024-27023/",
+					"impact": "medium",
+					"cvss3": "5.5/CVSS:3.1/AV:L/AC:L/PR:L/UI:N/S:U/C:N/I:N/A:H"
+				},
+				{
+					"text": "CVE-2024-27023 at NVD",
+					"href": "https://nvd.nist.gov/vuln/detail/CVE-2024-27023"
+				}
+			],
+			"bugzilla": [
+				{
+					"text": "SUSE bug 1223776",
+					"href": "https://bugzilla.suse.com/1223776"
+				}
+			],
+			"issued": {
+				"date": "2024-05-03"
+			},
+			"updated": {
+				"date": "2024-05-03"
+			},
+			"affected_cpe_list": {
+				"cpe": [
+					"cpe:/o:suse:suse-microos:5.0"
+				]
+			}
+		}
+	},
+	"criteria": {
+		"operator": "AND",
+		"criterions": [
+			{
+				"test_ref": "oval:org.opensuse.security:tst:2009704855",
+				"comment": "SUSE Linux Enterprise Micro 5.0 is installed"
+			},
+			{
+				"test_ref": "oval:org.opensuse.security:tst:2009334017",
+				"comment": "kernel-default is not affected"
+			}
+		]
+	}
+}

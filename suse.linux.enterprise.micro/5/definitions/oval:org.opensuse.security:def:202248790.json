@@ -1,0 +1,260 @@
+{
+	"id": "oval:org.opensuse.security:def:202248790",
+	"version": "1",
+	"class": "vulnerability",
+	"metadata": {
+		"title": "CVE-2022-48790",
+		"affected": {
+			"family": "unix",
+			"platform": [
+				"SUSE Linux Enterprise Micro 5.1",
+				"SUSE Linux Enterprise Micro 5.2",
+				"SUSE Linux Enterprise Micro 5.3",
+				"SUSE Linux Enterprise Micro 5.4",
+				"SUSE Linux Enterprise Micro 5.5"
+			]
+		},
+		"reference": [
+			{
+				"ref_id": "Mitre CVE-2022-48790",
+				"ref_url": "https://cve.mitre.org/cgi-bin/cvename.cgi?name=CVE-2022-48790",
+				"source": "CVE"
+			},
+			{
+				"ref_id": "SUSE CVE-2022-48790",
+				"ref_url": "https://www.suse.com/security/cve/CVE-2022-48790",
+				"source": "SUSE CVE"
+			},
+			{
+				"ref_id": "SUSE-SU-2024:2894-1",
+				"ref_url": "https://lists.suse.com/pipermail/sle-updates/2024-August/036430.html",
+				"source": "SUSE-SU"
+			},
+			{
+				"ref_id": "SUSE-SU-2024:2902-1",
+				"ref_url": "https://lists.suse.com/pipermail/sle-updates/2024-August/036443.html",
+				"source": "SUSE-SU"
+			},
+			{
+				"ref_id": "SUSE-SU-2024:2929-1",
+				"ref_url": "https://lists.suse.com/pipermail/sle-updates/2024-August/036473.html",
+				"source": "SUSE-SU"
+			},
+			{
+				"ref_id": "SUSE-SU-2024:2939-1",
+				"ref_url": "https://lists.suse.com/pipermail/sle-security-updates/2024-August/019211.html",
+				"source": "SUSE-SU"
+			},
+			{
+				"ref_id": "SUSE-SU-2024:2947-1",
+				"ref_url": "https://lists.suse.com/pipermail/sle-updates/2024-August/036488.html",
+				"source": "SUSE-SU"
+			},
+			{
+				"ref_id": "SUSE-SU-2024:3225-1",
+				"ref_url": "https://lists.suse.com/pipermail/sle-updates/2024-September/036876.html",
+				"source": "SUSE-SU"
+			},
+			{
+				"ref_id": "SUSE-SU-2024:3249-1",
+				"ref_url": "https://lists.suse.com/pipermail/sle-updates/2024-September/036898.html",
+				"source": "SUSE-SU"
+			},
+			{
+				"ref_id": "SUSE-SU-2024:3559-1",
+				"ref_url": "https://lists.suse.com/pipermail/sle-updates/2024-October/037179.html",
+				"source": "SUSE-SU"
+			},
+			{
+				"ref_id": "SUSE-SU-2024:3566-1",
+				"ref_url": "https://lists.suse.com/pipermail/sle-security-updates/2024-October/019578.html",
+				"source": "SUSE-SU"
+			},
+			{
+				"ref_id": "SUSE-SU-2024:3591-1",
+				"ref_url": "https://lists.suse.com/pipermail/sle-security-updates/2024-October/019587.html",
+				"source": "SUSE-SU"
+			}
+		],
+		"description": "\n    In the Linux kernel, the following vulnerability has been resolved:\n\nnvme: fix a possible use-after-free in controller reset during load\n\nUnlike .queue_rq, in .submit_async_event drivers may not check the ctrl\nreadiness for AER submission. This may lead to a use-after-free\ncondition that was observed with nvme-tcp.\n\nThe race condition may happen in the following scenario:\n1. driver executes its reset_ctrl_work\n2. -> nvme_stop_ctrl - flushes ctrl async_event_work\n3. ctrl sends AEN which is received by the host, which in turn\n   schedules AEN handling\n4. teardown admin queue (which releases the queue socket)\n5. AEN processed, submits another AER, calling the driver to submit\n6. driver attempts to send the cmd\n==> use-after-free\n\nIn order to fix that, add ctrl state check to validate the ctrl\nis actually able to accept the AER submission.\n\nThis addresses the above race in controller resets because the driver\nduring teardown should:\n1. change ctrl state to RESETTING\n2. flush async_event_work (as well as other async work elements)\n\nSo after 1,2, any other AER command will find the\nctrl state to be RESETTING and bail out without submitting the AER.\n    ",
+		"advisory": {
+			"from": "security@suse.de",
+			"severity": "Moderate",
+			"cve": [
+				{
+					"text": "CVE-2022-48790 at SUSE",
+					"href": "https://www.suse.com/security/cve/CVE-2022-48790/",
+					"impact": "medium",
+					"cvss3": "6.4/CVSS:3.1/AV:L/AC:H/PR:H/UI:N/S:U/C:H/I:H/A:H"
+				},
+				{
+					"text": "CVE-2022-48790 at NVD",
+					"href": "https://nvd.nist.gov/vuln/detail/CVE-2022-48790",
+					"impact": "high",
+					"cvss3": "7/CVSS:3.1/AV:L/AC:H/PR:L/UI:N/S:U/C:H/I:H/A:H"
+				}
+			],
+			"bugzilla": [
+				{
+					"text": "SUSE bug 1227941",
+					"href": "https://bugzilla.suse.com/1227941"
+				}
+			],
+			"issued": {
+				"date": "2024-10-18"
+			},
+			"updated": {
+				"date": "2024-10-18"
+			},
+			"affected_cpe_list": {
+				"cpe": [
+					"cpe:/o:suse:sle-micro:5.3",
+					"cpe:/o:suse:sle-micro:5.4",
+					"cpe:/o:suse:sle-micro:5.5",
+					"cpe:/o:suse:suse-microos:5.1",
+					"cpe:/o:suse:suse-microos:5.2"
+				]
+			}
+		}
+	},
+	"criteria": {
+		"operator": "OR",
+		"criterias": [
+			{
+				"operator": "AND",
+				"criterias": [
+					{
+						"operator": "OR",
+						"criterions": [
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009728694",
+								"comment": "SUSE Linux Enterprise Micro 5.3 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009755086",
+								"comment": "SUSE Linux Enterprise Micro 5.4 is installed"
+							}
+						]
+					},
+					{
+						"operator": "OR",
+						"criterions": [
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009879796",
+								"comment": "kernel-default-5.14.21-150400.24.128.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009879678",
+								"comment": "kernel-default-base-5.14.21-150400.24.128.1.150400.24.62.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009879551",
+								"comment": "kernel-rt-5.14.21-150400.15.88.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009879552",
+								"comment": "kernel-source-rt-5.14.21-150400.15.88.1 is installed"
+							}
+						]
+					}
+				]
+			},
+			{
+				"operator": "AND",
+				"criterias": [
+					{
+						"operator": "OR",
+						"criterions": [
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009879879",
+								"comment": "kernel-default-5.14.21-150500.55.73.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009880170",
+								"comment": "kernel-default-base-5.14.21-150500.55.73.1.150500.6.33.8 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009879144",
+								"comment": "kernel-rt-5.14.21-150500.13.64.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009879155",
+								"comment": "kernel-source-rt-5.14.21-150500.13.64.1 is installed"
+							}
+						]
+					}
+				],
+				"criterions": [
+					{
+						"test_ref": "oval:org.opensuse.security:tst:2009800388",
+						"comment": "SUSE Linux Enterprise Micro 5.5 is installed"
+					}
+				]
+			},
+			{
+				"operator": "AND",
+				"criterias": [
+					{
+						"operator": "OR",
+						"criterions": [
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009942734",
+								"comment": "kernel-default-5.3.18-150300.59.174.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009942662",
+								"comment": "kernel-default-base-5.3.18-150300.59.174.1.150300.18.103.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009942540",
+								"comment": "kernel-rt-5.3.18-150300.181.2 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009942541",
+								"comment": "kernel-source-rt-5.3.18-150300.181.2 is installed"
+							}
+						]
+					}
+				],
+				"criterions": [
+					{
+						"test_ref": "oval:org.opensuse.security:tst:2009681300",
+						"comment": "SUSE Linux Enterprise Micro 5.2 is installed"
+					}
+				]
+			},
+			{
+				"operator": "AND",
+				"criterias": [
+					{
+						"operator": "OR",
+						"criterions": [
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009942734",
+								"comment": "kernel-default-5.3.18-150300.59.174.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009942735",
+								"comment": "kernel-default-base-5.3.18-150300.59.174.1.150300.18.103.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009942540",
+								"comment": "kernel-rt-5.3.18-150300.181.2 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009942541",
+								"comment": "kernel-source-rt-5.3.18-150300.181.2 is installed"
+							}
+						]
+					}
+				],
+				"criterions": [
+					{
+						"test_ref": "oval:org.opensuse.security:tst:2009669964",
+						"comment": "SUSE Linux Enterprise Micro 5.1 is installed"
+					}
+				]
+			}
+		]
+	}
+}

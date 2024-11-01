@@ -1,0 +1,137 @@
+{
+	"id": "oval:org.opensuse.security:def:202352497",
+	"version": "1",
+	"class": "vulnerability",
+	"metadata": {
+		"title": "CVE-2023-52497",
+		"affected": {
+			"family": "unix",
+			"platform": [
+				"SUSE Linux Enterprise Micro 5.3"
+			]
+		},
+		"reference": [
+			{
+				"ref_id": "Mitre CVE-2023-52497",
+				"ref_url": "https://cve.mitre.org/cgi-bin/cvename.cgi?name=CVE-2023-52497",
+				"source": "CVE"
+			},
+			{
+				"ref_id": "SUSE CVE-2023-52497",
+				"ref_url": "https://www.suse.com/security/cve/CVE-2023-52497",
+				"source": "SUSE CVE"
+			},
+			{
+				"ref_id": "SUSE-SU-2024:1320-1",
+				"ref_url": "https://lists.suse.com/pipermail/sle-updates/2024-April/035000.html",
+				"source": "SUSE-SU"
+			},
+			{
+				"ref_id": "SUSE-SU-2024:1321-1",
+				"ref_url": "https://lists.suse.com/pipermail/sle-updates/2024-April/035005.html",
+				"source": "SUSE-SU"
+			},
+			{
+				"ref_id": "SUSE-SU-2024:1322-1",
+				"ref_url": "https://lists.suse.com/pipermail/sle-updates/2024-April/035002.html",
+				"source": "SUSE-SU"
+			},
+			{
+				"ref_id": "SUSE-SU-2024:1322-2",
+				"ref_url": "https://lists.suse.com/pipermail/sle-security-updates/2024-April/018377.html",
+				"source": "SUSE-SU"
+			},
+			{
+				"ref_id": "SUSE-SU-2024:1332-1",
+				"ref_url": "https://lists.suse.com/pipermail/sle-updates/2024-April/035014.html",
+				"source": "SUSE-SU"
+			},
+			{
+				"ref_id": "SUSE-SU-2024:1332-2",
+				"ref_url": "https://lists.suse.com/pipermail/sle-security-updates/2024-April/018378.html",
+				"source": "SUSE-SU"
+			},
+			{
+				"ref_id": "SUSE-SU-2024:1466-1",
+				"ref_url": "https://lists.suse.com/pipermail/sle-updates/2024-April/035122.html",
+				"source": "SUSE-SU"
+			},
+			{
+				"ref_id": "SUSE-SU-2024:1480-1",
+				"ref_url": "https://lists.suse.com/pipermail/sle-updates/2024-April/035134.html",
+				"source": "SUSE-SU"
+			},
+			{
+				"ref_id": "SUSE-SU-2024:1490-1",
+				"ref_url": "https://lists.suse.com/pipermail/sle-updates/2024-May/035140.html",
+				"source": "SUSE-SU"
+			}
+		],
+		"description": "\n    In the Linux kernel, the following vulnerability has been resolved:\n\nerofs: fix lz4 inplace decompression\n\nCurrently EROFS can map another compressed buffer for inplace\ndecompression, that was used to handle the cases that some pages of\ncompressed data are actually not in-place I/O.\n\nHowever, like most simple LZ77 algorithms, LZ4 expects the compressed\ndata is arranged at the end of the decompressed buffer and it\nexplicitly uses memmove() to handle overlapping:\n  __________________________________________________________\n |_ direction of decompression --> ____ |_ compressed data _|\n\nAlthough EROFS arranges compressed data like this, it typically maps two\nindividual virtual buffers so the relative order is uncertain.\nPreviously, it was hardly observed since LZ4 only uses memmove() for\nshort overlapped literals and x86/arm64 memmove implementations seem to\ncompletely cover it up and they don't have this issue.  Juhyung reported\nthat EROFS data corruption can be found on a new Intel x86 processor.\nAfter some analysis, it seems that recent x86 processors with the new\nFSRM feature expose this issue with \"rep movsb\".\n\nLet's strictly use the decompressed buffer for lz4 inplace\ndecompression for now.  Later, as an useful improvement, we could try\nto tie up these two buffers together in the correct order.\n    ",
+		"advisory": {
+			"from": "security@suse.de",
+			"severity": "Moderate",
+			"cve": [
+				{
+					"text": "CVE-2023-52497 at SUSE",
+					"href": "https://www.suse.com/security/cve/CVE-2023-52497/",
+					"impact": "medium",
+					"cvss3": "4.4/CVSS:3.1/AV:L/AC:L/PR:L/UI:N/S:U/C:N/I:L/A:L"
+				},
+				{
+					"text": "CVE-2023-52497 at NVD",
+					"href": "https://nvd.nist.gov/vuln/detail/CVE-2023-52497"
+				}
+			],
+			"bugzilla": [
+				{
+					"text": "SUSE bug 1220879",
+					"href": "https://bugzilla.suse.com/1220879"
+				}
+			],
+			"issued": {
+				"date": "2024-07-26"
+			},
+			"updated": {
+				"date": "2024-07-26"
+			},
+			"affected_cpe_list": {
+				"cpe": [
+					"cpe:/o:suse:sle-micro:5.3"
+				]
+			}
+		}
+	},
+	"criteria": {
+		"operator": "AND",
+		"criterias": [
+			{
+				"operator": "OR",
+				"criterions": [
+					{
+						"test_ref": "oval:org.opensuse.security:tst:2009855250",
+						"comment": "kernel-default-5.14.21-150400.24.116.1 is installed"
+					},
+					{
+						"test_ref": "oval:org.opensuse.security:tst:2009855166",
+						"comment": "kernel-default-base-5.14.21-150400.24.116.1.150400.24.54.5 is installed"
+					},
+					{
+						"test_ref": "oval:org.opensuse.security:tst:2009855248",
+						"comment": "kernel-rt-5.14.21-150400.15.76.1 is installed"
+					},
+					{
+						"test_ref": "oval:org.opensuse.security:tst:2009855249",
+						"comment": "kernel-source-rt-5.14.21-150400.15.76.1 is installed"
+					}
+				]
+			}
+		],
+		"criterions": [
+			{
+				"test_ref": "oval:org.opensuse.security:tst:2009728694",
+				"comment": "SUSE Linux Enterprise Micro 5.3 is installed"
+			}
+		]
+	}
+}

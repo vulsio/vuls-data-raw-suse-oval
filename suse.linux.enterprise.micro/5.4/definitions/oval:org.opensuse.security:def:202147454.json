@@ -1,0 +1,117 @@
+{
+	"id": "oval:org.opensuse.security:def:202147454",
+	"version": "1",
+	"class": "vulnerability",
+	"metadata": {
+		"title": "CVE-2021-47454",
+		"affected": {
+			"family": "unix",
+			"platform": [
+				"SUSE Linux Enterprise Micro 5.4"
+			]
+		},
+		"reference": [
+			{
+				"ref_id": "Mitre CVE-2021-47454",
+				"ref_url": "https://cve.mitre.org/cgi-bin/cvename.cgi?name=CVE-2021-47454",
+				"source": "CVE"
+			},
+			{
+				"ref_id": "SUSE CVE-2021-47454",
+				"ref_url": "https://www.suse.com/security/cve/CVE-2021-47454",
+				"source": "SUSE CVE"
+			},
+			{
+				"ref_id": "SUSE-SU-2024:2008-1",
+				"ref_url": "https://lists.suse.com/pipermail/sle-updates/2024-June/035569.html",
+				"source": "SUSE-SU"
+			},
+			{
+				"ref_id": "SUSE-SU-2024:2011-1",
+				"ref_url": "https://lists.suse.com/pipermail/sle-updates/2024-June/035575.html",
+				"source": "SUSE-SU"
+			},
+			{
+				"ref_id": "SUSE-SU-2024:2019-1",
+				"ref_url": "https://lists.suse.com/pipermail/sle-updates/2024-June/035578.html",
+				"source": "SUSE-SU"
+			},
+			{
+				"ref_id": "SUSE-SU-2024:2189-1",
+				"ref_url": "https://lists.suse.com/pipermail/sle-updates/2024-June/035721.html",
+				"source": "SUSE-SU"
+			},
+			{
+				"ref_id": "SUSE-SU-2024:2190-1",
+				"ref_url": "https://lists.suse.com/pipermail/sle-updates/2024-June/035732.html",
+				"source": "SUSE-SU"
+			}
+		],
+		"description": "\n    In the Linux kernel, the following vulnerability has been resolved:\n\npowerpc/smp: do not decrement idle task preempt count in CPU offline\n\nWith PREEMPT_COUNT=y, when a CPU is offlined and then onlined again, we\nget:\n\nBUG: scheduling while atomic: swapper/1/0/0x00000000\nno locks held by swapper/1/0.\nCPU: 1 PID: 0 Comm: swapper/1 Not tainted 5.15.0-rc2+ #100\nCall Trace:\n dump_stack_lvl+0xac/0x108\n __schedule_bug+0xac/0xe0\n __schedule+0xcf8/0x10d0\n schedule_idle+0x3c/0x70\n do_idle+0x2d8/0x4a0\n cpu_startup_entry+0x38/0x40\n start_secondary+0x2ec/0x3a0\n start_secondary_prolog+0x10/0x14\n\nThis is because powerpc's arch_cpu_idle_dead() decrements the idle task's\npreempt count, for reasons explained in commit a7c2bb8279d2 (\"powerpc:\nRe-enable preemption before cpu_die()\"), specifically \"start_secondary()\nexpects a preempt_count() of 0.\"\n\nHowever, since commit 2c669ef6979c (\"powerpc/preempt: Don't touch the idle\ntask's preempt_count during hotplug\") and commit f1a0a376ca0c (\"sched/core:\nInitialize the idle task with preemption disabled\"), that justification no\nlonger holds.\n\nThe idle task isn't supposed to re-enable preemption, so remove the\nvestigial preempt_enable() from the CPU offline path.\n\nTested with pseries and powernv in qemu, and pseries on PowerVM.\n    ",
+		"advisory": {
+			"from": "security@suse.de",
+			"severity": "Moderate",
+			"cve": [
+				{
+					"text": "CVE-2021-47454 at SUSE",
+					"href": "https://www.suse.com/security/cve/CVE-2021-47454/",
+					"impact": "medium",
+					"cvss3": "5.5/CVSS:3.1/AV:L/AC:L/PR:L/UI:N/S:U/C:N/I:N/A:H"
+				},
+				{
+					"text": "CVE-2021-47454 at NVD",
+					"href": "https://nvd.nist.gov/vuln/detail/CVE-2021-47454"
+				}
+			],
+			"bugzilla": [
+				{
+					"text": "SUSE bug 1225255",
+					"href": "https://bugzilla.suse.com/1225255"
+				}
+			],
+			"issued": {
+				"date": "2024-07-26"
+			},
+			"updated": {
+				"date": "2024-07-26"
+			},
+			"affected_cpe_list": {
+				"cpe": [
+					"cpe:/o:suse:sle-micro:5.4"
+				]
+			}
+		}
+	},
+	"criteria": {
+		"operator": "AND",
+		"criterias": [
+			{
+				"operator": "OR",
+				"criterions": [
+					{
+						"test_ref": "oval:org.opensuse.security:tst:2009869879",
+						"comment": "kernel-default-5.14.21-150400.24.122.2 is installed"
+					},
+					{
+						"test_ref": "oval:org.opensuse.security:tst:2009869533",
+						"comment": "kernel-default-base-5.14.21-150400.24.122.2.150400.24.58.2 is installed"
+					},
+					{
+						"test_ref": "oval:org.opensuse.security:tst:2009865707",
+						"comment": "kernel-rt-5.14.21-150400.15.82.1 is installed"
+					},
+					{
+						"test_ref": "oval:org.opensuse.security:tst:2009865708",
+						"comment": "kernel-source-rt-5.14.21-150400.15.82.1 is installed"
+					}
+				]
+			}
+		],
+		"criterions": [
+			{
+				"test_ref": "oval:org.opensuse.security:tst:2009755086",
+				"comment": "SUSE Linux Enterprise Micro 5.4 is installed"
+			}
+		]
+	}
+}

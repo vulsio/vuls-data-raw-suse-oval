@@ -1,0 +1,88 @@
+{
+	"id": "oval:org.opensuse.security:def:202426918",
+	"version": "1",
+	"class": "vulnerability",
+	"metadata": {
+		"title": "CVE-2024-26918",
+		"affected": {
+			"family": "unix",
+			"platform": [
+				"SUSE Linux Enterprise Micro 5.2"
+			]
+		},
+		"reference": [
+			{
+				"ref_id": "Mitre CVE-2024-26918",
+				"ref_url": "https://cve.mitre.org/cgi-bin/cvename.cgi?name=CVE-2024-26918",
+				"source": "CVE"
+			},
+			{
+				"ref_id": "SUSE CVE-2024-26918",
+				"ref_url": "https://www.suse.com/security/cve/CVE-2024-26918",
+				"source": "SUSE CVE"
+			}
+		],
+		"description": "\n    In the Linux kernel, the following vulnerability has been resolved:\n\nPCI: Fix active state requirement in PME polling\n\nThe commit noted in fixes added a bogus requirement that runtime PM managed\ndevices need to be in the RPM_ACTIVE state for PME polling.  In fact, only\ndevices in low power states should be polled.\n\nHowever there's still a requirement that the device config space must be\naccessible, which has implications for both the current state of the polled\ndevice and the parent bridge, when present.  It's not sufficient to assume\nthe bridge remains in D0 and cases have been observed where the bridge\npasses the D0 test, but the PM state indicates RPM_SUSPENDING and config\nspace of the polled device becomes inaccessible during pci_pme_wakeup().\n\nTherefore, since the bridge is already effectively required to be in the\nRPM_ACTIVE state, formalize this in the code and elevate the PM usage count\nto maintain the state while polling the subordinate device.\n\nThis resolves a regression reported in the bugzilla below where a\nThunderbolt/USB4 hierarchy fails to scan for an attached NVMe endpoint\ndownstream of a bridge in a D3hot power state.\n    ",
+		"advisory": {
+			"from": "security@suse.de",
+			"severity": "Low",
+			"cve": [
+				{
+					"text": "CVE-2024-26918 at SUSE",
+					"href": "https://www.suse.com/security/cve/CVE-2024-26918/",
+					"impact": "low",
+					"cvss3": "3.3/CVSS:3.1/AV:L/AC:L/PR:L/UI:N/S:U/C:N/I:N/A:L"
+				},
+				{
+					"text": "CVE-2024-26918 at NVD",
+					"href": "https://nvd.nist.gov/vuln/detail/CVE-2024-26918"
+				}
+			],
+			"bugzilla": [
+				{
+					"text": "SUSE bug 1223136",
+					"href": "https://bugzilla.suse.com/1223136"
+				}
+			],
+			"issued": {
+				"date": "2024-04-20"
+			},
+			"updated": {
+				"date": "2024-04-26"
+			},
+			"affected_cpe_list": {
+				"cpe": [
+					"cpe:/o:suse:suse-microos:5.2"
+				]
+			}
+		}
+	},
+	"criteria": {
+		"operator": "AND",
+		"criterias": [
+			{
+				"operator": "OR",
+				"criterions": [
+					{
+						"test_ref": "oval:org.opensuse.security:tst:2009334017",
+						"comment": "kernel-default is not affected"
+					},
+					{
+						"test_ref": "oval:org.opensuse.security:tst:2009705046",
+						"comment": "kernel-rt is not affected"
+					},
+					{
+						"test_ref": "oval:org.opensuse.security:tst:2009728712",
+						"comment": "kernel-source-rt is not affected"
+					}
+				]
+			}
+		],
+		"criterions": [
+			{
+				"test_ref": "oval:org.opensuse.security:tst:2009681300",
+				"comment": "SUSE Linux Enterprise Micro 5.2 is installed"
+			}
+		]
+	}
+}

@@ -1,0 +1,263 @@
+{
+	"id": "oval:org.opensuse.security:def:202352854",
+	"version": "1",
+	"class": "vulnerability",
+	"metadata": {
+		"title": "CVE-2023-52854",
+		"affected": {
+			"family": "unix",
+			"platform": [
+				"SUSE Linux Enterprise Micro 5.1",
+				"SUSE Linux Enterprise Micro 5.2",
+				"SUSE Linux Enterprise Micro 5.3",
+				"SUSE Linux Enterprise Micro 5.4",
+				"SUSE Linux Enterprise Micro 5.5"
+			]
+		},
+		"reference": [
+			{
+				"ref_id": "Mitre CVE-2023-52854",
+				"ref_url": "https://cve.mitre.org/cgi-bin/cvename.cgi?name=CVE-2023-52854",
+				"source": "CVE"
+			},
+			{
+				"ref_id": "SUSE CVE-2023-52854",
+				"ref_url": "https://www.suse.com/security/cve/CVE-2023-52854",
+				"source": "SUSE CVE"
+			},
+			{
+				"ref_id": "SUSE-SU-2024:2008-1",
+				"ref_url": "https://lists.suse.com/pipermail/sle-updates/2024-June/035569.html",
+				"source": "SUSE-SU"
+			},
+			{
+				"ref_id": "SUSE-SU-2024:2011-1",
+				"ref_url": "https://lists.suse.com/pipermail/sle-updates/2024-June/035575.html",
+				"source": "SUSE-SU"
+			},
+			{
+				"ref_id": "SUSE-SU-2024:2019-1",
+				"ref_url": "https://lists.suse.com/pipermail/sle-updates/2024-June/035578.html",
+				"source": "SUSE-SU"
+			},
+			{
+				"ref_id": "SUSE-SU-2024:2189-1",
+				"ref_url": "https://lists.suse.com/pipermail/sle-updates/2024-June/035721.html",
+				"source": "SUSE-SU"
+			},
+			{
+				"ref_id": "SUSE-SU-2024:2190-1",
+				"ref_url": "https://lists.suse.com/pipermail/sle-updates/2024-June/035732.html",
+				"source": "SUSE-SU"
+			},
+			{
+				"ref_id": "SUSE-SU-2024:2571-1",
+				"ref_url": "https://lists.suse.com/pipermail/sle-updates/2024-July/036103.html",
+				"source": "SUSE-SU"
+			},
+			{
+				"ref_id": "SUSE-SU-2024:2896-1",
+				"ref_url": "https://lists.suse.com/pipermail/sle-security-updates/2024-August/019185.html",
+				"source": "SUSE-SU"
+			},
+			{
+				"ref_id": "SUSE-SU-2024:2973-1",
+				"ref_url": "https://lists.suse.com/pipermail/sle-security-updates/2024-August/019280.html",
+				"source": "SUSE-SU"
+			},
+			{
+				"ref_id": "SUSE-SU-2024:3225-1",
+				"ref_url": "https://lists.suse.com/pipermail/sle-updates/2024-September/036876.html",
+				"source": "SUSE-SU"
+			},
+			{
+				"ref_id": "SUSE-SU-2024:3249-1",
+				"ref_url": "https://lists.suse.com/pipermail/sle-updates/2024-September/036898.html",
+				"source": "SUSE-SU"
+			},
+			{
+				"ref_id": "SUSE-SU-2024:3499-1",
+				"ref_url": "https://lists.suse.com/pipermail/sle-updates/2024-September/037117.html",
+				"source": "SUSE-SU"
+			}
+		],
+		"description": "\n    In the Linux kernel, the following vulnerability has been resolved:\n\npadata: Fix refcnt handling in padata_free_shell()\n\nIn a high-load arm64 environment, the pcrypt_aead01 test in LTP can lead\nto system UAF (Use-After-Free) issues. Due to the lengthy analysis of\nthe pcrypt_aead01 function call, I'll describe the problem scenario\nusing a simplified model:\n\nSuppose there's a user of padata named `user_function` that adheres to\nthe padata requirement of calling `padata_free_shell` after `serial()`\nhas been invoked, as demonstrated in the following code:\n\n```c\nstruct request {\n    struct padata_priv padata;\n    struct completion *done;\n};\n\nvoid parallel(struct padata_priv *padata) {\n    do_something();\n}\n\nvoid serial(struct padata_priv *padata) {\n    struct request *request = container_of(padata,\n    \t\t\t\tstruct request,\n\t\t\t\tpadata);\n    complete(request->done);\n}\n\nvoid user_function() {\n    DECLARE_COMPLETION(done)\n    padata->parallel = parallel;\n    padata->serial = serial;\n    padata_do_parallel();\n    wait_for_completion(&done);\n    padata_free_shell();\n}\n```\n\nIn the corresponding padata.c file, there's the following code:\n\n```c\nstatic void padata_serial_worker(struct work_struct *serial_work) {\n    ...\n    cnt = 0;\n\n    while (!list_empty(&local_list)) {\n        ...\n        padata->serial(padata);\n        cnt++;\n    }\n\n    local_bh_enable();\n\n    if (refcount_sub_and_test(cnt, &pd->refcnt))\n        padata_free_pd(pd);\n}\n```\n\nBecause of the high system load and the accumulation of unexecuted\nsoftirq at this moment, `local_bh_enable()` in padata takes longer\nto execute than usual. Subsequently, when accessing `pd->refcnt`,\n`pd` has already been released by `padata_free_shell()`, resulting\nin a UAF issue with `pd->refcnt`.\n\nThe fix is straightforward: add `refcount_dec_and_test` before calling\n`padata_free_pd` in `padata_free_shell`.\n    ",
+		"advisory": {
+			"from": "security@suse.de",
+			"severity": "Moderate",
+			"cve": [
+				{
+					"text": "CVE-2023-52854 at SUSE",
+					"href": "https://www.suse.com/security/cve/CVE-2023-52854/",
+					"impact": "medium",
+					"cvss3": "5.5/CVSS:3.1/AV:L/AC:L/PR:L/UI:N/S:U/C:N/I:N/A:H"
+				},
+				{
+					"text": "CVE-2023-52854 at NVD",
+					"href": "https://nvd.nist.gov/vuln/detail/CVE-2023-52854"
+				}
+			],
+			"bugzilla": [
+				{
+					"text": "SUSE bug 1225584",
+					"href": "https://bugzilla.suse.com/1225584"
+				}
+			],
+			"issued": {
+				"date": "2024-10-18"
+			},
+			"updated": {
+				"date": "2024-10-18"
+			},
+			"affected_cpe_list": {
+				"cpe": [
+					"cpe:/o:suse:sle-micro:5.3",
+					"cpe:/o:suse:sle-micro:5.4",
+					"cpe:/o:suse:sle-micro:5.5",
+					"cpe:/o:suse:suse-microos:5.1",
+					"cpe:/o:suse:suse-microos:5.2"
+				]
+			}
+		}
+	},
+	"criteria": {
+		"operator": "OR",
+		"criterias": [
+			{
+				"operator": "AND",
+				"criterias": [
+					{
+						"operator": "OR",
+						"criterions": [
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009728694",
+								"comment": "SUSE Linux Enterprise Micro 5.3 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009755086",
+								"comment": "SUSE Linux Enterprise Micro 5.4 is installed"
+							}
+						]
+					},
+					{
+						"operator": "OR",
+						"criterions": [
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009869879",
+								"comment": "kernel-default-5.14.21-150400.24.122.2 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009869533",
+								"comment": "kernel-default-base-5.14.21-150400.24.122.2.150400.24.58.2 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009865707",
+								"comment": "kernel-rt-5.14.21-150400.15.82.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009865708",
+								"comment": "kernel-source-rt-5.14.21-150400.15.82.1 is installed"
+							}
+						]
+					}
+				]
+			},
+			{
+				"operator": "AND",
+				"criterias": [
+					{
+						"operator": "OR",
+						"criterions": [
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009869880",
+								"comment": "kernel-default-5.14.21-150500.55.68.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009869881",
+								"comment": "kernel-default-base-5.14.21-150500.55.68.1.150500.6.31.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009865619",
+								"comment": "kernel-rt-5.14.21-150500.13.58.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009865630",
+								"comment": "kernel-source-rt-5.14.21-150500.13.58.1 is installed"
+							}
+						]
+					}
+				],
+				"criterions": [
+					{
+						"test_ref": "oval:org.opensuse.security:tst:2009800388",
+						"comment": "SUSE Linux Enterprise Micro 5.5 is installed"
+					}
+				]
+			},
+			{
+				"operator": "AND",
+				"criterias": [
+					{
+						"operator": "OR",
+						"criterions": [
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009942734",
+								"comment": "kernel-default-5.3.18-150300.59.174.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009942662",
+								"comment": "kernel-default-base-5.3.18-150300.59.174.1.150300.18.103.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009942540",
+								"comment": "kernel-rt-5.3.18-150300.181.2 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009942541",
+								"comment": "kernel-source-rt-5.3.18-150300.181.2 is installed"
+							}
+						]
+					}
+				],
+				"criterions": [
+					{
+						"test_ref": "oval:org.opensuse.security:tst:2009681300",
+						"comment": "SUSE Linux Enterprise Micro 5.2 is installed"
+					}
+				]
+			},
+			{
+				"operator": "AND",
+				"criterias": [
+					{
+						"operator": "OR",
+						"criterions": [
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009942734",
+								"comment": "kernel-default-5.3.18-150300.59.174.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009942735",
+								"comment": "kernel-default-base-5.3.18-150300.59.174.1.150300.18.103.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009942540",
+								"comment": "kernel-rt-5.3.18-150300.181.2 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009942541",
+								"comment": "kernel-source-rt-5.3.18-150300.181.2 is installed"
+							}
+						]
+					}
+				],
+				"criterions": [
+					{
+						"test_ref": "oval:org.opensuse.security:tst:2009669964",
+						"comment": "SUSE Linux Enterprise Micro 5.1 is installed"
+					}
+				]
+			}
+		]
+	}
+}

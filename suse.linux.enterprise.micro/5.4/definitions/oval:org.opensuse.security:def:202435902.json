@@ -1,0 +1,116 @@
+{
+	"id": "oval:org.opensuse.security:def:202435902",
+	"version": "1",
+	"class": "vulnerability",
+	"metadata": {
+		"title": "CVE-2024-35902",
+		"affected": {
+			"family": "unix",
+			"platform": [
+				"SUSE Linux Enterprise Micro 5.4"
+			]
+		},
+		"reference": [
+			{
+				"ref_id": "Mitre CVE-2024-35902",
+				"ref_url": "https://cve.mitre.org/cgi-bin/cvename.cgi?name=CVE-2024-35902",
+				"source": "CVE"
+			},
+			{
+				"ref_id": "SUSE CVE-2024-35902",
+				"ref_url": "https://www.suse.com/security/cve/CVE-2024-35902",
+				"source": "SUSE CVE"
+			},
+			{
+				"ref_id": "SUSE-SU-2024:3190-1",
+				"ref_url": "https://lists.suse.com/pipermail/sle-security-updates/2024-September/019403.html",
+				"source": "SUSE-SU"
+			},
+			{
+				"ref_id": "SUSE-SU-2024:3194-1",
+				"ref_url": "https://lists.suse.com/pipermail/sle-updates/2024-September/036835.html",
+				"source": "SUSE-SU"
+			},
+			{
+				"ref_id": "SUSE-SU-2024:3195-1",
+				"ref_url": "https://lists.suse.com/pipermail/sle-updates/2024-September/036842.html",
+				"source": "SUSE-SU"
+			},
+			{
+				"ref_id": "SUSE-SU-2024:3209-1",
+				"ref_url": "https://lists.suse.com/pipermail/sle-updates/2024-September/036854.html",
+				"source": "SUSE-SU"
+			},
+			{
+				"ref_id": "SUSE-SU-2024:3383-1",
+				"ref_url": "https://lists.suse.com/pipermail/sle-security-updates/2024-September/019497.html",
+				"source": "SUSE-SU"
+			},
+			{
+				"ref_id": "SUSE-SU-2024:3483-1",
+				"ref_url": "https://lists.suse.com/pipermail/sle-updates/2024-September/037089.html",
+				"source": "SUSE-SU"
+			}
+		],
+		"description": "\n    In the Linux kernel, the following vulnerability has been resolved:\n\nnet/rds: fix possible cp null dereference\n\ncp might be null, calling cp->cp_conn would produce null dereference\n\n[Simon Horman adds:]\n\nAnalysis:\n\n* cp is a parameter of __rds_rdma_map and is not reassigned.\n\n* The following call-sites pass a NULL cp argument to __rds_rdma_map()\n\n  - rds_get_mr()\n  - rds_get_mr_for_dest\n\n* Prior to the code above, the following assumes that cp may be NULL\n  (which is indicative, but could itself be unnecessary)\n\n\ttrans_private = rs->rs_transport->get_mr(\n\t\tsg, nents, rs, &mr->r_key, cp ? cp->cp_conn : NULL,\n\t\targs->vec.addr, args->vec.bytes,\n\t\tneed_odp ? ODP_ZEROBASED : ODP_NOT_NEEDED);\n\n* The code modified by this patch is guarded by IS_ERR(trans_private),\n  where trans_private is assigned as per the previous point in this analysis.\n\n  The only implementation of get_mr that I could locate is rds_ib_get_mr()\n  which can return an ERR_PTR if the conn (4th) argument is NULL.\n\n* ret is set to PTR_ERR(trans_private).\n  rds_ib_get_mr can return ERR_PTR(-ENODEV) if the conn (4th) argument is NULL.\n  Thus ret may be -ENODEV in which case the code in question will execute.\n\nConclusion:\n* cp may be NULL at the point where this patch adds a check;\n  this patch does seem to address a possible bug\n    ",
+		"advisory": {
+			"from": "security@suse.de",
+			"severity": "Moderate",
+			"cve": [
+				{
+					"text": "CVE-2024-35902 at SUSE",
+					"href": "https://www.suse.com/security/cve/CVE-2024-35902/"
+				},
+				{
+					"text": "CVE-2024-35902 at NVD",
+					"href": "https://nvd.nist.gov/vuln/detail/CVE-2024-35902"
+				}
+			],
+			"bugzilla": [
+				{
+					"text": "SUSE bug 1224496",
+					"href": "https://bugzilla.suse.com/1224496"
+				}
+			],
+			"issued": {
+				"date": "2024-05-21"
+			},
+			"updated": {
+				"date": "2024-09-30"
+			},
+			"affected_cpe_list": {
+				"cpe": [
+					"cpe:/o:suse:sle-micro:5.4"
+				]
+			}
+		}
+	},
+	"criteria": {
+		"operator": "AND",
+		"criterias": [
+			{
+				"operator": "OR",
+				"criterions": [
+					{
+						"test_ref": "oval:org.opensuse.security:tst:2009334017",
+						"comment": "kernel-default is not affected"
+					},
+					{
+						"test_ref": "oval:org.opensuse.security:tst:2009705046",
+						"comment": "kernel-rt is not affected"
+					},
+					{
+						"test_ref": "oval:org.opensuse.security:tst:2009728712",
+						"comment": "kernel-source-rt is not affected"
+					}
+				]
+			}
+		],
+		"criterions": [
+			{
+				"test_ref": "oval:org.opensuse.security:tst:2009755086",
+				"comment": "SUSE Linux Enterprise Micro 5.4 is installed"
+			}
+		]
+	}
+}

@@ -1,0 +1,128 @@
+{
+	"id": "oval:org.opensuse.security:def:202147555",
+	"version": "1",
+	"class": "vulnerability",
+	"metadata": {
+		"title": "CVE-2021-47555",
+		"affected": {
+			"family": "unix",
+			"platform": [
+				"SUSE Linux Enterprise Micro 5.1"
+			]
+		},
+		"reference": [
+			{
+				"ref_id": "Mitre CVE-2021-47555",
+				"ref_url": "https://cve.mitre.org/cgi-bin/cvename.cgi?name=CVE-2021-47555",
+				"source": "CVE"
+			},
+			{
+				"ref_id": "SUSE CVE-2021-47555",
+				"ref_url": "https://www.suse.com/security/cve/CVE-2021-47555",
+				"source": "SUSE CVE"
+			},
+			{
+				"ref_id": "SUSE-SU-2024:2008-1",
+				"ref_url": "https://lists.suse.com/pipermail/sle-updates/2024-June/035569.html",
+				"source": "SUSE-SU"
+			},
+			{
+				"ref_id": "SUSE-SU-2024:2019-1",
+				"ref_url": "https://lists.suse.com/pipermail/sle-updates/2024-June/035578.html",
+				"source": "SUSE-SU"
+			},
+			{
+				"ref_id": "SUSE-SU-2024:2190-1",
+				"ref_url": "https://lists.suse.com/pipermail/sle-updates/2024-June/035732.html",
+				"source": "SUSE-SU"
+			},
+			{
+				"ref_id": "SUSE-SU-2024:2372-1",
+				"ref_url": "https://lists.suse.com/pipermail/sle-updates/2024-July/035868.html",
+				"source": "SUSE-SU"
+			},
+			{
+				"ref_id": "SUSE-SU-2024:2385-1",
+				"ref_url": "https://lists.suse.com/pipermail/sle-updates/2024-July/035905.html",
+				"source": "SUSE-SU"
+			},
+			{
+				"ref_id": "SUSE-SU-2024:2394-1",
+				"ref_url": "https://lists.suse.com/pipermail/sle-updates/2024-July/035907.html",
+				"source": "SUSE-SU"
+			},
+			{
+				"ref_id": "SUSE-SU-2024:2495-1",
+				"ref_url": "https://lists.suse.com/pipermail/sle-security-updates/2024-July/018982.html",
+				"source": "SUSE-SU"
+			},
+			{
+				"ref_id": "SUSE-SU-2024:2939-1",
+				"ref_url": "https://lists.suse.com/pipermail/sle-security-updates/2024-August/019211.html",
+				"source": "SUSE-SU"
+			}
+		],
+		"description": "\n    In the Linux kernel, the following vulnerability has been resolved:\n\nnet: vlan: fix underflow for the real_dev refcnt\n\nInject error before dev_hold(real_dev) in register_vlan_dev(),\nand execute the following testcase:\n\nip link add dev dummy1 type dummy\nip link add name dummy1.100 link dummy1 type vlan id 100\nip link del dev dummy1\n\nWhen the dummy netdevice is removed, we will get a WARNING as following:\n\n=======================================================================\nrefcount_t: decrement hit 0; leaking memory.\nWARNING: CPU: 2 PID: 0 at lib/refcount.c:31 refcount_warn_saturate+0xbf/0x1e0\n\nand an endless loop of:\n\n=======================================================================\nunregister_netdevice: waiting for dummy1 to become free. Usage count = -1073741824\n\nThat is because dev_put(real_dev) in vlan_dev_free() be called without\ndev_hold(real_dev) in register_vlan_dev(). It makes the refcnt of real_dev\nunderflow.\n\nMove the dev_hold(real_dev) to vlan_dev_init() which is the call-back of\nndo_init(). That makes dev_hold() and dev_put() for vlan's real_dev\nsymmetrical.\n    ",
+		"advisory": {
+			"from": "security@suse.de",
+			"severity": "Moderate",
+			"cve": [
+				{
+					"text": "CVE-2021-47555 at SUSE",
+					"href": "https://www.suse.com/security/cve/CVE-2021-47555/",
+					"impact": "medium",
+					"cvss3": "4.4/CVSS:3.1/AV:L/AC:L/PR:L/UI:N/S:U/C:L/I:N/A:L"
+				},
+				{
+					"text": "CVE-2021-47555 at NVD",
+					"href": "https://nvd.nist.gov/vuln/detail/CVE-2021-47555"
+				}
+			],
+			"bugzilla": [
+				{
+					"text": "SUSE bug 1225467",
+					"href": "https://bugzilla.suse.com/1225467"
+				}
+			],
+			"issued": {
+				"date": "2024-05-29"
+			},
+			"updated": {
+				"date": "2024-08-17"
+			},
+			"affected_cpe_list": {
+				"cpe": [
+					"cpe:/o:suse:suse-microos:5.1"
+				]
+			}
+		}
+	},
+	"criteria": {
+		"operator": "AND",
+		"criterias": [
+			{
+				"operator": "OR",
+				"criterions": [
+					{
+						"test_ref": "oval:org.opensuse.security:tst:2009334017",
+						"comment": "kernel-default is not affected"
+					},
+					{
+						"test_ref": "oval:org.opensuse.security:tst:2009705046",
+						"comment": "kernel-rt is not affected"
+					},
+					{
+						"test_ref": "oval:org.opensuse.security:tst:2009728712",
+						"comment": "kernel-source-rt is not affected"
+					}
+				]
+			}
+		],
+		"criterions": [
+			{
+				"test_ref": "oval:org.opensuse.security:tst:2009669964",
+				"comment": "SUSE Linux Enterprise Micro 5.1 is installed"
+			}
+		]
+	}
+}

@@ -1,0 +1,142 @@
+{
+	"id": "oval:org.opensuse.security:def:202147007",
+	"version": "1",
+	"class": "vulnerability",
+	"metadata": {
+		"title": "CVE-2021-47007",
+		"affected": {
+			"family": "unix",
+			"platform": [
+				"SUSE Linux Enterprise Micro 5.0",
+				"SUSE Linux Enterprise Micro 5.1",
+				"SUSE Linux Enterprise Micro 5.2",
+				"SUSE Linux Enterprise Micro 5.3",
+				"SUSE Linux Enterprise Micro 5.4",
+				"SUSE Linux Enterprise Micro 5.5"
+			]
+		},
+		"reference": [
+			{
+				"ref_id": "Mitre CVE-2021-47007",
+				"ref_url": "https://cve.mitre.org/cgi-bin/cvename.cgi?name=CVE-2021-47007",
+				"source": "CVE"
+			},
+			{
+				"ref_id": "SUSE CVE-2021-47007",
+				"ref_url": "https://www.suse.com/security/cve/CVE-2021-47007",
+				"source": "SUSE CVE"
+			}
+		],
+		"description": "\n    In the Linux kernel, the following vulnerability has been resolved:\n\nf2fs: fix panic during f2fs_resize_fs()\n\nf2fs_resize_fs() hangs in below callstack with testcase:\n- mkfs 16GB image & mount image\n- dd 8GB fileA\n- dd 8GB fileB\n- sync\n- rm fileA\n- sync\n- resize filesystem to 8GB\n\nkernel BUG at segment.c:2484!\nCall Trace:\n allocate_segment_by_default+0x92/0xf0 [f2fs]\n f2fs_allocate_data_block+0x44b/0x7e0 [f2fs]\n do_write_page+0x5a/0x110 [f2fs]\n f2fs_outplace_write_data+0x55/0x100 [f2fs]\n f2fs_do_write_data_page+0x392/0x850 [f2fs]\n move_data_page+0x233/0x320 [f2fs]\n do_garbage_collect+0x14d9/0x1660 [f2fs]\n free_segment_range+0x1f7/0x310 [f2fs]\n f2fs_resize_fs+0x118/0x330 [f2fs]\n __f2fs_ioctl+0x487/0x3680 [f2fs]\n __x64_sys_ioctl+0x8e/0xd0\n do_syscall_64+0x33/0x80\n entry_SYSCALL_64_after_hwframe+0x44/0xa9\n\nThe root cause is we forgot to check that whether we have enough space\nin resized filesystem to store all valid blocks in before-resizing\nfilesystem, then allocator will run out-of-space during block migration\nin free_segment_range().\n    ",
+		"advisory": {
+			"from": "security@suse.de",
+			"severity": "Moderate",
+			"cve": [
+				{
+					"text": "CVE-2021-47007 at SUSE",
+					"href": "https://www.suse.com/security/cve/CVE-2021-47007/"
+				},
+				{
+					"text": "CVE-2021-47007 at NVD",
+					"href": "https://nvd.nist.gov/vuln/detail/CVE-2021-47007"
+				}
+			],
+			"bugzilla": [
+				{
+					"text": "SUSE bug 1220691",
+					"href": "https://bugzilla.suse.com/1220691"
+				}
+			],
+			"issued": {
+				"date": "2024-10-18"
+			},
+			"updated": {
+				"date": "2024-10-18"
+			},
+			"affected_cpe_list": {
+				"cpe": [
+					"cpe:/o:suse:sle-micro:5.3",
+					"cpe:/o:suse:sle-micro:5.4",
+					"cpe:/o:suse:sle-micro:5.5",
+					"cpe:/o:suse:suse-microos:5.0",
+					"cpe:/o:suse:suse-microos:5.1",
+					"cpe:/o:suse:suse-microos:5.2"
+				]
+			}
+		}
+	},
+	"criteria": {
+		"operator": "OR",
+		"criterias": [
+			{
+				"operator": "AND",
+				"criterions": [
+					{
+						"test_ref": "oval:org.opensuse.security:tst:2009704855",
+						"comment": "SUSE Linux Enterprise Micro 5.0 is installed"
+					},
+					{
+						"test_ref": "oval:org.opensuse.security:tst:2009334017",
+						"comment": "kernel-default is not affected"
+					}
+				]
+			},
+			{
+				"operator": "AND",
+				"criterions": [
+					{
+						"test_ref": "oval:org.opensuse.security:tst:2009800388",
+						"comment": "SUSE Linux Enterprise Micro 5.5 is installed"
+					},
+					{
+						"test_ref": "oval:org.opensuse.security:tst:2009728712",
+						"comment": "kernel-source-rt is not affected"
+					}
+				]
+			},
+			{
+				"operator": "AND",
+				"criterias": [
+					{
+						"operator": "OR",
+						"criterions": [
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009669964",
+								"comment": "SUSE Linux Enterprise Micro 5.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009681300",
+								"comment": "SUSE Linux Enterprise Micro 5.2 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009728694",
+								"comment": "SUSE Linux Enterprise Micro 5.3 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009755086",
+								"comment": "SUSE Linux Enterprise Micro 5.4 is installed"
+							}
+						]
+					},
+					{
+						"operator": "OR",
+						"criterions": [
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009334017",
+								"comment": "kernel-default is not affected"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009705046",
+								"comment": "kernel-rt is not affected"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009728712",
+								"comment": "kernel-source-rt is not affected"
+							}
+						]
+					}
+				]
+			}
+		]
+	}
+}

@@ -1,0 +1,90 @@
+{
+	"id": "oval:org.opensuse.security:def:202449982",
+	"version": "1",
+	"class": "vulnerability",
+	"metadata": {
+		"title": "CVE-2024-49982",
+		"affected": {
+			"family": "unix",
+			"platform": [
+				"SUSE Linux Enterprise Micro 5.5"
+			]
+		},
+		"reference": [
+			{
+				"ref_id": "Mitre CVE-2024-49982",
+				"ref_url": "https://cve.mitre.org/cgi-bin/cvename.cgi?name=CVE-2024-49982",
+				"source": "CVE"
+			},
+			{
+				"ref_id": "SUSE CVE-2024-49982",
+				"ref_url": "https://www.suse.com/security/cve/CVE-2024-49982",
+				"source": "SUSE CVE"
+			}
+		],
+		"description": "\n    In the Linux kernel, the following vulnerability has been resolved:\n\naoe: fix the potential use-after-free problem in more places\n\nFor fixing CVE-2023-6270, f98364e92662 (\"aoe: fix the potential\nuse-after-free problem in aoecmd_cfg_pkts\") makes tx() calling dev_put()\ninstead of doing in aoecmd_cfg_pkts(). It avoids that the tx() runs\ninto use-after-free.\n\nThen Nicolai Stange found more places in aoe have potential use-after-free\nproblem with tx(). e.g. revalidate(), aoecmd_ata_rw(), resend(), probe()\nand aoecmd_cfg_rsp(). Those functions also use aoenet_xmit() to push\npacket to tx queue. So they should also use dev_hold() to increase the\nrefcnt of skb->dev.\n\nOn the other hand, moving dev_put() to tx() causes that the refcnt of\nskb->dev be reduced to a negative value, because corresponding\ndev_hold() are not called in revalidate(), aoecmd_ata_rw(), resend(),\nprobe(), and aoecmd_cfg_rsp(). This patch fixed this issue.\n    ",
+		"advisory": {
+			"from": "security@suse.de",
+			"severity": "Moderate",
+			"cve": [
+				{
+					"text": "CVE-2024-49982 at SUSE",
+					"href": "https://www.suse.com/security/cve/CVE-2024-49982/",
+					"impact": "medium",
+					"cvss3": "5.5/CVSS:3.1/AV:L/AC:L/PR:L/UI:N/S:U/C:N/I:N/A:H"
+				},
+				{
+					"text": "CVE-2024-49982 at NVD",
+					"href": "https://nvd.nist.gov/vuln/detail/CVE-2024-49982",
+					"impact": "high",
+					"cvss3": "7.8/CVSS:3.1/AV:L/AC:L/PR:L/UI:N/S:U/C:H/I:H/A:H"
+				}
+			],
+			"bugzilla": [
+				{
+					"text": "SUSE bug 1232097",
+					"href": "https://bugzilla.suse.com/1232097"
+				}
+			],
+			"issued": {
+				"date": "2024-10-27"
+			},
+			"updated": {
+				"date": "2024-10-27"
+			},
+			"affected_cpe_list": {
+				"cpe": [
+					"cpe:/o:suse:sle-micro:5.5"
+				]
+			}
+		}
+	},
+	"criteria": {
+		"operator": "AND",
+		"criterias": [
+			{
+				"operator": "OR",
+				"criterions": [
+					{
+						"test_ref": "oval:org.opensuse.security:tst:2009334017",
+						"comment": "kernel-default is not affected"
+					},
+					{
+						"test_ref": "oval:org.opensuse.security:tst:2009333928",
+						"comment": "kernel-source is not affected"
+					},
+					{
+						"test_ref": "oval:org.opensuse.security:tst:2009728712",
+						"comment": "kernel-source-rt is not affected"
+					}
+				]
+			}
+		],
+		"criterions": [
+			{
+				"test_ref": "oval:org.opensuse.security:tst:2009800388",
+				"comment": "SUSE Linux Enterprise Micro 5.5 is installed"
+			}
+		]
+	}
+}

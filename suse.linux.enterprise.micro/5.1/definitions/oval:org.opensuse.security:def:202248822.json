@@ -1,0 +1,148 @@
+{
+	"id": "oval:org.opensuse.security:def:202248822",
+	"version": "1",
+	"class": "vulnerability",
+	"metadata": {
+		"title": "CVE-2022-48822",
+		"affected": {
+			"family": "unix",
+			"platform": [
+				"SUSE Linux Enterprise Micro 5.1"
+			]
+		},
+		"reference": [
+			{
+				"ref_id": "Mitre CVE-2022-48822",
+				"ref_url": "https://cve.mitre.org/cgi-bin/cvename.cgi?name=CVE-2022-48822",
+				"source": "CVE"
+			},
+			{
+				"ref_id": "SUSE CVE-2022-48822",
+				"ref_url": "https://www.suse.com/security/cve/CVE-2022-48822",
+				"source": "SUSE CVE"
+			},
+			{
+				"ref_id": "SUSE-SU-2024:2893-1",
+				"ref_url": "https://lists.suse.com/pipermail/sle-security-updates/2024-August/019187.html",
+				"source": "SUSE-SU"
+			},
+			{
+				"ref_id": "SUSE-SU-2024:2894-1",
+				"ref_url": "https://lists.suse.com/pipermail/sle-updates/2024-August/036430.html",
+				"source": "SUSE-SU"
+			},
+			{
+				"ref_id": "SUSE-SU-2024:2902-1",
+				"ref_url": "https://lists.suse.com/pipermail/sle-updates/2024-August/036443.html",
+				"source": "SUSE-SU"
+			},
+			{
+				"ref_id": "SUSE-SU-2024:2929-1",
+				"ref_url": "https://lists.suse.com/pipermail/sle-updates/2024-August/036473.html",
+				"source": "SUSE-SU"
+			},
+			{
+				"ref_id": "SUSE-SU-2024:2939-1",
+				"ref_url": "https://lists.suse.com/pipermail/sle-security-updates/2024-August/019211.html",
+				"source": "SUSE-SU"
+			},
+			{
+				"ref_id": "SUSE-SU-2024:2947-1",
+				"ref_url": "https://lists.suse.com/pipermail/sle-updates/2024-August/036488.html",
+				"source": "SUSE-SU"
+			},
+			{
+				"ref_id": "SUSE-SU-2024:2948-1",
+				"ref_url": "https://lists.suse.com/pipermail/sle-security-updates/2024-August/019219.html",
+				"source": "SUSE-SU"
+			},
+			{
+				"ref_id": "SUSE-SU-2024:3189-1",
+				"ref_url": "https://lists.suse.com/pipermail/sle-security-updates/2024-September/019404.html",
+				"source": "SUSE-SU"
+			},
+			{
+				"ref_id": "SUSE-SU-2024:3251-1",
+				"ref_url": "https://lists.suse.com/pipermail/sle-updates/2024-September/036895.html",
+				"source": "SUSE-SU"
+			},
+			{
+				"ref_id": "SUSE-SU-2024:3252-1",
+				"ref_url": "https://lists.suse.com/pipermail/sle-updates/2024-September/036896.html",
+				"source": "SUSE-SU"
+			}
+		],
+		"description": "\n    In the Linux kernel, the following vulnerability has been resolved:\n\nusb: f_fs: Fix use-after-free for epfile\n\nConsider a case where ffs_func_eps_disable is called from\nffs_func_disable as part of composition switch and at the\nsame time ffs_epfile_release get called from userspace.\nffs_epfile_release will free up the read buffer and call\nffs_data_closed which in turn destroys ffs->epfiles and\nmark it as NULL. While this was happening the driver has\nalready initialized the local epfile in ffs_func_eps_disable\nwhich is now freed and waiting to acquire the spinlock. Once\nspinlock is acquired the driver proceeds with the stale value\nof epfile and tries to free the already freed read buffer\ncausing use-after-free.\n\nFollowing is the illustration of the race:\n\n      CPU1                                  CPU2\n\n   ffs_func_eps_disable\n   epfiles (local copy)\n\t\t\t\t\tffs_epfile_release\n\t\t\t\t\tffs_data_closed\n\t\t\t\t\tif (last file closed)\n\t\t\t\t\tffs_data_reset\n\t\t\t\t\tffs_data_clear\n\t\t\t\t\tffs_epfiles_destroy\nspin_lock\ndereference epfiles\n\nFix this races by taking epfiles local copy & assigning it under\nspinlock and if epfiles(local) is null then update it in ffs->epfiles\nthen finally destroy it.\nExtending the scope further from the race, protecting the ep related\nstructures, and concurrent accesses.\n    ",
+		"advisory": {
+			"from": "security@suse.de",
+			"severity": "Moderate",
+			"cve": [
+				{
+					"text": "CVE-2022-48822 at SUSE",
+					"href": "https://www.suse.com/security/cve/CVE-2022-48822/",
+					"impact": "high",
+					"cvss3": "7/CVSS:3.1/AV:L/AC:H/PR:L/UI:N/S:U/C:H/I:H/A:H"
+				},
+				{
+					"text": "CVE-2022-48822 at NVD",
+					"href": "https://nvd.nist.gov/vuln/detail/CVE-2022-48822",
+					"impact": "high",
+					"cvss3": "7.8/CVSS:3.1/AV:L/AC:L/PR:L/UI:N/S:U/C:H/I:H/A:H"
+				}
+			],
+			"bugzilla": [
+				{
+					"text": "SUSE bug 1228040",
+					"href": "https://bugzilla.suse.com/1228040"
+				},
+				{
+					"text": "SUSE bug 1228136",
+					"href": "https://bugzilla.suse.com/1228136"
+				}
+			],
+			"issued": {
+				"date": "2024-08-14"
+			},
+			"updated": {
+				"date": "2024-09-17"
+			},
+			"affected_cpe_list": {
+				"cpe": [
+					"cpe:/o:suse:suse-microos:5.1"
+				]
+			}
+		}
+	},
+	"criteria": {
+		"operator": "AND",
+		"criterias": [
+			{
+				"operator": "OR",
+				"criterions": [
+					{
+						"test_ref": "oval:org.opensuse.security:tst:2009880168",
+						"comment": "kernel-default-5.3.18-150300.59.170.1 is installed"
+					},
+					{
+						"test_ref": "oval:org.opensuse.security:tst:2009880169",
+						"comment": "kernel-default-base-5.3.18-150300.59.170.1.150300.18.100.1 is installed"
+					},
+					{
+						"test_ref": "oval:org.opensuse.security:tst:2009879396",
+						"comment": "kernel-rt-5.3.18-150300.178.1 is installed"
+					},
+					{
+						"test_ref": "oval:org.opensuse.security:tst:2009879397",
+						"comment": "kernel-source-rt-5.3.18-150300.178.1 is installed"
+					}
+				]
+			}
+		],
+		"criterions": [
+			{
+				"test_ref": "oval:org.opensuse.security:tst:2009669964",
+				"comment": "SUSE Linux Enterprise Micro 5.1 is installed"
+			}
+		]
+	}
+}

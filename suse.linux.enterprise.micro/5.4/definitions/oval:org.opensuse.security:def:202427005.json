@@ -1,0 +1,88 @@
+{
+	"id": "oval:org.opensuse.security:def:202427005",
+	"version": "1",
+	"class": "vulnerability",
+	"metadata": {
+		"title": "CVE-2024-27005",
+		"affected": {
+			"family": "unix",
+			"platform": [
+				"SUSE Linux Enterprise Micro 5.4"
+			]
+		},
+		"reference": [
+			{
+				"ref_id": "Mitre CVE-2024-27005",
+				"ref_url": "https://cve.mitre.org/cgi-bin/cvename.cgi?name=CVE-2024-27005",
+				"source": "CVE"
+			},
+			{
+				"ref_id": "SUSE CVE-2024-27005",
+				"ref_url": "https://www.suse.com/security/cve/CVE-2024-27005",
+				"source": "SUSE CVE"
+			}
+		],
+		"description": "\n    In the Linux kernel, the following vulnerability has been resolved:\n\ninterconnect: Don't access req_list while it's being manipulated\n\nThe icc_lock mutex was split into separate icc_lock and icc_bw_lock\nmutexes in [1] to avoid lockdep splats. However, this didn't adequately\nprotect access to icc_node::req_list.\n\nThe icc_set_bw() function will eventually iterate over req_list while\nonly holding icc_bw_lock, but req_list can be modified while only\nholding icc_lock. This causes races between icc_set_bw(), of_icc_get(),\nand icc_put().\n\nExample A:\n\n  CPU0                               CPU1\n  ----                               ----\n  icc_set_bw(path_a)\n    mutex_lock(&icc_bw_lock);\n                                     icc_put(path_b)\n                                       mutex_lock(&icc_lock);\n    aggregate_requests()\n      hlist_for_each_entry(r, ...\n                                       hlist_del(...\n        <r = invalid pointer>\n\nExample B:\n\n  CPU0                               CPU1\n  ----                               ----\n  icc_set_bw(path_a)\n    mutex_lock(&icc_bw_lock);\n                                     path_b = of_icc_get()\n                                       of_icc_get_by_index()\n                                         mutex_lock(&icc_lock);\n                                         path_find()\n                                           path_init()\n    aggregate_requests()\n      hlist_for_each_entry(r, ...\n                                             hlist_add_head(...\n        <r = invalid pointer>\n\nFix this by ensuring icc_bw_lock is always held before manipulating\nicc_node::req_list. The additional places icc_bw_lock is held don't\nperform any memory allocations, so we should still be safe from the\noriginal lockdep splats that motivated the separate locks.\n\n[1] commit af42269c3523 (\"interconnect: Fix locking for runpm vs reclaim\")\n    ",
+		"advisory": {
+			"from": "security@suse.de",
+			"severity": "Moderate",
+			"cve": [
+				{
+					"text": "CVE-2024-27005 at SUSE",
+					"href": "https://www.suse.com/security/cve/CVE-2024-27005/",
+					"impact": "medium",
+					"cvss3": "5.5/CVSS:3.1/AV:L/AC:L/PR:L/UI:N/S:U/C:N/I:N/A:H"
+				},
+				{
+					"text": "CVE-2024-27005 at NVD",
+					"href": "https://nvd.nist.gov/vuln/detail/CVE-2024-27005"
+				}
+			],
+			"bugzilla": [
+				{
+					"text": "SUSE bug 1223800",
+					"href": "https://bugzilla.suse.com/1223800"
+				}
+			],
+			"issued": {
+				"date": "2024-05-04"
+			},
+			"updated": {
+				"date": "2024-05-04"
+			},
+			"affected_cpe_list": {
+				"cpe": [
+					"cpe:/o:suse:sle-micro:5.4"
+				]
+			}
+		}
+	},
+	"criteria": {
+		"operator": "AND",
+		"criterias": [
+			{
+				"operator": "OR",
+				"criterions": [
+					{
+						"test_ref": "oval:org.opensuse.security:tst:2009334017",
+						"comment": "kernel-default is not affected"
+					},
+					{
+						"test_ref": "oval:org.opensuse.security:tst:2009705046",
+						"comment": "kernel-rt is not affected"
+					},
+					{
+						"test_ref": "oval:org.opensuse.security:tst:2009728712",
+						"comment": "kernel-source-rt is not affected"
+					}
+				]
+			}
+		],
+		"criterions": [
+			{
+				"test_ref": "oval:org.opensuse.security:tst:2009755086",
+				"comment": "SUSE Linux Enterprise Micro 5.4 is installed"
+			}
+		]
+	}
+}

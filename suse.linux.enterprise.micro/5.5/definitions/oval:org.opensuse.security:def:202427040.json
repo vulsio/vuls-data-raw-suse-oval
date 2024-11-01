@@ -1,0 +1,73 @@
+{
+	"id": "oval:org.opensuse.security:def:202427040",
+	"version": "1",
+	"class": "vulnerability",
+	"metadata": {
+		"title": "CVE-2024-27040",
+		"affected": {
+			"family": "unix",
+			"platform": [
+				"SUSE Linux Enterprise Micro 5.5"
+			]
+		},
+		"reference": [
+			{
+				"ref_id": "Mitre CVE-2024-27040",
+				"ref_url": "https://cve.mitre.org/cgi-bin/cvename.cgi?name=CVE-2024-27040",
+				"source": "CVE"
+			},
+			{
+				"ref_id": "SUSE CVE-2024-27040",
+				"ref_url": "https://www.suse.com/security/cve/CVE-2024-27040",
+				"source": "SUSE CVE"
+			}
+		],
+		"description": "\n    In the Linux kernel, the following vulnerability has been resolved:\n\ndrm/amd/display: Add 'replay' NULL check in 'edp_set_replay_allow_active()'\n\nIn the first if statement, we're checking if 'replay' is NULL. But in\nthe second if statement, we're not checking if 'replay' is NULL again\nbefore calling replay->funcs->replay_set_power_opt().\n\nif (replay == NULL && force_static)\n    return false;\n\n...\n\nif (link->replay_settings.replay_feature_enabled &&\n    replay->funcs->replay_set_power_opt) {\n\treplay->funcs->replay_set_power_opt(replay, *power_opts, panel_inst);\n\tlink->replay_settings.replay_power_opt_active = *power_opts;\n}\n\nIf 'replay' is NULL, this will cause a null pointer dereference.\n\nFixes the below found by smatch:\ndrivers/gpu/drm/amd/amdgpu/../display/dc/link/protocols/link_edp_panel_control.c:895 edp_set_replay_allow_active() error: we previously assumed 'replay' could be null (see line 887)\n    ",
+		"advisory": {
+			"from": "security@suse.de",
+			"severity": "Moderate",
+			"cve": [
+				{
+					"text": "CVE-2024-27040 at SUSE",
+					"href": "https://www.suse.com/security/cve/CVE-2024-27040/",
+					"impact": "medium",
+					"cvss3": "5.5/CVSS:3.1/AV:L/AC:L/PR:L/UI:N/S:U/C:N/I:N/A:H"
+				},
+				{
+					"text": "CVE-2024-27040 at NVD",
+					"href": "https://nvd.nist.gov/vuln/detail/CVE-2024-27040"
+				}
+			],
+			"bugzilla": [
+				{
+					"text": "SUSE bug 1223711",
+					"href": "https://bugzilla.suse.com/1223711"
+				}
+			],
+			"issued": {
+				"date": "2024-05-03"
+			},
+			"updated": {
+				"date": "2024-05-03"
+			},
+			"affected_cpe_list": {
+				"cpe": [
+					"cpe:/o:suse:sle-micro:5.5"
+				]
+			}
+		}
+	},
+	"criteria": {
+		"operator": "AND",
+		"criterions": [
+			{
+				"test_ref": "oval:org.opensuse.security:tst:2009800388",
+				"comment": "SUSE Linux Enterprise Micro 5.5 is installed"
+			},
+			{
+				"test_ref": "oval:org.opensuse.security:tst:2009728712",
+				"comment": "kernel-source-rt is not affected"
+			}
+		]
+	}
+}

@@ -1,0 +1,180 @@
+{
+	"id": "oval:org.opensuse.security:def:202147189",
+	"version": "1",
+	"class": "vulnerability",
+	"metadata": {
+		"title": "CVE-2021-47189",
+		"affected": {
+			"family": "unix",
+			"platform": [
+				"openSUSE Leap Micro 5.4"
+			]
+		},
+		"reference": [
+			{
+				"ref_id": "Mitre CVE-2021-47189",
+				"ref_url": "https://cve.mitre.org/cgi-bin/cvename.cgi?name=CVE-2021-47189",
+				"source": "CVE"
+			},
+			{
+				"ref_id": "SUSE CVE-2021-47189",
+				"ref_url": "https://www.suse.com/security/cve/CVE-2021-47189",
+				"source": "SUSE CVE"
+			},
+			{
+				"ref_id": "SUSE-SU-2024:1454-1",
+				"ref_url": "https://lists.suse.com/pipermail/sle-updates/2024-April/035109.html",
+				"source": "SUSE-SU"
+			},
+			{
+				"ref_id": "SUSE-SU-2024:1465-1",
+				"ref_url": "https://lists.suse.com/pipermail/sle-security-updates/2024-August/019273.html",
+				"source": "SUSE-SU"
+			},
+			{
+				"ref_id": "SUSE-SU-2024:1489-1",
+				"ref_url": "https://lists.suse.com/pipermail/sle-security-updates/2024-August/019270.html",
+				"source": "SUSE-SU"
+			},
+			{
+				"ref_id": "SUSE-SU-2024:1490-1",
+				"ref_url": "https://lists.suse.com/pipermail/sle-updates/2024-May/035140.html",
+				"source": "SUSE-SU"
+			},
+			{
+				"ref_id": "SUSE-SU-2024:1641-1",
+				"ref_url": "https://lists.suse.com/pipermail/sle-updates/2024-May/035266.html",
+				"source": "SUSE-SU"
+			},
+			{
+				"ref_id": "SUSE-SU-2024:1643-1",
+				"ref_url": "https://lists.suse.com/pipermail/sle-updates/2024-May/035264.html",
+				"source": "SUSE-SU"
+			},
+			{
+				"ref_id": "SUSE-SU-2024:1646-1",
+				"ref_url": "https://lists.suse.com/pipermail/sle-updates/2024-May/035261.html",
+				"source": "SUSE-SU"
+			},
+			{
+				"ref_id": "SUSE-SU-2024:1647-1",
+				"ref_url": "https://lists.suse.com/pipermail/sle-updates/2024-May/035260.html",
+				"source": "SUSE-SU"
+			},
+			{
+				"ref_id": "SUSE-SU-2024:1648-1",
+				"ref_url": "https://lists.suse.com/pipermail/sle-updates/2024-May/035259.html",
+				"source": "SUSE-SU"
+			},
+			{
+				"ref_id": "SUSE-SU-2024:1648-2",
+				"ref_url": "https://lists.suse.com/pipermail/sle-updates/2024-May/035319.html",
+				"source": "SUSE-SU"
+			},
+			{
+				"ref_id": "SUSE-SU-2024:1659-1",
+				"ref_url": "https://lists.suse.com/pipermail/sle-updates/2024-May/035281.html",
+				"source": "SUSE-SU"
+			},
+			{
+				"ref_id": "SUSE-SU-2024:1663-1",
+				"ref_url": "https://lists.suse.com/pipermail/sle-security-updates/2024-August/019268.html",
+				"source": "SUSE-SU"
+			},
+			{
+				"ref_id": "SUSE-SU-2024:1870-1",
+				"ref_url": "https://lists.suse.com/pipermail/sle-updates/2024-May/035427.html",
+				"source": "SUSE-SU"
+			}
+		],
+		"description": "\n    In the Linux kernel, the following vulnerability has been resolved:\n\nbtrfs: fix memory ordering between normal and ordered work functions\n\nOrdered work functions aren't guaranteed to be handled by the same thread\nwhich executed the normal work functions. The only way execution between\nnormal/ordered functions is synchronized is via the WORK_DONE_BIT,\nunfortunately the used bitops don't guarantee any ordering whatsoever.\n\nThis manifested as seemingly inexplicable crashes on ARM64, where\nasync_chunk::inode is seen as non-null in async_cow_submit which causes\nsubmit_compressed_extents to be called and crash occurs because\nasync_chunk::inode suddenly became NULL. The call trace was similar to:\n\n    pc : submit_compressed_extents+0x38/0x3d0\n    lr : async_cow_submit+0x50/0xd0\n    sp : ffff800015d4bc20\n\n    <registers omitted for brevity>\n\n    Call trace:\n     submit_compressed_extents+0x38/0x3d0\n     async_cow_submit+0x50/0xd0\n     run_ordered_work+0xc8/0x280\n     btrfs_work_helper+0x98/0x250\n     process_one_work+0x1f0/0x4ac\n     worker_thread+0x188/0x504\n     kthread+0x110/0x114\n     ret_from_fork+0x10/0x18\n\nFix this by adding respective barrier calls which ensure that all\naccesses preceding setting of WORK_DONE_BIT are strictly ordered before\nsetting the flag. At the same time add a read barrier after reading of\nWORK_DONE_BIT in run_ordered_work which ensures all subsequent loads\nwould be strictly ordered after reading the bit. This in turn ensures\nare all accesses before WORK_DONE_BIT are going to be strictly ordered\nbefore any access that can occur in ordered_func.\n    ",
+		"advisory": {
+			"from": "security@suse.de",
+			"severity": "Moderate",
+			"cve": [
+				{
+					"text": "CVE-2021-47189 at SUSE",
+					"href": "https://www.suse.com/security/cve/CVE-2021-47189/",
+					"impact": "medium",
+					"cvss3": "5.5/CVSS:3.1/AV:L/AC:L/PR:L/UI:N/S:U/C:N/I:N/A:H"
+				},
+				{
+					"text": "CVE-2021-47189 at NVD",
+					"href": "https://nvd.nist.gov/vuln/detail/CVE-2021-47189"
+				}
+			],
+			"bugzilla": [
+				{
+					"text": "SUSE bug 1222706",
+					"href": "https://bugzilla.suse.com/1222706"
+				}
+			],
+			"issued": {
+				"date": "2024-05-15"
+			},
+			"updated": {
+				"date": "2024-08-20"
+			},
+			"affected_cpe_list": {
+				"cpe": [
+					"cpe:/o:opensuse:leap-micro:5.4"
+				]
+			}
+		}
+	},
+	"criteria": {
+		"operator": "AND",
+		"criterias": [
+			{
+				"operator": "OR",
+				"criterias": [
+					{
+						"operator": "AND",
+						"criterions": [
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009861083",
+								"comment": "kernel-default-5.14.21-150400.24.119.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009151354",
+								"comment": "kernel-default is signed with openSUSE key"
+							}
+						]
+					},
+					{
+						"operator": "AND",
+						"criterions": [
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009860903",
+								"comment": "kernel-default-base-5.14.21-150400.24.119.1.150400.24.56.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009151960",
+								"comment": "kernel-default-base is signed with openSUSE key"
+							}
+						]
+					},
+					{
+						"operator": "AND",
+						"criterions": [
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009861084",
+								"comment": "kernel-rt-5.14.21-150400.15.79.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009342860",
+								"comment": "kernel-rt is signed with openSUSE key"
+							}
+						]
+					}
+				]
+			}
+		],
+		"criterions": [
+			{
+				"test_ref": "oval:org.opensuse.security:tst:2009799818",
+				"comment": "openSUSE Leap Micro 5.4 is installed"
+			}
+		]
+	}
+}

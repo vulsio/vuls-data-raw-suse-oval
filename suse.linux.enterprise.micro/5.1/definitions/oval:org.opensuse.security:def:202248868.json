@@ -1,0 +1,115 @@
+{
+	"id": "oval:org.opensuse.security:def:202248868",
+	"version": "1",
+	"class": "vulnerability",
+	"metadata": {
+		"title": "CVE-2022-48868",
+		"affected": {
+			"family": "unix",
+			"platform": [
+				"SUSE Linux Enterprise Micro 5.1"
+			]
+		},
+		"reference": [
+			{
+				"ref_id": "Mitre CVE-2022-48868",
+				"ref_url": "https://cve.mitre.org/cgi-bin/cvename.cgi?name=CVE-2022-48868",
+				"source": "CVE"
+			},
+			{
+				"ref_id": "SUSE CVE-2022-48868",
+				"ref_url": "https://www.suse.com/security/cve/CVE-2022-48868",
+				"source": "SUSE CVE"
+			},
+			{
+				"ref_id": "SUSE-SU-2024:3190-1",
+				"ref_url": "https://lists.suse.com/pipermail/sle-security-updates/2024-September/019403.html",
+				"source": "SUSE-SU"
+			},
+			{
+				"ref_id": "SUSE-SU-2024:3209-1",
+				"ref_url": "https://lists.suse.com/pipermail/sle-updates/2024-September/036854.html",
+				"source": "SUSE-SU"
+			},
+			{
+				"ref_id": "SUSE-SU-2024:3227-1",
+				"ref_url": "https://lists.suse.com/pipermail/sle-updates/2024-September/036874.html",
+				"source": "SUSE-SU"
+			},
+			{
+				"ref_id": "SUSE-SU-2024:3408-1",
+				"ref_url": "https://lists.suse.com/pipermail/sle-updates/2024-September/037033.html",
+				"source": "SUSE-SU"
+			},
+			{
+				"ref_id": "SUSE-SU-2024:3483-1",
+				"ref_url": "https://lists.suse.com/pipermail/sle-updates/2024-September/037089.html",
+				"source": "SUSE-SU"
+			}
+		],
+		"description": "\n    In the Linux kernel, the following vulnerability has been resolved:\n\ndmaengine: idxd: Let probe fail when workqueue cannot be enabled\n\nThe workqueue is enabled when the appropriate driver is loaded and\ndisabled when the driver is removed. When the driver is removed it\nassumes that the workqueue was enabled successfully and proceeds to\nfree allocations made during workqueue enabling.\n\nFailure during workqueue enabling does not prevent the driver from\nbeing loaded. This is because the error path within drv_enable_wq()\nreturns success unless a second failure is encountered\nduring the error path. By returning success it is possible to load\nthe driver even if the workqueue cannot be enabled and\nallocations that do not exist are attempted to be freed during\ndriver remove.\n\nSome examples of problematic flows:\n(a)\n\n idxd_dmaengine_drv_probe() -> drv_enable_wq() -> idxd_wq_request_irq():\n In above flow, if idxd_wq_request_irq() fails then\n idxd_wq_unmap_portal() is called on error exit path, but\n drv_enable_wq() returns 0 because idxd_wq_disable() succeeds. The\n driver is thus loaded successfully.\n\n idxd_dmaengine_drv_remove()->drv_disable_wq()->idxd_wq_unmap_portal()\n Above flow on driver unload triggers the WARN in devm_iounmap() because\n the device resource has already been removed during error path of\n drv_enable_wq().\n\n(b)\n\n idxd_dmaengine_drv_probe() -> drv_enable_wq() -> idxd_wq_request_irq():\n In above flow, if idxd_wq_request_irq() fails then\n idxd_wq_init_percpu_ref() is never called to initialize the percpu\n counter, yet the driver loads successfully because drv_enable_wq()\n returns 0.\n\n idxd_dmaengine_drv_remove()->__idxd_wq_quiesce()->percpu_ref_kill():\n Above flow on driver unload triggers a BUG when attempting to drop the\n initial ref of the uninitialized percpu ref:\n BUG: kernel NULL pointer dereference, address: 0000000000000010\n\nFix the drv_enable_wq() error path by returning the original error that\nindicates failure of workqueue enabling. This ensures that the probe\nfails when an error is encountered and the driver remove paths are only\nattempted when the workqueue was enabled successfully.\n    ",
+		"advisory": {
+			"from": "security@suse.de",
+			"severity": "Moderate",
+			"cve": [
+				{
+					"text": "CVE-2022-48868 at SUSE",
+					"href": "https://www.suse.com/security/cve/CVE-2022-48868/",
+					"impact": "medium",
+					"cvss3": "5.5/CVSS:3.1/AV:L/AC:L/PR:L/UI:N/S:U/C:N/I:N/A:H"
+				},
+				{
+					"text": "CVE-2022-48868 at NVD",
+					"href": "https://nvd.nist.gov/vuln/detail/CVE-2022-48868",
+					"impact": "medium",
+					"cvss3": "5.5/CVSS:3.1/AV:L/AC:L/PR:L/UI:N/S:U/C:N/I:N/A:H"
+				}
+			],
+			"bugzilla": [
+				{
+					"text": "SUSE bug 1229506",
+					"href": "https://bugzilla.suse.com/1229506"
+				}
+			],
+			"issued": {
+				"date": "2024-08-22"
+			},
+			"updated": {
+				"date": "2024-09-30"
+			},
+			"affected_cpe_list": {
+				"cpe": [
+					"cpe:/o:suse:suse-microos:5.1"
+				]
+			}
+		}
+	},
+	"criteria": {
+		"operator": "AND",
+		"criterias": [
+			{
+				"operator": "OR",
+				"criterions": [
+					{
+						"test_ref": "oval:org.opensuse.security:tst:2009334017",
+						"comment": "kernel-default is not affected"
+					},
+					{
+						"test_ref": "oval:org.opensuse.security:tst:2009705046",
+						"comment": "kernel-rt is not affected"
+					},
+					{
+						"test_ref": "oval:org.opensuse.security:tst:2009728712",
+						"comment": "kernel-source-rt is not affected"
+					}
+				]
+			}
+		],
+		"criterions": [
+			{
+				"test_ref": "oval:org.opensuse.security:tst:2009669964",
+				"comment": "SUSE Linux Enterprise Micro 5.1 is installed"
+			}
+		]
+	}
+}

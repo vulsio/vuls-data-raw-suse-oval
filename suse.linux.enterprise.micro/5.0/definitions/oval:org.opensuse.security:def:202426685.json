@@ -1,0 +1,103 @@
+{
+	"id": "oval:org.opensuse.security:def:202426685",
+	"version": "1",
+	"class": "vulnerability",
+	"metadata": {
+		"title": "CVE-2024-26685",
+		"affected": {
+			"family": "unix",
+			"platform": [
+				"SUSE Linux Enterprise Micro 5.0"
+			]
+		},
+		"reference": [
+			{
+				"ref_id": "Mitre CVE-2024-26685",
+				"ref_url": "https://cve.mitre.org/cgi-bin/cvename.cgi?name=CVE-2024-26685",
+				"source": "CVE"
+			},
+			{
+				"ref_id": "SUSE CVE-2024-26685",
+				"ref_url": "https://www.suse.com/security/cve/CVE-2024-26685",
+				"source": "SUSE CVE"
+			},
+			{
+				"ref_id": "SUSE-SU-2024:1490-1",
+				"ref_url": "https://lists.suse.com/pipermail/sle-updates/2024-May/035140.html",
+				"source": "SUSE-SU"
+			},
+			{
+				"ref_id": "SUSE-SU-2024:1659-1",
+				"ref_url": "https://lists.suse.com/pipermail/sle-updates/2024-May/035281.html",
+				"source": "SUSE-SU"
+			},
+			{
+				"ref_id": "SUSE-SU-2024:1663-1",
+				"ref_url": "https://lists.suse.com/pipermail/sle-security-updates/2024-August/019268.html",
+				"source": "SUSE-SU"
+			},
+			{
+				"ref_id": "SUSE-SU-2024:2135-1",
+				"ref_url": "https://lists.suse.com/pipermail/sle-updates/2024-June/035681.html",
+				"source": "SUSE-SU"
+			},
+			{
+				"ref_id": "SUSE-SU-2024:2203-1",
+				"ref_url": "https://lists.suse.com/pipermail/sle-security-updates/2024-August/019244.html",
+				"source": "SUSE-SU"
+			},
+			{
+				"ref_id": "SUSE-SU-2024:2973-1",
+				"ref_url": "https://lists.suse.com/pipermail/sle-security-updates/2024-August/019280.html",
+				"source": "SUSE-SU"
+			}
+		],
+		"description": "\n    In the Linux kernel, the following vulnerability has been resolved:\n\nnilfs2: fix potential bug in end_buffer_async_write\n\nAccording to a syzbot report, end_buffer_async_write(), which handles the\ncompletion of block device writes, may detect abnormal condition of the\nbuffer async_write flag and cause a BUG_ON failure when using nilfs2.\n\nNilfs2 itself does not use end_buffer_async_write().  But, the async_write\nflag is now used as a marker by commit 7f42ec394156 (\"nilfs2: fix issue\nwith race condition of competition between segments for dirty blocks\") as\na means of resolving double list insertion of dirty blocks in\nnilfs_lookup_dirty_data_buffers() and nilfs_lookup_node_buffers() and the\nresulting crash.\n\nThis modification is safe as long as it is used for file data and b-tree\nnode blocks where the page caches are independent.  However, it was\nirrelevant and redundant to also introduce async_write for segment summary\nand super root blocks that share buffers with the backing device.  This\nled to the possibility that the BUG_ON check in end_buffer_async_write\nwould fail as described above, if independent writebacks of the backing\ndevice occurred in parallel.\n\nThe use of async_write for segment summary buffers has already been\nremoved in a previous change.\n\nFix this issue by removing the manipulation of the async_write flag for\nthe remaining super root block buffer.\n    ",
+		"advisory": {
+			"from": "security@suse.de",
+			"severity": "Moderate",
+			"cve": [
+				{
+					"text": "CVE-2024-26685 at SUSE",
+					"href": "https://www.suse.com/security/cve/CVE-2024-26685/",
+					"impact": "medium",
+					"cvss3": "5.5/CVSS:3.1/AV:L/AC:L/PR:L/UI:N/S:U/C:N/I:N/A:H"
+				},
+				{
+					"text": "CVE-2024-26685 at NVD",
+					"href": "https://nvd.nist.gov/vuln/detail/CVE-2024-26685"
+				}
+			],
+			"bugzilla": [
+				{
+					"text": "SUSE bug 1222437",
+					"href": "https://bugzilla.suse.com/1222437"
+				}
+			],
+			"issued": {
+				"date": "2024-04-09"
+			},
+			"updated": {
+				"date": "2024-08-21"
+			},
+			"affected_cpe_list": {
+				"cpe": [
+					"cpe:/o:suse:suse-microos:5.0"
+				]
+			}
+		}
+	},
+	"criteria": {
+		"operator": "AND",
+		"criterions": [
+			{
+				"test_ref": "oval:org.opensuse.security:tst:2009704855",
+				"comment": "SUSE Linux Enterprise Micro 5.0 is installed"
+			},
+			{
+				"test_ref": "oval:org.opensuse.security:tst:2009334017",
+				"comment": "kernel-default is not affected"
+			}
+		]
+	}
+}

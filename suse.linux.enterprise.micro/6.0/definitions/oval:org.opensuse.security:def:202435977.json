@@ -1,0 +1,131 @@
+{
+	"id": "oval:org.opensuse.security:def:202435977",
+	"version": "1",
+	"class": "vulnerability",
+	"metadata": {
+		"title": "CVE-2024-35977",
+		"affected": {
+			"family": "unix",
+			"platform": [
+				"SUSE Linux Enterprise Micro 6.0"
+			]
+		},
+		"reference": [
+			{
+				"ref_id": "Mitre CVE-2024-35977",
+				"ref_url": "https://cve.mitre.org/cgi-bin/cvename.cgi?name=CVE-2024-35977",
+				"source": "CVE"
+			},
+			{
+				"ref_id": "SUSE CVE-2024-35977",
+				"ref_url": "https://www.suse.com/security/cve/CVE-2024-35977",
+				"source": "SUSE CVE"
+			},
+			{
+				"ref_id": "SUSE-SU-2024:2135-1",
+				"ref_url": "https://lists.suse.com/pipermail/sle-updates/2024-June/035681.html",
+				"source": "SUSE-SU"
+			},
+			{
+				"ref_id": "SUSE-SU-2024:2203-1",
+				"ref_url": "https://lists.suse.com/pipermail/sle-security-updates/2024-August/019244.html",
+				"source": "SUSE-SU"
+			},
+			{
+				"ref_id": "SUSE-SU-2024:2973-1",
+				"ref_url": "https://lists.suse.com/pipermail/sle-security-updates/2024-August/019280.html",
+				"source": "SUSE-SU"
+			}
+		],
+		"description": "\n    In the Linux kernel, the following vulnerability has been resolved:\n\nplatform/chrome: cros_ec_uart: properly fix race condition\n\nThe cros_ec_uart_probe() function calls devm_serdev_device_open() before\nit calls serdev_device_set_client_ops(). This can trigger a NULL pointer\ndereference:\n\n    BUG: kernel NULL pointer dereference, address: 0000000000000000\n    ...\n    Call Trace:\n     <TASK>\n     ...\n     ? ttyport_receive_buf\n\nA simplified version of crashing code is as follows:\n\n    static inline size_t serdev_controller_receive_buf(struct serdev_controller *ctrl,\n                                                      const u8 *data,\n                                                      size_t count)\n    {\n            struct serdev_device *serdev = ctrl->serdev;\n\n            if (!serdev || !serdev->ops->receive_buf) // CRASH!\n                return 0;\n\n            return serdev->ops->receive_buf(serdev, data, count);\n    }\n\nIt assumes that if SERPORT_ACTIVE is set and serdev exists, serdev->ops\nwill also exist. This conflicts with the existing cros_ec_uart_probe()\nlogic, as it first calls devm_serdev_device_open() (which sets\nSERPORT_ACTIVE), and only later sets serdev->ops via\nserdev_device_set_client_ops().\n\nCommit 01f95d42b8f4 (\"platform/chrome: cros_ec_uart: fix race\ncondition\") attempted to fix a similar race condition, but while doing\nso, made the window of error for this race condition to happen much\nwider.\n\nAttempt to fix the race condition again, making sure we fully setup\nbefore calling devm_serdev_device_open().\n    ",
+		"advisory": {
+			"from": "security@suse.de",
+			"severity": "Moderate",
+			"cve": [
+				{
+					"text": "CVE-2024-35977 at SUSE",
+					"href": "https://www.suse.com/security/cve/CVE-2024-35977/",
+					"impact": "medium",
+					"cvss3": "5.5/CVSS:3.1/AV:L/AC:L/PR:L/UI:N/S:U/C:N/I:N/A:H"
+				},
+				{
+					"text": "CVE-2024-35977 at NVD",
+					"href": "https://nvd.nist.gov/vuln/detail/CVE-2024-35977"
+				}
+			],
+			"bugzilla": [
+				{
+					"text": "SUSE bug 1224568",
+					"href": "https://bugzilla.suse.com/1224568"
+				}
+			],
+			"issued": {
+				"date": "2024-08-31"
+			},
+			"updated": {
+				"date": "2024-09-18"
+			},
+			"affected_cpe_list": {
+				"cpe": [
+					"cpe:/o:suse:sl-micro:6.0"
+				]
+			}
+		}
+	},
+	"criteria": {
+		"operator": "AND",
+		"criterias": [
+			{
+				"operator": "OR",
+				"criterions": [
+					{
+						"test_ref": "oval:org.opensuse.security:tst:2009881568",
+						"comment": "kernel-default-6.4.0-18.1 is installed"
+					},
+					{
+						"test_ref": "oval:org.opensuse.security:tst:2009881569",
+						"comment": "kernel-default-base-6.4.0-17.1.1.51 is installed"
+					},
+					{
+						"test_ref": "oval:org.opensuse.security:tst:2009881570",
+						"comment": "kernel-default-extra-6.4.0-18.1 is installed"
+					},
+					{
+						"test_ref": "oval:org.opensuse.security:tst:2009881571",
+						"comment": "kernel-devel-6.4.0-18.1 is installed"
+					},
+					{
+						"test_ref": "oval:org.opensuse.security:tst:2009942881",
+						"comment": "kernel-devel-rt-6.4.0-9.1 is installed"
+					},
+					{
+						"test_ref": "oval:org.opensuse.security:tst:2009881572",
+						"comment": "kernel-kvmsmall-6.4.0-18.1 is installed"
+					},
+					{
+						"test_ref": "oval:org.opensuse.security:tst:2009881573",
+						"comment": "kernel-macros-6.4.0-18.1 is installed"
+					},
+					{
+						"test_ref": "oval:org.opensuse.security:tst:2009942882",
+						"comment": "kernel-rt-6.4.0-9.1 is installed"
+					},
+					{
+						"test_ref": "oval:org.opensuse.security:tst:2009881574",
+						"comment": "kernel-source-6.4.0-18.1 is installed"
+					},
+					{
+						"test_ref": "oval:org.opensuse.security:tst:2009942883",
+						"comment": "kernel-source-rt-6.4.0-9.1 is installed"
+					}
+				]
+			}
+		],
+		"criterions": [
+			{
+				"test_ref": "oval:org.opensuse.security:tst:2009864179",
+				"comment": "SUSE Linux Enterprise Micro 6.0 is installed"
+			}
+		]
+	}
+}

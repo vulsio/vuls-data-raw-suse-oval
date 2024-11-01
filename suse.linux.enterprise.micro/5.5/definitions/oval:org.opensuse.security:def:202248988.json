@@ -1,0 +1,88 @@
+{
+	"id": "oval:org.opensuse.security:def:202248988",
+	"version": "1",
+	"class": "vulnerability",
+	"metadata": {
+		"title": "CVE-2022-48988",
+		"affected": {
+			"family": "unix",
+			"platform": [
+				"SUSE Linux Enterprise Micro 5.5"
+			]
+		},
+		"reference": [
+			{
+				"ref_id": "Mitre CVE-2022-48988",
+				"ref_url": "https://cve.mitre.org/cgi-bin/cvename.cgi?name=CVE-2022-48988",
+				"source": "CVE"
+			},
+			{
+				"ref_id": "SUSE CVE-2022-48988",
+				"ref_url": "https://www.suse.com/security/cve/CVE-2022-48988",
+				"source": "SUSE CVE"
+			}
+		],
+		"description": "\n    In the Linux kernel, the following vulnerability has been resolved:\n\nmemcg: fix possible use-after-free in memcg_write_event_control()\n\nmemcg_write_event_control() accesses the dentry->d_name of the specified\ncontrol fd to route the write call.  As a cgroup interface file can't be\nrenamed, it's safe to access d_name as long as the specified file is a\nregular cgroup file.  Also, as these cgroup interface files can't be\nremoved before the directory, it's safe to access the parent too.\n\nPrior to 347c4a874710 (\"memcg: remove cgroup_event->cft\"), there was a\ncall to __file_cft() which verified that the specified file is a regular\ncgroupfs file before further accesses.  The cftype pointer returned from\n__file_cft() was no longer necessary and the commit inadvertently dropped\nthe file type check with it allowing any file to slip through.  With the\ninvarients broken, the d_name and parent accesses can now race against\nrenames and removals of arbitrary files and cause use-after-free's.\n\nFix the bug by resurrecting the file type check in __file_cft().  Now that\ncgroupfs is implemented through kernfs, checking the file operations needs\nto go through a layer of indirection.  Instead, let's check the superblock\nand dentry type.\n    ",
+		"advisory": {
+			"from": "security@suse.de",
+			"severity": "Important",
+			"cve": [
+				{
+					"text": "CVE-2022-48988 at SUSE",
+					"href": "https://www.suse.com/security/cve/CVE-2022-48988/",
+					"impact": "high",
+					"cvss3": "7/CVSS:3.1/AV:L/AC:H/PR:L/UI:N/S:U/C:H/I:H/A:H"
+				},
+				{
+					"text": "CVE-2022-48988 at NVD",
+					"href": "https://nvd.nist.gov/vuln/detail/CVE-2022-48988"
+				}
+			],
+			"bugzilla": [
+				{
+					"text": "SUSE bug 1232069",
+					"href": "https://bugzilla.suse.com/1232069"
+				}
+			],
+			"issued": {
+				"date": "2024-10-27"
+			},
+			"updated": {
+				"date": "2024-10-27"
+			},
+			"affected_cpe_list": {
+				"cpe": [
+					"cpe:/o:suse:sle-micro:5.5"
+				]
+			}
+		}
+	},
+	"criteria": {
+		"operator": "AND",
+		"criterias": [
+			{
+				"operator": "OR",
+				"criterions": [
+					{
+						"test_ref": "oval:org.opensuse.security:tst:2009334017",
+						"comment": "kernel-default is not affected"
+					},
+					{
+						"test_ref": "oval:org.opensuse.security:tst:2009333928",
+						"comment": "kernel-source is not affected"
+					},
+					{
+						"test_ref": "oval:org.opensuse.security:tst:2009728712",
+						"comment": "kernel-source-rt is not affected"
+					}
+				]
+			}
+		],
+		"criterions": [
+			{
+				"test_ref": "oval:org.opensuse.security:tst:2009800388",
+				"comment": "SUSE Linux Enterprise Micro 5.5 is installed"
+			}
+		]
+	}
+}

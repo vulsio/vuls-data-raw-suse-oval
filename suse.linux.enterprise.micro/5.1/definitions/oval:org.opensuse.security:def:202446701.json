@@ -1,0 +1,90 @@
+{
+	"id": "oval:org.opensuse.security:def:202446701",
+	"version": "1",
+	"class": "vulnerability",
+	"metadata": {
+		"title": "CVE-2024-46701",
+		"affected": {
+			"family": "unix",
+			"platform": [
+				"SUSE Linux Enterprise Micro 5.1"
+			]
+		},
+		"reference": [
+			{
+				"ref_id": "Mitre CVE-2024-46701",
+				"ref_url": "https://cve.mitre.org/cgi-bin/cvename.cgi?name=CVE-2024-46701",
+				"source": "CVE"
+			},
+			{
+				"ref_id": "SUSE CVE-2024-46701",
+				"ref_url": "https://www.suse.com/security/cve/CVE-2024-46701",
+				"source": "SUSE CVE"
+			}
+		],
+		"description": "\n    In the Linux kernel, the following vulnerability has been resolved:\n\nlibfs: fix infinite directory reads for offset dir\n\nAfter we switch tmpfs dir operations from simple_dir_operations to\nsimple_offset_dir_operations, every rename happened will fill new dentry\nto dest dir's maple tree(&SHMEM_I(inode)->dir_offsets->mt) with a free\nkey starting with octx->newx_offset, and then set newx_offset equals to\nfree key + 1. This will lead to infinite readdir combine with rename\nhappened at the same time, which fail generic/736 in xfstests(detail show\nas below).\n\n1. create 5000 files(1 2 3...) under one dir\n2. call readdir(man 3 readdir) once, and get one entry\n3. rename(entry, \"TEMPFILE\"), then rename(\"TEMPFILE\", entry)\n4. loop 2~3, until readdir return nothing or we loop too many\n   times(tmpfs break test with the second condition)\n\nWe choose the same logic what commit 9b378f6ad48cf (\"btrfs: fix infinite\ndirectory reads\") to fix it, record the last_index when we open dir, and\ndo not emit the entry which index >= last_index. The file->private_data\nnow used in offset dir can use directly to do this, and we also update\nthe last_index when we llseek the dir file.\n\n[brauner: only update last_index after seek when offset is zero like Jan suggested]\n    ",
+		"advisory": {
+			"from": "security@suse.de",
+			"severity": "Moderate",
+			"cve": [
+				{
+					"text": "CVE-2024-46701 at SUSE",
+					"href": "https://www.suse.com/security/cve/CVE-2024-46701/",
+					"impact": "medium",
+					"cvss3": "5.5/CVSS:3.1/AV:L/AC:L/PR:L/UI:N/S:U/C:N/I:N/A:H"
+				},
+				{
+					"text": "CVE-2024-46701 at NVD",
+					"href": "https://nvd.nist.gov/vuln/detail/CVE-2024-46701",
+					"impact": "medium",
+					"cvss3": "5.5/CVSS:3.1/AV:L/AC:L/PR:L/UI:N/S:U/C:N/I:N/A:H"
+				}
+			],
+			"bugzilla": [
+				{
+					"text": "SUSE bug 1230588",
+					"href": "https://bugzilla.suse.com/1230588"
+				}
+			],
+			"issued": {
+				"date": "2024-09-17"
+			},
+			"updated": {
+				"date": "2024-09-20"
+			},
+			"affected_cpe_list": {
+				"cpe": [
+					"cpe:/o:suse:suse-microos:5.1"
+				]
+			}
+		}
+	},
+	"criteria": {
+		"operator": "AND",
+		"criterias": [
+			{
+				"operator": "OR",
+				"criterions": [
+					{
+						"test_ref": "oval:org.opensuse.security:tst:2009334017",
+						"comment": "kernel-default is not affected"
+					},
+					{
+						"test_ref": "oval:org.opensuse.security:tst:2009705046",
+						"comment": "kernel-rt is not affected"
+					},
+					{
+						"test_ref": "oval:org.opensuse.security:tst:2009728712",
+						"comment": "kernel-source-rt is not affected"
+					}
+				]
+			}
+		],
+		"criterions": [
+			{
+				"test_ref": "oval:org.opensuse.security:tst:2009669964",
+				"comment": "SUSE Linux Enterprise Micro 5.1 is installed"
+			}
+		]
+	}
+}

@@ -1,0 +1,88 @@
+{
+	"id": "oval:org.opensuse.security:def:202352625",
+	"version": "1",
+	"class": "vulnerability",
+	"metadata": {
+		"title": "CVE-2023-52625",
+		"affected": {
+			"family": "unix",
+			"platform": [
+				"SUSE Linux Enterprise Micro 5.2"
+			]
+		},
+		"reference": [
+			{
+				"ref_id": "Mitre CVE-2023-52625",
+				"ref_url": "https://cve.mitre.org/cgi-bin/cvename.cgi?name=CVE-2023-52625",
+				"source": "CVE"
+			},
+			{
+				"ref_id": "SUSE CVE-2023-52625",
+				"ref_url": "https://www.suse.com/security/cve/CVE-2023-52625",
+				"source": "SUSE CVE"
+			}
+		],
+		"description": "\n    In the Linux kernel, the following vulnerability has been resolved:\n\ndrm/amd/display: Refactor DMCUB enter/exit idle interface\n\n[Why]\nWe can hang in place trying to send commands when the DMCUB isn't\npowered on.\n\n[How]\nWe need to exit out of the idle state prior to sending a command,\nbut the process that performs the exit also invokes a command itself.\n\nFixing this issue involves the following:\n\n1. Using a software state to track whether or not we need to start\n   the process to exit idle or notify idle.\n\nIt's possible for the hardware to have exited an idle state without\ndriver knowledge, but entering one is always restricted to a driver\nallow - which makes the SW state vs HW state mismatch issue purely one\nof optimization, which should seldomly be hit, if at all.\n\n2. Refactor any instances of exit/notify idle to use a single wrapper\n   that maintains this SW state.\n\nThis works simialr to dc_allow_idle_optimizations, but works at the\nDMCUB level and makes sure the state is marked prior to any notify/exit\nidle so we don't enter an infinite loop.\n\n3. Make sure we exit out of idle prior to sending any commands or\n   waiting for DMCUB idle.\n\nThis patch takes care of 1/2. A future patch will take care of wrapping\nDMCUB command submission with calls to this new interface.\n    ",
+		"advisory": {
+			"from": "security@suse.de",
+			"severity": "Moderate",
+			"cve": [
+				{
+					"text": "CVE-2023-52625 at SUSE",
+					"href": "https://www.suse.com/security/cve/CVE-2023-52625/",
+					"impact": "medium",
+					"cvss3": "5.5/CVSS:3.1/AV:L/AC:L/PR:L/UI:N/S:U/C:N/I:N/A:H"
+				},
+				{
+					"text": "CVE-2023-52625 at NVD",
+					"href": "https://nvd.nist.gov/vuln/detail/CVE-2023-52625"
+				}
+			],
+			"bugzilla": [
+				{
+					"text": "SUSE bug 1222085",
+					"href": "https://bugzilla.suse.com/1222085"
+				}
+			],
+			"issued": {
+				"date": "2024-03-28"
+			},
+			"updated": {
+				"date": "2024-04-26"
+			},
+			"affected_cpe_list": {
+				"cpe": [
+					"cpe:/o:suse:suse-microos:5.2"
+				]
+			}
+		}
+	},
+	"criteria": {
+		"operator": "AND",
+		"criterias": [
+			{
+				"operator": "OR",
+				"criterions": [
+					{
+						"test_ref": "oval:org.opensuse.security:tst:2009334017",
+						"comment": "kernel-default is not affected"
+					},
+					{
+						"test_ref": "oval:org.opensuse.security:tst:2009705046",
+						"comment": "kernel-rt is not affected"
+					},
+					{
+						"test_ref": "oval:org.opensuse.security:tst:2009728712",
+						"comment": "kernel-source-rt is not affected"
+					}
+				]
+			}
+		],
+		"criterions": [
+			{
+				"test_ref": "oval:org.opensuse.security:tst:2009681300",
+				"comment": "SUSE Linux Enterprise Micro 5.2 is installed"
+			}
+		]
+	}
+}

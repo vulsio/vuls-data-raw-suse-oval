@@ -1,0 +1,142 @@
+{
+	"id": "oval:org.opensuse.security:def:202426654",
+	"version": "1",
+	"class": "vulnerability",
+	"metadata": {
+		"title": "CVE-2024-26654",
+		"affected": {
+			"family": "unix",
+			"platform": [
+				"SUSE Linux Enterprise Micro 5.5"
+			]
+		},
+		"reference": [
+			{
+				"ref_id": "Mitre CVE-2024-26654",
+				"ref_url": "https://cve.mitre.org/cgi-bin/cvename.cgi?name=CVE-2024-26654",
+				"source": "CVE"
+			},
+			{
+				"ref_id": "SUSE CVE-2024-26654",
+				"ref_url": "https://www.suse.com/security/cve/CVE-2024-26654",
+				"source": "SUSE CVE"
+			},
+			{
+				"ref_id": "SUSE-SU-2024:1322-1",
+				"ref_url": "https://lists.suse.com/pipermail/sle-updates/2024-April/035002.html",
+				"source": "SUSE-SU"
+			},
+			{
+				"ref_id": "SUSE-SU-2024:1322-2",
+				"ref_url": "https://lists.suse.com/pipermail/sle-security-updates/2024-April/018377.html",
+				"source": "SUSE-SU"
+			},
+			{
+				"ref_id": "SUSE-SU-2024:1332-1",
+				"ref_url": "https://lists.suse.com/pipermail/sle-updates/2024-April/035014.html",
+				"source": "SUSE-SU"
+			},
+			{
+				"ref_id": "SUSE-SU-2024:1332-2",
+				"ref_url": "https://lists.suse.com/pipermail/sle-security-updates/2024-April/018378.html",
+				"source": "SUSE-SU"
+			},
+			{
+				"ref_id": "SUSE-SU-2024:1466-1",
+				"ref_url": "https://lists.suse.com/pipermail/sle-updates/2024-April/035122.html",
+				"source": "SUSE-SU"
+			},
+			{
+				"ref_id": "SUSE-SU-2024:1480-1",
+				"ref_url": "https://lists.suse.com/pipermail/sle-updates/2024-April/035134.html",
+				"source": "SUSE-SU"
+			},
+			{
+				"ref_id": "SUSE-SU-2024:1490-1",
+				"ref_url": "https://lists.suse.com/pipermail/sle-updates/2024-May/035140.html",
+				"source": "SUSE-SU"
+			},
+			{
+				"ref_id": "SUSE-SU-2024:2135-1",
+				"ref_url": "https://lists.suse.com/pipermail/sle-updates/2024-June/035681.html",
+				"source": "SUSE-SU"
+			},
+			{
+				"ref_id": "SUSE-SU-2024:2203-1",
+				"ref_url": "https://lists.suse.com/pipermail/sle-security-updates/2024-August/019244.html",
+				"source": "SUSE-SU"
+			},
+			{
+				"ref_id": "SUSE-SU-2024:2973-1",
+				"ref_url": "https://lists.suse.com/pipermail/sle-security-updates/2024-August/019280.html",
+				"source": "SUSE-SU"
+			}
+		],
+		"description": "\n    In the Linux kernel, the following vulnerability has been resolved:\n\nALSA: sh: aica: reorder cleanup operations to avoid UAF bugs\n\nThe dreamcastcard->timer could schedule the spu_dma_work and the\nspu_dma_work could also arm the dreamcastcard->timer.\n\nWhen the snd_pcm_substream is closing, the aica_channel will be\ndeallocated. But it could still be dereferenced in the worker\nthread. The reason is that del_timer() will return directly\nregardless of whether the timer handler is running or not and\nthe worker could be rescheduled in the timer handler. As a result,\nthe UAF bug will happen. The racy situation is shown below:\n\n      (Thread 1)                 |      (Thread 2)\nsnd_aicapcm_pcm_close()          |\n ...                             |  run_spu_dma() //worker\n                                 |    mod_timer()\n  flush_work()                   |\n  del_timer()                    |  aica_period_elapsed() //timer\n  kfree(dreamcastcard->channel)  |    schedule_work()\n                                 |  run_spu_dma() //worker\n  ...                            |    dreamcastcard->channel-> //USE\n\nIn order to mitigate this bug and other possible corner cases,\ncall mod_timer() conditionally in run_spu_dma(), then implement\nPCM sync_stop op to cancel both the timer and worker. The sync_stop\nop will be called from PCM core appropriately when needed.\n    ",
+		"advisory": {
+			"from": "security@suse.de",
+			"severity": "Moderate",
+			"cve": [
+				{
+					"text": "CVE-2024-26654 at SUSE",
+					"href": "https://www.suse.com/security/cve/CVE-2024-26654/",
+					"impact": "medium",
+					"cvss3": "5.5/CVSS:3.1/AV:L/AC:L/PR:L/UI:N/S:U/C:N/I:N/A:H"
+				},
+				{
+					"text": "CVE-2024-26654 at NVD",
+					"href": "https://nvd.nist.gov/vuln/detail/CVE-2024-26654"
+				}
+			],
+			"bugzilla": [
+				{
+					"text": "SUSE bug 1222304",
+					"href": "https://bugzilla.suse.com/1222304"
+				}
+			],
+			"issued": {
+				"date": "2024-04-30"
+			},
+			"updated": {
+				"date": "2024-08-21"
+			},
+			"affected_cpe_list": {
+				"cpe": [
+					"cpe:/o:suse:sle-micro:5.5"
+				]
+			}
+		}
+	},
+	"criteria": {
+		"operator": "AND",
+		"criterias": [
+			{
+				"operator": "OR",
+				"criterions": [
+					{
+						"test_ref": "oval:org.opensuse.security:tst:2009858622",
+						"comment": "kernel-default-5.14.21-150500.55.59.1 is installed"
+					},
+					{
+						"test_ref": "oval:org.opensuse.security:tst:2009858623",
+						"comment": "kernel-default-base-5.14.21-150500.55.59.1.150500.6.25.7 is installed"
+					},
+					{
+						"test_ref": "oval:org.opensuse.security:tst:2009858175",
+						"comment": "kernel-rt-5.14.21-150500.13.47.1 is installed"
+					},
+					{
+						"test_ref": "oval:org.opensuse.security:tst:2009858186",
+						"comment": "kernel-source-rt-5.14.21-150500.13.47.1 is installed"
+					}
+				]
+			}
+		],
+		"criterions": [
+			{
+				"test_ref": "oval:org.opensuse.security:tst:2009800388",
+				"comment": "SUSE Linux Enterprise Micro 5.5 is installed"
+			}
+		]
+	}
+}

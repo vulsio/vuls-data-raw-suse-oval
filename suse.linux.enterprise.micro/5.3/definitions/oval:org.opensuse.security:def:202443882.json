@@ -1,0 +1,173 @@
+{
+	"id": "oval:org.opensuse.security:def:202443882",
+	"version": "1",
+	"class": "vulnerability",
+	"metadata": {
+		"title": "CVE-2024-43882",
+		"affected": {
+			"family": "unix",
+			"platform": [
+				"SUSE Linux Enterprise Micro 5.3"
+			]
+		},
+		"reference": [
+			{
+				"ref_id": "Mitre CVE-2024-43882",
+				"ref_url": "https://cve.mitre.org/cgi-bin/cvename.cgi?name=CVE-2024-43882",
+				"source": "CVE"
+			},
+			{
+				"ref_id": "SUSE CVE-2024-43882",
+				"ref_url": "https://www.suse.com/security/cve/CVE-2024-43882",
+				"source": "SUSE CVE"
+			},
+			{
+				"ref_id": "SUSE-SU-2024:3189-1",
+				"ref_url": "https://lists.suse.com/pipermail/sle-security-updates/2024-September/019404.html",
+				"source": "SUSE-SU"
+			},
+			{
+				"ref_id": "SUSE-SU-2024:3190-1",
+				"ref_url": "https://lists.suse.com/pipermail/sle-security-updates/2024-September/019403.html",
+				"source": "SUSE-SU"
+			},
+			{
+				"ref_id": "SUSE-SU-2024:3194-1",
+				"ref_url": "https://lists.suse.com/pipermail/sle-updates/2024-September/036835.html",
+				"source": "SUSE-SU"
+			},
+			{
+				"ref_id": "SUSE-SU-2024:3195-1",
+				"ref_url": "https://lists.suse.com/pipermail/sle-updates/2024-September/036842.html",
+				"source": "SUSE-SU"
+			},
+			{
+				"ref_id": "SUSE-SU-2024:3209-1",
+				"ref_url": "https://lists.suse.com/pipermail/sle-updates/2024-September/036854.html",
+				"source": "SUSE-SU"
+			},
+			{
+				"ref_id": "SUSE-SU-2024:3225-1",
+				"ref_url": "https://lists.suse.com/pipermail/sle-updates/2024-September/036876.html",
+				"source": "SUSE-SU"
+			},
+			{
+				"ref_id": "SUSE-SU-2024:3227-1",
+				"ref_url": "https://lists.suse.com/pipermail/sle-updates/2024-September/036874.html",
+				"source": "SUSE-SU"
+			},
+			{
+				"ref_id": "SUSE-SU-2024:3249-1",
+				"ref_url": "https://lists.suse.com/pipermail/sle-updates/2024-September/036898.html",
+				"source": "SUSE-SU"
+			},
+			{
+				"ref_id": "SUSE-SU-2024:3251-1",
+				"ref_url": "https://lists.suse.com/pipermail/sle-updates/2024-September/036895.html",
+				"source": "SUSE-SU"
+			},
+			{
+				"ref_id": "SUSE-SU-2024:3252-1",
+				"ref_url": "https://lists.suse.com/pipermail/sle-updates/2024-September/036896.html",
+				"source": "SUSE-SU"
+			},
+			{
+				"ref_id": "SUSE-SU-2024:3383-1",
+				"ref_url": "https://lists.suse.com/pipermail/sle-security-updates/2024-September/019497.html",
+				"source": "SUSE-SU"
+			},
+			{
+				"ref_id": "SUSE-SU-2024:3408-1",
+				"ref_url": "https://lists.suse.com/pipermail/sle-updates/2024-September/037033.html",
+				"source": "SUSE-SU"
+			},
+			{
+				"ref_id": "SUSE-SU-2024:3467-1",
+				"ref_url": "https://lists.suse.com/pipermail/sle-updates/2024-September/037088.html",
+				"source": "SUSE-SU"
+			},
+			{
+				"ref_id": "SUSE-SU-2024:3483-1",
+				"ref_url": "https://lists.suse.com/pipermail/sle-updates/2024-September/037089.html",
+				"source": "SUSE-SU"
+			},
+			{
+				"ref_id": "SUSE-SU-2024:3499-1",
+				"ref_url": "https://lists.suse.com/pipermail/sle-updates/2024-September/037117.html",
+				"source": "SUSE-SU"
+			}
+		],
+		"description": "\n    In the Linux kernel, the following vulnerability has been resolved:\n\nexec: Fix ToCToU between perm check and set-uid/gid usage\n\nWhen opening a file for exec via do_filp_open(), permission checking is\ndone against the file's metadata at that moment, and on success, a file\npointer is passed back. Much later in the execve() code path, the file\nmetadata (specifically mode, uid, and gid) is used to determine if/how\nto set the uid and gid. However, those values may have changed since the\npermissions check, meaning the execution may gain unintended privileges.\n\nFor example, if a file could change permissions from executable and not\nset-id:\n\n---------x 1 root root 16048 Aug  7 13:16 target\n\nto set-id and non-executable:\n\n---S------ 1 root root 16048 Aug  7 13:16 target\n\nit is possible to gain root privileges when execution should have been\ndisallowed.\n\nWhile this race condition is rare in real-world scenarios, it has been\nobserved (and proven exploitable) when package managers are updating\nthe setuid bits of installed programs. Such files start with being\nworld-executable but then are adjusted to be group-exec with a set-uid\nbit. For example, \"chmod o-x,u+s target\" makes \"target\" executable only\nby uid \"root\" and gid \"cdrom\", while also becoming setuid-root:\n\n-rwxr-xr-x 1 root cdrom 16048 Aug  7 13:16 target\n\nbecomes:\n\n-rwsr-xr-- 1 root cdrom 16048 Aug  7 13:16 target\n\nBut racing the chmod means users without group \"cdrom\" membership can\nget the permission to execute \"target\" just before the chmod, and when\nthe chmod finishes, the exec reaches brpm_fill_uid(), and performs the\nsetuid to root, violating the expressed authorization of \"only cdrom\ngroup members can setuid to root\".\n\nRe-check that we still have execute permissions in case the metadata\nhas changed. It would be better to keep a copy from the perm-check time,\nbut until we can do that refactoring, the least-bad option is to do a\nfull inode_permission() call (under inode lock). It is understood that\nthis is safe against dead-locks, but hardly optimal.\n    ",
+		"advisory": {
+			"from": "security@suse.de",
+			"severity": "Moderate",
+			"cve": [
+				{
+					"text": "CVE-2024-43882 at SUSE",
+					"href": "https://www.suse.com/security/cve/CVE-2024-43882/",
+					"impact": "high",
+					"cvss3": "7/CVSS:3.1/AV:L/AC:H/PR:L/UI:N/S:U/C:H/I:H/A:H"
+				},
+				{
+					"text": "CVE-2024-43882 at NVD",
+					"href": "https://nvd.nist.gov/vuln/detail/CVE-2024-43882",
+					"impact": "high",
+					"cvss3": "7/CVSS:3.1/AV:L/AC:H/PR:L/UI:N/S:U/C:H/I:H/A:H"
+				}
+			],
+			"bugzilla": [
+				{
+					"text": "SUSE bug 1229503",
+					"href": "https://bugzilla.suse.com/1229503"
+				},
+				{
+					"text": "SUSE bug 1229504",
+					"href": "https://bugzilla.suse.com/1229504"
+				}
+			],
+			"issued": {
+				"date": "2024-09-13"
+			},
+			"updated": {
+				"date": "2024-10-01"
+			},
+			"affected_cpe_list": {
+				"cpe": [
+					"cpe:/o:suse:sle-micro:5.3"
+				]
+			}
+		}
+	},
+	"criteria": {
+		"operator": "AND",
+		"criterias": [
+			{
+				"operator": "OR",
+				"criterions": [
+					{
+						"test_ref": "oval:org.opensuse.security:tst:2009944673",
+						"comment": "kernel-default-5.14.21-150400.24.133.2 is installed"
+					},
+					{
+						"test_ref": "oval:org.opensuse.security:tst:2009944559",
+						"comment": "kernel-default-base-5.14.21-150400.24.133.2.150400.24.64.5 is installed"
+					},
+					{
+						"test_ref": "oval:org.opensuse.security:tst:2009942543",
+						"comment": "kernel-rt-5.14.21-150400.15.91.3 is installed"
+					},
+					{
+						"test_ref": "oval:org.opensuse.security:tst:2009942544",
+						"comment": "kernel-source-rt-5.14.21-150400.15.91.3 is installed"
+					}
+				]
+			}
+		],
+		"criterions": [
+			{
+				"test_ref": "oval:org.opensuse.security:tst:2009728694",
+				"comment": "SUSE Linux Enterprise Micro 5.3 is installed"
+			}
+		]
+	}
+}

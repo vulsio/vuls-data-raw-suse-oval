@@ -1,0 +1,189 @@
+{
+	"id": "oval:org.opensuse.security:def:202426921",
+	"version": "1",
+	"class": "vulnerability",
+	"metadata": {
+		"title": "CVE-2024-26921",
+		"affected": {
+			"family": "unix",
+			"platform": [
+				"openSUSE Leap Micro 5.5"
+			]
+		},
+		"reference": [
+			{
+				"ref_id": "Mitre CVE-2024-26921",
+				"ref_url": "https://cve.mitre.org/cgi-bin/cvename.cgi?name=CVE-2024-26921",
+				"source": "CVE"
+			},
+			{
+				"ref_id": "SUSE CVE-2024-26921",
+				"ref_url": "https://www.suse.com/security/cve/CVE-2024-26921",
+				"source": "SUSE CVE"
+			},
+			{
+				"ref_id": "SUSE-SU-2024:1979-1",
+				"ref_url": "https://lists.suse.com/pipermail/sle-updates/2024-June/035536.html",
+				"source": "SUSE-SU"
+			},
+			{
+				"ref_id": "SUSE-SU-2024:1983-1",
+				"ref_url": "https://lists.suse.com/pipermail/sle-updates/2024-June/035554.html",
+				"source": "SUSE-SU"
+			},
+			{
+				"ref_id": "SUSE-SU-2024:2008-1",
+				"ref_url": "https://lists.suse.com/pipermail/sle-updates/2024-June/035569.html",
+				"source": "SUSE-SU"
+			},
+			{
+				"ref_id": "SUSE-SU-2024:2010-1",
+				"ref_url": "https://lists.suse.com/pipermail/sle-updates/2024-June/035576.html",
+				"source": "SUSE-SU"
+			},
+			{
+				"ref_id": "SUSE-SU-2024:2011-1",
+				"ref_url": "https://lists.suse.com/pipermail/sle-updates/2024-June/035575.html",
+				"source": "SUSE-SU"
+			},
+			{
+				"ref_id": "SUSE-SU-2024:2019-1",
+				"ref_url": "https://lists.suse.com/pipermail/sle-updates/2024-June/035578.html",
+				"source": "SUSE-SU"
+			},
+			{
+				"ref_id": "SUSE-SU-2024:2135-1",
+				"ref_url": "https://lists.suse.com/pipermail/sle-updates/2024-June/035681.html",
+				"source": "SUSE-SU"
+			},
+			{
+				"ref_id": "SUSE-SU-2024:2184-1",
+				"ref_url": "https://lists.suse.com/pipermail/sle-updates/2024-June/035716.html",
+				"source": "SUSE-SU"
+			},
+			{
+				"ref_id": "SUSE-SU-2024:2185-1",
+				"ref_url": "https://lists.suse.com/pipermail/sle-updates/2024-June/035718.html",
+				"source": "SUSE-SU"
+			},
+			{
+				"ref_id": "SUSE-SU-2024:2189-1",
+				"ref_url": "https://lists.suse.com/pipermail/sle-updates/2024-June/035721.html",
+				"source": "SUSE-SU"
+			},
+			{
+				"ref_id": "SUSE-SU-2024:2190-1",
+				"ref_url": "https://lists.suse.com/pipermail/sle-updates/2024-June/035732.html",
+				"source": "SUSE-SU"
+			},
+			{
+				"ref_id": "SUSE-SU-2024:2203-1",
+				"ref_url": "https://lists.suse.com/pipermail/sle-security-updates/2024-August/019244.html",
+				"source": "SUSE-SU"
+			},
+			{
+				"ref_id": "SUSE-SU-2024:2365-1",
+				"ref_url": "https://lists.suse.com/pipermail/sle-updates/2024-July/035864.html",
+				"source": "SUSE-SU"
+			},
+			{
+				"ref_id": "SUSE-SU-2024:2973-1",
+				"ref_url": "https://lists.suse.com/pipermail/sle-security-updates/2024-August/019280.html",
+				"source": "SUSE-SU"
+			}
+		],
+		"description": "\n    In the Linux kernel, the following vulnerability has been resolved:\n\ninet: inet_defrag: prevent sk release while still in use\n\nip_local_out() and other functions can pass skb->sk as function argument.\n\nIf the skb is a fragment and reassembly happens before such function call\nreturns, the sk must not be released.\n\nThis affects skb fragments reassembled via netfilter or similar\nmodules, e.g. openvswitch or ct_act.c, when run as part of tx pipeline.\n\nEric Dumazet made an initial analysis of this bug.  Quoting Eric:\n  Calling ip_defrag() in output path is also implying skb_orphan(),\n  which is buggy because output path relies on sk not disappearing.\n\n  A relevant old patch about the issue was :\n  8282f27449bf (\"inet: frag: Always orphan skbs inside ip_defrag()\")\n\n  [..]\n\n  net/ipv4/ip_output.c depends on skb->sk being set, and probably to an\n  inet socket, not an arbitrary one.\n\n  If we orphan the packet in ipvlan, then downstream things like FQ\n  packet scheduler will not work properly.\n\n  We need to change ip_defrag() to only use skb_orphan() when really\n  needed, ie whenever frag_list is going to be used.\n\nEric suggested to stash sk in fragment queue and made an initial patch.\nHowever there is a problem with this:\n\nIf skb is refragmented again right after, ip_do_fragment() will copy\nhead->sk to the new fragments, and sets up destructor to sock_wfree.\nIOW, we have no choice but to fix up sk_wmem accouting to reflect the\nfully reassembled skb, else wmem will underflow.\n\nThis change moves the orphan down into the core, to last possible moment.\nAs ip_defrag_offset is aliased with sk_buff->sk member, we must move the\noffset into the FRAG_CB, else skb->sk gets clobbered.\n\nThis allows to delay the orphaning long enough to learn if the skb has\nto be queued or if the skb is completing the reasm queue.\n\nIn the former case, things work as before, skb is orphaned.  This is\nsafe because skb gets queued/stolen and won't continue past reasm engine.\n\nIn the latter case, we will steal the skb->sk reference, reattach it to\nthe head skb, and fix up wmem accouting when inet_frag inflates truesize.\n    ",
+		"advisory": {
+			"from": "security@suse.de",
+			"severity": "Important",
+			"cve": [
+				{
+					"text": "CVE-2024-26921 at SUSE",
+					"href": "https://www.suse.com/security/cve/CVE-2024-26921/",
+					"impact": "high",
+					"cvss3": "7.8/CVSS:3.1/AV:L/AC:L/PR:L/UI:N/S:U/C:H/I:H/A:H"
+				},
+				{
+					"text": "CVE-2024-26921 at NVD",
+					"href": "https://nvd.nist.gov/vuln/detail/CVE-2024-26921"
+				}
+			],
+			"bugzilla": [
+				{
+					"text": "SUSE bug 1223138",
+					"href": "https://bugzilla.suse.com/1223138"
+				},
+				{
+					"text": "SUSE bug 1223139",
+					"href": "https://bugzilla.suse.com/1223139"
+				}
+			],
+			"issued": {
+				"date": "2024-06-13"
+			},
+			"updated": {
+				"date": "2024-09-30"
+			},
+			"affected_cpe_list": {
+				"cpe": [
+					"cpe:/o:opensuse:leap-micro:5.5"
+				]
+			}
+		}
+	},
+	"criteria": {
+		"operator": "AND",
+		"criterias": [
+			{
+				"operator": "OR",
+				"criterias": [
+					{
+						"operator": "AND",
+						"criterions": [
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009869880",
+								"comment": "kernel-default-5.14.21-150500.55.68.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009151354",
+								"comment": "kernel-default is signed with openSUSE key"
+							}
+						]
+					},
+					{
+						"operator": "AND",
+						"criterions": [
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009869881",
+								"comment": "kernel-default-base-5.14.21-150500.55.68.1.150500.6.31.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009151960",
+								"comment": "kernel-default-base is signed with openSUSE key"
+							}
+						]
+					},
+					{
+						"operator": "AND",
+						"criterions": [
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009865619",
+								"comment": "kernel-rt-5.14.21-150500.13.58.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009342860",
+								"comment": "kernel-rt is signed with openSUSE key"
+							}
+						]
+					}
+				]
+			}
+		],
+		"criterions": [
+			{
+				"test_ref": "oval:org.opensuse.security:tst:2009799821",
+				"comment": "openSUSE Leap Micro 5.5 is installed"
+			}
+		]
+	}
+}

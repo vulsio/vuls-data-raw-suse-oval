@@ -1,0 +1,144 @@
+{
+	"id": "oval:org.opensuse.security:def:202442088",
+	"version": "1",
+	"class": "vulnerability",
+	"metadata": {
+		"title": "CVE-2024-42088",
+		"affected": {
+			"family": "unix",
+			"platform": [
+				"SUSE Linux Enterprise Micro 5.0",
+				"SUSE Linux Enterprise Micro 5.1",
+				"SUSE Linux Enterprise Micro 5.2",
+				"SUSE Linux Enterprise Micro 5.3",
+				"SUSE Linux Enterprise Micro 5.4",
+				"SUSE Linux Enterprise Micro 5.5"
+			]
+		},
+		"reference": [
+			{
+				"ref_id": "Mitre CVE-2024-42088",
+				"ref_url": "https://cve.mitre.org/cgi-bin/cvename.cgi?name=CVE-2024-42088",
+				"source": "CVE"
+			},
+			{
+				"ref_id": "SUSE CVE-2024-42088",
+				"ref_url": "https://www.suse.com/security/cve/CVE-2024-42088",
+				"source": "SUSE CVE"
+			}
+		],
+		"description": "\n    In the Linux kernel, the following vulnerability has been resolved:\n\nASoC: mediatek: mt8195: Add platform entry for ETDM1_OUT_BE dai link\n\nCommit e70b8dd26711 (\"ASoC: mediatek: mt8195: Remove afe-dai component\nand rework codec link\") removed the codec entry for the ETDM1_OUT_BE\ndai link entirely instead of replacing it with COMP_EMPTY(). This worked\nby accident as the remaining COMP_EMPTY() platform entry became the codec\nentry, and the platform entry became completely empty, effectively the\nsame as COMP_DUMMY() since snd_soc_fill_dummy_dai() doesn't do anything\nfor platform entries.\n\nThis causes a KASAN out-of-bounds warning in mtk_soundcard_common_probe()\nin sound/soc/mediatek/common/mtk-soundcard-driver.c:\n\n\tfor_each_card_prelinks(card, i, dai_link) {\n\t\tif (adsp_node && !strncmp(dai_link->name, \"AFE_SOF\", strlen(\"AFE_SOF\")))\n\t\t\tdai_link->platforms->of_node = adsp_node;\n\t\telse if (!dai_link->platforms->name && !dai_link->platforms->of_node)\n\t\t\tdai_link->platforms->of_node = platform_node;\n\t}\n\nwhere the code expects the platforms array to have space for at least one entry.\n\nAdd an COMP_EMPTY() entry so that dai_link->platforms has space.\n    ",
+		"advisory": {
+			"from": "security@suse.de",
+			"severity": "Moderate",
+			"cve": [
+				{
+					"text": "CVE-2024-42088 at SUSE",
+					"href": "https://www.suse.com/security/cve/CVE-2024-42088/",
+					"impact": "medium",
+					"cvss3": "5.5/CVSS:3.1/AV:L/AC:L/PR:L/UI:N/S:U/C:N/I:N/A:H"
+				},
+				{
+					"text": "CVE-2024-42088 at NVD",
+					"href": "https://nvd.nist.gov/vuln/detail/CVE-2024-42088"
+				}
+			],
+			"bugzilla": [
+				{
+					"text": "SUSE bug 1228451",
+					"href": "https://bugzilla.suse.com/1228451"
+				}
+			],
+			"issued": {
+				"date": "2024-10-18"
+			},
+			"updated": {
+				"date": "2024-10-18"
+			},
+			"affected_cpe_list": {
+				"cpe": [
+					"cpe:/o:suse:sle-micro:5.3",
+					"cpe:/o:suse:sle-micro:5.4",
+					"cpe:/o:suse:sle-micro:5.5",
+					"cpe:/o:suse:suse-microos:5.0",
+					"cpe:/o:suse:suse-microos:5.1",
+					"cpe:/o:suse:suse-microos:5.2"
+				]
+			}
+		}
+	},
+	"criteria": {
+		"operator": "OR",
+		"criterias": [
+			{
+				"operator": "AND",
+				"criterions": [
+					{
+						"test_ref": "oval:org.opensuse.security:tst:2009704855",
+						"comment": "SUSE Linux Enterprise Micro 5.0 is installed"
+					},
+					{
+						"test_ref": "oval:org.opensuse.security:tst:2009334017",
+						"comment": "kernel-default is not affected"
+					}
+				]
+			},
+			{
+				"operator": "AND",
+				"criterions": [
+					{
+						"test_ref": "oval:org.opensuse.security:tst:2009800388",
+						"comment": "SUSE Linux Enterprise Micro 5.5 is installed"
+					},
+					{
+						"test_ref": "oval:org.opensuse.security:tst:2009728712",
+						"comment": "kernel-source-rt is not affected"
+					}
+				]
+			},
+			{
+				"operator": "AND",
+				"criterias": [
+					{
+						"operator": "OR",
+						"criterions": [
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009669964",
+								"comment": "SUSE Linux Enterprise Micro 5.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009681300",
+								"comment": "SUSE Linux Enterprise Micro 5.2 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009728694",
+								"comment": "SUSE Linux Enterprise Micro 5.3 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009755086",
+								"comment": "SUSE Linux Enterprise Micro 5.4 is installed"
+							}
+						]
+					},
+					{
+						"operator": "OR",
+						"criterions": [
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009334017",
+								"comment": "kernel-default is not affected"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009705046",
+								"comment": "kernel-rt is not affected"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009728712",
+								"comment": "kernel-source-rt is not affected"
+							}
+						]
+					}
+				]
+			}
+		]
+	}
+}

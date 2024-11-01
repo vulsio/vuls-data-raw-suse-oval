@@ -1,0 +1,272 @@
+{
+	"id": "oval:org.opensuse.security:def:202147497",
+	"version": "1",
+	"class": "vulnerability",
+	"metadata": {
+		"title": "CVE-2021-47497",
+		"affected": {
+			"family": "unix",
+			"platform": [
+				"SUSE Linux Enterprise Micro 5.1",
+				"SUSE Linux Enterprise Micro 5.2",
+				"SUSE Linux Enterprise Micro 5.3",
+				"SUSE Linux Enterprise Micro 5.4",
+				"SUSE Linux Enterprise Micro 5.5"
+			]
+		},
+		"reference": [
+			{
+				"ref_id": "Mitre CVE-2021-47497",
+				"ref_url": "https://cve.mitre.org/cgi-bin/cvename.cgi?name=CVE-2021-47497",
+				"source": "CVE"
+			},
+			{
+				"ref_id": "SUSE CVE-2021-47497",
+				"ref_url": "https://www.suse.com/security/cve/CVE-2021-47497",
+				"source": "SUSE CVE"
+			},
+			{
+				"ref_id": "RHSA-2024:7000",
+				"ref_url": "https://lists.suse.com/pipermail/suse-liberty-linux-updates/2024-September/000095.html",
+				"source": "SUSE-SU"
+			},
+			{
+				"ref_id": "SUSE-SU-2024:1979-1",
+				"ref_url": "https://lists.suse.com/pipermail/sle-updates/2024-June/035536.html",
+				"source": "SUSE-SU"
+			},
+			{
+				"ref_id": "SUSE-SU-2024:1983-1",
+				"ref_url": "https://lists.suse.com/pipermail/sle-updates/2024-June/035554.html",
+				"source": "SUSE-SU"
+			},
+			{
+				"ref_id": "SUSE-SU-2024:2008-1",
+				"ref_url": "https://lists.suse.com/pipermail/sle-updates/2024-June/035569.html",
+				"source": "SUSE-SU"
+			},
+			{
+				"ref_id": "SUSE-SU-2024:2010-1",
+				"ref_url": "https://lists.suse.com/pipermail/sle-updates/2024-June/035576.html",
+				"source": "SUSE-SU"
+			},
+			{
+				"ref_id": "SUSE-SU-2024:2011-1",
+				"ref_url": "https://lists.suse.com/pipermail/sle-updates/2024-June/035575.html",
+				"source": "SUSE-SU"
+			},
+			{
+				"ref_id": "SUSE-SU-2024:2019-1",
+				"ref_url": "https://lists.suse.com/pipermail/sle-updates/2024-June/035578.html",
+				"source": "SUSE-SU"
+			},
+			{
+				"ref_id": "SUSE-SU-2024:2183-1",
+				"ref_url": "https://lists.suse.com/pipermail/sle-updates/2024-June/035717.html",
+				"source": "SUSE-SU"
+			},
+			{
+				"ref_id": "SUSE-SU-2024:2184-1",
+				"ref_url": "https://lists.suse.com/pipermail/sle-updates/2024-June/035716.html",
+				"source": "SUSE-SU"
+			},
+			{
+				"ref_id": "SUSE-SU-2024:2185-1",
+				"ref_url": "https://lists.suse.com/pipermail/sle-updates/2024-June/035718.html",
+				"source": "SUSE-SU"
+			},
+			{
+				"ref_id": "SUSE-SU-2024:2189-1",
+				"ref_url": "https://lists.suse.com/pipermail/sle-updates/2024-June/035721.html",
+				"source": "SUSE-SU"
+			},
+			{
+				"ref_id": "SUSE-SU-2024:2190-1",
+				"ref_url": "https://lists.suse.com/pipermail/sle-updates/2024-June/035732.html",
+				"source": "SUSE-SU"
+			}
+		],
+		"description": "\n    In the Linux kernel, the following vulnerability has been resolved:\n\nnvmem: Fix shift-out-of-bound (UBSAN) with byte size cells\n\nIf a cell has 'nbits' equal to a multiple of BITS_PER_BYTE the logic\n\n *p &= GENMASK((cell->nbits%BITS_PER_BYTE) - 1, 0);\n\nwill become undefined behavior because nbits modulo BITS_PER_BYTE is 0, and we\nsubtract one from that making a large number that is then shifted more than the\nnumber of bits that fit into an unsigned long.\n\nUBSAN reports this problem:\n\n UBSAN: shift-out-of-bounds in drivers/nvmem/core.c:1386:8\n shift exponent 64 is too large for 64-bit type 'unsigned long'\n CPU: 6 PID: 7 Comm: kworker/u16:0 Not tainted 5.15.0-rc3+ #9\n Hardware name: Google Lazor (rev3+) with KB Backlight (DT)\n Workqueue: events_unbound deferred_probe_work_func\n Call trace:\n  dump_backtrace+0x0/0x170\n  show_stack+0x24/0x30\n  dump_stack_lvl+0x64/0x7c\n  dump_stack+0x18/0x38\n  ubsan_epilogue+0x10/0x54\n  __ubsan_handle_shift_out_of_bounds+0x180/0x194\n  __nvmem_cell_read+0x1ec/0x21c\n  nvmem_cell_read+0x58/0x94\n  nvmem_cell_read_variable_common+0x4c/0xb0\n  nvmem_cell_read_variable_le_u32+0x40/0x100\n  a6xx_gpu_init+0x170/0x2f4\n  adreno_bind+0x174/0x284\n  component_bind_all+0xf0/0x264\n  msm_drm_bind+0x1d8/0x7a0\n  try_to_bring_up_master+0x164/0x1ac\n  __component_add+0xbc/0x13c\n  component_add+0x20/0x2c\n  dp_display_probe+0x340/0x384\n  platform_probe+0xc0/0x100\n  really_probe+0x110/0x304\n  __driver_probe_device+0xb8/0x120\n  driver_probe_device+0x4c/0xfc\n  __device_attach_driver+0xb0/0x128\n  bus_for_each_drv+0x90/0xdc\n  __device_attach+0xc8/0x174\n  device_initial_probe+0x20/0x2c\n  bus_probe_device+0x40/0xa4\n  deferred_probe_work_func+0x7c/0xb8\n  process_one_work+0x128/0x21c\n  process_scheduled_works+0x40/0x54\n  worker_thread+0x1ec/0x2a8\n  kthread+0x138/0x158\n  ret_from_fork+0x10/0x20\n\nFix it by making sure there are any bits to mask out.\n    ",
+		"advisory": {
+			"from": "security@suse.de",
+			"severity": "Moderate",
+			"cve": [
+				{
+					"text": "CVE-2021-47497 at SUSE",
+					"href": "https://www.suse.com/security/cve/CVE-2021-47497/",
+					"impact": "low",
+					"cvss3": "0/CVSS:3.1/AV:L/AC:H/PR:L/UI:N/S:U/C:N/I:N/A:N"
+				},
+				{
+					"text": "CVE-2021-47497 at NVD",
+					"href": "https://nvd.nist.gov/vuln/detail/CVE-2021-47497"
+				}
+			],
+			"bugzilla": [
+				{
+					"text": "SUSE bug 1225355",
+					"href": "https://bugzilla.suse.com/1225355"
+				},
+				{
+					"text": "SUSE bug 1227655",
+					"href": "https://bugzilla.suse.com/1227655"
+				}
+			],
+			"issued": {
+				"date": "2024-10-18"
+			},
+			"updated": {
+				"date": "2024-10-18"
+			},
+			"affected_cpe_list": {
+				"cpe": [
+					"cpe:/o:suse:sle-micro:5.3",
+					"cpe:/o:suse:sle-micro:5.4",
+					"cpe:/o:suse:sle-micro:5.5",
+					"cpe:/o:suse:suse-microos:5.1",
+					"cpe:/o:suse:suse-microos:5.2"
+				]
+			}
+		}
+	},
+	"criteria": {
+		"operator": "OR",
+		"criterias": [
+			{
+				"operator": "AND",
+				"criterias": [
+					{
+						"operator": "OR",
+						"criterions": [
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009868905",
+								"comment": "kernel-default-5.3.18-150300.59.164.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009868822",
+								"comment": "kernel-default-base-5.3.18-150300.59.164.1.150300.18.96.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009865703",
+								"comment": "kernel-rt-5.3.18-150300.172.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009865704",
+								"comment": "kernel-source-rt-5.3.18-150300.172.1 is installed"
+							}
+						]
+					}
+				],
+				"criterions": [
+					{
+						"test_ref": "oval:org.opensuse.security:tst:2009681300",
+						"comment": "SUSE Linux Enterprise Micro 5.2 is installed"
+					}
+				]
+			},
+			{
+				"operator": "AND",
+				"criterias": [
+					{
+						"operator": "OR",
+						"criterions": [
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009868905",
+								"comment": "kernel-default-5.3.18-150300.59.164.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009868906",
+								"comment": "kernel-default-base-5.3.18-150300.59.164.1.150300.18.96.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009865703",
+								"comment": "kernel-rt-5.3.18-150300.172.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009865704",
+								"comment": "kernel-source-rt-5.3.18-150300.172.1 is installed"
+							}
+						]
+					}
+				],
+				"criterions": [
+					{
+						"test_ref": "oval:org.opensuse.security:tst:2009669964",
+						"comment": "SUSE Linux Enterprise Micro 5.1 is installed"
+					}
+				]
+			},
+			{
+				"operator": "AND",
+				"criterias": [
+					{
+						"operator": "OR",
+						"criterions": [
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009728694",
+								"comment": "SUSE Linux Enterprise Micro 5.3 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009755086",
+								"comment": "SUSE Linux Enterprise Micro 5.4 is installed"
+							}
+						]
+					},
+					{
+						"operator": "OR",
+						"criterions": [
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009869879",
+								"comment": "kernel-default-5.14.21-150400.24.122.2 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009869533",
+								"comment": "kernel-default-base-5.14.21-150400.24.122.2.150400.24.58.2 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009865707",
+								"comment": "kernel-rt-5.14.21-150400.15.82.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009865708",
+								"comment": "kernel-source-rt-5.14.21-150400.15.82.1 is installed"
+							}
+						]
+					}
+				]
+			},
+			{
+				"operator": "AND",
+				"criterias": [
+					{
+						"operator": "OR",
+						"criterions": [
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009869880",
+								"comment": "kernel-default-5.14.21-150500.55.68.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009869881",
+								"comment": "kernel-default-base-5.14.21-150500.55.68.1.150500.6.31.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009865619",
+								"comment": "kernel-rt-5.14.21-150500.13.58.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009865630",
+								"comment": "kernel-source-rt-5.14.21-150500.13.58.1 is installed"
+							}
+						]
+					}
+				],
+				"criterions": [
+					{
+						"test_ref": "oval:org.opensuse.security:tst:2009800388",
+						"comment": "SUSE Linux Enterprise Micro 5.5 is installed"
+					}
+				]
+			}
+		]
+	}
+}

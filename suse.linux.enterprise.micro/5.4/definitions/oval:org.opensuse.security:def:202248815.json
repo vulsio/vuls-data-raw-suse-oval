@@ -1,0 +1,117 @@
+{
+	"id": "oval:org.opensuse.security:def:202248815",
+	"version": "1",
+	"class": "vulnerability",
+	"metadata": {
+		"title": "CVE-2022-48815",
+		"affected": {
+			"family": "unix",
+			"platform": [
+				"SUSE Linux Enterprise Micro 5.4"
+			]
+		},
+		"reference": [
+			{
+				"ref_id": "Mitre CVE-2022-48815",
+				"ref_url": "https://cve.mitre.org/cgi-bin/cvename.cgi?name=CVE-2022-48815",
+				"source": "CVE"
+			},
+			{
+				"ref_id": "SUSE CVE-2022-48815",
+				"ref_url": "https://www.suse.com/security/cve/CVE-2022-48815",
+				"source": "SUSE CVE"
+			},
+			{
+				"ref_id": "SUSE-SU-2024:2894-1",
+				"ref_url": "https://lists.suse.com/pipermail/sle-updates/2024-August/036430.html",
+				"source": "SUSE-SU"
+			},
+			{
+				"ref_id": "SUSE-SU-2024:2902-1",
+				"ref_url": "https://lists.suse.com/pipermail/sle-updates/2024-August/036443.html",
+				"source": "SUSE-SU"
+			},
+			{
+				"ref_id": "SUSE-SU-2024:2929-1",
+				"ref_url": "https://lists.suse.com/pipermail/sle-updates/2024-August/036473.html",
+				"source": "SUSE-SU"
+			},
+			{
+				"ref_id": "SUSE-SU-2024:2939-1",
+				"ref_url": "https://lists.suse.com/pipermail/sle-security-updates/2024-August/019211.html",
+				"source": "SUSE-SU"
+			},
+			{
+				"ref_id": "SUSE-SU-2024:2947-1",
+				"ref_url": "https://lists.suse.com/pipermail/sle-updates/2024-August/036488.html",
+				"source": "SUSE-SU"
+			}
+		],
+		"description": "\n    In the Linux kernel, the following vulnerability has been resolved:\n\nnet: dsa: bcm_sf2: don't use devres for mdiobus\n\nAs explained in commits:\n74b6d7d13307 (\"net: dsa: realtek: register the MDIO bus under devres\")\n5135e96a3dd2 (\"net: dsa: don't allocate the slave_mii_bus using devres\")\n\nmdiobus_free() will panic when called from devm_mdiobus_free() <-\ndevres_release_all() <- __device_release_driver(), and that mdiobus was\nnot previously unregistered.\n\nThe Starfighter 2 is a platform device, so the initial set of\nconstraints that I thought would cause this (I2C or SPI buses which call\n->remove on ->shutdown) do not apply. But there is one more which\napplies here.\n\nIf the DSA master itself is on a bus that calls ->remove from ->shutdown\n(like dpaa2-eth, which is on the fsl-mc bus), there is a device link\nbetween the switch and the DSA master, and device_links_unbind_consumers()\nwill unbind the bcm_sf2 switch driver on shutdown.\n\nSo the same treatment must be applied to all DSA switch drivers, which\nis: either use devres for both the mdiobus allocation and registration,\nor don't use devres at all.\n\nThe bcm_sf2 driver has the code structure in place for orderly mdiobus\nremoval, so just replace devm_mdiobus_alloc() with the non-devres\nvariant, and add manual free where necessary, to ensure that we don't\nlet devres free a still-registered bus.\n    ",
+		"advisory": {
+			"from": "security@suse.de",
+			"severity": "Moderate",
+			"cve": [
+				{
+					"text": "CVE-2022-48815 at SUSE",
+					"href": "https://www.suse.com/security/cve/CVE-2022-48815/",
+					"impact": "medium",
+					"cvss3": "5.5/CVSS:3.1/AV:L/AC:L/PR:L/UI:N/S:U/C:N/I:N/A:H"
+				},
+				{
+					"text": "CVE-2022-48815 at NVD",
+					"href": "https://nvd.nist.gov/vuln/detail/CVE-2022-48815"
+				}
+			],
+			"bugzilla": [
+				{
+					"text": "SUSE bug 1227933",
+					"href": "https://bugzilla.suse.com/1227933"
+				}
+			],
+			"issued": {
+				"date": "2024-08-15"
+			},
+			"updated": {
+				"date": "2024-08-17"
+			},
+			"affected_cpe_list": {
+				"cpe": [
+					"cpe:/o:suse:sle-micro:5.4"
+				]
+			}
+		}
+	},
+	"criteria": {
+		"operator": "AND",
+		"criterias": [
+			{
+				"operator": "OR",
+				"criterions": [
+					{
+						"test_ref": "oval:org.opensuse.security:tst:2009879796",
+						"comment": "kernel-default-5.14.21-150400.24.128.1 is installed"
+					},
+					{
+						"test_ref": "oval:org.opensuse.security:tst:2009879678",
+						"comment": "kernel-default-base-5.14.21-150400.24.128.1.150400.24.62.1 is installed"
+					},
+					{
+						"test_ref": "oval:org.opensuse.security:tst:2009879551",
+						"comment": "kernel-rt-5.14.21-150400.15.88.1 is installed"
+					},
+					{
+						"test_ref": "oval:org.opensuse.security:tst:2009879552",
+						"comment": "kernel-source-rt-5.14.21-150400.15.88.1 is installed"
+					}
+				]
+			}
+		],
+		"criterions": [
+			{
+				"test_ref": "oval:org.opensuse.security:tst:2009755086",
+				"comment": "SUSE Linux Enterprise Micro 5.4 is installed"
+			}
+		]
+	}
+}
