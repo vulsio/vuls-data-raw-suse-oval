@@ -1,0 +1,158 @@
+{
+	"id": "oval:org.opensuse.security:def:202439508",
+	"version": "1",
+	"class": "vulnerability",
+	"metadata": {
+		"title": "CVE-2024-39508",
+		"affected": {
+			"family": "unix",
+			"platform": [
+				"SUSE Linux Enterprise Micro 6.0"
+			]
+		},
+		"reference": [
+			{
+				"ref_id": "Mitre CVE-2024-39508",
+				"ref_url": "https://cve.mitre.org/cgi-bin/cvename.cgi?name=CVE-2024-39508",
+				"source": "CVE"
+			},
+			{
+				"ref_id": "SUSE CVE-2024-39508",
+				"ref_url": "https://www.suse.com/security/cve/CVE-2024-39508",
+				"source": "SUSE CVE"
+			},
+			{
+				"ref_id": "SUSE-SU-2024:2894-1",
+				"ref_url": "https://lists.suse.com/pipermail/sle-updates/2024-August/036430.html",
+				"source": "SUSE-SU"
+			},
+			{
+				"ref_id": "SUSE-SU-2024:2939-1",
+				"ref_url": "https://lists.suse.com/pipermail/sle-security-updates/2024-August/019211.html",
+				"source": "SUSE-SU"
+			},
+			{
+				"ref_id": "SUSE-SU-2024:2947-1",
+				"ref_url": "https://lists.suse.com/pipermail/sle-updates/2024-August/036488.html",
+				"source": "SUSE-SU"
+			},
+			{
+				"ref_id": "SUSE-SU-2024:3194-1",
+				"ref_url": "https://lists.suse.com/pipermail/sle-updates/2024-September/036835.html",
+				"source": "SUSE-SU"
+			},
+			{
+				"ref_id": "SUSE-SU-2024:3195-1",
+				"ref_url": "https://lists.suse.com/pipermail/sle-updates/2024-September/036842.html",
+				"source": "SUSE-SU"
+			},
+			{
+				"ref_id": "SUSE-SU-2024:3383-1",
+				"ref_url": "https://lists.suse.com/pipermail/sle-security-updates/2024-September/019497.html",
+				"source": "SUSE-SU"
+			}
+		],
+		"description": "\n    In the Linux kernel, the following vulnerability has been resolved:\n\nio_uring/io-wq: Use set_bit() and test_bit() at worker->flags\n\nUtilize set_bit() and test_bit() on worker->flags within io_uring/io-wq\nto address potential data races.\n\nThe structure io_worker->flags may be accessed through various data\npaths, leading to concurrency issues. When KCSAN is enabled, it reveals\ndata races occurring in io_worker_handle_work and\nio_wq_activate_free_worker functions.\n\n\t BUG: KCSAN: data-race in io_worker_handle_work / io_wq_activate_free_worker\n\t write to 0xffff8885c4246404 of 4 bytes by task 49071 on cpu 28:\n\t io_worker_handle_work (io_uring/io-wq.c:434 io_uring/io-wq.c:569)\n\t io_wq_worker (io_uring/io-wq.c:?)\n<snip>\n\n\t read to 0xffff8885c4246404 of 4 bytes by task 49024 on cpu 5:\n\t io_wq_activate_free_worker (io_uring/io-wq.c:? io_uring/io-wq.c:285)\n\t io_wq_enqueue (io_uring/io-wq.c:947)\n\t io_queue_iowq (io_uring/io_uring.c:524)\n\t io_req_task_submit (io_uring/io_uring.c:1511)\n\t io_handle_tw_list (io_uring/io_uring.c:1198)\n<snip>\n\nLine numbers against commit 18daea77cca6 (\"Merge tag 'for-linus' of\ngit://git.kernel.org/pub/scm/virt/kvm/kvm\").\n\nThese races involve writes and reads to the same memory location by\ndifferent tasks running on different CPUs. To mitigate this, refactor\nthe code to use atomic operations such as set_bit(), test_bit(), and\nclear_bit() instead of basic \"and\" and \"or\" operations. This ensures\nthread-safe manipulation of worker flags.\n\nAlso, move `create_index` to avoid holes in the structure.\n    ",
+		"advisory": {
+			"from": "security@suse.de",
+			"severity": "Moderate",
+			"cve": [
+				{
+					"text": "CVE-2024-39508 at SUSE",
+					"href": "https://www.suse.com/security/cve/CVE-2024-39508/",
+					"impact": "medium",
+					"cvss3": "6.3/CVSS:3.1/AV:L/AC:H/PR:L/UI:N/S:U/C:H/I:H/A:N"
+				},
+				{
+					"text": "CVE-2024-39508 at NVD",
+					"href": "https://nvd.nist.gov/vuln/detail/CVE-2024-39508"
+				}
+			],
+			"bugzilla": [
+				{
+					"text": "SUSE bug 1227732",
+					"href": "https://bugzilla.suse.com/1227732"
+				}
+			],
+			"issued": {
+				"date": "2024-11-05"
+			},
+			"updated": {
+				"date": "2024-11-05"
+			},
+			"affected_cpe_list": {
+				"cpe": [
+					"cpe:/o:suse:sl-micro:6.0"
+				]
+			}
+		}
+	},
+	"criteria": {
+		"operator": "AND",
+		"criterias": [
+			{
+				"operator": "OR",
+				"criterions": [
+					{
+						"test_ref": "oval:org.opensuse.security:tst:2009950949",
+						"comment": "kernel-default-6.4.0-19.1 is installed"
+					},
+					{
+						"test_ref": "oval:org.opensuse.security:tst:2009950950",
+						"comment": "kernel-default-base-6.4.0-17.1.1.51 is installed"
+					},
+					{
+						"test_ref": "oval:org.opensuse.security:tst:2009950951",
+						"comment": "kernel-default-extra-6.4.0-19.1 is installed"
+					},
+					{
+						"test_ref": "oval:org.opensuse.security:tst:2009950952",
+						"comment": "kernel-default-livepatch-6.4.0-19.1 is installed"
+					},
+					{
+						"test_ref": "oval:org.opensuse.security:tst:2009950953",
+						"comment": "kernel-devel-6.4.0-19.1 is installed"
+					},
+					{
+						"test_ref": "oval:org.opensuse.security:tst:2009950959",
+						"comment": "kernel-devel-rt-6.4.0-10.1 is installed"
+					},
+					{
+						"test_ref": "oval:org.opensuse.security:tst:2009950954",
+						"comment": "kernel-kvmsmall-6.4.0-19.1 is installed"
+					},
+					{
+						"test_ref": "oval:org.opensuse.security:tst:2009950960",
+						"comment": "kernel-livepatch-6_4_0-10-rt-1-1.1 is installed"
+					},
+					{
+						"test_ref": "oval:org.opensuse.security:tst:2009950955",
+						"comment": "kernel-livepatch-6_4_0-19-default-1-1.1 is installed"
+					},
+					{
+						"test_ref": "oval:org.opensuse.security:tst:2009950956",
+						"comment": "kernel-macros-6.4.0-19.1 is installed"
+					},
+					{
+						"test_ref": "oval:org.opensuse.security:tst:2009950961",
+						"comment": "kernel-rt-6.4.0-10.1 is installed"
+					},
+					{
+						"test_ref": "oval:org.opensuse.security:tst:2009950957",
+						"comment": "kernel-source-6.4.0-19.1 is installed"
+					},
+					{
+						"test_ref": "oval:org.opensuse.security:tst:2009950962",
+						"comment": "kernel-source-rt-6.4.0-10.1 is installed"
+					}
+				]
+			}
+		],
+		"criterions": [
+			{
+				"test_ref": "oval:org.opensuse.security:tst:2009864179",
+				"comment": "SUSE Linux Enterprise Micro 6.0 is installed"
+			}
+		]
+	}
+}
