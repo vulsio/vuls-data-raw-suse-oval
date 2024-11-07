@@ -1,0 +1,92 @@
+{
+	"id": "oval:org.opensuse.security:def:202450100",
+	"version": "1",
+	"class": "vulnerability",
+	"metadata": {
+		"title": "CVE-2024-50100",
+		"affected": {
+			"family": "unix",
+			"platform": [
+				"SUSE Linux Enterprise Micro 5.3"
+			]
+		},
+		"reference": [
+			{
+				"ref_id": "Mitre CVE-2024-50100",
+				"ref_url": "https://cve.mitre.org/cgi-bin/cvename.cgi?name=CVE-2024-50100",
+				"source": "CVE"
+			},
+			{
+				"ref_id": "SUSE CVE-2024-50100",
+				"ref_url": "https://www.suse.com/security/cve/CVE-2024-50100",
+				"source": "SUSE CVE"
+			}
+		],
+		"description": "\n    In the Linux kernel, the following vulnerability has been resolved:\n\nUSB: gadget: dummy-hcd: Fix \"task hung\" problem\n\nThe syzbot fuzzer has been encountering \"task hung\" problems ever\nsince the dummy-hcd driver was changed to use hrtimers instead of\nregular timers.  It turns out that the problems are caused by a subtle\ndifference between the timer_pending() and hrtimer_active() APIs.\n\nThe changeover blindly replaced the first by the second.  However,\ntimer_pending() returns True when the timer is queued but not when its\ncallback is running, whereas hrtimer_active() returns True when the\nhrtimer is queued _or_ its callback is running.  This difference\noccasionally caused dummy_urb_enqueue() to think that the callback\nroutine had not yet started when in fact it was almost finished.  As a\nresult the hrtimer was not restarted, which made it impossible for the\ndriver to dequeue later the URB that was just enqueued.  This caused\nusb_kill_urb() to hang, and things got worse from there.\n\nSince hrtimers have no API for telling when they are queued and the\ncallback isn't running, the driver must keep track of this for itself.\nThat's what this patch does, adding a new \"timer_pending\" flag and\nsetting or clearing it at the appropriate times.\n    ",
+		"advisory": {
+			"from": "security@suse.de",
+			"severity": "Moderate",
+			"cve": [
+				{
+					"text": "CVE-2024-50100 at SUSE",
+					"href": "https://www.suse.com/security/cve/CVE-2024-50100/",
+					"impact": "medium",
+					"cvss3": "5.5/CVSS:3.1/AV:L/AC:L/PR:L/UI:N/S:U/C:N/I:N/A:H"
+				},
+				{
+					"text": "CVE-2024-50100 at NVD",
+					"href": "https://nvd.nist.gov/vuln/detail/CVE-2024-50100"
+				}
+			],
+			"bugzilla": [
+				{
+					"text": "SUSE bug 1232876",
+					"href": "https://bugzilla.suse.com/1232876"
+				}
+			],
+			"issued": {
+				"date": "2024-11-07"
+			},
+			"updated": {
+				"date": "2024-11-07"
+			},
+			"affected_cpe_list": {
+				"cpe": [
+					"cpe:/o:suse:sle-micro:5.3"
+				]
+			}
+		}
+	},
+	"criteria": {
+		"operator": "AND",
+		"criterias": [
+			{
+				"operator": "OR",
+				"criterions": [
+					{
+						"test_ref": "oval:org.opensuse.security:tst:2009334017",
+						"comment": "kernel-default is not affected"
+					},
+					{
+						"test_ref": "oval:org.opensuse.security:tst:2009705046",
+						"comment": "kernel-rt is not affected"
+					},
+					{
+						"test_ref": "oval:org.opensuse.security:tst:2009333928",
+						"comment": "kernel-source is not affected"
+					},
+					{
+						"test_ref": "oval:org.opensuse.security:tst:2009728712",
+						"comment": "kernel-source-rt is not affected"
+					}
+				]
+			}
+		],
+		"criterions": [
+			{
+				"test_ref": "oval:org.opensuse.security:tst:2009728694",
+				"comment": "SUSE Linux Enterprise Micro 5.3 is installed"
+			}
+		]
+	}
+}

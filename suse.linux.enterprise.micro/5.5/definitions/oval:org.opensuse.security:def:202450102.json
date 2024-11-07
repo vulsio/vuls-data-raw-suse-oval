@@ -1,0 +1,88 @@
+{
+	"id": "oval:org.opensuse.security:def:202450102",
+	"version": "1",
+	"class": "vulnerability",
+	"metadata": {
+		"title": "CVE-2024-50102",
+		"affected": {
+			"family": "unix",
+			"platform": [
+				"SUSE Linux Enterprise Micro 5.5"
+			]
+		},
+		"reference": [
+			{
+				"ref_id": "Mitre CVE-2024-50102",
+				"ref_url": "https://cve.mitre.org/cgi-bin/cvename.cgi?name=CVE-2024-50102",
+				"source": "CVE"
+			},
+			{
+				"ref_id": "SUSE CVE-2024-50102",
+				"ref_url": "https://www.suse.com/security/cve/CVE-2024-50102",
+				"source": "SUSE CVE"
+			}
+		],
+		"description": "\n    In the Linux kernel, the following vulnerability has been resolved:\n\nx86: fix user address masking non-canonical speculation issue\n\nIt turns out that AMD has a \"Meltdown Lite(tm)\" issue with non-canonical\naccesses in kernel space.  And so using just the high bit to decide\nwhether an access is in user space or kernel space ends up with the good\nold \"leak speculative data\" if you have the right gadget using the\nresult:\n\n  CVE-2020-12965 \"Transient Execution of Non-Canonical Accesses\"\n\nNow, the kernel surrounds the access with a STAC/CLAC pair, and those\ninstructions end up serializing execution on older Zen architectures,\nwhich closes the speculation window.\n\nBut that was true only up until Zen 5, which renames the AC bit [1].\nThat improves performance of STAC/CLAC a lot, but also means that the\nspeculation window is now open.\n\nNote that this affects not just the new address masking, but also the\nregular valid_user_address() check used by access_ok(), and the asm\nversion of the sign bit check in the get_user() helpers.\n\nIt does not affect put_user() or clear_user() variants, since there's no\nspeculative result to be used in a gadget for those operations.\n    ",
+		"advisory": {
+			"from": "security@suse.de",
+			"severity": "Moderate",
+			"cve": [
+				{
+					"text": "CVE-2024-50102 at SUSE",
+					"href": "https://www.suse.com/security/cve/CVE-2024-50102/",
+					"impact": "medium",
+					"cvss3": "5.5/CVSS:3.1/AV:L/AC:L/PR:L/UI:N/S:U/C:N/I:N/A:H"
+				},
+				{
+					"text": "CVE-2024-50102 at NVD",
+					"href": "https://nvd.nist.gov/vuln/detail/CVE-2024-50102"
+				}
+			],
+			"bugzilla": [
+				{
+					"text": "SUSE bug 1232880",
+					"href": "https://bugzilla.suse.com/1232880"
+				}
+			],
+			"issued": {
+				"date": "2024-11-07"
+			},
+			"updated": {
+				"date": "2024-11-07"
+			},
+			"affected_cpe_list": {
+				"cpe": [
+					"cpe:/o:suse:sle-micro:5.5"
+				]
+			}
+		}
+	},
+	"criteria": {
+		"operator": "AND",
+		"criterias": [
+			{
+				"operator": "OR",
+				"criterions": [
+					{
+						"test_ref": "oval:org.opensuse.security:tst:2009334017",
+						"comment": "kernel-default is not affected"
+					},
+					{
+						"test_ref": "oval:org.opensuse.security:tst:2009333928",
+						"comment": "kernel-source is not affected"
+					},
+					{
+						"test_ref": "oval:org.opensuse.security:tst:2009728712",
+						"comment": "kernel-source-rt is not affected"
+					}
+				]
+			}
+		],
+		"criterions": [
+			{
+				"test_ref": "oval:org.opensuse.security:tst:2009800388",
+				"comment": "SUSE Linux Enterprise Micro 5.5 is installed"
+			}
+		]
+	}
+}
