@@ -1,0 +1,383 @@
+{
+	"id": "oval:org.opensuse.security:def:202449888",
+	"version": "1",
+	"class": "vulnerability",
+	"metadata": {
+		"title": "CVE-2024-49888",
+		"affected": {
+			"family": "unix",
+			"platform": [
+				"SUSE Linux Enterprise High Performance Computing 12",
+				"SUSE Linux Enterprise Live Patching 12 SP5",
+				"SUSE Linux Enterprise Module for Public Cloud 12",
+				"SUSE Linux Enterprise Real Time 12 SP5",
+				"SUSE Linux Enterprise Server 12",
+				"SUSE Linux Enterprise Server 12 SP2-LTSS",
+				"SUSE Linux Enterprise Server 12 SP3",
+				"SUSE Linux Enterprise Server 12 SP4",
+				"SUSE Linux Enterprise Server 12 SP4-LTSS",
+				"SUSE Linux Enterprise Server 12 SP5",
+				"SUSE Linux Enterprise Server 12 SP5-LTSS",
+				"SUSE Linux Enterprise Server for SAP Applications 12",
+				"SUSE Linux Enterprise Server for SAP Applications 12 SP3",
+				"SUSE Linux Enterprise Server for SAP Applications 12 SP4",
+				"SUSE Linux Enterprise Server for SAP Applications 12 SP5",
+				"SUSE Linux Enterprise Workstation Extension 12 SP5"
+			]
+		},
+		"reference": [
+			{
+				"ref_id": "Mitre CVE-2024-49888",
+				"ref_url": "https://cve.mitre.org/cgi-bin/cvename.cgi?name=CVE-2024-49888",
+				"source": "CVE"
+			},
+			{
+				"ref_id": "SUSE CVE-2024-49888",
+				"ref_url": "https://www.suse.com/security/cve/CVE-2024-49888",
+				"source": "SUSE CVE"
+			}
+		],
+		"description": "\n    In the Linux kernel, the following vulnerability has been resolved:\n\nbpf: Fix a sdiv overflow issue\n\nZac Ecob reported a problem where a bpf program may cause kernel crash due\nto the following error:\n  Oops: divide error: 0000 [#1] PREEMPT SMP KASAN PTI\n\nThe failure is due to the below signed divide:\n  LLONG_MIN/-1 where LLONG_MIN equals to -9,223,372,036,854,775,808.\nLLONG_MIN/-1 is supposed to give a positive number 9,223,372,036,854,775,808,\nbut it is impossible since for 64-bit system, the maximum positive\nnumber is 9,223,372,036,854,775,807. On x86_64, LLONG_MIN/-1 will\ncause a kernel exception. On arm64, the result for LLONG_MIN/-1 is\nLLONG_MIN.\n\nFurther investigation found all the following sdiv/smod cases may trigger\nan exception when bpf program is running on x86_64 platform:\n  - LLONG_MIN/-1 for 64bit operation\n  - INT_MIN/-1 for 32bit operation\n  - LLONG_MIN%-1 for 64bit operation\n  - INT_MIN%-1 for 32bit operation\nwhere -1 can be an immediate or in a register.\n\nOn arm64, there are no exceptions:\n  - LLONG_MIN/-1 = LLONG_MIN\n  - INT_MIN/-1 = INT_MIN\n  - LLONG_MIN%-1 = 0\n  - INT_MIN%-1 = 0\nwhere -1 can be an immediate or in a register.\n\nInsn patching is needed to handle the above cases and the patched codes\nproduced results aligned with above arm64 result. The below are pseudo\ncodes to handle sdiv/smod exceptions including both divisor -1 and divisor 0\nand the divisor is stored in a register.\n\nsdiv:\n      tmp = rX\n      tmp += 1 /* [-1, 0] -> [0, 1]\n      if tmp >(unsigned) 1 goto L2\n      if tmp == 0 goto L1\n      rY = 0\n  L1:\n      rY = -rY;\n      goto L3\n  L2:\n      rY /= rX\n  L3:\n\nsmod:\n      tmp = rX\n      tmp += 1 /* [-1, 0] -> [0, 1]\n      if tmp >(unsigned) 1 goto L1\n      if tmp == 1 (is64 ? goto L2 : goto L3)\n      rY = 0;\n      goto L2\n  L1:\n      rY %= rX\n  L2:\n      goto L4  // only when !is64\n  L3:\n      wY = wY  // only when !is64\n  L4:\n\n  [1] https://lore.kernel.org/bpf/tPJLTEh7S_DxFEqAI2Ji5MBSoZVg7_G-Py2iaZpAaWtM961fFTWtsnlzwvTbzBzaUzwQAoNATXKUlt0LZOFgnDcIyKCswAnAGdUF3LBrhGQ=@protonmail.com/\n    ",
+		"advisory": {
+			"from": "security@suse.de",
+			"severity": "Moderate",
+			"cve": [
+				{
+					"text": "CVE-2024-49888 at SUSE",
+					"href": "https://www.suse.com/security/cve/CVE-2024-49888/",
+					"impact": "medium",
+					"cvss3": "5.5/CVSS:3.1/AV:L/AC:L/PR:L/UI:N/S:U/C:N/I:N/A:H"
+				},
+				{
+					"text": "CVE-2024-49888 at NVD",
+					"href": "https://nvd.nist.gov/vuln/detail/CVE-2024-49888"
+				}
+			],
+			"bugzilla": [
+				{
+					"text": "SUSE bug 1232208",
+					"href": "https://bugzilla.suse.com/1232208"
+				}
+			],
+			"issued": {
+				"date": "2024-11-08"
+			},
+			"updated": {
+				"date": "2024-11-08"
+			},
+			"affected_cpe_list": {
+				"cpe": [
+					"cpe:/o:suse:sle-live-patching:12:sp5",
+					"cpe:/o:suse:sle-module-public-cloud:12",
+					"cpe:/o:suse:sle-we:12:sp5",
+					"cpe:/o:suse:sle_hpc:12",
+					"cpe:/o:suse:sles-ltss-extended-security:12:sp5",
+					"cpe:/o:suse:sles-ltss:12:sp2",
+					"cpe:/o:suse:sles-ltss:12:sp4",
+					"cpe:/o:suse:sles:12",
+					"cpe:/o:suse:sles:12:sp3",
+					"cpe:/o:suse:sles:12:sp4",
+					"cpe:/o:suse:sles:12:sp5",
+					"cpe:/o:suse:sles_sap:12",
+					"cpe:/o:suse:sles_sap:12:sp3",
+					"cpe:/o:suse:sles_sap:12:sp4",
+					"cpe:/o:suse:sles_sap:12:sp5",
+					"cpe:/o:suse:suse-linux-enterprise-rt:12:sp5"
+				]
+			}
+		}
+	},
+	"criteria": {
+		"operator": "OR",
+		"criterias": [
+			{
+				"operator": "AND",
+				"criterias": [
+					{
+						"operator": "OR",
+						"criterions": [
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009334017",
+								"comment": "kernel-default is not affected"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009333928",
+								"comment": "kernel-source is not affected"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009340305",
+								"comment": "kernel-source-azure is not affected"
+							}
+						]
+					}
+				],
+				"criterions": [
+					{
+						"test_ref": "oval:org.opensuse.security:tst:2009258806",
+						"comment": "SUSE Linux Enterprise Server for SAP Applications 12 SP5 is installed"
+					}
+				]
+			},
+			{
+				"operator": "AND",
+				"criterias": [
+					{
+						"operator": "OR",
+						"criterions": [
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009703659",
+								"comment": "SUSE Linux Enterprise High Performance Computing 12 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009178199",
+								"comment": "SUSE Linux Enterprise Module for Public Cloud 12 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009116126",
+								"comment": "SUSE Linux Enterprise Server 12 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009158922",
+								"comment": "SUSE Linux Enterprise Server 12 SP3 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009240280",
+								"comment": "SUSE Linux Enterprise Server 12 SP4 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009258033",
+								"comment": "SUSE Linux Enterprise Server 12 SP5 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009258800",
+								"comment": "SUSE Linux Enterprise Server for SAP Applications 12 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009258803",
+								"comment": "SUSE Linux Enterprise Server for SAP Applications 12 SP3 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009258804",
+								"comment": "SUSE Linux Enterprise Server for SAP Applications 12 SP4 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009258806",
+								"comment": "SUSE Linux Enterprise Server for SAP Applications 12 SP5 is installed"
+							}
+						]
+					},
+					{
+						"operator": "OR",
+						"criterions": [
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009334017",
+								"comment": "kernel-default is not affected"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009333928",
+								"comment": "kernel-source is not affected"
+							}
+						]
+					}
+				]
+			},
+			{
+				"operator": "AND",
+				"criterias": [
+					{
+						"operator": "OR",
+						"criterions": [
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009258033",
+								"comment": "SUSE Linux Enterprise Server 12 SP5 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009258033",
+								"comment": "SUSE Linux Enterprise Server 12 SP5-LTSS is installed"
+							}
+						]
+					},
+					{
+						"operator": "OR",
+						"criterions": [
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009334017",
+								"comment": "kernel-default is not affected"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009335425",
+								"comment": "kernel-default-base is not affected"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009335423",
+								"comment": "kernel-default-devel is not affected"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009335426",
+								"comment": "kernel-default-man is not affected"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009334791",
+								"comment": "kernel-devel is not affected"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009334792",
+								"comment": "kernel-macros is not affected"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009333928",
+								"comment": "kernel-source is not affected"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009340306",
+								"comment": "kernel-devel-azure is not affected"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009340305",
+								"comment": "kernel-source-azure is not affected"
+							}
+						]
+					}
+				]
+			},
+			{
+				"operator": "AND",
+				"criterias": [
+					{
+						"operator": "OR",
+						"criterions": [
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009128018",
+								"comment": "SUSE Linux Enterprise Server 12 SP2-LTSS is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009240280",
+								"comment": "SUSE Linux Enterprise Server 12 SP4-LTSS is installed"
+							}
+						]
+					},
+					{
+						"operator": "OR",
+						"criterions": [
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009334017",
+								"comment": "kernel-default is not affected"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009335425",
+								"comment": "kernel-default-base is not affected"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009335423",
+								"comment": "kernel-default-devel is not affected"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009335426",
+								"comment": "kernel-default-man is not affected"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009334791",
+								"comment": "kernel-devel is not affected"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009334792",
+								"comment": "kernel-macros is not affected"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009333928",
+								"comment": "kernel-source is not affected"
+							}
+						]
+					}
+				]
+			},
+			{
+				"operator": "AND",
+				"criterias": [
+					{
+						"operator": "OR",
+						"criterions": [
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009258033",
+								"comment": "SUSE Linux Enterprise Server 12 SP5 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009258806",
+								"comment": "SUSE Linux Enterprise Server for SAP Applications 12 SP5 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009258650",
+								"comment": "SUSE Linux Enterprise Workstation Extension 12 SP5 is installed"
+							}
+						]
+					},
+					{
+						"operator": "OR",
+						"criterions": [
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009335424",
+								"comment": "kernel-default-extra is not affected"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009333928",
+								"comment": "kernel-source is not affected"
+							}
+						]
+					}
+				]
+			},
+			{
+				"operator": "AND",
+				"criterias": [
+					{
+						"operator": "OR",
+						"criterions": [
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009338031",
+								"comment": "kernel-default-kgraft is not affected"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009696923",
+								"comment": "kernel-default-kgraft-devel is not affected"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009333928",
+								"comment": "kernel-source is not affected"
+							}
+						]
+					}
+				],
+				"criterions": [
+					{
+						"test_ref": "oval:org.opensuse.security:tst:2009273148",
+						"comment": "SUSE Linux Enterprise Live Patching 12 SP5 is installed"
+					}
+				]
+			},
+			{
+				"operator": "AND",
+				"criterias": [
+					{
+						"operator": "OR",
+						"criterions": [
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009728711",
+								"comment": "kernel-devel-rt is not affected"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009728712",
+								"comment": "kernel-source-rt is not affected"
+							}
+						]
+					}
+				],
+				"criterions": [
+					{
+						"test_ref": "oval:org.opensuse.security:tst:2009279486",
+						"comment": "SUSE Linux Enterprise Real Time 12 SP5 is installed"
+					}
+				]
+			}
+		]
+	}
+}
