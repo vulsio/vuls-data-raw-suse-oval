@@ -1,0 +1,249 @@
+{
+	"id": "oval:org.opensuse.security:def:202444935",
+	"version": "1",
+	"class": "vulnerability",
+	"metadata": {
+		"title": "CVE-2024-44935",
+		"affected": {
+			"family": "unix",
+			"platform": [
+				"SUSE Linux Enterprise Micro 6.0"
+			]
+		},
+		"reference": [
+			{
+				"ref_id": "Mitre CVE-2024-44935",
+				"ref_url": "https://cve.mitre.org/cgi-bin/cvename.cgi?name=CVE-2024-44935",
+				"source": "CVE"
+			},
+			{
+				"ref_id": "SUSE CVE-2024-44935",
+				"ref_url": "https://www.suse.com/security/cve/CVE-2024-44935",
+				"source": "SUSE CVE"
+			},
+			{
+				"ref_id": "RHSA-2024:8856",
+				"ref_url": "https://lists.suse.com/pipermail/suse-liberty-linux-updates/2024-November/000202.html",
+				"source": "SUSE-SU"
+			},
+			{
+				"ref_id": "SUSE-SU-2024:3551-1",
+				"ref_url": "https://lists.suse.com/pipermail/sle-updates/2024-October/037163.html",
+				"source": "SUSE-SU"
+			},
+			{
+				"ref_id": "SUSE-SU-2024:3561-1",
+				"ref_url": "https://lists.suse.com/pipermail/sle-security-updates/2024-October/019580.html",
+				"source": "SUSE-SU"
+			},
+			{
+				"ref_id": "SUSE-SU-2024:3564-1",
+				"ref_url": "https://lists.suse.com/pipermail/sle-updates/2024-October/037178.html",
+				"source": "SUSE-SU"
+			},
+			{
+				"ref_id": "SUSE-SU-2024:3569-1",
+				"ref_url": "https://lists.suse.com/pipermail/sle-security-updates/2024-October/019576.html",
+				"source": "SUSE-SU"
+			},
+			{
+				"ref_id": "SUSE-SU-2024:3587-1",
+				"ref_url": "https://lists.suse.com/pipermail/sle-security-updates/2024-October/019588.html",
+				"source": "SUSE-SU"
+			},
+			{
+				"ref_id": "SUSE-SU-2024:3592-1",
+				"ref_url": "https://lists.suse.com/pipermail/sle-updates/2024-October/037209.html",
+				"source": "SUSE-SU"
+			}
+		],
+		"description": "\n    In the Linux kernel, the following vulnerability has been resolved:\n\nsctp: Fix null-ptr-deref in reuseport_add_sock().\n\nsyzbot reported a null-ptr-deref while accessing sk2->sk_reuseport_cb in\nreuseport_add_sock(). [0]\n\nThe repro first creates a listener with SO_REUSEPORT.  Then, it creates\nanother listener on the same port and concurrently closes the first\nlistener.\n\nThe second listen() calls reuseport_add_sock() with the first listener as\nsk2, where sk2->sk_reuseport_cb is not expected to be cleared concurrently,\nbut the close() does clear it by reuseport_detach_sock().\n\nThe problem is SCTP does not properly synchronise reuseport_alloc(),\nreuseport_add_sock(), and reuseport_detach_sock().\n\nThe caller of reuseport_alloc() and reuseport_{add,detach}_sock() must\nprovide synchronisation for sockets that are classified into the same\nreuseport group.\n\nOtherwise, such sockets form multiple identical reuseport groups, and\nall groups except one would be silently dead.\n\n  1. Two sockets call listen() concurrently\n  2. No socket in the same group found in sctp_ep_hashtable[]\n  3. Two sockets call reuseport_alloc() and form two reuseport groups\n  4. Only one group hit first in __sctp_rcv_lookup_endpoint() receives\n      incoming packets\n\nAlso, the reported null-ptr-deref could occur.\n\nTCP/UDP guarantees that would not happen by holding the hash bucket lock.\n\nLet's apply the locking strategy to __sctp_hash_endpoint() and\n__sctp_unhash_endpoint().\n\n[0]:\nOops: general protection fault, probably for non-canonical address 0xdffffc0000000002: 0000 [#1] PREEMPT SMP KASAN PTI\nKASAN: null-ptr-deref in range [0x0000000000000010-0x0000000000000017]\nCPU: 1 UID: 0 PID: 10230 Comm: syz-executor119 Not tainted 6.10.0-syzkaller-12585-g301927d2d2eb #0\nHardware name: Google Google Compute Engine/Google Compute Engine, BIOS Google 06/27/2024\nRIP: 0010:reuseport_add_sock+0x27e/0x5e0 net/core/sock_reuseport.c:350\nCode: 00 0f b7 5d 00 bf 01 00 00 00 89 de e8 1b a4 ff f7 83 fb 01 0f 85 a3 01 00 00 e8 6d a0 ff f7 49 8d 7e 12 48 89 f8 48 c1 e8 03 <42> 0f b6 04 28 84 c0 0f 85 4b 02 00 00 41 0f b7 5e 12 49 8d 7e 14\nRSP: 0018:ffffc9000b947c98 EFLAGS: 00010202\nRAX: 0000000000000002 RBX: ffff8880252ddf98 RCX: ffff888079478000\nRDX: 0000000000000000 RSI: 0000000000000001 RDI: 0000000000000012\nRBP: 0000000000000001 R08: ffffffff8993e18d R09: 1ffffffff1fef385\nR10: dffffc0000000000 R11: fffffbfff1fef386 R12: ffff8880252ddac0\nR13: dffffc0000000000 R14: 0000000000000000 R15: 0000000000000000\nFS:  00007f24e45b96c0(0000) GS:ffff8880b9300000(0000) knlGS:0000000000000000\nCS:  0010 DS: 0000 ES: 0000 CR0: 0000000080050033\nCR2: 00007ffcced5f7b8 CR3: 00000000241be000 CR4: 00000000003506f0\nDR0: 0000000000000000 DR1: 0000000000000000 DR2: 0000000000000000\n DR3: 0000000000000000 DR6: 00000000fffe0ff0 DR7: 0000000000000400\nCall Trace:\n <TASK>\n __sctp_hash_endpoint net/sctp/input.c:762 [inline]\n sctp_hash_endpoint+0x52a/0x600 net/sctp/input.c:790\n sctp_listen_start net/sctp/socket.c:8570 [inline]\n sctp_inet_listen+0x767/0xa20 net/sctp/socket.c:8625\n __sys_listen_socket net/socket.c:1883 [inline]\n __sys_listen+0x1b7/0x230 net/socket.c:1894\n __do_sys_listen net/socket.c:1902 [inline]\n __se_sys_listen net/socket.c:1900 [inline]\n __x64_sys_listen+0x5a/0x70 net/socket.c:1900\n do_syscall_x64 arch/x86/entry/common.c:52 [inline]\n do_syscall_64+0xf3/0x230 arch/x86/entry/common.c:83\n entry_SYSCALL_64_after_hwframe+0x77/0x7f\nRIP: 0033:0x7f24e46039b9\nCode: 28 00 00 00 75 05 48 83 c4 28 c3 e8 91 1a 00 00 90 48 89 f8 48 89 f7 48 89 d6 48 89 ca 4d 89 c2 4d 89 c8 4c 8b 4c 24 08 0f 05 <48> 3d 01 f0 ff ff 73 01 c3 48 c7 c1 b0 ff ff ff f7 d8 64 89 01 48\nRSP: 002b:00007f24e45b9228 EFLAGS: 00000246 ORIG_RAX: 0000000000000032\nRAX: ffffffffffffffda RBX: 00007f24e468e428 RCX: 00007f24e46039b9\nRDX: 00007f24e46039b9 RSI: 0000000000000003 RDI: 0000000000000004\nRBP: 00007f24e468e420 R08: 00007f24e45b96c0 R09: 00007f24e45b96c0\nR10: 00007f24e45b96c0 R11: 0000000000000246 R12: 00007f24e468e42c\nR13:\n---truncated---\n    ",
+		"advisory": {
+			"from": "security@suse.de",
+			"severity": "Moderate",
+			"cve": [
+				{
+					"text": "CVE-2024-44935 at SUSE",
+					"href": "https://www.suse.com/security/cve/CVE-2024-44935/",
+					"impact": "medium",
+					"cvss3": "5.5/CVSS:3.1/AV:L/AC:L/PR:L/UI:N/S:U/C:N/I:N/A:H"
+				},
+				{
+					"text": "CVE-2024-44935 at NVD",
+					"href": "https://nvd.nist.gov/vuln/detail/CVE-2024-44935",
+					"impact": "medium",
+					"cvss3": "5.5/CVSS:3.1/AV:L/AC:L/PR:L/UI:N/S:U/C:N/I:N/A:H"
+				}
+			],
+			"bugzilla": [
+				{
+					"text": "SUSE bug 1229810",
+					"href": "https://bugzilla.suse.com/1229810"
+				}
+			],
+			"issued": {
+				"date": "2024-11-09"
+			},
+			"updated": {
+				"date": "2024-11-09"
+			},
+			"affected_cpe_list": {
+				"cpe": [
+					"cpe:/o:suse:sl-micro:6.0"
+				]
+			}
+		}
+	},
+	"criteria": {
+		"operator": "AND",
+		"criterias": [
+			{
+				"operator": "OR",
+				"criterions": [
+					{
+						"test_ref": "oval:org.opensuse.security:tst:2009951656",
+						"comment": "gtk3-data-3.24.37+70-6.1 is installed"
+					},
+					{
+						"test_ref": "oval:org.opensuse.security:tst:2009951657",
+						"comment": "gtk3-schema-3.24.37+70-6.1 is installed"
+					},
+					{
+						"test_ref": "oval:org.opensuse.security:tst:2009951658",
+						"comment": "gtk3-tools-3.24.37+70-6.1 is installed"
+					},
+					{
+						"test_ref": "oval:org.opensuse.security:tst:2009951659",
+						"comment": "keepalived-2.2.8-2.1 is installed"
+					},
+					{
+						"test_ref": "oval:org.opensuse.security:tst:2009951660",
+						"comment": "kernel-default-6.4.0-20.1 is installed"
+					},
+					{
+						"test_ref": "oval:org.opensuse.security:tst:2009881569",
+						"comment": "kernel-default-base-6.4.0-17.1.1.51 is installed"
+					},
+					{
+						"test_ref": "oval:org.opensuse.security:tst:2009951661",
+						"comment": "kernel-default-extra-6.4.0-20.1 is installed"
+					},
+					{
+						"test_ref": "oval:org.opensuse.security:tst:2009951662",
+						"comment": "kernel-default-livepatch-6.4.0-20.1 is installed"
+					},
+					{
+						"test_ref": "oval:org.opensuse.security:tst:2009951663",
+						"comment": "kernel-devel-6.4.0-20.1 is installed"
+					},
+					{
+						"test_ref": "oval:org.opensuse.security:tst:2009951664",
+						"comment": "kernel-devel-rt-6.4.0-11.1 is installed"
+					},
+					{
+						"test_ref": "oval:org.opensuse.security:tst:2009951665",
+						"comment": "kernel-kvmsmall-6.4.0-20.1 is installed"
+					},
+					{
+						"test_ref": "oval:org.opensuse.security:tst:2009951666",
+						"comment": "kernel-livepatch-6_4_0-11-rt-1-1.2 is installed"
+					},
+					{
+						"test_ref": "oval:org.opensuse.security:tst:2009951667",
+						"comment": "kernel-livepatch-6_4_0-20-default-1-1.2 is installed"
+					},
+					{
+						"test_ref": "oval:org.opensuse.security:tst:2009951668",
+						"comment": "kernel-macros-6.4.0-20.1 is installed"
+					},
+					{
+						"test_ref": "oval:org.opensuse.security:tst:2009951669",
+						"comment": "kernel-rt-6.4.0-11.1 is installed"
+					},
+					{
+						"test_ref": "oval:org.opensuse.security:tst:2009951670",
+						"comment": "kernel-source-6.4.0-20.1 is installed"
+					},
+					{
+						"test_ref": "oval:org.opensuse.security:tst:2009951671",
+						"comment": "kernel-source-rt-6.4.0-11.1 is installed"
+					},
+					{
+						"test_ref": "oval:org.opensuse.security:tst:2009951672",
+						"comment": "krb5-1.20.1-5.1 is installed"
+					},
+					{
+						"test_ref": "oval:org.opensuse.security:tst:2009951673",
+						"comment": "libaudit1-3.0.9-4.1 is installed"
+					},
+					{
+						"test_ref": "oval:org.opensuse.security:tst:2009951674",
+						"comment": "libauparse0-3.0.9-4.1 is installed"
+					},
+					{
+						"test_ref": "oval:org.opensuse.security:tst:2009951675",
+						"comment": "libgtk-3-0-3.24.37+70-6.1 is installed"
+					},
+					{
+						"test_ref": "oval:org.opensuse.security:tst:2009951676",
+						"comment": "libsystemd0-254.18-1.1 is installed"
+					},
+					{
+						"test_ref": "oval:org.opensuse.security:tst:2009951677",
+						"comment": "libudev1-254.18-1.1 is installed"
+					},
+					{
+						"test_ref": "oval:org.opensuse.security:tst:2009951678",
+						"comment": "patch-2.7.6-3.1 is installed"
+					},
+					{
+						"test_ref": "oval:org.opensuse.security:tst:2009951679",
+						"comment": "perl-Bootloader-1.8.2-1.1 is installed"
+					},
+					{
+						"test_ref": "oval:org.opensuse.security:tst:2009951680",
+						"comment": "python311-setuptools-69.0.2-2.1 is installed"
+					},
+					{
+						"test_ref": "oval:org.opensuse.security:tst:2009951681",
+						"comment": "systemd-254.18-1.1 is installed"
+					},
+					{
+						"test_ref": "oval:org.opensuse.security:tst:2009951682",
+						"comment": "systemd-container-254.18-1.1 is installed"
+					},
+					{
+						"test_ref": "oval:org.opensuse.security:tst:2009951683",
+						"comment": "systemd-coredump-254.18-1.1 is installed"
+					},
+					{
+						"test_ref": "oval:org.opensuse.security:tst:2009951684",
+						"comment": "systemd-experimental-254.18-1.1 is installed"
+					},
+					{
+						"test_ref": "oval:org.opensuse.security:tst:2009951685",
+						"comment": "systemd-journal-remote-254.18-1.1 is installed"
+					},
+					{
+						"test_ref": "oval:org.opensuse.security:tst:2009951686",
+						"comment": "systemd-portable-254.18-1.1 is installed"
+					},
+					{
+						"test_ref": "oval:org.opensuse.security:tst:2009951687",
+						"comment": "typelib-1_0-Gtk-3_0-3.24.37+70-6.1 is installed"
+					},
+					{
+						"test_ref": "oval:org.opensuse.security:tst:2009951688",
+						"comment": "udev-254.18-1.1 is installed"
+					}
+				]
+			}
+		],
+		"criterions": [
+			{
+				"test_ref": "oval:org.opensuse.security:tst:2009864179",
+				"comment": "SUSE Linux Enterprise Micro 6.0 is installed"
+			}
+		]
+	}
+}

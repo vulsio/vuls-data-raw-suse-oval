@@ -1,0 +1,249 @@
+{
+	"id": "oval:org.opensuse.security:def:202445006",
+	"version": "1",
+	"class": "vulnerability",
+	"metadata": {
+		"title": "CVE-2024-45006",
+		"affected": {
+			"family": "unix",
+			"platform": [
+				"SUSE Linux Enterprise Micro 6.0"
+			]
+		},
+		"reference": [
+			{
+				"ref_id": "Mitre CVE-2024-45006",
+				"ref_url": "https://cve.mitre.org/cgi-bin/cvename.cgi?name=CVE-2024-45006",
+				"source": "CVE"
+			},
+			{
+				"ref_id": "SUSE CVE-2024-45006",
+				"ref_url": "https://www.suse.com/security/cve/CVE-2024-45006",
+				"source": "SUSE CVE"
+			},
+			{
+				"ref_id": "SUSE-SU-2024:3551-1",
+				"ref_url": "https://lists.suse.com/pipermail/sle-updates/2024-October/037163.html",
+				"source": "SUSE-SU"
+			},
+			{
+				"ref_id": "SUSE-SU-2024:3553-1",
+				"ref_url": "https://lists.suse.com/pipermail/sle-updates/2024-October/037161.html",
+				"source": "SUSE-SU"
+			},
+			{
+				"ref_id": "SUSE-SU-2024:3561-1",
+				"ref_url": "https://lists.suse.com/pipermail/sle-security-updates/2024-October/019580.html",
+				"source": "SUSE-SU"
+			},
+			{
+				"ref_id": "SUSE-SU-2024:3564-1",
+				"ref_url": "https://lists.suse.com/pipermail/sle-updates/2024-October/037178.html",
+				"source": "SUSE-SU"
+			},
+			{
+				"ref_id": "SUSE-SU-2024:3569-1",
+				"ref_url": "https://lists.suse.com/pipermail/sle-security-updates/2024-October/019576.html",
+				"source": "SUSE-SU"
+			},
+			{
+				"ref_id": "SUSE-SU-2024:3587-1",
+				"ref_url": "https://lists.suse.com/pipermail/sle-security-updates/2024-October/019588.html",
+				"source": "SUSE-SU"
+			},
+			{
+				"ref_id": "SUSE-SU-2024:3592-1",
+				"ref_url": "https://lists.suse.com/pipermail/sle-updates/2024-October/037209.html",
+				"source": "SUSE-SU"
+			}
+		],
+		"description": "\n    In the Linux kernel, the following vulnerability has been resolved:\n\nxhci: Fix Panther point NULL pointer deref at full-speed re-enumeration\n\nre-enumerating full-speed devices after a failed address device command\ncan trigger a NULL pointer dereference.\n\nFull-speed devices may need to reconfigure the endpoint 0 Max Packet Size\nvalue during enumeration. Usb core calls usb_ep0_reinit() in this case,\nwhich ends up calling xhci_configure_endpoint().\n\nOn Panther point xHC the xhci_configure_endpoint() function will\nadditionally check and reserve bandwidth in software. Other hosts do\nthis in hardware\n\nIf xHC address device command fails then a new xhci_virt_device structure\nis allocated as part of re-enabling the slot, but the bandwidth table\npointers are not set up properly here.\nThis triggers the NULL pointer dereference the next time usb_ep0_reinit()\nis called and xhci_configure_endpoint() tries to check and reserve\nbandwidth\n\n[46710.713538] usb 3-1: new full-speed USB device number 5 using xhci_hcd\n[46710.713699] usb 3-1: Device not responding to setup address.\n[46710.917684] usb 3-1: Device not responding to setup address.\n[46711.125536] usb 3-1: device not accepting address 5, error -71\n[46711.125594] BUG: kernel NULL pointer dereference, address: 0000000000000008\n[46711.125600] #PF: supervisor read access in kernel mode\n[46711.125603] #PF: error_code(0x0000) - not-present page\n[46711.125606] PGD 0 P4D 0\n[46711.125610] Oops: Oops: 0000 [#1] PREEMPT SMP PTI\n[46711.125615] CPU: 1 PID: 25760 Comm: kworker/1:2 Not tainted 6.10.3_2 #1\n[46711.125620] Hardware name: Gigabyte Technology Co., Ltd.\n[46711.125623] Workqueue: usb_hub_wq hub_event [usbcore]\n[46711.125668] RIP: 0010:xhci_reserve_bandwidth (drivers/usb/host/xhci.c\n\nFix this by making sure bandwidth table pointers are set up correctly\nafter a failed address device command, and additionally by avoiding\nchecking for bandwidth in cases like this where no actual endpoints are\nadded or removed, i.e. only context for default control endpoint 0 is\nevaluated.\n    ",
+		"advisory": {
+			"from": "security@suse.de",
+			"severity": "Moderate",
+			"cve": [
+				{
+					"text": "CVE-2024-45006 at SUSE",
+					"href": "https://www.suse.com/security/cve/CVE-2024-45006/",
+					"impact": "medium",
+					"cvss3": "5.5/CVSS:3.1/AV:L/AC:L/PR:L/UI:N/S:U/C:N/I:N/A:H"
+				},
+				{
+					"text": "CVE-2024-45006 at NVD",
+					"href": "https://nvd.nist.gov/vuln/detail/CVE-2024-45006",
+					"impact": "medium",
+					"cvss3": "5.5/CVSS:3.1/AV:L/AC:L/PR:L/UI:N/S:U/C:N/I:N/A:H"
+				}
+			],
+			"bugzilla": [
+				{
+					"text": "SUSE bug 1230247",
+					"href": "https://bugzilla.suse.com/1230247"
+				}
+			],
+			"issued": {
+				"date": "2024-11-09"
+			},
+			"updated": {
+				"date": "2024-11-09"
+			},
+			"affected_cpe_list": {
+				"cpe": [
+					"cpe:/o:suse:sl-micro:6.0"
+				]
+			}
+		}
+	},
+	"criteria": {
+		"operator": "AND",
+		"criterias": [
+			{
+				"operator": "OR",
+				"criterions": [
+					{
+						"test_ref": "oval:org.opensuse.security:tst:2009951656",
+						"comment": "gtk3-data-3.24.37+70-6.1 is installed"
+					},
+					{
+						"test_ref": "oval:org.opensuse.security:tst:2009951657",
+						"comment": "gtk3-schema-3.24.37+70-6.1 is installed"
+					},
+					{
+						"test_ref": "oval:org.opensuse.security:tst:2009951658",
+						"comment": "gtk3-tools-3.24.37+70-6.1 is installed"
+					},
+					{
+						"test_ref": "oval:org.opensuse.security:tst:2009951659",
+						"comment": "keepalived-2.2.8-2.1 is installed"
+					},
+					{
+						"test_ref": "oval:org.opensuse.security:tst:2009951660",
+						"comment": "kernel-default-6.4.0-20.1 is installed"
+					},
+					{
+						"test_ref": "oval:org.opensuse.security:tst:2009881569",
+						"comment": "kernel-default-base-6.4.0-17.1.1.51 is installed"
+					},
+					{
+						"test_ref": "oval:org.opensuse.security:tst:2009951661",
+						"comment": "kernel-default-extra-6.4.0-20.1 is installed"
+					},
+					{
+						"test_ref": "oval:org.opensuse.security:tst:2009951662",
+						"comment": "kernel-default-livepatch-6.4.0-20.1 is installed"
+					},
+					{
+						"test_ref": "oval:org.opensuse.security:tst:2009951663",
+						"comment": "kernel-devel-6.4.0-20.1 is installed"
+					},
+					{
+						"test_ref": "oval:org.opensuse.security:tst:2009951664",
+						"comment": "kernel-devel-rt-6.4.0-11.1 is installed"
+					},
+					{
+						"test_ref": "oval:org.opensuse.security:tst:2009951665",
+						"comment": "kernel-kvmsmall-6.4.0-20.1 is installed"
+					},
+					{
+						"test_ref": "oval:org.opensuse.security:tst:2009951666",
+						"comment": "kernel-livepatch-6_4_0-11-rt-1-1.2 is installed"
+					},
+					{
+						"test_ref": "oval:org.opensuse.security:tst:2009951667",
+						"comment": "kernel-livepatch-6_4_0-20-default-1-1.2 is installed"
+					},
+					{
+						"test_ref": "oval:org.opensuse.security:tst:2009951668",
+						"comment": "kernel-macros-6.4.0-20.1 is installed"
+					},
+					{
+						"test_ref": "oval:org.opensuse.security:tst:2009951669",
+						"comment": "kernel-rt-6.4.0-11.1 is installed"
+					},
+					{
+						"test_ref": "oval:org.opensuse.security:tst:2009951670",
+						"comment": "kernel-source-6.4.0-20.1 is installed"
+					},
+					{
+						"test_ref": "oval:org.opensuse.security:tst:2009951671",
+						"comment": "kernel-source-rt-6.4.0-11.1 is installed"
+					},
+					{
+						"test_ref": "oval:org.opensuse.security:tst:2009951672",
+						"comment": "krb5-1.20.1-5.1 is installed"
+					},
+					{
+						"test_ref": "oval:org.opensuse.security:tst:2009951673",
+						"comment": "libaudit1-3.0.9-4.1 is installed"
+					},
+					{
+						"test_ref": "oval:org.opensuse.security:tst:2009951674",
+						"comment": "libauparse0-3.0.9-4.1 is installed"
+					},
+					{
+						"test_ref": "oval:org.opensuse.security:tst:2009951675",
+						"comment": "libgtk-3-0-3.24.37+70-6.1 is installed"
+					},
+					{
+						"test_ref": "oval:org.opensuse.security:tst:2009951676",
+						"comment": "libsystemd0-254.18-1.1 is installed"
+					},
+					{
+						"test_ref": "oval:org.opensuse.security:tst:2009951677",
+						"comment": "libudev1-254.18-1.1 is installed"
+					},
+					{
+						"test_ref": "oval:org.opensuse.security:tst:2009951678",
+						"comment": "patch-2.7.6-3.1 is installed"
+					},
+					{
+						"test_ref": "oval:org.opensuse.security:tst:2009951679",
+						"comment": "perl-Bootloader-1.8.2-1.1 is installed"
+					},
+					{
+						"test_ref": "oval:org.opensuse.security:tst:2009951680",
+						"comment": "python311-setuptools-69.0.2-2.1 is installed"
+					},
+					{
+						"test_ref": "oval:org.opensuse.security:tst:2009951681",
+						"comment": "systemd-254.18-1.1 is installed"
+					},
+					{
+						"test_ref": "oval:org.opensuse.security:tst:2009951682",
+						"comment": "systemd-container-254.18-1.1 is installed"
+					},
+					{
+						"test_ref": "oval:org.opensuse.security:tst:2009951683",
+						"comment": "systemd-coredump-254.18-1.1 is installed"
+					},
+					{
+						"test_ref": "oval:org.opensuse.security:tst:2009951684",
+						"comment": "systemd-experimental-254.18-1.1 is installed"
+					},
+					{
+						"test_ref": "oval:org.opensuse.security:tst:2009951685",
+						"comment": "systemd-journal-remote-254.18-1.1 is installed"
+					},
+					{
+						"test_ref": "oval:org.opensuse.security:tst:2009951686",
+						"comment": "systemd-portable-254.18-1.1 is installed"
+					},
+					{
+						"test_ref": "oval:org.opensuse.security:tst:2009951687",
+						"comment": "typelib-1_0-Gtk-3_0-3.24.37+70-6.1 is installed"
+					},
+					{
+						"test_ref": "oval:org.opensuse.security:tst:2009951688",
+						"comment": "udev-254.18-1.1 is installed"
+					}
+				]
+			}
+		],
+		"criterions": [
+			{
+				"test_ref": "oval:org.opensuse.security:tst:2009864179",
+				"comment": "SUSE Linux Enterprise Micro 6.0 is installed"
+			}
+		]
+	}
+}

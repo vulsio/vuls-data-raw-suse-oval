@@ -1,0 +1,249 @@
+{
+	"id": "oval:org.opensuse.security:def:202445000",
+	"version": "1",
+	"class": "vulnerability",
+	"metadata": {
+		"title": "CVE-2024-45000",
+		"affected": {
+			"family": "unix",
+			"platform": [
+				"SUSE Linux Enterprise Micro 6.0"
+			]
+		},
+		"reference": [
+			{
+				"ref_id": "Mitre CVE-2024-45000",
+				"ref_url": "https://cve.mitre.org/cgi-bin/cvename.cgi?name=CVE-2024-45000",
+				"source": "CVE"
+			},
+			{
+				"ref_id": "SUSE CVE-2024-45000",
+				"ref_url": "https://www.suse.com/security/cve/CVE-2024-45000",
+				"source": "SUSE CVE"
+			},
+			{
+				"ref_id": "SUSE-SU-2024:3551-1",
+				"ref_url": "https://lists.suse.com/pipermail/sle-updates/2024-October/037163.html",
+				"source": "SUSE-SU"
+			},
+			{
+				"ref_id": "SUSE-SU-2024:3553-1",
+				"ref_url": "https://lists.suse.com/pipermail/sle-updates/2024-October/037161.html",
+				"source": "SUSE-SU"
+			},
+			{
+				"ref_id": "SUSE-SU-2024:3561-1",
+				"ref_url": "https://lists.suse.com/pipermail/sle-security-updates/2024-October/019580.html",
+				"source": "SUSE-SU"
+			},
+			{
+				"ref_id": "SUSE-SU-2024:3564-1",
+				"ref_url": "https://lists.suse.com/pipermail/sle-updates/2024-October/037178.html",
+				"source": "SUSE-SU"
+			},
+			{
+				"ref_id": "SUSE-SU-2024:3569-1",
+				"ref_url": "https://lists.suse.com/pipermail/sle-security-updates/2024-October/019576.html",
+				"source": "SUSE-SU"
+			},
+			{
+				"ref_id": "SUSE-SU-2024:3587-1",
+				"ref_url": "https://lists.suse.com/pipermail/sle-security-updates/2024-October/019588.html",
+				"source": "SUSE-SU"
+			},
+			{
+				"ref_id": "SUSE-SU-2024:3592-1",
+				"ref_url": "https://lists.suse.com/pipermail/sle-updates/2024-October/037209.html",
+				"source": "SUSE-SU"
+			}
+		],
+		"description": "\n    In the Linux kernel, the following vulnerability has been resolved:\n\nfs/netfs/fscache_cookie: add missing \"n_accesses\" check\n\nThis fixes a NULL pointer dereference bug due to a data race which\nlooks like this:\n\n  BUG: kernel NULL pointer dereference, address: 0000000000000008\n  #PF: supervisor read access in kernel mode\n  #PF: error_code(0x0000) - not-present page\n  PGD 0 P4D 0\n  Oops: 0000 [#1] SMP PTI\n  CPU: 33 PID: 16573 Comm: kworker/u97:799 Not tainted 6.8.7-cm4all1-hp+ #43\n  Hardware name: HP ProLiant DL380 Gen9/ProLiant DL380 Gen9, BIOS P89 10/17/2018\n  Workqueue: events_unbound netfs_rreq_write_to_cache_work\n  RIP: 0010:cachefiles_prepare_write+0x30/0xa0\n  Code: 57 41 56 45 89 ce 41 55 49 89 cd 41 54 49 89 d4 55 53 48 89 fb 48 83 ec 08 48 8b 47 08 48 83 7f 10 00 48 89 34 24 48 8b 68 20 <48> 8b 45 08 4c 8b 38 74 45 49 8b 7f 50 e8 4e a9 b0 ff 48 8b 73 10\n  RSP: 0018:ffffb4e78113bde0 EFLAGS: 00010286\n  RAX: ffff976126be6d10 RBX: ffff97615cdb8438 RCX: 0000000000020000\n  RDX: ffff97605e6c4c68 RSI: ffff97605e6c4c60 RDI: ffff97615cdb8438\n  RBP: 0000000000000000 R08: 0000000000278333 R09: 0000000000000001\n  R10: ffff97605e6c4600 R11: 0000000000000001 R12: ffff97605e6c4c68\n  R13: 0000000000020000 R14: 0000000000000001 R15: ffff976064fe2c00\n  FS:  0000000000000000(0000) GS:ffff9776dfd40000(0000) knlGS:0000000000000000\n  CS:  0010 DS: 0000 ES: 0000 CR0: 0000000080050033\n  CR2: 0000000000000008 CR3: 000000005942c002 CR4: 00000000001706f0\n  Call Trace:\n   <TASK>\n   ? __die+0x1f/0x70\n   ? page_fault_oops+0x15d/0x440\n   ? search_module_extables+0xe/0x40\n   ? fixup_exception+0x22/0x2f0\n   ? exc_page_fault+0x5f/0x100\n   ? asm_exc_page_fault+0x22/0x30\n   ? cachefiles_prepare_write+0x30/0xa0\n   netfs_rreq_write_to_cache_work+0x135/0x2e0\n   process_one_work+0x137/0x2c0\n   worker_thread+0x2e9/0x400\n   ? __pfx_worker_thread+0x10/0x10\n   kthread+0xcc/0x100\n   ? __pfx_kthread+0x10/0x10\n   ret_from_fork+0x30/0x50\n   ? __pfx_kthread+0x10/0x10\n   ret_from_fork_asm+0x1b/0x30\n   </TASK>\n  Modules linked in:\n  CR2: 0000000000000008\n  ---[ end trace 0000000000000000 ]---\n\nThis happened because fscache_cookie_state_machine() was slow and was\nstill running while another process invoked fscache_unuse_cookie();\nthis led to a fscache_cookie_lru_do_one() call, setting the\nFSCACHE_COOKIE_DO_LRU_DISCARD flag, which was picked up by\nfscache_cookie_state_machine(), withdrawing the cookie via\ncachefiles_withdraw_cookie(), clearing cookie->cache_priv.\n\nAt the same time, yet another process invoked\ncachefiles_prepare_write(), which found a NULL pointer in this code\nline:\n\n  struct cachefiles_object *object = cachefiles_cres_object(cres);\n\nThe next line crashes, obviously:\n\n  struct cachefiles_cache *cache = object->volume->cache;\n\nDuring cachefiles_prepare_write(), the \"n_accesses\" counter is\nnon-zero (via fscache_begin_operation()).  The cookie must not be\nwithdrawn until it drops to zero.\n\nThe counter is checked by fscache_cookie_state_machine() before\nswitching to FSCACHE_COOKIE_STATE_RELINQUISHING and\nFSCACHE_COOKIE_STATE_WITHDRAWING (in \"case\nFSCACHE_COOKIE_STATE_FAILED\"), but not for\nFSCACHE_COOKIE_STATE_LRU_DISCARDING (\"case\nFSCACHE_COOKIE_STATE_ACTIVE\").\n\nThis patch adds the missing check.  With a non-zero access counter,\nthe function returns and the next fscache_end_cookie_access() call\nwill queue another fscache_cookie_state_machine() call to handle the\nstill-pending FSCACHE_COOKIE_DO_LRU_DISCARD.\n    ",
+		"advisory": {
+			"from": "security@suse.de",
+			"severity": "Moderate",
+			"cve": [
+				{
+					"text": "CVE-2024-45000 at SUSE",
+					"href": "https://www.suse.com/security/cve/CVE-2024-45000/",
+					"impact": "medium",
+					"cvss3": "5.5/CVSS:3.1/AV:L/AC:L/PR:L/UI:N/S:U/C:N/I:N/A:H"
+				},
+				{
+					"text": "CVE-2024-45000 at NVD",
+					"href": "https://nvd.nist.gov/vuln/detail/CVE-2024-45000",
+					"impact": "medium",
+					"cvss3": "5.5/CVSS:3.1/AV:L/AC:L/PR:L/UI:N/S:U/C:N/I:N/A:H"
+				}
+			],
+			"bugzilla": [
+				{
+					"text": "SUSE bug 1230170",
+					"href": "https://bugzilla.suse.com/1230170"
+				}
+			],
+			"issued": {
+				"date": "2024-11-09"
+			},
+			"updated": {
+				"date": "2024-11-09"
+			},
+			"affected_cpe_list": {
+				"cpe": [
+					"cpe:/o:suse:sl-micro:6.0"
+				]
+			}
+		}
+	},
+	"criteria": {
+		"operator": "AND",
+		"criterias": [
+			{
+				"operator": "OR",
+				"criterions": [
+					{
+						"test_ref": "oval:org.opensuse.security:tst:2009951656",
+						"comment": "gtk3-data-3.24.37+70-6.1 is installed"
+					},
+					{
+						"test_ref": "oval:org.opensuse.security:tst:2009951657",
+						"comment": "gtk3-schema-3.24.37+70-6.1 is installed"
+					},
+					{
+						"test_ref": "oval:org.opensuse.security:tst:2009951658",
+						"comment": "gtk3-tools-3.24.37+70-6.1 is installed"
+					},
+					{
+						"test_ref": "oval:org.opensuse.security:tst:2009951659",
+						"comment": "keepalived-2.2.8-2.1 is installed"
+					},
+					{
+						"test_ref": "oval:org.opensuse.security:tst:2009951660",
+						"comment": "kernel-default-6.4.0-20.1 is installed"
+					},
+					{
+						"test_ref": "oval:org.opensuse.security:tst:2009881569",
+						"comment": "kernel-default-base-6.4.0-17.1.1.51 is installed"
+					},
+					{
+						"test_ref": "oval:org.opensuse.security:tst:2009951661",
+						"comment": "kernel-default-extra-6.4.0-20.1 is installed"
+					},
+					{
+						"test_ref": "oval:org.opensuse.security:tst:2009951662",
+						"comment": "kernel-default-livepatch-6.4.0-20.1 is installed"
+					},
+					{
+						"test_ref": "oval:org.opensuse.security:tst:2009951663",
+						"comment": "kernel-devel-6.4.0-20.1 is installed"
+					},
+					{
+						"test_ref": "oval:org.opensuse.security:tst:2009951664",
+						"comment": "kernel-devel-rt-6.4.0-11.1 is installed"
+					},
+					{
+						"test_ref": "oval:org.opensuse.security:tst:2009951665",
+						"comment": "kernel-kvmsmall-6.4.0-20.1 is installed"
+					},
+					{
+						"test_ref": "oval:org.opensuse.security:tst:2009951666",
+						"comment": "kernel-livepatch-6_4_0-11-rt-1-1.2 is installed"
+					},
+					{
+						"test_ref": "oval:org.opensuse.security:tst:2009951667",
+						"comment": "kernel-livepatch-6_4_0-20-default-1-1.2 is installed"
+					},
+					{
+						"test_ref": "oval:org.opensuse.security:tst:2009951668",
+						"comment": "kernel-macros-6.4.0-20.1 is installed"
+					},
+					{
+						"test_ref": "oval:org.opensuse.security:tst:2009951669",
+						"comment": "kernel-rt-6.4.0-11.1 is installed"
+					},
+					{
+						"test_ref": "oval:org.opensuse.security:tst:2009951670",
+						"comment": "kernel-source-6.4.0-20.1 is installed"
+					},
+					{
+						"test_ref": "oval:org.opensuse.security:tst:2009951671",
+						"comment": "kernel-source-rt-6.4.0-11.1 is installed"
+					},
+					{
+						"test_ref": "oval:org.opensuse.security:tst:2009951672",
+						"comment": "krb5-1.20.1-5.1 is installed"
+					},
+					{
+						"test_ref": "oval:org.opensuse.security:tst:2009951673",
+						"comment": "libaudit1-3.0.9-4.1 is installed"
+					},
+					{
+						"test_ref": "oval:org.opensuse.security:tst:2009951674",
+						"comment": "libauparse0-3.0.9-4.1 is installed"
+					},
+					{
+						"test_ref": "oval:org.opensuse.security:tst:2009951675",
+						"comment": "libgtk-3-0-3.24.37+70-6.1 is installed"
+					},
+					{
+						"test_ref": "oval:org.opensuse.security:tst:2009951676",
+						"comment": "libsystemd0-254.18-1.1 is installed"
+					},
+					{
+						"test_ref": "oval:org.opensuse.security:tst:2009951677",
+						"comment": "libudev1-254.18-1.1 is installed"
+					},
+					{
+						"test_ref": "oval:org.opensuse.security:tst:2009951678",
+						"comment": "patch-2.7.6-3.1 is installed"
+					},
+					{
+						"test_ref": "oval:org.opensuse.security:tst:2009951679",
+						"comment": "perl-Bootloader-1.8.2-1.1 is installed"
+					},
+					{
+						"test_ref": "oval:org.opensuse.security:tst:2009951680",
+						"comment": "python311-setuptools-69.0.2-2.1 is installed"
+					},
+					{
+						"test_ref": "oval:org.opensuse.security:tst:2009951681",
+						"comment": "systemd-254.18-1.1 is installed"
+					},
+					{
+						"test_ref": "oval:org.opensuse.security:tst:2009951682",
+						"comment": "systemd-container-254.18-1.1 is installed"
+					},
+					{
+						"test_ref": "oval:org.opensuse.security:tst:2009951683",
+						"comment": "systemd-coredump-254.18-1.1 is installed"
+					},
+					{
+						"test_ref": "oval:org.opensuse.security:tst:2009951684",
+						"comment": "systemd-experimental-254.18-1.1 is installed"
+					},
+					{
+						"test_ref": "oval:org.opensuse.security:tst:2009951685",
+						"comment": "systemd-journal-remote-254.18-1.1 is installed"
+					},
+					{
+						"test_ref": "oval:org.opensuse.security:tst:2009951686",
+						"comment": "systemd-portable-254.18-1.1 is installed"
+					},
+					{
+						"test_ref": "oval:org.opensuse.security:tst:2009951687",
+						"comment": "typelib-1_0-Gtk-3_0-3.24.37+70-6.1 is installed"
+					},
+					{
+						"test_ref": "oval:org.opensuse.security:tst:2009951688",
+						"comment": "udev-254.18-1.1 is installed"
+					}
+				]
+			}
+		],
+		"criterions": [
+			{
+				"test_ref": "oval:org.opensuse.security:tst:2009864179",
+				"comment": "SUSE Linux Enterprise Micro 6.0 is installed"
+			}
+		]
+	}
+}

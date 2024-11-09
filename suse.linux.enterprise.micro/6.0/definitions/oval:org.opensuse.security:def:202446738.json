@@ -1,0 +1,264 @@
+{
+	"id": "oval:org.opensuse.security:def:202446738",
+	"version": "1",
+	"class": "vulnerability",
+	"metadata": {
+		"title": "CVE-2024-46738",
+		"affected": {
+			"family": "unix",
+			"platform": [
+				"SUSE Linux Enterprise Micro 6.0"
+			]
+		},
+		"reference": [
+			{
+				"ref_id": "Mitre CVE-2024-46738",
+				"ref_url": "https://cve.mitre.org/cgi-bin/cvename.cgi?name=CVE-2024-46738",
+				"source": "CVE"
+			},
+			{
+				"ref_id": "SUSE CVE-2024-46738",
+				"ref_url": "https://www.suse.com/security/cve/CVE-2024-46738",
+				"source": "SUSE CVE"
+			},
+			{
+				"ref_id": "SUSE-SU-2024:3551-1",
+				"ref_url": "https://lists.suse.com/pipermail/sle-updates/2024-October/037163.html",
+				"source": "SUSE-SU"
+			},
+			{
+				"ref_id": "SUSE-SU-2024:3553-1",
+				"ref_url": "https://lists.suse.com/pipermail/sle-updates/2024-October/037161.html",
+				"source": "SUSE-SU"
+			},
+			{
+				"ref_id": "SUSE-SU-2024:3559-1",
+				"ref_url": "https://lists.suse.com/pipermail/sle-updates/2024-October/037179.html",
+				"source": "SUSE-SU"
+			},
+			{
+				"ref_id": "SUSE-SU-2024:3561-1",
+				"ref_url": "https://lists.suse.com/pipermail/sle-security-updates/2024-October/019580.html",
+				"source": "SUSE-SU"
+			},
+			{
+				"ref_id": "SUSE-SU-2024:3564-1",
+				"ref_url": "https://lists.suse.com/pipermail/sle-updates/2024-October/037178.html",
+				"source": "SUSE-SU"
+			},
+			{
+				"ref_id": "SUSE-SU-2024:3566-1",
+				"ref_url": "https://lists.suse.com/pipermail/sle-security-updates/2024-October/019578.html",
+				"source": "SUSE-SU"
+			},
+			{
+				"ref_id": "SUSE-SU-2024:3569-1",
+				"ref_url": "https://lists.suse.com/pipermail/sle-security-updates/2024-October/019576.html",
+				"source": "SUSE-SU"
+			},
+			{
+				"ref_id": "SUSE-SU-2024:3587-1",
+				"ref_url": "https://lists.suse.com/pipermail/sle-security-updates/2024-October/019588.html",
+				"source": "SUSE-SU"
+			},
+			{
+				"ref_id": "SUSE-SU-2024:3591-1",
+				"ref_url": "https://lists.suse.com/pipermail/sle-security-updates/2024-October/019587.html",
+				"source": "SUSE-SU"
+			},
+			{
+				"ref_id": "SUSE-SU-2024:3592-1",
+				"ref_url": "https://lists.suse.com/pipermail/sle-updates/2024-October/037209.html",
+				"source": "SUSE-SU"
+			}
+		],
+		"description": "\n    In the Linux kernel, the following vulnerability has been resolved:\n\nVMCI: Fix use-after-free when removing resource in vmci_resource_remove()\n\nWhen removing a resource from vmci_resource_table in\nvmci_resource_remove(), the search is performed using the resource\nhandle by comparing context and resource fields.\n\nIt is possible though to create two resources with different types\nbut same handle (same context and resource fields).\n\nWhen trying to remove one of the resources, vmci_resource_remove()\nmay not remove the intended one, but the object will still be freed\nas in the case of the datagram type in vmci_datagram_destroy_handle().\nvmci_resource_table will still hold a pointer to this freed resource\nleading to a use-after-free vulnerability.\n\nBUG: KASAN: use-after-free in vmci_handle_is_equal include/linux/vmw_vmci_defs.h:142 [inline]\nBUG: KASAN: use-after-free in vmci_resource_remove+0x3a1/0x410 drivers/misc/vmw_vmci/vmci_resource.c:147\nRead of size 4 at addr ffff88801c16d800 by task syz-executor197/1592\nCall Trace:\n <TASK>\n __dump_stack lib/dump_stack.c:88 [inline]\n dump_stack_lvl+0x82/0xa9 lib/dump_stack.c:106\n print_address_description.constprop.0+0x21/0x366 mm/kasan/report.c:239\n __kasan_report.cold+0x7f/0x132 mm/kasan/report.c:425\n kasan_report+0x38/0x51 mm/kasan/report.c:442\n vmci_handle_is_equal include/linux/vmw_vmci_defs.h:142 [inline]\n vmci_resource_remove+0x3a1/0x410 drivers/misc/vmw_vmci/vmci_resource.c:147\n vmci_qp_broker_detach+0x89a/0x11b9 drivers/misc/vmw_vmci/vmci_queue_pair.c:2182\n ctx_free_ctx+0x473/0xbe1 drivers/misc/vmw_vmci/vmci_context.c:444\n kref_put include/linux/kref.h:65 [inline]\n vmci_ctx_put drivers/misc/vmw_vmci/vmci_context.c:497 [inline]\n vmci_ctx_destroy+0x170/0x1d6 drivers/misc/vmw_vmci/vmci_context.c:195\n vmci_host_close+0x125/0x1ac drivers/misc/vmw_vmci/vmci_host.c:143\n __fput+0x261/0xa34 fs/file_table.c:282\n task_work_run+0xf0/0x194 kernel/task_work.c:164\n tracehook_notify_resume include/linux/tracehook.h:189 [inline]\n exit_to_user_mode_loop+0x184/0x189 kernel/entry/common.c:187\n exit_to_user_mode_prepare+0x11b/0x123 kernel/entry/common.c:220\n __syscall_exit_to_user_mode_work kernel/entry/common.c:302 [inline]\n syscall_exit_to_user_mode+0x18/0x42 kernel/entry/common.c:313\n do_syscall_64+0x41/0x85 arch/x86/entry/common.c:86\n entry_SYSCALL_64_after_hwframe+0x6e/0x0\n\nThis change ensures the type is also checked when removing\nthe resource from vmci_resource_table in vmci_resource_remove().\n    ",
+		"advisory": {
+			"from": "security@suse.de",
+			"severity": "Important",
+			"cve": [
+				{
+					"text": "CVE-2024-46738 at SUSE",
+					"href": "https://www.suse.com/security/cve/CVE-2024-46738/",
+					"impact": "medium",
+					"cvss3": "6.7/CVSS:3.1/AV:L/AC:L/PR:H/UI:N/S:U/C:H/I:H/A:H"
+				},
+				{
+					"text": "CVE-2024-46738 at NVD",
+					"href": "https://nvd.nist.gov/vuln/detail/CVE-2024-46738",
+					"impact": "high",
+					"cvss3": "7.8/CVSS:3.1/AV:L/AC:L/PR:L/UI:N/S:U/C:H/I:H/A:H"
+				}
+			],
+			"bugzilla": [
+				{
+					"text": "SUSE bug 1230731",
+					"href": "https://bugzilla.suse.com/1230731"
+				}
+			],
+			"issued": {
+				"date": "2024-11-09"
+			},
+			"updated": {
+				"date": "2024-11-09"
+			},
+			"affected_cpe_list": {
+				"cpe": [
+					"cpe:/o:suse:sl-micro:6.0"
+				]
+			}
+		}
+	},
+	"criteria": {
+		"operator": "AND",
+		"criterias": [
+			{
+				"operator": "OR",
+				"criterions": [
+					{
+						"test_ref": "oval:org.opensuse.security:tst:2009951656",
+						"comment": "gtk3-data-3.24.37+70-6.1 is installed"
+					},
+					{
+						"test_ref": "oval:org.opensuse.security:tst:2009951657",
+						"comment": "gtk3-schema-3.24.37+70-6.1 is installed"
+					},
+					{
+						"test_ref": "oval:org.opensuse.security:tst:2009951658",
+						"comment": "gtk3-tools-3.24.37+70-6.1 is installed"
+					},
+					{
+						"test_ref": "oval:org.opensuse.security:tst:2009951659",
+						"comment": "keepalived-2.2.8-2.1 is installed"
+					},
+					{
+						"test_ref": "oval:org.opensuse.security:tst:2009951660",
+						"comment": "kernel-default-6.4.0-20.1 is installed"
+					},
+					{
+						"test_ref": "oval:org.opensuse.security:tst:2009881569",
+						"comment": "kernel-default-base-6.4.0-17.1.1.51 is installed"
+					},
+					{
+						"test_ref": "oval:org.opensuse.security:tst:2009951661",
+						"comment": "kernel-default-extra-6.4.0-20.1 is installed"
+					},
+					{
+						"test_ref": "oval:org.opensuse.security:tst:2009951662",
+						"comment": "kernel-default-livepatch-6.4.0-20.1 is installed"
+					},
+					{
+						"test_ref": "oval:org.opensuse.security:tst:2009951663",
+						"comment": "kernel-devel-6.4.0-20.1 is installed"
+					},
+					{
+						"test_ref": "oval:org.opensuse.security:tst:2009951664",
+						"comment": "kernel-devel-rt-6.4.0-11.1 is installed"
+					},
+					{
+						"test_ref": "oval:org.opensuse.security:tst:2009951665",
+						"comment": "kernel-kvmsmall-6.4.0-20.1 is installed"
+					},
+					{
+						"test_ref": "oval:org.opensuse.security:tst:2009951666",
+						"comment": "kernel-livepatch-6_4_0-11-rt-1-1.2 is installed"
+					},
+					{
+						"test_ref": "oval:org.opensuse.security:tst:2009951667",
+						"comment": "kernel-livepatch-6_4_0-20-default-1-1.2 is installed"
+					},
+					{
+						"test_ref": "oval:org.opensuse.security:tst:2009951668",
+						"comment": "kernel-macros-6.4.0-20.1 is installed"
+					},
+					{
+						"test_ref": "oval:org.opensuse.security:tst:2009951669",
+						"comment": "kernel-rt-6.4.0-11.1 is installed"
+					},
+					{
+						"test_ref": "oval:org.opensuse.security:tst:2009951670",
+						"comment": "kernel-source-6.4.0-20.1 is installed"
+					},
+					{
+						"test_ref": "oval:org.opensuse.security:tst:2009951671",
+						"comment": "kernel-source-rt-6.4.0-11.1 is installed"
+					},
+					{
+						"test_ref": "oval:org.opensuse.security:tst:2009951672",
+						"comment": "krb5-1.20.1-5.1 is installed"
+					},
+					{
+						"test_ref": "oval:org.opensuse.security:tst:2009951673",
+						"comment": "libaudit1-3.0.9-4.1 is installed"
+					},
+					{
+						"test_ref": "oval:org.opensuse.security:tst:2009951674",
+						"comment": "libauparse0-3.0.9-4.1 is installed"
+					},
+					{
+						"test_ref": "oval:org.opensuse.security:tst:2009951675",
+						"comment": "libgtk-3-0-3.24.37+70-6.1 is installed"
+					},
+					{
+						"test_ref": "oval:org.opensuse.security:tst:2009951676",
+						"comment": "libsystemd0-254.18-1.1 is installed"
+					},
+					{
+						"test_ref": "oval:org.opensuse.security:tst:2009951677",
+						"comment": "libudev1-254.18-1.1 is installed"
+					},
+					{
+						"test_ref": "oval:org.opensuse.security:tst:2009951678",
+						"comment": "patch-2.7.6-3.1 is installed"
+					},
+					{
+						"test_ref": "oval:org.opensuse.security:tst:2009951679",
+						"comment": "perl-Bootloader-1.8.2-1.1 is installed"
+					},
+					{
+						"test_ref": "oval:org.opensuse.security:tst:2009951680",
+						"comment": "python311-setuptools-69.0.2-2.1 is installed"
+					},
+					{
+						"test_ref": "oval:org.opensuse.security:tst:2009951681",
+						"comment": "systemd-254.18-1.1 is installed"
+					},
+					{
+						"test_ref": "oval:org.opensuse.security:tst:2009951682",
+						"comment": "systemd-container-254.18-1.1 is installed"
+					},
+					{
+						"test_ref": "oval:org.opensuse.security:tst:2009951683",
+						"comment": "systemd-coredump-254.18-1.1 is installed"
+					},
+					{
+						"test_ref": "oval:org.opensuse.security:tst:2009951684",
+						"comment": "systemd-experimental-254.18-1.1 is installed"
+					},
+					{
+						"test_ref": "oval:org.opensuse.security:tst:2009951685",
+						"comment": "systemd-journal-remote-254.18-1.1 is installed"
+					},
+					{
+						"test_ref": "oval:org.opensuse.security:tst:2009951686",
+						"comment": "systemd-portable-254.18-1.1 is installed"
+					},
+					{
+						"test_ref": "oval:org.opensuse.security:tst:2009951687",
+						"comment": "typelib-1_0-Gtk-3_0-3.24.37+70-6.1 is installed"
+					},
+					{
+						"test_ref": "oval:org.opensuse.security:tst:2009951688",
+						"comment": "udev-254.18-1.1 is installed"
+					}
+				]
+			}
+		],
+		"criterions": [
+			{
+				"test_ref": "oval:org.opensuse.security:tst:2009864179",
+				"comment": "SUSE Linux Enterprise Micro 6.0 is installed"
+			}
+		]
+	}
+}
