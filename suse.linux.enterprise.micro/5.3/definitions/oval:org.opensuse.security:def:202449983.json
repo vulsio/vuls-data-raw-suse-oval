@@ -1,0 +1,94 @@
+{
+	"id": "oval:org.opensuse.security:def:202449983",
+	"version": "1",
+	"class": "vulnerability",
+	"metadata": {
+		"title": "CVE-2024-49983",
+		"affected": {
+			"family": "unix",
+			"platform": [
+				"SUSE Linux Enterprise Micro 5.3"
+			]
+		},
+		"reference": [
+			{
+				"ref_id": "Mitre CVE-2024-49983",
+				"ref_url": "https://cve.mitre.org/cgi-bin/cvename.cgi?name=CVE-2024-49983",
+				"source": "CVE"
+			},
+			{
+				"ref_id": "SUSE CVE-2024-49983",
+				"ref_url": "https://www.suse.com/security/cve/CVE-2024-49983",
+				"source": "SUSE CVE"
+			}
+		],
+		"description": "\n    In the Linux kernel, the following vulnerability has been resolved:\n\next4: drop ppath from ext4_ext_replay_update_ex() to avoid double-free\n\nWhen calling ext4_force_split_extent_at() in ext4_ext_replay_update_ex(),\nthe 'ppath' is updated but it is the 'path' that is freed, thus potentially\ntriggering a double-free in the following process:\n\next4_ext_replay_update_ex\n  ppath = path\n  ext4_force_split_extent_at(&ppath)\n    ext4_split_extent_at\n      ext4_ext_insert_extent\n        ext4_ext_create_new_leaf\n          ext4_ext_grow_indepth\n            ext4_find_extent\n              if (depth > path[0].p_maxdepth)\n                kfree(path)                 ---> path First freed\n                *orig_path = path = NULL    ---> null ppath\n  kfree(path)                               ---> path double-free !!!\n\nSo drop the unnecessary ppath and use path directly to avoid this problem.\nAnd use ext4_find_extent() directly to update path, avoiding unnecessary\nmemory allocation and freeing. Also, propagate the error returned by\next4_find_extent() instead of using strange error codes.\n    ",
+		"advisory": {
+			"from": "security@suse.de",
+			"severity": "Moderate",
+			"cve": [
+				{
+					"text": "CVE-2024-49983 at SUSE",
+					"href": "https://www.suse.com/security/cve/CVE-2024-49983/",
+					"impact": "medium",
+					"cvss3": "5.5/CVSS:3.1/AV:L/AC:L/PR:L/UI:N/S:U/C:N/I:N/A:H"
+				},
+				{
+					"text": "CVE-2024-49983 at NVD",
+					"href": "https://nvd.nist.gov/vuln/detail/CVE-2024-49983",
+					"impact": "high",
+					"cvss3": "7.8/CVSS:3.1/AV:L/AC:L/PR:L/UI:N/S:U/C:H/I:H/A:H"
+				}
+			],
+			"bugzilla": [
+				{
+					"text": "SUSE bug 1232096",
+					"href": "https://bugzilla.suse.com/1232096"
+				}
+			],
+			"issued": {
+				"date": "2024-10-27"
+			},
+			"updated": {
+				"date": "2024-10-31"
+			},
+			"affected_cpe_list": {
+				"cpe": [
+					"cpe:/o:suse:sle-micro:5.3"
+				]
+			}
+		}
+	},
+	"criteria": {
+		"operator": "AND",
+		"criterias": [
+			{
+				"operator": "OR",
+				"criterions": [
+					{
+						"test_ref": "oval:org.opensuse.security:tst:2009338032",
+						"comment": "kernel-default is affected"
+					},
+					{
+						"test_ref": "oval:org.opensuse.security:tst:2009705050",
+						"comment": "kernel-rt is affected"
+					},
+					{
+						"test_ref": "oval:org.opensuse.security:tst:2009333995",
+						"comment": "kernel-source is affected"
+					},
+					{
+						"test_ref": "oval:org.opensuse.security:tst:2009728714",
+						"comment": "kernel-source-rt is affected"
+					}
+				]
+			}
+		],
+		"criterions": [
+			{
+				"test_ref": "oval:org.opensuse.security:tst:2009728694",
+				"comment": "SUSE Linux Enterprise Micro 5.3 is installed"
+			}
+		]
+	}
+}

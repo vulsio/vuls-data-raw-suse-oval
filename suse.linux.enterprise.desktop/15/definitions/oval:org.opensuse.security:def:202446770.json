@@ -1,0 +1,239 @@
+{
+	"id": "oval:org.opensuse.security:def:202446770",
+	"version": "1",
+	"class": "vulnerability",
+	"metadata": {
+		"title": "CVE-2024-46770",
+		"affected": {
+			"family": "unix",
+			"platform": [
+				"SUSE Linux Enterprise Desktop 15 SP5",
+				"SUSE Linux Enterprise Desktop 15 SP6",
+				"SUSE Linux Enterprise High Performance Computing 15 SP5",
+				"SUSE Linux Enterprise High Performance Computing 15 SP6",
+				"SUSE Linux Enterprise Module for Basesystem 15 SP5",
+				"SUSE Linux Enterprise Module for Basesystem 15 SP6",
+				"SUSE Linux Enterprise Module for Development Tools 15 SP5",
+				"SUSE Linux Enterprise Module for Development Tools 15 SP6",
+				"SUSE Linux Enterprise Server 15 SP5",
+				"SUSE Linux Enterprise Server 15 SP6",
+				"SUSE Linux Enterprise Server for SAP Applications 15 SP5",
+				"SUSE Linux Enterprise Server for SAP Applications 15 SP6"
+			]
+		},
+		"reference": [
+			{
+				"ref_id": "Mitre CVE-2024-46770",
+				"ref_url": "https://cve.mitre.org/cgi-bin/cvename.cgi?name=CVE-2024-46770",
+				"source": "CVE"
+			},
+			{
+				"ref_id": "SUSE CVE-2024-46770",
+				"ref_url": "https://www.suse.com/security/cve/CVE-2024-46770",
+				"source": "SUSE CVE"
+			},
+			{
+				"ref_id": "SUSE-SU-2024:3559-1",
+				"ref_url": "https://lists.suse.com/pipermail/sle-updates/2024-October/037179.html",
+				"source": "SUSE-SU"
+			},
+			{
+				"ref_id": "SUSE-SU-2024:3566-1",
+				"ref_url": "https://lists.suse.com/pipermail/sle-security-updates/2024-October/019578.html",
+				"source": "SUSE-SU"
+			},
+			{
+				"ref_id": "SUSE-SU-2024:3587-1",
+				"ref_url": "https://lists.suse.com/pipermail/sle-security-updates/2024-October/019588.html",
+				"source": "SUSE-SU"
+			},
+			{
+				"ref_id": "SUSE-SU-2024:3591-1",
+				"ref_url": "https://lists.suse.com/pipermail/sle-security-updates/2024-October/019587.html",
+				"source": "SUSE-SU"
+			}
+		],
+		"description": "\n    In the Linux kernel, the following vulnerability has been resolved:\n\nice: Add netif_device_attach/detach into PF reset flow\n\nEthtool callbacks can be executed while reset is in progress and try to\naccess deleted resources, e.g. getting coalesce settings can result in a\nNULL pointer dereference seen below.\n\nReproduction steps:\nOnce the driver is fully initialized, trigger reset:\n\t# echo 1 > /sys/class/net/<interface>/device/reset\nwhen reset is in progress try to get coalesce settings using ethtool:\n\t# ethtool -c <interface>\n\nBUG: kernel NULL pointer dereference, address: 0000000000000020\nPGD 0 P4D 0\nOops: Oops: 0000 [#1] PREEMPT SMP PTI\nCPU: 11 PID: 19713 Comm: ethtool Tainted: G S                 6.10.0-rc7+ #7\nRIP: 0010:ice_get_q_coalesce+0x2e/0xa0 [ice]\nRSP: 0018:ffffbab1e9bcf6a8 EFLAGS: 00010206\nRAX: 000000000000000c RBX: ffff94512305b028 RCX: 0000000000000000\nRDX: 0000000000000000 RSI: ffff9451c3f2e588 RDI: ffff9451c3f2e588\nRBP: 0000000000000000 R08: 0000000000000000 R09: 0000000000000000\nR10: ffff9451c3f2e580 R11: 000000000000001f R12: ffff945121fa9000\nR13: ffffbab1e9bcf760 R14: 0000000000000013 R15: ffffffff9e65dd40\nFS:  00007faee5fbe740(0000) GS:ffff94546fd80000(0000) knlGS:0000000000000000\nCS:  0010 DS: 0000 ES: 0000 CR0: 0000000080050033\nCR2: 0000000000000020 CR3: 0000000106c2e005 CR4: 00000000001706f0\nCall Trace:\n<TASK>\nice_get_coalesce+0x17/0x30 [ice]\ncoalesce_prepare_data+0x61/0x80\nethnl_default_doit+0xde/0x340\ngenl_family_rcv_msg_doit+0xf2/0x150\ngenl_rcv_msg+0x1b3/0x2c0\nnetlink_rcv_skb+0x5b/0x110\ngenl_rcv+0x28/0x40\nnetlink_unicast+0x19c/0x290\nnetlink_sendmsg+0x222/0x490\n__sys_sendto+0x1df/0x1f0\n__x64_sys_sendto+0x24/0x30\ndo_syscall_64+0x82/0x160\nentry_SYSCALL_64_after_hwframe+0x76/0x7e\nRIP: 0033:0x7faee60d8e27\n\nCalling netif_device_detach() before reset makes the net core not call\nthe driver when ethtool command is issued, the attempt to execute an\nethtool command during reset will result in the following message:\n\n    netlink error: No such device\n\ninstead of NULL pointer dereference. Once reset is done and\nice_rebuild() is executing, the netif_device_attach() is called to allow\nfor ethtool operations to occur again in a safe manner.\n    ",
+		"advisory": {
+			"from": "security@suse.de",
+			"severity": "Moderate",
+			"cve": [
+				{
+					"text": "CVE-2024-46770 at SUSE",
+					"href": "https://www.suse.com/security/cve/CVE-2024-46770/",
+					"impact": "medium",
+					"cvss3": "5.5/CVSS:3.1/AV:L/AC:L/PR:L/UI:N/S:U/C:N/I:N/A:H"
+				},
+				{
+					"text": "CVE-2024-46770 at NVD",
+					"href": "https://nvd.nist.gov/vuln/detail/CVE-2024-46770",
+					"impact": "medium",
+					"cvss3": "5.5/CVSS:3.1/AV:L/AC:L/PR:L/UI:N/S:U/C:N/I:N/A:H"
+				}
+			],
+			"bugzilla": [
+				{
+					"text": "SUSE bug 1230763",
+					"href": "https://bugzilla.suse.com/1230763"
+				}
+			],
+			"issued": {
+				"date": "2024-09-20"
+			},
+			"updated": {
+				"date": "2024-10-11"
+			},
+			"affected_cpe_list": {
+				"cpe": [
+					"cpe:/o:suse:sle-module-basesystem:15:sp5",
+					"cpe:/o:suse:sle-module-basesystem:15:sp6",
+					"cpe:/o:suse:sle-module-development-tools:15:sp5",
+					"cpe:/o:suse:sle-module-development-tools:15:sp6",
+					"cpe:/o:suse:sle_hpc:15:sp5",
+					"cpe:/o:suse:sled:15:sp5",
+					"cpe:/o:suse:sles:15:sp5",
+					"cpe:/o:suse:sles_sap:15:sp5"
+				]
+			}
+		}
+	},
+	"criteria": {
+		"operator": "OR",
+		"criterias": [
+			{
+				"operator": "AND",
+				"criterias": [
+					{
+						"operator": "OR",
+						"criterions": [
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009759898",
+								"comment": "SUSE Linux Enterprise Desktop 15 SP5 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009856171",
+								"comment": "SUSE Linux Enterprise Desktop 15 SP6 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009759899",
+								"comment": "SUSE Linux Enterprise High Performance Computing 15 SP5 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009856172",
+								"comment": "SUSE Linux Enterprise High Performance Computing 15 SP6 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009760583",
+								"comment": "SUSE Linux Enterprise Module for Development Tools 15 SP5 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009856253",
+								"comment": "SUSE Linux Enterprise Module for Development Tools 15 SP6 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009759901",
+								"comment": "SUSE Linux Enterprise Server 15 SP5 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009856174",
+								"comment": "SUSE Linux Enterprise Server 15 SP6 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009759902",
+								"comment": "SUSE Linux Enterprise Server for SAP Applications 15 SP5 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009856175",
+								"comment": "SUSE Linux Enterprise Server for SAP Applications 15 SP6 is installed"
+							}
+						]
+					},
+					{
+						"operator": "OR",
+						"criterions": [
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009338032",
+								"comment": "kernel-default is affected"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009333995",
+								"comment": "kernel-source is affected"
+							}
+						]
+					}
+				]
+			},
+			{
+				"operator": "AND",
+				"criterias": [
+					{
+						"operator": "OR",
+						"criterions": [
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009759898",
+								"comment": "SUSE Linux Enterprise Desktop 15 SP5 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009856171",
+								"comment": "SUSE Linux Enterprise Desktop 15 SP6 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009759899",
+								"comment": "SUSE Linux Enterprise High Performance Computing 15 SP5 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009856172",
+								"comment": "SUSE Linux Enterprise High Performance Computing 15 SP6 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009759900",
+								"comment": "SUSE Linux Enterprise Module for Basesystem 15 SP5 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009856173",
+								"comment": "SUSE Linux Enterprise Module for Basesystem 15 SP6 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009759901",
+								"comment": "SUSE Linux Enterprise Server 15 SP5 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009856174",
+								"comment": "SUSE Linux Enterprise Server 15 SP6 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009759902",
+								"comment": "SUSE Linux Enterprise Server for SAP Applications 15 SP5 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009856175",
+								"comment": "SUSE Linux Enterprise Server for SAP Applications 15 SP6 is installed"
+							}
+						]
+					},
+					{
+						"operator": "OR",
+						"criterions": [
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009338032",
+								"comment": "kernel-default is affected"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009338034",
+								"comment": "kernel-default-devel is affected"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009335275",
+								"comment": "kernel-devel is affected"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009335276",
+								"comment": "kernel-macros is affected"
+							}
+						]
+					}
+				]
+			}
+		]
+	}
+}

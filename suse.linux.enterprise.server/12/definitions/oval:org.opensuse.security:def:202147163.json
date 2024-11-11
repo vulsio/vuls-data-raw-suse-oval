@@ -1,0 +1,346 @@
+{
+	"id": "oval:org.opensuse.security:def:202147163",
+	"version": "1",
+	"class": "vulnerability",
+	"metadata": {
+		"title": "CVE-2021-47163",
+		"affected": {
+			"family": "unix",
+			"platform": [
+				"SUSE Linux Enterprise Live Patching 12 SP5",
+				"SUSE Linux Enterprise Real Time 12 SP5",
+				"SUSE Linux Enterprise Server 12 SP2-LTSS",
+				"SUSE Linux Enterprise Server 12 SP4-LTSS",
+				"SUSE Linux Enterprise Server 12 SP5",
+				"SUSE Linux Enterprise Server for SAP Applications 12 SP2",
+				"SUSE Linux Enterprise Server for SAP Applications 12 SP4",
+				"SUSE Linux Enterprise Server for SAP Applications 12 SP5",
+				"SUSE Linux Enterprise Workstation Extension 12 SP5"
+			]
+		},
+		"reference": [
+			{
+				"ref_id": "Mitre CVE-2021-47163",
+				"ref_url": "https://cve.mitre.org/cgi-bin/cvename.cgi?name=CVE-2021-47163",
+				"source": "CVE"
+			},
+			{
+				"ref_id": "SUSE CVE-2021-47163",
+				"ref_url": "https://www.suse.com/security/cve/CVE-2021-47163",
+				"source": "SUSE CVE"
+			}
+		],
+		"description": "\n    In the Linux kernel, the following vulnerability has been resolved:\n\ntipc: wait and exit until all work queues are done\n\nOn some host, a crash could be triggered simply by repeating these\ncommands several times:\n\n  # modprobe tipc\n  # tipc bearer enable media udp name UDP1 localip 127.0.0.1\n  # rmmod tipc\n\n  [] BUG: unable to handle kernel paging request at ffffffffc096bb00\n  [] Workqueue: events 0xffffffffc096bb00\n  [] Call Trace:\n  []  ? process_one_work+0x1a7/0x360\n  []  ? worker_thread+0x30/0x390\n  []  ? create_worker+0x1a0/0x1a0\n  []  ? kthread+0x116/0x130\n  []  ? kthread_flush_work_fn+0x10/0x10\n  []  ? ret_from_fork+0x35/0x40\n\nWhen removing the TIPC module, the UDP tunnel sock will be delayed to\nrelease in a work queue as sock_release() can't be done in rtnl_lock().\nIf the work queue is schedule to run after the TIPC module is removed,\nkernel will crash as the work queue function cleanup_beareri() code no\nlonger exists when trying to invoke it.\n\nTo fix it, this patch introduce a member wq_count in tipc_net to track\nthe numbers of work queues in schedule, and  wait and exit until all\nwork queues are done in tipc_exit_net().\n    ",
+		"advisory": {
+			"from": "security@suse.de",
+			"severity": "Moderate",
+			"cve": [
+				{
+					"text": "CVE-2021-47163 at SUSE",
+					"href": "https://www.suse.com/security/cve/CVE-2021-47163/",
+					"impact": "medium",
+					"cvss3": "5.5/CVSS:3.1/AV:L/AC:L/PR:L/UI:N/S:U/C:N/I:N/A:H"
+				},
+				{
+					"text": "CVE-2021-47163 at NVD",
+					"href": "https://nvd.nist.gov/vuln/detail/CVE-2021-47163"
+				}
+			],
+			"bugzilla": [
+				{
+					"text": "SUSE bug 1221980",
+					"href": "https://bugzilla.suse.com/1221980"
+				}
+			],
+			"issued": {
+				"date": "2024-03-28"
+			},
+			"updated": {
+				"date": "2024-10-22"
+			},
+			"affected_cpe_list": {
+				"cpe": [
+					"cpe:/o:suse:sle-live-patching:12:sp5",
+					"cpe:/o:suse:sle-we:12:sp5",
+					"cpe:/o:suse:sles-ltss:12:sp2",
+					"cpe:/o:suse:sles-ltss:12:sp4",
+					"cpe:/o:suse:sles:12:sp5",
+					"cpe:/o:suse:sles_sap:12:sp2",
+					"cpe:/o:suse:sles_sap:12:sp4",
+					"cpe:/o:suse:sles_sap:12:sp5",
+					"cpe:/o:suse:suse-linux-enterprise-rt:12:sp5"
+				]
+			}
+		}
+	},
+	"criteria": {
+		"operator": "OR",
+		"criterias": [
+			{
+				"operator": "AND",
+				"criterias": [
+					{
+						"operator": "OR",
+						"criterions": [
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009338032",
+								"comment": "kernel-default is affected"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009333995",
+								"comment": "kernel-source is affected"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009340767",
+								"comment": "kernel-source-azure is affected"
+							}
+						]
+					}
+				],
+				"criterions": [
+					{
+						"test_ref": "oval:org.opensuse.security:tst:2009258806",
+						"comment": "SUSE Linux Enterprise Server for SAP Applications 12 SP5 is installed"
+					}
+				]
+			},
+			{
+				"operator": "AND",
+				"criterias": [
+					{
+						"operator": "OR",
+						"criterions": [
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009258802",
+								"comment": "SUSE Linux Enterprise Server for SAP Applications 12 SP2 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009258804",
+								"comment": "SUSE Linux Enterprise Server for SAP Applications 12 SP4 is installed"
+							}
+						]
+					},
+					{
+						"operator": "OR",
+						"criterions": [
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009338032",
+								"comment": "kernel-default is affected"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009338033",
+								"comment": "kernel-default-base is affected"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009338034",
+								"comment": "kernel-default-devel is affected"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009335275",
+								"comment": "kernel-devel is affected"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009335276",
+								"comment": "kernel-macros is affected"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009333995",
+								"comment": "kernel-source is affected"
+							}
+						]
+					}
+				]
+			},
+			{
+				"operator": "AND",
+				"criterias": [
+					{
+						"operator": "OR",
+						"criterions": [
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009338032",
+								"comment": "kernel-default is affected"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009338033",
+								"comment": "kernel-default-base is affected"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009338034",
+								"comment": "kernel-default-devel is affected"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009338036",
+								"comment": "kernel-default-man is affected"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009335275",
+								"comment": "kernel-devel is affected"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009335276",
+								"comment": "kernel-macros is affected"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009333995",
+								"comment": "kernel-source is affected"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009340777",
+								"comment": "kernel-devel-azure is affected"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009340767",
+								"comment": "kernel-source-azure is affected"
+							}
+						]
+					}
+				],
+				"criterions": [
+					{
+						"test_ref": "oval:org.opensuse.security:tst:2009258033",
+						"comment": "SUSE Linux Enterprise Server 12 SP5 is installed"
+					}
+				]
+			},
+			{
+				"operator": "AND",
+				"criterias": [
+					{
+						"operator": "OR",
+						"criterions": [
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009128018",
+								"comment": "SUSE Linux Enterprise Server 12 SP2-LTSS is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009240280",
+								"comment": "SUSE Linux Enterprise Server 12 SP4-LTSS is installed"
+							}
+						]
+					},
+					{
+						"operator": "OR",
+						"criterions": [
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009338032",
+								"comment": "kernel-default is affected"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009338033",
+								"comment": "kernel-default-base is affected"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009338034",
+								"comment": "kernel-default-devel is affected"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009338036",
+								"comment": "kernel-default-man is affected"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009335275",
+								"comment": "kernel-devel is affected"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009335276",
+								"comment": "kernel-macros is affected"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009333995",
+								"comment": "kernel-source is affected"
+							}
+						]
+					}
+				]
+			},
+			{
+				"operator": "AND",
+				"criterias": [
+					{
+						"operator": "OR",
+						"criterions": [
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009338035",
+								"comment": "kernel-default-kgraft is affected"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009809200",
+								"comment": "kernel-default-kgraft-devel is affected"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009333995",
+								"comment": "kernel-source is affected"
+							}
+						]
+					}
+				],
+				"criterions": [
+					{
+						"test_ref": "oval:org.opensuse.security:tst:2009273148",
+						"comment": "SUSE Linux Enterprise Live Patching 12 SP5 is installed"
+					}
+				]
+			},
+			{
+				"operator": "AND",
+				"criterias": [
+					{
+						"operator": "OR",
+						"criterions": [
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009258033",
+								"comment": "SUSE Linux Enterprise Server 12 SP5 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009258806",
+								"comment": "SUSE Linux Enterprise Server for SAP Applications 12 SP5 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009258650",
+								"comment": "SUSE Linux Enterprise Workstation Extension 12 SP5 is installed"
+							}
+						]
+					},
+					{
+						"operator": "OR",
+						"criterions": [
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009715290",
+								"comment": "kernel-default-extra is affected"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009333995",
+								"comment": "kernel-source is affected"
+							}
+						]
+					}
+				]
+			},
+			{
+				"operator": "AND",
+				"criterias": [
+					{
+						"operator": "OR",
+						"criterions": [
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009728713",
+								"comment": "kernel-devel-rt is affected"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009728714",
+								"comment": "kernel-source-rt is affected"
+							}
+						]
+					}
+				],
+				"criterions": [
+					{
+						"test_ref": "oval:org.opensuse.security:tst:2009279486",
+						"comment": "SUSE Linux Enterprise Real Time 12 SP5 is installed"
+					}
+				]
+			}
+		]
+	}
+}

@@ -1,0 +1,125 @@
+{
+	"id": "oval:org.opensuse.security:def:202443892",
+	"version": "1",
+	"class": "vulnerability",
+	"metadata": {
+		"title": "CVE-2024-43892",
+		"affected": {
+			"family": "unix",
+			"platform": [
+				"SUSE Linux Enterprise Micro 5.2"
+			]
+		},
+		"reference": [
+			{
+				"ref_id": "Mitre CVE-2024-43892",
+				"ref_url": "https://cve.mitre.org/cgi-bin/cvename.cgi?name=CVE-2024-43892",
+				"source": "CVE"
+			},
+			{
+				"ref_id": "SUSE CVE-2024-43892",
+				"ref_url": "https://www.suse.com/security/cve/CVE-2024-43892",
+				"source": "SUSE CVE"
+			},
+			{
+				"ref_id": "RHSA-2024:8856",
+				"ref_url": "https://lists.suse.com/pipermail/suse-liberty-linux-updates/2024-November/000202.html",
+				"source": "SUSE-SU"
+			},
+			{
+				"ref_id": "SUSE-SU-2024:3189-1",
+				"ref_url": "https://lists.suse.com/pipermail/sle-security-updates/2024-September/019404.html",
+				"source": "SUSE-SU"
+			},
+			{
+				"ref_id": "SUSE-SU-2024:3190-1",
+				"ref_url": "https://lists.suse.com/pipermail/sle-security-updates/2024-September/019403.html",
+				"source": "SUSE-SU"
+			},
+			{
+				"ref_id": "SUSE-SU-2024:3194-1",
+				"ref_url": "https://lists.suse.com/pipermail/sle-updates/2024-September/036835.html",
+				"source": "SUSE-SU"
+			},
+			{
+				"ref_id": "SUSE-SU-2024:3195-1",
+				"ref_url": "https://lists.suse.com/pipermail/sle-updates/2024-September/036842.html",
+				"source": "SUSE-SU"
+			},
+			{
+				"ref_id": "SUSE-SU-2024:3209-1",
+				"ref_url": "https://lists.suse.com/pipermail/sle-updates/2024-September/036854.html",
+				"source": "SUSE-SU"
+			},
+			{
+				"ref_id": "SUSE-SU-2024:3251-1",
+				"ref_url": "https://lists.suse.com/pipermail/sle-updates/2024-September/036895.html",
+				"source": "SUSE-SU"
+			},
+			{
+				"ref_id": "SUSE-SU-2024:3252-1",
+				"ref_url": "https://lists.suse.com/pipermail/sle-updates/2024-September/036896.html",
+				"source": "SUSE-SU"
+			},
+			{
+				"ref_id": "SUSE-SU-2024:3383-1",
+				"ref_url": "https://lists.suse.com/pipermail/sle-security-updates/2024-September/019497.html",
+				"source": "SUSE-SU"
+			},
+			{
+				"ref_id": "SUSE-SU-2024:3483-1",
+				"ref_url": "https://lists.suse.com/pipermail/sle-updates/2024-September/037089.html",
+				"source": "SUSE-SU"
+			}
+		],
+		"description": "\n    In the Linux kernel, the following vulnerability has been resolved:\n\nmemcg: protect concurrent access to mem_cgroup_idr\n\nCommit 73f576c04b94 (\"mm: memcontrol: fix cgroup creation failure after\nmany small jobs\") decoupled the memcg IDs from the CSS ID space to fix the\ncgroup creation failures.  It introduced IDR to maintain the memcg ID\nspace.  The IDR depends on external synchronization mechanisms for\nmodifications.  For the mem_cgroup_idr, the idr_alloc() and idr_replace()\nhappen within css callback and thus are protected through cgroup_mutex\nfrom concurrent modifications.  However idr_remove() for mem_cgroup_idr\nwas not protected against concurrency and can be run concurrently for\ndifferent memcgs when they hit their refcnt to zero.  Fix that.\n\nWe have been seeing list_lru based kernel crashes at a low frequency in\nour fleet for a long time.  These crashes were in different part of\nlist_lru code including list_lru_add(), list_lru_del() and reparenting\ncode.  Upon further inspection, it looked like for a given object (dentry\nand inode), the super_block's list_lru didn't have list_lru_one for the\nmemcg of that object.  The initial suspicions were either the object is\nnot allocated through kmem_cache_alloc_lru() or somehow\nmemcg_list_lru_alloc() failed to allocate list_lru_one() for a memcg but\nreturned success.  No evidence were found for these cases.\n\nLooking more deeply, we started seeing situations where valid memcg's id\nis not present in mem_cgroup_idr and in some cases multiple valid memcgs\nhave same id and mem_cgroup_idr is pointing to one of them.  So, the most\nreasonable explanation is that these situations can happen due to race\nbetween multiple idr_remove() calls or race between\nidr_alloc()/idr_replace() and idr_remove().  These races are causing\nmultiple memcgs to acquire the same ID and then offlining of one of them\nwould cleanup list_lrus on the system for all of them.  Later access from\nother memcgs to the list_lru cause crashes due to missing list_lru_one.\n    ",
+		"advisory": {
+			"from": "security@suse.de",
+			"severity": "Moderate",
+			"cve": [
+				{
+					"text": "CVE-2024-43892 at SUSE",
+					"href": "https://www.suse.com/security/cve/CVE-2024-43892/",
+					"impact": "medium",
+					"cvss3": "4.7/CVSS:3.1/AV:L/AC:H/PR:L/UI:N/S:U/C:N/I:N/A:H"
+				},
+				{
+					"text": "CVE-2024-43892 at NVD",
+					"href": "https://nvd.nist.gov/vuln/detail/CVE-2024-43892",
+					"impact": "medium",
+					"cvss3": "4.7/CVSS:3.1/AV:L/AC:H/PR:L/UI:N/S:U/C:N/I:N/A:H"
+				}
+			],
+			"bugzilla": [
+				{
+					"text": "SUSE bug 1229761",
+					"href": "https://bugzilla.suse.com/1229761"
+				}
+			],
+			"issued": {
+				"date": "2024-08-27"
+			},
+			"updated": {
+				"date": "2024-11-09"
+			},
+			"affected_cpe_list": {
+				"cpe": [
+					"cpe:/o:suse:suse-microos:5.2"
+				]
+			}
+		}
+	},
+	"criteria": {
+		"operator": "AND",
+		"criterions": [
+			{
+				"test_ref": "oval:org.opensuse.security:tst:2009681300",
+				"comment": "SUSE Linux Enterprise Micro 5.2 is installed"
+			},
+			{
+				"test_ref": "oval:org.opensuse.security:tst:2009338032",
+				"comment": "kernel-default is affected"
+			}
+		]
+	}
+}

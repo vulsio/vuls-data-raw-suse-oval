@@ -1,0 +1,100 @@
+{
+	"id": "oval:org.opensuse.security:def:202440974",
+	"version": "1",
+	"class": "vulnerability",
+	"metadata": {
+		"title": "CVE-2024-40974",
+		"affected": {
+			"family": "unix",
+			"platform": [
+				"SUSE Linux Enterprise Micro 6.0"
+			]
+		},
+		"reference": [
+			{
+				"ref_id": "Mitre CVE-2024-40974",
+				"ref_url": "https://cve.mitre.org/cgi-bin/cvename.cgi?name=CVE-2024-40974",
+				"source": "CVE"
+			},
+			{
+				"ref_id": "SUSE CVE-2024-40974",
+				"ref_url": "https://www.suse.com/security/cve/CVE-2024-40974",
+				"source": "SUSE CVE"
+			}
+		],
+		"description": "\n    In the Linux kernel, the following vulnerability has been resolved:\n\npowerpc/pseries: Enforce hcall result buffer validity and size\n\nplpar_hcall(), plpar_hcall9(), and related functions expect callers to\nprovide valid result buffers of certain minimum size. Currently this\nis communicated only through comments in the code and the compiler has\nno idea.\n\nFor example, if I write a bug like this:\n\n  long retbuf[PLPAR_HCALL_BUFSIZE]; // should be PLPAR_HCALL9_BUFSIZE\n  plpar_hcall9(H_ALLOCATE_VAS_WINDOW, retbuf, ...);\n\nThis compiles with no diagnostics emitted, but likely results in stack\ncorruption at runtime when plpar_hcall9() stores results past the end\nof the array. (To be clear this is a contrived example and I have not\nfound a real instance yet.)\n\nTo make this class of error less likely, we can use explicitly-sized\narray parameters instead of pointers in the declarations for the hcall\nAPIs. When compiled with -Warray-bounds[1], the code above now\nprovokes a diagnostic like this:\n\nerror: array argument is too small;\nis of size 32, callee requires at least 72 [-Werror,-Warray-bounds]\n   60 |                 plpar_hcall9(H_ALLOCATE_VAS_WINDOW, retbuf,\n      |                 ^                                   ~~~~~~\n\n[1] Enabled for LLVM builds but not GCC for now. See commit\n    0da6e5fd6c37 (\"gcc: disable '-Warray-bounds' for gcc-13 too\") and\n    related changes.\n    ",
+		"advisory": {
+			"from": "security@suse.de",
+			"severity": "Moderate",
+			"cve": [
+				{
+					"text": "CVE-2024-40974 at SUSE",
+					"href": "https://www.suse.com/security/cve/CVE-2024-40974/",
+					"impact": "medium",
+					"cvss3": "5.5/CVSS:3.1/AV:L/AC:L/PR:L/UI:N/S:U/C:N/I:N/A:H"
+				},
+				{
+					"text": "CVE-2024-40974 at NVD",
+					"href": "https://nvd.nist.gov/vuln/detail/CVE-2024-40974"
+				}
+			],
+			"bugzilla": [
+				{
+					"text": "SUSE bug 1227892",
+					"href": "https://bugzilla.suse.com/1227892"
+				}
+			],
+			"issued": {
+				"date": "2024-08-28"
+			},
+			"updated": {
+				"date": "2024-08-28"
+			},
+			"affected_cpe_list": {
+				"cpe": [
+					"cpe:/o:suse:sl-micro:6.0"
+				]
+			}
+		}
+	},
+	"criteria": {
+		"operator": "AND",
+		"criterias": [
+			{
+				"operator": "OR",
+				"criterions": [
+					{
+						"test_ref": "oval:org.opensuse.security:tst:2009338032",
+						"comment": "kernel-default is affected"
+					},
+					{
+						"test_ref": "oval:org.opensuse.security:tst:2009335275",
+						"comment": "kernel-devel is affected"
+					},
+					{
+						"test_ref": "oval:org.opensuse.security:tst:2009335276",
+						"comment": "kernel-macros is affected"
+					},
+					{
+						"test_ref": "oval:org.opensuse.security:tst:2009333995",
+						"comment": "kernel-source is affected"
+					},
+					{
+						"test_ref": "oval:org.opensuse.security:tst:2009728713",
+						"comment": "kernel-devel-rt is affected"
+					},
+					{
+						"test_ref": "oval:org.opensuse.security:tst:2009728714",
+						"comment": "kernel-source-rt is affected"
+					}
+				]
+			}
+		],
+		"criterions": [
+			{
+				"test_ref": "oval:org.opensuse.security:tst:2009864179",
+				"comment": "SUSE Linux Enterprise Micro 6.0 is installed"
+			}
+		]
+	}
+}

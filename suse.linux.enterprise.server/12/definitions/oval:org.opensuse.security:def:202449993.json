@@ -1,0 +1,385 @@
+{
+	"id": "oval:org.opensuse.security:def:202449993",
+	"version": "1",
+	"class": "vulnerability",
+	"metadata": {
+		"title": "CVE-2024-49993",
+		"affected": {
+			"family": "unix",
+			"platform": [
+				"SUSE Linux Enterprise High Performance Computing 12",
+				"SUSE Linux Enterprise Live Patching 12 SP5",
+				"SUSE Linux Enterprise Module for Public Cloud 12",
+				"SUSE Linux Enterprise Real Time 12 SP5",
+				"SUSE Linux Enterprise Server 12",
+				"SUSE Linux Enterprise Server 12 SP2-LTSS",
+				"SUSE Linux Enterprise Server 12 SP3",
+				"SUSE Linux Enterprise Server 12 SP4",
+				"SUSE Linux Enterprise Server 12 SP4-LTSS",
+				"SUSE Linux Enterprise Server 12 SP5",
+				"SUSE Linux Enterprise Server 12 SP5-LTSS",
+				"SUSE Linux Enterprise Server for SAP Applications 12",
+				"SUSE Linux Enterprise Server for SAP Applications 12 SP3",
+				"SUSE Linux Enterprise Server for SAP Applications 12 SP4",
+				"SUSE Linux Enterprise Server for SAP Applications 12 SP5",
+				"SUSE Linux Enterprise Workstation Extension 12 SP5"
+			]
+		},
+		"reference": [
+			{
+				"ref_id": "Mitre CVE-2024-49993",
+				"ref_url": "https://cve.mitre.org/cgi-bin/cvename.cgi?name=CVE-2024-49993",
+				"source": "CVE"
+			},
+			{
+				"ref_id": "SUSE CVE-2024-49993",
+				"ref_url": "https://www.suse.com/security/cve/CVE-2024-49993",
+				"source": "SUSE CVE"
+			}
+		],
+		"description": "\n    In the Linux kernel, the following vulnerability has been resolved:\n\niommu/vt-d: Fix potential lockup if qi_submit_sync called with 0 count\n\nIf qi_submit_sync() is invoked with 0 invalidation descriptors (for\ninstance, for DMA draining purposes), we can run into a bug where a\nsubmitting thread fails to detect the completion of invalidation_wait.\nSubsequently, this led to a soft lockup. Currently, there is no impact\nby this bug on the existing users because no callers are submitting\ninvalidations with 0 descriptors. This fix will enable future users\n(such as DMA drain) calling qi_submit_sync() with 0 count.\n\nSuppose thread T1 invokes qi_submit_sync() with non-zero descriptors, while\nconcurrently, thread T2 calls qi_submit_sync() with zero descriptors. Both\nthreads then enter a while loop, waiting for their respective descriptors\nto complete. T1 detects its completion (i.e., T1's invalidation_wait status\nchanges to QI_DONE by HW) and proceeds to call reclaim_free_desc() to\nreclaim all descriptors, potentially including adjacent ones of other\nthreads that are also marked as QI_DONE.\n\nDuring this time, while T2 is waiting to acquire the qi->q_lock, the IOMMU\nhardware may complete the invalidation for T2, setting its status to\nQI_DONE. However, if T1's execution of reclaim_free_desc() frees T2's\ninvalidation_wait descriptor and changes its status to QI_FREE, T2 will\nnot observe the QI_DONE status for its invalidation_wait and will\nindefinitely remain stuck.\n\nThis soft lockup does not occur when only non-zero descriptors are\nsubmitted.In such cases, invalidation descriptors are interspersed among\nwait descriptors with the status QI_IN_USE, acting as barriers. These\nbarriers prevent the reclaim code from mistakenly freeing descriptors\nbelonging to other submitters.\n\nConsidered the following example timeline:\n\tT1\t\t\tT2\n========================================\n\tID1\n\tWD1\n\twhile(WD1!=QI_DONE)\n\tunlock\n\t\t\t\tlock\n\tWD1=QI_DONE*\t\tWD2\n\t\t\t\twhile(WD2!=QI_DONE)\n\t\t\t\tunlock\n\tlock\n\tWD1==QI_DONE?\n\tID1=QI_DONE\t\tWD2=DONE*\n\treclaim()\n\tID1=FREE\n\tWD1=FREE\n\tWD2=FREE\n\tunlock\n\t\t\t\tsoft lockup! T2 never sees QI_DONE in WD2\n\nWhere:\nID = invalidation descriptor\nWD = wait descriptor\n* Written by hardware\n\nThe root of the problem is that the descriptor status QI_DONE flag is used\nfor two conflicting purposes:\n1. signal a descriptor is ready for reclaim (to be freed)\n2. signal by the hardware that a wait descriptor is complete\n\nThe solution (in this patch) is state separation by using QI_FREE flag\nfor #1.\n\nOnce a thread's invalidation descriptors are complete, their status would\nbe set to QI_FREE. The reclaim_free_desc() function would then only\nfree descriptors marked as QI_FREE instead of those marked as\nQI_DONE. This change ensures that T2 (from the previous example) will\ncorrectly observe the completion of its invalidation_wait (marked as\nQI_DONE).\n    ",
+		"advisory": {
+			"from": "security@suse.de",
+			"severity": "Moderate",
+			"cve": [
+				{
+					"text": "CVE-2024-49993 at SUSE",
+					"href": "https://www.suse.com/security/cve/CVE-2024-49993/",
+					"impact": "low",
+					"cvss3": "3.3/CVSS:3.1/AV:L/AC:L/PR:L/UI:N/S:U/C:N/I:N/A:L"
+				},
+				{
+					"text": "CVE-2024-49993 at NVD",
+					"href": "https://nvd.nist.gov/vuln/detail/CVE-2024-49993",
+					"impact": "medium",
+					"cvss3": "5.5/CVSS:3.1/AV:L/AC:L/PR:L/UI:N/S:U/C:N/I:N/A:H"
+				}
+			],
+			"bugzilla": [
+				{
+					"text": "SUSE bug 1232316",
+					"href": "https://bugzilla.suse.com/1232316"
+				}
+			],
+			"issued": {
+				"date": "2024-10-27"
+			},
+			"updated": {
+				"date": "2024-10-27"
+			},
+			"affected_cpe_list": {
+				"cpe": [
+					"cpe:/o:suse:sle-live-patching:12:sp5",
+					"cpe:/o:suse:sle-module-public-cloud:12",
+					"cpe:/o:suse:sle-we:12:sp5",
+					"cpe:/o:suse:sle_hpc:12",
+					"cpe:/o:suse:sles-ltss-extended-security:12:sp5",
+					"cpe:/o:suse:sles-ltss:12:sp2",
+					"cpe:/o:suse:sles-ltss:12:sp4",
+					"cpe:/o:suse:sles:12",
+					"cpe:/o:suse:sles:12:sp3",
+					"cpe:/o:suse:sles:12:sp4",
+					"cpe:/o:suse:sles:12:sp5",
+					"cpe:/o:suse:sles_sap:12",
+					"cpe:/o:suse:sles_sap:12:sp3",
+					"cpe:/o:suse:sles_sap:12:sp4",
+					"cpe:/o:suse:sles_sap:12:sp5",
+					"cpe:/o:suse:suse-linux-enterprise-rt:12:sp5"
+				]
+			}
+		}
+	},
+	"criteria": {
+		"operator": "OR",
+		"criterias": [
+			{
+				"operator": "AND",
+				"criterias": [
+					{
+						"operator": "OR",
+						"criterions": [
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009338032",
+								"comment": "kernel-default is affected"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009333995",
+								"comment": "kernel-source is affected"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009340767",
+								"comment": "kernel-source-azure is affected"
+							}
+						]
+					}
+				],
+				"criterions": [
+					{
+						"test_ref": "oval:org.opensuse.security:tst:2009258806",
+						"comment": "SUSE Linux Enterprise Server for SAP Applications 12 SP5 is installed"
+					}
+				]
+			},
+			{
+				"operator": "AND",
+				"criterias": [
+					{
+						"operator": "OR",
+						"criterions": [
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009703659",
+								"comment": "SUSE Linux Enterprise High Performance Computing 12 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009178199",
+								"comment": "SUSE Linux Enterprise Module for Public Cloud 12 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009116126",
+								"comment": "SUSE Linux Enterprise Server 12 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009158922",
+								"comment": "SUSE Linux Enterprise Server 12 SP3 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009240280",
+								"comment": "SUSE Linux Enterprise Server 12 SP4 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009258033",
+								"comment": "SUSE Linux Enterprise Server 12 SP5 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009258800",
+								"comment": "SUSE Linux Enterprise Server for SAP Applications 12 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009258803",
+								"comment": "SUSE Linux Enterprise Server for SAP Applications 12 SP3 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009258804",
+								"comment": "SUSE Linux Enterprise Server for SAP Applications 12 SP4 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009258806",
+								"comment": "SUSE Linux Enterprise Server for SAP Applications 12 SP5 is installed"
+							}
+						]
+					},
+					{
+						"operator": "OR",
+						"criterions": [
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009338032",
+								"comment": "kernel-default is affected"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009333995",
+								"comment": "kernel-source is affected"
+							}
+						]
+					}
+				]
+			},
+			{
+				"operator": "AND",
+				"criterias": [
+					{
+						"operator": "OR",
+						"criterions": [
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009258033",
+								"comment": "SUSE Linux Enterprise Server 12 SP5 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009258033",
+								"comment": "SUSE Linux Enterprise Server 12 SP5-LTSS is installed"
+							}
+						]
+					},
+					{
+						"operator": "OR",
+						"criterions": [
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009338032",
+								"comment": "kernel-default is affected"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009338033",
+								"comment": "kernel-default-base is affected"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009338034",
+								"comment": "kernel-default-devel is affected"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009338036",
+								"comment": "kernel-default-man is affected"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009335275",
+								"comment": "kernel-devel is affected"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009335276",
+								"comment": "kernel-macros is affected"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009333995",
+								"comment": "kernel-source is affected"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009340777",
+								"comment": "kernel-devel-azure is affected"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009340767",
+								"comment": "kernel-source-azure is affected"
+							}
+						]
+					}
+				]
+			},
+			{
+				"operator": "AND",
+				"criterias": [
+					{
+						"operator": "OR",
+						"criterions": [
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009128018",
+								"comment": "SUSE Linux Enterprise Server 12 SP2-LTSS is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009240280",
+								"comment": "SUSE Linux Enterprise Server 12 SP4-LTSS is installed"
+							}
+						]
+					},
+					{
+						"operator": "OR",
+						"criterions": [
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009338032",
+								"comment": "kernel-default is affected"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009338033",
+								"comment": "kernel-default-base is affected"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009338034",
+								"comment": "kernel-default-devel is affected"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009338036",
+								"comment": "kernel-default-man is affected"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009335275",
+								"comment": "kernel-devel is affected"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009335276",
+								"comment": "kernel-macros is affected"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009333995",
+								"comment": "kernel-source is affected"
+							}
+						]
+					}
+				]
+			},
+			{
+				"operator": "AND",
+				"criterias": [
+					{
+						"operator": "OR",
+						"criterions": [
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009338035",
+								"comment": "kernel-default-kgraft is affected"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009809200",
+								"comment": "kernel-default-kgraft-devel is affected"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009333995",
+								"comment": "kernel-source is affected"
+							}
+						]
+					}
+				],
+				"criterions": [
+					{
+						"test_ref": "oval:org.opensuse.security:tst:2009273148",
+						"comment": "SUSE Linux Enterprise Live Patching 12 SP5 is installed"
+					}
+				]
+			},
+			{
+				"operator": "AND",
+				"criterias": [
+					{
+						"operator": "OR",
+						"criterions": [
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009258033",
+								"comment": "SUSE Linux Enterprise Server 12 SP5 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009258806",
+								"comment": "SUSE Linux Enterprise Server for SAP Applications 12 SP5 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009258650",
+								"comment": "SUSE Linux Enterprise Workstation Extension 12 SP5 is installed"
+							}
+						]
+					},
+					{
+						"operator": "OR",
+						"criterions": [
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009715290",
+								"comment": "kernel-default-extra is affected"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009333995",
+								"comment": "kernel-source is affected"
+							}
+						]
+					}
+				]
+			},
+			{
+				"operator": "AND",
+				"criterias": [
+					{
+						"operator": "OR",
+						"criterions": [
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009728713",
+								"comment": "kernel-devel-rt is affected"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009728714",
+								"comment": "kernel-source-rt is affected"
+							}
+						]
+					}
+				],
+				"criterions": [
+					{
+						"test_ref": "oval:org.opensuse.security:tst:2009279486",
+						"comment": "SUSE Linux Enterprise Real Time 12 SP5 is installed"
+					}
+				]
+			}
+		]
+	}
+}

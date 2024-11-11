@@ -1,0 +1,107 @@
+{
+	"id": "oval:org.opensuse.security:def:202352527",
+	"version": "1",
+	"class": "vulnerability",
+	"metadata": {
+		"title": "CVE-2023-52527",
+		"affected": {
+			"family": "unix",
+			"platform": [
+				"SUSE Linux Enterprise Micro 5.2"
+			]
+		},
+		"reference": [
+			{
+				"ref_id": "Mitre CVE-2023-52527",
+				"ref_url": "https://cve.mitre.org/cgi-bin/cvename.cgi?name=CVE-2023-52527",
+				"source": "CVE"
+			},
+			{
+				"ref_id": "SUSE CVE-2023-52527",
+				"ref_url": "https://www.suse.com/security/cve/CVE-2023-52527",
+				"source": "SUSE CVE"
+			},
+			{
+				"ref_id": "SUSE-SU-2024:1979-1",
+				"ref_url": "https://lists.suse.com/pipermail/sle-updates/2024-June/035536.html",
+				"source": "SUSE-SU"
+			},
+			{
+				"ref_id": "SUSE-SU-2024:1983-1",
+				"ref_url": "https://lists.suse.com/pipermail/sle-updates/2024-June/035554.html",
+				"source": "SUSE-SU"
+			},
+			{
+				"ref_id": "SUSE-SU-2024:2184-1",
+				"ref_url": "https://lists.suse.com/pipermail/sle-updates/2024-June/035716.html",
+				"source": "SUSE-SU"
+			}
+		],
+		"description": "\n    In the Linux kernel, the following vulnerability has been resolved:\n\nipv4, ipv6: Fix handling of transhdrlen in __ip{,6}_append_data()\n\nIncluding the transhdrlen in length is a problem when the packet is\npartially filled (e.g. something like send(MSG_MORE) happened previously)\nwhen appending to an IPv4 or IPv6 packet as we don't want to repeat the\ntransport header or account for it twice.  This can happen under some\ncircumstances, such as splicing into an L2TP socket.\n\nThe symptom observed is a warning in __ip6_append_data():\n\n    WARNING: CPU: 1 PID: 5042 at net/ipv6/ip6_output.c:1800 __ip6_append_data.isra.0+0x1be8/0x47f0 net/ipv6/ip6_output.c:1800\n\nthat occurs when MSG_SPLICE_PAGES is used to append more data to an already\npartially occupied skbuff.  The warning occurs when 'copy' is larger than\nthe amount of data in the message iterator.  This is because the requested\nlength includes the transport header length when it shouldn't.  This can be\ntriggered by, for example:\n\n        sfd = socket(AF_INET6, SOCK_DGRAM, IPPROTO_L2TP);\n        bind(sfd, ...); // ::1\n        connect(sfd, ...); // ::1 port 7\n        send(sfd, buffer, 4100, MSG_MORE);\n        sendfile(sfd, dfd, NULL, 1024);\n\nFix this by only adding transhdrlen into the length if the write queue is\nempty in l2tp_ip6_sendmsg(), analogously to how UDP does things.\n\nl2tp_ip_sendmsg() looks like it won't suffer from this problem as it builds\nthe UDP packet itself.\n    ",
+		"advisory": {
+			"from": "security@suse.de",
+			"severity": "Moderate",
+			"cve": [
+				{
+					"text": "CVE-2023-52527 at SUSE",
+					"href": "https://www.suse.com/security/cve/CVE-2023-52527/",
+					"impact": "medium",
+					"cvss3": "5.5/CVSS:3.1/AV:L/AC:L/PR:L/UI:N/S:U/C:N/I:N/A:H"
+				},
+				{
+					"text": "CVE-2023-52527 at NVD",
+					"href": "https://nvd.nist.gov/vuln/detail/CVE-2023-52527"
+				}
+			],
+			"bugzilla": [
+				{
+					"text": "SUSE bug 1220928",
+					"href": "https://bugzilla.suse.com/1220928"
+				}
+			],
+			"issued": {
+				"date": "2024-03-07"
+			},
+			"updated": {
+				"date": "2024-10-10"
+			},
+			"affected_cpe_list": {
+				"cpe": [
+					"cpe:/o:suse:suse-microos:5.2"
+				]
+			}
+		}
+	},
+	"criteria": {
+		"operator": "AND",
+		"criterias": [
+			{
+				"operator": "OR",
+				"criterions": [
+					{
+						"test_ref": "oval:org.opensuse.security:tst:2009338032",
+						"comment": "kernel-default is affected"
+					},
+					{
+						"test_ref": "oval:org.opensuse.security:tst:2009705050",
+						"comment": "kernel-rt is affected"
+					},
+					{
+						"test_ref": "oval:org.opensuse.security:tst:2009333995",
+						"comment": "kernel-source is affected"
+					},
+					{
+						"test_ref": "oval:org.opensuse.security:tst:2009728714",
+						"comment": "kernel-source-rt is affected"
+					}
+				]
+			}
+		],
+		"criterions": [
+			{
+				"test_ref": "oval:org.opensuse.security:tst:2009681300",
+				"comment": "SUSE Linux Enterprise Micro 5.2 is installed"
+			}
+		]
+	}
+}

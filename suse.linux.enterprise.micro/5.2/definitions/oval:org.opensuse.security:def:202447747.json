@@ -1,0 +1,98 @@
+{
+	"id": "oval:org.opensuse.security:def:202447747",
+	"version": "1",
+	"class": "vulnerability",
+	"metadata": {
+		"title": "CVE-2024-47747",
+		"affected": {
+			"family": "unix",
+			"platform": [
+				"SUSE Linux Enterprise Micro 5.2"
+			]
+		},
+		"reference": [
+			{
+				"ref_id": "Mitre CVE-2024-47747",
+				"ref_url": "https://cve.mitre.org/cgi-bin/cvename.cgi?name=CVE-2024-47747",
+				"source": "CVE"
+			},
+			{
+				"ref_id": "SUSE CVE-2024-47747",
+				"ref_url": "https://www.suse.com/security/cve/CVE-2024-47747",
+				"source": "SUSE CVE"
+			}
+		],
+		"description": "\n    In the Linux kernel, the following vulnerability has been resolved:\n\nnet: seeq: Fix use after free vulnerability in ether3 Driver Due to Race Condition\n\nIn the ether3_probe function, a timer is initialized with a callback\nfunction ether3_ledoff, bound to &prev(dev)->timer. Once the timer is\nstarted, there is a risk of a race condition if the module or device\nis removed, triggering the ether3_remove function to perform cleanup.\nThe sequence of operations that may lead to a UAF bug is as follows:\n\nCPU0                                    CPU1\n\n                      |  ether3_ledoff\nether3_remove         |\n  free_netdev(dev);   |\n  put_devic           |\n  kfree(dev);         |\n |  ether3_outw(priv(dev)->regs.config2 |= CFG2_CTRLO, REG_CONFIG2);\n                      | // use dev\n\nFix it by ensuring that the timer is canceled before proceeding with\nthe cleanup in ether3_remove.\n    ",
+		"advisory": {
+			"from": "security@suse.de",
+			"severity": "Important",
+			"cve": [
+				{
+					"text": "CVE-2024-47747 at SUSE",
+					"href": "https://www.suse.com/security/cve/CVE-2024-47747/",
+					"impact": "high",
+					"cvss3": "7/CVSS:3.1/AV:L/AC:H/PR:L/UI:N/S:U/C:H/I:H/A:H"
+				},
+				{
+					"text": "CVE-2024-47747 at NVD",
+					"href": "https://nvd.nist.gov/vuln/detail/CVE-2024-47747",
+					"impact": "high",
+					"cvss3": "7/CVSS:3.1/AV:L/AC:H/PR:L/UI:N/S:U/C:H/I:H/A:H"
+				}
+			],
+			"bugzilla": [
+				{
+					"text": "SUSE bug 1232145",
+					"href": "https://bugzilla.suse.com/1232145"
+				},
+				{
+					"text": "SUSE bug 1232146",
+					"href": "https://bugzilla.suse.com/1232146"
+				}
+			],
+			"issued": {
+				"date": "2024-10-27"
+			},
+			"updated": {
+				"date": "2024-11-06"
+			},
+			"affected_cpe_list": {
+				"cpe": [
+					"cpe:/o:suse:suse-microos:5.2"
+				]
+			}
+		}
+	},
+	"criteria": {
+		"operator": "AND",
+		"criterias": [
+			{
+				"operator": "OR",
+				"criterions": [
+					{
+						"test_ref": "oval:org.opensuse.security:tst:2009338032",
+						"comment": "kernel-default is affected"
+					},
+					{
+						"test_ref": "oval:org.opensuse.security:tst:2009705050",
+						"comment": "kernel-rt is affected"
+					},
+					{
+						"test_ref": "oval:org.opensuse.security:tst:2009333995",
+						"comment": "kernel-source is affected"
+					},
+					{
+						"test_ref": "oval:org.opensuse.security:tst:2009728714",
+						"comment": "kernel-source-rt is affected"
+					}
+				]
+			}
+		],
+		"criterions": [
+			{
+				"test_ref": "oval:org.opensuse.security:tst:2009681300",
+				"comment": "SUSE Linux Enterprise Micro 5.2 is installed"
+			}
+		]
+	}
+}

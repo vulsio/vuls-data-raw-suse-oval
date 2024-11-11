@@ -1,0 +1,122 @@
+{
+	"id": "oval:org.opensuse.security:def:202426960",
+	"version": "1",
+	"class": "vulnerability",
+	"metadata": {
+		"title": "CVE-2024-26960",
+		"affected": {
+			"family": "unix",
+			"platform": [
+				"SUSE Linux Enterprise Micro 5.4"
+			]
+		},
+		"reference": [
+			{
+				"ref_id": "Mitre CVE-2024-26960",
+				"ref_url": "https://cve.mitre.org/cgi-bin/cvename.cgi?name=CVE-2024-26960",
+				"source": "CVE"
+			},
+			{
+				"ref_id": "SUSE CVE-2024-26960",
+				"ref_url": "https://www.suse.com/security/cve/CVE-2024-26960",
+				"source": "SUSE CVE"
+			},
+			{
+				"ref_id": "SUSE-SU-2024:1644-1",
+				"ref_url": "https://lists.suse.com/pipermail/sle-updates/2024-May/035263.html",
+				"source": "SUSE-SU"
+			},
+			{
+				"ref_id": "SUSE-SU-2024:1659-1",
+				"ref_url": "https://lists.suse.com/pipermail/sle-updates/2024-May/035281.html",
+				"source": "SUSE-SU"
+			},
+			{
+				"ref_id": "SUSE-SU-2024:1663-1",
+				"ref_url": "https://lists.suse.com/pipermail/sle-security-updates/2024-August/019268.html",
+				"source": "SUSE-SU"
+			},
+			{
+				"ref_id": "SUSE-SU-2024:2135-1",
+				"ref_url": "https://lists.suse.com/pipermail/sle-updates/2024-June/035681.html",
+				"source": "SUSE-SU"
+			},
+			{
+				"ref_id": "SUSE-SU-2024:2203-1",
+				"ref_url": "https://lists.suse.com/pipermail/sle-security-updates/2024-August/019244.html",
+				"source": "SUSE-SU"
+			},
+			{
+				"ref_id": "SUSE-SU-2024:2973-1",
+				"ref_url": "https://lists.suse.com/pipermail/sle-security-updates/2024-August/019280.html",
+				"source": "SUSE-SU"
+			}
+		],
+		"description": "\n    In the Linux kernel, the following vulnerability has been resolved:\n\nmm: swap: fix race between free_swap_and_cache() and swapoff()\n\nThere was previously a theoretical window where swapoff() could run and\nteardown a swap_info_struct while a call to free_swap_and_cache() was\nrunning in another thread.  This could cause, amongst other bad\npossibilities, swap_page_trans_huge_swapped() (called by\nfree_swap_and_cache()) to access the freed memory for swap_map.\n\nThis is a theoretical problem and I haven't been able to provoke it from a\ntest case.  But there has been agreement based on code review that this is\npossible (see link below).\n\nFix it by using get_swap_device()/put_swap_device(), which will stall\nswapoff().  There was an extra check in _swap_info_get() to confirm that\nthe swap entry was not free.  This isn't present in get_swap_device()\nbecause it doesn't make sense in general due to the race between getting\nthe reference and swapoff.  So I've added an equivalent check directly in\nfree_swap_and_cache().\n\nDetails of how to provoke one possible issue (thanks to David Hildenbrand\nfor deriving this):\n\n--8<-----\n\n__swap_entry_free() might be the last user and result in\n\"count == SWAP_HAS_CACHE\".\n\nswapoff->try_to_unuse() will stop as soon as soon as si->inuse_pages==0.\n\nSo the question is: could someone reclaim the folio and turn\nsi->inuse_pages==0, before we completed swap_page_trans_huge_swapped().\n\nImagine the following: 2 MiB folio in the swapcache. Only 2 subpages are\nstill references by swap entries.\n\nProcess 1 still references subpage 0 via swap entry.\nProcess 2 still references subpage 1 via swap entry.\n\nProcess 1 quits. Calls free_swap_and_cache().\n-> count == SWAP_HAS_CACHE\n[then, preempted in the hypervisor etc.]\n\nProcess 2 quits. Calls free_swap_and_cache().\n-> count == SWAP_HAS_CACHE\n\nProcess 2 goes ahead, passes swap_page_trans_huge_swapped(), and calls\n__try_to_reclaim_swap().\n\n__try_to_reclaim_swap()->folio_free_swap()->delete_from_swap_cache()->\nput_swap_folio()->free_swap_slot()->swapcache_free_entries()->\nswap_entry_free()->swap_range_free()->\n...\nWRITE_ONCE(si->inuse_pages, si->inuse_pages - nr_entries);\n\nWhat stops swapoff to succeed after process 2 reclaimed the swap cache\nbut before process1 finished its call to swap_page_trans_huge_swapped()?\n\n--8<-----\n    ",
+		"advisory": {
+			"from": "security@suse.de",
+			"severity": "Moderate",
+			"cve": [
+				{
+					"text": "CVE-2024-26960 at SUSE",
+					"href": "https://www.suse.com/security/cve/CVE-2024-26960/",
+					"impact": "medium",
+					"cvss3": "5.5/CVSS:3.1/AV:L/AC:L/PR:L/UI:N/S:U/C:N/I:N/A:H"
+				},
+				{
+					"text": "CVE-2024-26960 at NVD",
+					"href": "https://nvd.nist.gov/vuln/detail/CVE-2024-26960"
+				}
+			],
+			"bugzilla": [
+				{
+					"text": "SUSE bug 1223655",
+					"href": "https://bugzilla.suse.com/1223655"
+				}
+			],
+			"issued": {
+				"date": "2024-05-03"
+			},
+			"updated": {
+				"date": "2024-10-09"
+			},
+			"affected_cpe_list": {
+				"cpe": [
+					"cpe:/o:suse:sle-micro:5.4"
+				]
+			}
+		}
+	},
+	"criteria": {
+		"operator": "AND",
+		"criterias": [
+			{
+				"operator": "OR",
+				"criterions": [
+					{
+						"test_ref": "oval:org.opensuse.security:tst:2009338032",
+						"comment": "kernel-default is affected"
+					},
+					{
+						"test_ref": "oval:org.opensuse.security:tst:2009705050",
+						"comment": "kernel-rt is affected"
+					},
+					{
+						"test_ref": "oval:org.opensuse.security:tst:2009333995",
+						"comment": "kernel-source is affected"
+					},
+					{
+						"test_ref": "oval:org.opensuse.security:tst:2009728714",
+						"comment": "kernel-source-rt is affected"
+					}
+				]
+			}
+		],
+		"criterions": [
+			{
+				"test_ref": "oval:org.opensuse.security:tst:2009755086",
+				"comment": "SUSE Linux Enterprise Micro 5.4 is installed"
+			}
+		]
+	}
+}

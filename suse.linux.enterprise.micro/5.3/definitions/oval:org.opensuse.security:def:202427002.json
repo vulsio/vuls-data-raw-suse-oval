@@ -1,0 +1,107 @@
+{
+	"id": "oval:org.opensuse.security:def:202427002",
+	"version": "1",
+	"class": "vulnerability",
+	"metadata": {
+		"title": "CVE-2024-27002",
+		"affected": {
+			"family": "unix",
+			"platform": [
+				"SUSE Linux Enterprise Micro 5.3"
+			]
+		},
+		"reference": [
+			{
+				"ref_id": "Mitre CVE-2024-27002",
+				"ref_url": "https://cve.mitre.org/cgi-bin/cvename.cgi?name=CVE-2024-27002",
+				"source": "CVE"
+			},
+			{
+				"ref_id": "SUSE CVE-2024-27002",
+				"ref_url": "https://www.suse.com/security/cve/CVE-2024-27002",
+				"source": "SUSE CVE"
+			},
+			{
+				"ref_id": "SUSE-SU-2024:2135-1",
+				"ref_url": "https://lists.suse.com/pipermail/sle-updates/2024-June/035681.html",
+				"source": "SUSE-SU"
+			},
+			{
+				"ref_id": "SUSE-SU-2024:2203-1",
+				"ref_url": "https://lists.suse.com/pipermail/sle-security-updates/2024-August/019244.html",
+				"source": "SUSE-SU"
+			},
+			{
+				"ref_id": "SUSE-SU-2024:2973-1",
+				"ref_url": "https://lists.suse.com/pipermail/sle-security-updates/2024-August/019280.html",
+				"source": "SUSE-SU"
+			}
+		],
+		"description": "\n    In the Linux kernel, the following vulnerability has been resolved:\n\nclk: mediatek: Do a runtime PM get on controllers during probe\n\nmt8183-mfgcfg has a mutual dependency with genpd during the probing\nstage, which leads to a deadlock in the following call stack:\n\nCPU0:  genpd_lock --> clk_prepare_lock\ngenpd_power_off_work_fn()\n genpd_lock()\n generic_pm_domain::power_off()\n    clk_unprepare()\n      clk_prepare_lock()\n\nCPU1: clk_prepare_lock --> genpd_lock\nclk_register()\n  __clk_core_init()\n    clk_prepare_lock()\n    clk_pm_runtime_get()\n      genpd_lock()\n\nDo a runtime PM get at the probe function to make sure clk_register()\nwon't acquire the genpd lock. Instead of only modifying mt8183-mfgcfg,\ndo this on all mediatek clock controller probings because we don't\nbelieve this would cause any regression.\n\nVerified on MT8183 and MT8192 Chromebooks.\n    ",
+		"advisory": {
+			"from": "security@suse.de",
+			"severity": "Moderate",
+			"cve": [
+				{
+					"text": "CVE-2024-27002 at SUSE",
+					"href": "https://www.suse.com/security/cve/CVE-2024-27002/",
+					"impact": "medium",
+					"cvss3": "5.5/CVSS:3.1/AV:L/AC:L/PR:L/UI:N/S:U/C:N/I:N/A:H"
+				},
+				{
+					"text": "CVE-2024-27002 at NVD",
+					"href": "https://nvd.nist.gov/vuln/detail/CVE-2024-27002"
+				}
+			],
+			"bugzilla": [
+				{
+					"text": "SUSE bug 1223759",
+					"href": "https://bugzilla.suse.com/1223759"
+				}
+			],
+			"issued": {
+				"date": "2024-05-03"
+			},
+			"updated": {
+				"date": "2024-10-09"
+			},
+			"affected_cpe_list": {
+				"cpe": [
+					"cpe:/o:suse:sle-micro:5.3"
+				]
+			}
+		}
+	},
+	"criteria": {
+		"operator": "AND",
+		"criterias": [
+			{
+				"operator": "OR",
+				"criterions": [
+					{
+						"test_ref": "oval:org.opensuse.security:tst:2009338032",
+						"comment": "kernel-default is affected"
+					},
+					{
+						"test_ref": "oval:org.opensuse.security:tst:2009705050",
+						"comment": "kernel-rt is affected"
+					},
+					{
+						"test_ref": "oval:org.opensuse.security:tst:2009333995",
+						"comment": "kernel-source is affected"
+					},
+					{
+						"test_ref": "oval:org.opensuse.security:tst:2009728714",
+						"comment": "kernel-source-rt is affected"
+					}
+				]
+			}
+		],
+		"criterions": [
+			{
+				"test_ref": "oval:org.opensuse.security:tst:2009728694",
+				"comment": "SUSE Linux Enterprise Micro 5.3 is installed"
+			}
+		]
+	}
+}

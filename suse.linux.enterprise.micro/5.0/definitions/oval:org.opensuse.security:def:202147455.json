@@ -1,0 +1,103 @@
+{
+	"id": "oval:org.opensuse.security:def:202147455",
+	"version": "1",
+	"class": "vulnerability",
+	"metadata": {
+		"title": "CVE-2021-47455",
+		"affected": {
+			"family": "unix",
+			"platform": [
+				"SUSE Linux Enterprise Micro 5.0"
+			]
+		},
+		"reference": [
+			{
+				"ref_id": "Mitre CVE-2021-47455",
+				"ref_url": "https://cve.mitre.org/cgi-bin/cvename.cgi?name=CVE-2021-47455",
+				"source": "CVE"
+			},
+			{
+				"ref_id": "SUSE CVE-2021-47455",
+				"ref_url": "https://www.suse.com/security/cve/CVE-2021-47455",
+				"source": "SUSE CVE"
+			},
+			{
+				"ref_id": "RHSA-2024:7000",
+				"ref_url": "https://lists.suse.com/pipermail/suse-liberty-linux-updates/2024-September/000095.html",
+				"source": "SUSE-SU"
+			},
+			{
+				"ref_id": "SUSE-SU-2024:2008-1",
+				"ref_url": "https://lists.suse.com/pipermail/sle-updates/2024-June/035569.html",
+				"source": "SUSE-SU"
+			},
+			{
+				"ref_id": "SUSE-SU-2024:2011-1",
+				"ref_url": "https://lists.suse.com/pipermail/sle-updates/2024-June/035575.html",
+				"source": "SUSE-SU"
+			},
+			{
+				"ref_id": "SUSE-SU-2024:2019-1",
+				"ref_url": "https://lists.suse.com/pipermail/sle-updates/2024-June/035578.html",
+				"source": "SUSE-SU"
+			},
+			{
+				"ref_id": "SUSE-SU-2024:2189-1",
+				"ref_url": "https://lists.suse.com/pipermail/sle-updates/2024-June/035721.html",
+				"source": "SUSE-SU"
+			},
+			{
+				"ref_id": "SUSE-SU-2024:2190-1",
+				"ref_url": "https://lists.suse.com/pipermail/sle-updates/2024-June/035732.html",
+				"source": "SUSE-SU"
+			}
+		],
+		"description": "\n    In the Linux kernel, the following vulnerability has been resolved:\n\nptp: Fix possible memory leak in ptp_clock_register()\n\nI got memory leak as follows when doing fault injection test:\n\nunreferenced object 0xffff88800906c618 (size 8):\n  comm \"i2c-idt82p33931\", pid 4421, jiffies 4294948083 (age 13.188s)\n  hex dump (first 8 bytes):\n    70 74 70 30 00 00 00 00                          ptp0....\n  backtrace:\n    [<00000000312ed458>] __kmalloc_track_caller+0x19f/0x3a0\n    [<0000000079f6e2ff>] kvasprintf+0xb5/0x150\n    [<0000000026aae54f>] kvasprintf_const+0x60/0x190\n    [<00000000f323a5f7>] kobject_set_name_vargs+0x56/0x150\n    [<000000004e35abdd>] dev_set_name+0xc0/0x100\n    [<00000000f20cfe25>] ptp_clock_register+0x9f4/0xd30 [ptp]\n    [<000000008bb9f0de>] idt82p33_probe.cold+0x8b6/0x1561 [ptp_idt82p33]\n\nWhen posix_clock_register() returns an error, the name allocated\nin dev_set_name() will be leaked, the put_device() should be used\nto give up the device reference, then the name will be freed in\nkobject_cleanup() and other memory will be freed in ptp_clock_release().\n    ",
+		"advisory": {
+			"from": "security@suse.de",
+			"severity": "Moderate",
+			"cve": [
+				{
+					"text": "CVE-2021-47455 at SUSE",
+					"href": "https://www.suse.com/security/cve/CVE-2021-47455/",
+					"impact": "medium",
+					"cvss3": "5.5/CVSS:3.1/AV:L/AC:L/PR:L/UI:N/S:U/C:N/I:N/A:H"
+				},
+				{
+					"text": "CVE-2021-47455 at NVD",
+					"href": "https://nvd.nist.gov/vuln/detail/CVE-2021-47455"
+				}
+			],
+			"bugzilla": [
+				{
+					"text": "SUSE bug 1225254",
+					"href": "https://bugzilla.suse.com/1225254"
+				}
+			],
+			"issued": {
+				"date": "2024-05-25"
+			},
+			"updated": {
+				"date": "2024-09-30"
+			},
+			"affected_cpe_list": {
+				"cpe": [
+					"cpe:/o:suse:suse-microos:5.0"
+				]
+			}
+		}
+	},
+	"criteria": {
+		"operator": "AND",
+		"criterions": [
+			{
+				"test_ref": "oval:org.opensuse.security:tst:2009704855",
+				"comment": "SUSE Linux Enterprise Micro 5.0 is installed"
+			},
+			{
+				"test_ref": "oval:org.opensuse.security:tst:2009338032",
+				"comment": "kernel-default is affected"
+			}
+		]
+	}
+}

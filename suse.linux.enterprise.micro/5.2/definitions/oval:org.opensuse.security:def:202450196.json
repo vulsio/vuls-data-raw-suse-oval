@@ -1,0 +1,92 @@
+{
+	"id": "oval:org.opensuse.security:def:202450196",
+	"version": "1",
+	"class": "vulnerability",
+	"metadata": {
+		"title": "CVE-2024-50196",
+		"affected": {
+			"family": "unix",
+			"platform": [
+				"SUSE Linux Enterprise Micro 5.2"
+			]
+		},
+		"reference": [
+			{
+				"ref_id": "Mitre CVE-2024-50196",
+				"ref_url": "https://cve.mitre.org/cgi-bin/cvename.cgi?name=CVE-2024-50196",
+				"source": "CVE"
+			},
+			{
+				"ref_id": "SUSE CVE-2024-50196",
+				"ref_url": "https://www.suse.com/security/cve/CVE-2024-50196",
+				"source": "SUSE CVE"
+			}
+		],
+		"description": "\n    In the Linux kernel, the following vulnerability has been resolved:\n\npinctrl: ocelot: fix system hang on level based interrupts\n\nThe current implementation only calls chained_irq_enter() and\nchained_irq_exit() if it detects pending interrupts.\n\n```\nfor (i = 0; i < info->stride; i++) {\n\turegmap_read(info->map, id_reg + 4 * i, &reg);\n\tif (!reg)\n\t\tcontinue;\n\n\tchained_irq_enter(parent_chip, desc);\n```\n\nHowever, in case of GPIO pin configured in level mode and the parent\ncontroller configured in edge mode, GPIO interrupt might be lowered by the\nhardware. In the result, if the interrupt is short enough, the parent\ninterrupt is still pending while the GPIO interrupt is cleared;\nchained_irq_enter() never gets called and the system hangs trying to\nservice the parent interrupt.\n\nMoving chained_irq_enter() and chained_irq_exit() outside the for loop\nensures that they are called even when GPIO interrupt is lowered by the\nhardware.\n\nThe similar code with chained_irq_enter() / chained_irq_exit() functions\nwrapping interrupt checking loop may be found in many other drivers:\n```\ngrep -r -A 10 chained_irq_enter drivers/pinctrl\n```\n    ",
+		"advisory": {
+			"from": "security@suse.de",
+			"severity": "Moderate",
+			"cve": [
+				{
+					"text": "CVE-2024-50196 at SUSE",
+					"href": "https://www.suse.com/security/cve/CVE-2024-50196/",
+					"impact": "medium",
+					"cvss3": "5.5/CVSS:3.1/AV:L/AC:L/PR:L/UI:N/S:U/C:N/I:N/A:H"
+				},
+				{
+					"text": "CVE-2024-50196 at NVD",
+					"href": "https://nvd.nist.gov/vuln/detail/CVE-2024-50196"
+				}
+			],
+			"bugzilla": [
+				{
+					"text": "SUSE bug 1233113",
+					"href": "https://bugzilla.suse.com/1233113"
+				}
+			],
+			"issued": {
+				"date": "2024-11-09"
+			},
+			"updated": {
+				"date": "2024-11-09"
+			},
+			"affected_cpe_list": {
+				"cpe": [
+					"cpe:/o:suse:suse-microos:5.2"
+				]
+			}
+		}
+	},
+	"criteria": {
+		"operator": "AND",
+		"criterias": [
+			{
+				"operator": "OR",
+				"criterions": [
+					{
+						"test_ref": "oval:org.opensuse.security:tst:2009338032",
+						"comment": "kernel-default is affected"
+					},
+					{
+						"test_ref": "oval:org.opensuse.security:tst:2009705050",
+						"comment": "kernel-rt is affected"
+					},
+					{
+						"test_ref": "oval:org.opensuse.security:tst:2009333995",
+						"comment": "kernel-source is affected"
+					},
+					{
+						"test_ref": "oval:org.opensuse.security:tst:2009728714",
+						"comment": "kernel-source-rt is affected"
+					}
+				]
+			}
+		],
+		"criterions": [
+			{
+				"test_ref": "oval:org.opensuse.security:tst:2009681300",
+				"comment": "SUSE Linux Enterprise Micro 5.2 is installed"
+			}
+		]
+	}
+}

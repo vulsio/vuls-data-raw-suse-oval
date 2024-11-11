@@ -1,0 +1,107 @@
+{
+	"id": "oval:org.opensuse.security:def:202147277",
+	"version": "1",
+	"class": "vulnerability",
+	"metadata": {
+		"title": "CVE-2021-47277",
+		"affected": {
+			"family": "unix",
+			"platform": [
+				"SUSE Linux Enterprise Micro 5.0",
+				"SUSE Linux Enterprise Micro 5.1",
+				"SUSE Linux Enterprise Micro 5.2"
+			]
+		},
+		"reference": [
+			{
+				"ref_id": "Mitre CVE-2021-47277",
+				"ref_url": "https://cve.mitre.org/cgi-bin/cvename.cgi?name=CVE-2021-47277",
+				"source": "CVE"
+			},
+			{
+				"ref_id": "SUSE CVE-2021-47277",
+				"ref_url": "https://www.suse.com/security/cve/CVE-2021-47277",
+				"source": "SUSE CVE"
+			},
+			{
+				"ref_id": "SUSE-SU-2024:1979-1",
+				"ref_url": "https://lists.suse.com/pipermail/sle-updates/2024-June/035536.html",
+				"source": "SUSE-SU"
+			},
+			{
+				"ref_id": "SUSE-SU-2024:1983-1",
+				"ref_url": "https://lists.suse.com/pipermail/sle-updates/2024-June/035554.html",
+				"source": "SUSE-SU"
+			},
+			{
+				"ref_id": "SUSE-SU-2024:2184-1",
+				"ref_url": "https://lists.suse.com/pipermail/sle-updates/2024-June/035716.html",
+				"source": "SUSE-SU"
+			}
+		],
+		"description": "\n    In the Linux kernel, the following vulnerability has been resolved:\n\nkvm: avoid speculation-based attacks from out-of-range memslot accesses\n\nKVM's mechanism for accessing guest memory translates a guest physical\naddress (gpa) to a host virtual address using the right-shifted gpa\n(also known as gfn) and a struct kvm_memory_slot.  The translation is\nperformed in __gfn_to_hva_memslot using the following formula:\n\n      hva = slot->userspace_addr + (gfn - slot->base_gfn) * PAGE_SIZE\n\nIt is expected that gfn falls within the boundaries of the guest's\nphysical memory.  However, a guest can access invalid physical addresses\nin such a way that the gfn is invalid.\n\n__gfn_to_hva_memslot is called from kvm_vcpu_gfn_to_hva_prot, which first\nretrieves a memslot through __gfn_to_memslot.  While __gfn_to_memslot\ndoes check that the gfn falls within the boundaries of the guest's\nphysical memory or not, a CPU can speculate the result of the check and\ncontinue execution speculatively using an illegal gfn. The speculation\ncan result in calculating an out-of-bounds hva.  If the resulting host\nvirtual address is used to load another guest physical address, this\nis effectively a Spectre gadget consisting of two consecutive reads,\nthe second of which is data dependent on the first.\n\nRight now it's not clear if there are any cases in which this is\nexploitable.  One interesting case was reported by the original author\nof this patch, and involves visiting guest page tables on x86.  Right\nnow these are not vulnerable because the hva read goes through get_user(),\nwhich contains an LFENCE speculation barrier.  However, there are\npatches in progress for x86 uaccess.h to mask kernel addresses instead of\nusing LFENCE; once these land, a guest could use speculation to read\nfrom the VMM's ring 3 address space.  Other architectures such as ARM\nalready use the address masking method, and would be susceptible to\nthis same kind of data-dependent access gadgets.  Therefore, this patch\nproactively protects from these attacks by masking out-of-bounds gfns\nin __gfn_to_hva_memslot, which blocks speculation of invalid hvas.\n\nSean Christopherson noted that this patch does not cover\nkvm_read_guest_offset_cached.  This however is limited to a few bytes\npast the end of the cache, and therefore it is unlikely to be useful in\nthe context of building a chain of data dependent accesses.\n    ",
+		"advisory": {
+			"from": "security@suse.de",
+			"severity": "Moderate",
+			"cve": [
+				{
+					"text": "CVE-2021-47277 at SUSE",
+					"href": "https://www.suse.com/security/cve/CVE-2021-47277/",
+					"impact": "medium",
+					"cvss3": "5.5/CVSS:3.1/AV:L/AC:L/PR:L/UI:N/S:U/C:N/I:N/A:H"
+				},
+				{
+					"text": "CVE-2021-47277 at NVD",
+					"href": "https://nvd.nist.gov/vuln/detail/CVE-2021-47277"
+				}
+			],
+			"bugzilla": [
+				{
+					"text": "SUSE bug 1224960",
+					"href": "https://bugzilla.suse.com/1224960"
+				}
+			],
+			"issued": {
+				"date": "2024-10-18"
+			},
+			"updated": {
+				"date": "2024-10-18"
+			},
+			"affected_cpe_list": {
+				"cpe": [
+					"cpe:/o:suse:suse-microos:5.0",
+					"cpe:/o:suse:suse-microos:5.1",
+					"cpe:/o:suse:suse-microos:5.2"
+				]
+			}
+		}
+	},
+	"criteria": {
+		"operator": "AND",
+		"criterias": [
+			{
+				"operator": "OR",
+				"criterions": [
+					{
+						"test_ref": "oval:org.opensuse.security:tst:2009704855",
+						"comment": "SUSE Linux Enterprise Micro 5.0 is installed"
+					},
+					{
+						"test_ref": "oval:org.opensuse.security:tst:2009669964",
+						"comment": "SUSE Linux Enterprise Micro 5.1 is installed"
+					},
+					{
+						"test_ref": "oval:org.opensuse.security:tst:2009681300",
+						"comment": "SUSE Linux Enterprise Micro 5.2 is installed"
+					}
+				]
+			}
+		],
+		"criterions": [
+			{
+				"test_ref": "oval:org.opensuse.security:tst:2009338032",
+				"comment": "kernel-default is affected"
+			}
+		]
+	}
+}

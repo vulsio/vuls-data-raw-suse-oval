@@ -1,0 +1,159 @@
+{
+	"id": "oval:org.opensuse.security:def:202441050",
+	"version": "1",
+	"class": "vulnerability",
+	"metadata": {
+		"title": "CVE-2024-41050",
+		"affected": {
+			"family": "unix",
+			"platform": [
+				"openSUSE Leap 15.5"
+			]
+		},
+		"reference": [
+			{
+				"ref_id": "Mitre CVE-2024-41050",
+				"ref_url": "https://cve.mitre.org/cgi-bin/cvename.cgi?name=CVE-2024-41050",
+				"source": "CVE"
+			},
+			{
+				"ref_id": "SUSE CVE-2024-41050",
+				"ref_url": "https://www.suse.com/security/cve/CVE-2024-41050",
+				"source": "SUSE CVE"
+			},
+			{
+				"ref_id": "SUSE-SU-2024:3194-1",
+				"ref_url": "https://lists.suse.com/pipermail/sle-updates/2024-September/036835.html",
+				"source": "SUSE-SU"
+			},
+			{
+				"ref_id": "SUSE-SU-2024:3195-1",
+				"ref_url": "https://lists.suse.com/pipermail/sle-updates/2024-September/036842.html",
+				"source": "SUSE-SU"
+			},
+			{
+				"ref_id": "SUSE-SU-2024:3383-1",
+				"ref_url": "https://lists.suse.com/pipermail/sle-security-updates/2024-September/019497.html",
+				"source": "SUSE-SU"
+			}
+		],
+		"description": "\n    In the Linux kernel, the following vulnerability has been resolved:\n\ncachefiles: cyclic allocation of msg_id to avoid reuse\n\nReusing the msg_id after a maliciously completed reopen request may cause\na read request to remain unprocessed and result in a hung, as shown below:\n\n       t1       |      t2       |      t3\n-------------------------------------------------\ncachefiles_ondemand_select_req\n cachefiles_ondemand_object_is_close(A)\n cachefiles_ondemand_set_object_reopening(A)\n queue_work(fscache_object_wq, &info->work)\n                ondemand_object_worker\n                 cachefiles_ondemand_init_object(A)\n                  cachefiles_ondemand_send_req(OPEN)\n                    // get msg_id 6\n                    wait_for_completion(&req_A->done)\ncachefiles_ondemand_daemon_read\n // read msg_id 6 req_A\n cachefiles_ondemand_get_fd\n copy_to_user\n                                // Malicious completion msg_id 6\n                                copen 6,-1\n                                cachefiles_ondemand_copen\n                                 complete(&req_A->done)\n                                 // will not set the object to close\n                                 // because ondemand_id && fd is valid.\n\n                // ondemand_object_worker() is done\n                // but the object is still reopening.\n\n                                // new open req_B\n                                cachefiles_ondemand_init_object(B)\n                                 cachefiles_ondemand_send_req(OPEN)\n                                 // reuse msg_id 6\nprocess_open_req\n copen 6,A.size\n // The expected failed copen was executed successfully\n\nExpect copen to fail, and when it does, it closes fd, which sets the\nobject to close, and then close triggers reopen again. However, due to\nmsg_id reuse resulting in a successful copen, the anonymous fd is not\nclosed until the daemon exits. Therefore read requests waiting for reopen\nto complete may trigger hung task.\n\nTo avoid this issue, allocate the msg_id cyclically to avoid reusing the\nmsg_id for a very short duration of time.\n    ",
+		"advisory": {
+			"from": "security@suse.de",
+			"severity": "Moderate",
+			"cve": [
+				{
+					"text": "CVE-2024-41050 at SUSE",
+					"href": "https://www.suse.com/security/cve/CVE-2024-41050/",
+					"impact": "medium",
+					"cvss3": "5.5/CVSS:3.1/AV:L/AC:L/PR:L/UI:N/S:U/C:N/I:N/A:H"
+				},
+				{
+					"text": "CVE-2024-41050 at NVD",
+					"href": "https://nvd.nist.gov/vuln/detail/CVE-2024-41050"
+				}
+			],
+			"bugzilla": [
+				{
+					"text": "SUSE bug 1228499",
+					"href": "https://bugzilla.suse.com/1228499"
+				}
+			],
+			"issued": {
+				"date": "2024-08-06"
+			},
+			"updated": {
+				"date": "2024-10-09"
+			},
+			"affected_cpe_list": {
+				"cpe": [
+					"cpe:/o:opensuse:leap:15.5"
+				]
+			}
+		}
+	},
+	"criteria": {
+		"operator": "AND",
+		"criterias": [
+			{
+				"operator": "OR",
+				"criterions": [
+					{
+						"test_ref": "oval:org.opensuse.security:tst:2009766997",
+						"comment": "cluster-md-kmp-default is affected"
+					},
+					{
+						"test_ref": "oval:org.opensuse.security:tst:2009766998",
+						"comment": "dlm-kmp-default is affected"
+					},
+					{
+						"test_ref": "oval:org.opensuse.security:tst:2009766999",
+						"comment": "gfs2-kmp-default is affected"
+					},
+					{
+						"test_ref": "oval:org.opensuse.security:tst:2009338032",
+						"comment": "kernel-default is affected"
+					},
+					{
+						"test_ref": "oval:org.opensuse.security:tst:2009338034",
+						"comment": "kernel-default-devel is affected"
+					},
+					{
+						"test_ref": "oval:org.opensuse.security:tst:2009715290",
+						"comment": "kernel-default-extra is affected"
+					},
+					{
+						"test_ref": "oval:org.opensuse.security:tst:2009764854",
+						"comment": "kernel-default-livepatch is affected"
+					},
+					{
+						"test_ref": "oval:org.opensuse.security:tst:2009764855",
+						"comment": "kernel-default-livepatch-devel is affected"
+					},
+					{
+						"test_ref": "oval:org.opensuse.security:tst:2009870815",
+						"comment": "kernel-default-optional is affected"
+					},
+					{
+						"test_ref": "oval:org.opensuse.security:tst:2009870816",
+						"comment": "kernel-default-vdso is affected"
+					},
+					{
+						"test_ref": "oval:org.opensuse.security:tst:2009870817",
+						"comment": "kselftests-kmp-default is affected"
+					},
+					{
+						"test_ref": "oval:org.opensuse.security:tst:2009767000",
+						"comment": "ocfs2-kmp-default is affected"
+					},
+					{
+						"test_ref": "oval:org.opensuse.security:tst:2009338038",
+						"comment": "reiserfs-kmp-default is affected"
+					},
+					{
+						"test_ref": "oval:org.opensuse.security:tst:2009335275",
+						"comment": "kernel-devel is affected"
+					},
+					{
+						"test_ref": "oval:org.opensuse.security:tst:2009335276",
+						"comment": "kernel-macros is affected"
+					},
+					{
+						"test_ref": "oval:org.opensuse.security:tst:2009333995",
+						"comment": "kernel-source is affected"
+					},
+					{
+						"test_ref": "oval:org.opensuse.security:tst:2009870818",
+						"comment": "kernel-source-vanilla is affected"
+					}
+				]
+			}
+		],
+		"criterions": [
+			{
+				"test_ref": "oval:org.opensuse.security:tst:2009752682",
+				"comment": "openSUSE Leap 15.5 is installed"
+			}
+		]
+	}
+}

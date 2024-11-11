@@ -1,0 +1,118 @@
+{
+	"id": "oval:org.opensuse.security:def:202435955",
+	"version": "1",
+	"class": "vulnerability",
+	"metadata": {
+		"title": "CVE-2024-35955",
+		"affected": {
+			"family": "unix",
+			"platform": [
+				"SUSE Linux Enterprise Micro 5.4"
+			]
+		},
+		"reference": [
+			{
+				"ref_id": "Mitre CVE-2024-35955",
+				"ref_url": "https://cve.mitre.org/cgi-bin/cvename.cgi?name=CVE-2024-35955",
+				"source": "CVE"
+			},
+			{
+				"ref_id": "SUSE CVE-2024-35955",
+				"ref_url": "https://www.suse.com/security/cve/CVE-2024-35955",
+				"source": "SUSE CVE"
+			},
+			{
+				"ref_id": "SUSE-SU-2024:1979-1",
+				"ref_url": "https://lists.suse.com/pipermail/sle-updates/2024-June/035536.html",
+				"source": "SUSE-SU"
+			},
+			{
+				"ref_id": "SUSE-SU-2024:1983-1",
+				"ref_url": "https://lists.suse.com/pipermail/sle-updates/2024-June/035554.html",
+				"source": "SUSE-SU"
+			},
+			{
+				"ref_id": "SUSE-SU-2024:2008-1",
+				"ref_url": "https://lists.suse.com/pipermail/sle-updates/2024-June/035569.html",
+				"source": "SUSE-SU"
+			},
+			{
+				"ref_id": "SUSE-SU-2024:2019-1",
+				"ref_url": "https://lists.suse.com/pipermail/sle-updates/2024-June/035578.html",
+				"source": "SUSE-SU"
+			},
+			{
+				"ref_id": "SUSE-SU-2024:2135-1",
+				"ref_url": "https://lists.suse.com/pipermail/sle-updates/2024-June/035681.html",
+				"source": "SUSE-SU"
+			},
+			{
+				"ref_id": "SUSE-SU-2024:2184-1",
+				"ref_url": "https://lists.suse.com/pipermail/sle-updates/2024-June/035716.html",
+				"source": "SUSE-SU"
+			},
+			{
+				"ref_id": "SUSE-SU-2024:2190-1",
+				"ref_url": "https://lists.suse.com/pipermail/sle-updates/2024-June/035732.html",
+				"source": "SUSE-SU"
+			},
+			{
+				"ref_id": "SUSE-SU-2024:2203-1",
+				"ref_url": "https://lists.suse.com/pipermail/sle-security-updates/2024-August/019244.html",
+				"source": "SUSE-SU"
+			},
+			{
+				"ref_id": "SUSE-SU-2024:2973-1",
+				"ref_url": "https://lists.suse.com/pipermail/sle-security-updates/2024-August/019280.html",
+				"source": "SUSE-SU"
+			}
+		],
+		"description": "\n    In the Linux kernel, the following vulnerability has been resolved:\n\nkprobes: Fix possible use-after-free issue on kprobe registration\n\nWhen unloading a module, its state is changing MODULE_STATE_LIVE ->\n MODULE_STATE_GOING -> MODULE_STATE_UNFORMED. Each change will take\na time. `is_module_text_address()` and `__module_text_address()`\nworks with MODULE_STATE_LIVE and MODULE_STATE_GOING.\nIf we use `is_module_text_address()` and `__module_text_address()`\nseparately, there is a chance that the first one is succeeded but the\nnext one is failed because module->state becomes MODULE_STATE_UNFORMED\nbetween those operations.\n\nIn `check_kprobe_address_safe()`, if the second `__module_text_address()`\nis failed, that is ignored because it expected a kernel_text address.\nBut it may have failed simply because module->state has been changed\nto MODULE_STATE_UNFORMED. In this case, arm_kprobe() will try to modify\nnon-exist module text address (use-after-free).\n\nTo fix this problem, we should not use separated `is_module_text_address()`\nand `__module_text_address()`, but use only `__module_text_address()`\nonce and do `try_module_get(module)` which is only available with\nMODULE_STATE_LIVE.\n    ",
+		"advisory": {
+			"from": "security@suse.de",
+			"severity": "Moderate",
+			"cve": [
+				{
+					"text": "CVE-2024-35955 at SUSE",
+					"href": "https://www.suse.com/security/cve/CVE-2024-35955/",
+					"impact": "medium",
+					"cvss3": "5.5/CVSS:3.1/AV:L/AC:L/PR:L/UI:N/S:U/C:N/I:N/A:H"
+				},
+				{
+					"text": "CVE-2024-35955 at NVD",
+					"href": "https://nvd.nist.gov/vuln/detail/CVE-2024-35955"
+				}
+			],
+			"bugzilla": [
+				{
+					"text": "SUSE bug 1224676",
+					"href": "https://bugzilla.suse.com/1224676"
+				}
+			],
+			"issued": {
+				"date": "2024-05-21"
+			},
+			"updated": {
+				"date": "2024-08-21"
+			},
+			"affected_cpe_list": {
+				"cpe": [
+					"cpe:/o:suse:sle-micro:5.4"
+				]
+			}
+		}
+	},
+	"criteria": {
+		"operator": "AND",
+		"criterions": [
+			{
+				"test_ref": "oval:org.opensuse.security:tst:2009755086",
+				"comment": "SUSE Linux Enterprise Micro 5.4 is installed"
+			},
+			{
+				"test_ref": "oval:org.opensuse.security:tst:2009338032",
+				"comment": "kernel-default is affected"
+			}
+		]
+	}
+}

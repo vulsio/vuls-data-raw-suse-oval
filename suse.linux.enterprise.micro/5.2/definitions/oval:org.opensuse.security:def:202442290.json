@@ -1,0 +1,107 @@
+{
+	"id": "oval:org.opensuse.security:def:202442290",
+	"version": "1",
+	"class": "vulnerability",
+	"metadata": {
+		"title": "CVE-2024-42290",
+		"affected": {
+			"family": "unix",
+			"platform": [
+				"SUSE Linux Enterprise Micro 5.2"
+			]
+		},
+		"reference": [
+			{
+				"ref_id": "Mitre CVE-2024-42290",
+				"ref_url": "https://cve.mitre.org/cgi-bin/cvename.cgi?name=CVE-2024-42290",
+				"source": "CVE"
+			},
+			{
+				"ref_id": "SUSE CVE-2024-42290",
+				"ref_url": "https://www.suse.com/security/cve/CVE-2024-42290",
+				"source": "SUSE CVE"
+			},
+			{
+				"ref_id": "SUSE-SU-2024:3194-1",
+				"ref_url": "https://lists.suse.com/pipermail/sle-updates/2024-September/036835.html",
+				"source": "SUSE-SU"
+			},
+			{
+				"ref_id": "SUSE-SU-2024:3195-1",
+				"ref_url": "https://lists.suse.com/pipermail/sle-updates/2024-September/036842.html",
+				"source": "SUSE-SU"
+			},
+			{
+				"ref_id": "SUSE-SU-2024:3383-1",
+				"ref_url": "https://lists.suse.com/pipermail/sle-security-updates/2024-September/019497.html",
+				"source": "SUSE-SU"
+			}
+		],
+		"description": "\n    In the Linux kernel, the following vulnerability has been resolved:\n\nirqchip/imx-irqsteer: Handle runtime power management correctly\n\nThe power domain is automatically activated from clk_prepare(). However, on\ncertain platforms like i.MX8QM and i.MX8QXP, the power-on handling invokes\nsleeping functions, which triggers the 'scheduling while atomic' bug in the\ncontext switch path during device probing:\n\n BUG: scheduling while atomic: kworker/u13:1/48/0x00000002\n Call trace:\n  __schedule_bug+0x54/0x6c\n  __schedule+0x7f0/0xa94\n  schedule+0x5c/0xc4\n  schedule_preempt_disabled+0x24/0x40\n  __mutex_lock.constprop.0+0x2c0/0x540\n  __mutex_lock_slowpath+0x14/0x20\n  mutex_lock+0x48/0x54\n  clk_prepare_lock+0x44/0xa0\n  clk_prepare+0x20/0x44\n  imx_irqsteer_resume+0x28/0xe0\n  pm_generic_runtime_resume+0x2c/0x44\n  __genpd_runtime_resume+0x30/0x80\n  genpd_runtime_resume+0xc8/0x2c0\n  __rpm_callback+0x48/0x1d8\n  rpm_callback+0x6c/0x78\n  rpm_resume+0x490/0x6b4\n  __pm_runtime_resume+0x50/0x94\n  irq_chip_pm_get+0x2c/0xa0\n  __irq_do_set_handler+0x178/0x24c\n  irq_set_chained_handler_and_data+0x60/0xa4\n  mxc_gpio_probe+0x160/0x4b0\n\nCure this by implementing the irq_bus_lock/sync_unlock() interrupt chip\ncallbacks and handle power management in them as they are invoked from\nnon-atomic context.\n\n[ tglx: Rewrote change log, added Fixes tag ]\n    ",
+		"advisory": {
+			"from": "security@suse.de",
+			"severity": "Moderate",
+			"cve": [
+				{
+					"text": "CVE-2024-42290 at SUSE",
+					"href": "https://www.suse.com/security/cve/CVE-2024-42290/",
+					"impact": "medium",
+					"cvss3": "5.5/CVSS:3.1/AV:L/AC:L/PR:L/UI:N/S:U/C:N/I:N/A:H"
+				},
+				{
+					"text": "CVE-2024-42290 at NVD",
+					"href": "https://nvd.nist.gov/vuln/detail/CVE-2024-42290"
+				}
+			],
+			"bugzilla": [
+				{
+					"text": "SUSE bug 1229379",
+					"href": "https://bugzilla.suse.com/1229379"
+				}
+			],
+			"issued": {
+				"date": "2024-08-20"
+			},
+			"updated": {
+				"date": "2024-10-10"
+			},
+			"affected_cpe_list": {
+				"cpe": [
+					"cpe:/o:suse:suse-microos:5.2"
+				]
+			}
+		}
+	},
+	"criteria": {
+		"operator": "AND",
+		"criterias": [
+			{
+				"operator": "OR",
+				"criterions": [
+					{
+						"test_ref": "oval:org.opensuse.security:tst:2009338032",
+						"comment": "kernel-default is affected"
+					},
+					{
+						"test_ref": "oval:org.opensuse.security:tst:2009705050",
+						"comment": "kernel-rt is affected"
+					},
+					{
+						"test_ref": "oval:org.opensuse.security:tst:2009333995",
+						"comment": "kernel-source is affected"
+					},
+					{
+						"test_ref": "oval:org.opensuse.security:tst:2009728714",
+						"comment": "kernel-source-rt is affected"
+					}
+				]
+			}
+		],
+		"criterions": [
+			{
+				"test_ref": "oval:org.opensuse.security:tst:2009681300",
+				"comment": "SUSE Linux Enterprise Micro 5.2 is installed"
+			}
+		]
+	}
+}

@@ -1,0 +1,245 @@
+{
+	"id": "oval:org.opensuse.security:def:202450154",
+	"version": "1",
+	"class": "vulnerability",
+	"metadata": {
+		"title": "CVE-2024-50154",
+		"affected": {
+			"family": "unix",
+			"platform": [
+				"SUSE Linux Enterprise Live Patching 12 SP5",
+				"SUSE Linux Enterprise Server 12 SP2-LTSS",
+				"SUSE Linux Enterprise Server 12 SP4-LTSS",
+				"SUSE Linux Enterprise Server 12 SP5",
+				"SUSE Linux Enterprise Server 12 SP5-LTSS",
+				"SUSE Linux Enterprise Server for SAP Applications 12 SP5"
+			]
+		},
+		"reference": [
+			{
+				"ref_id": "Mitre CVE-2024-50154",
+				"ref_url": "https://cve.mitre.org/cgi-bin/cvename.cgi?name=CVE-2024-50154",
+				"source": "CVE"
+			},
+			{
+				"ref_id": "SUSE CVE-2024-50154",
+				"ref_url": "https://www.suse.com/security/cve/CVE-2024-50154",
+				"source": "SUSE CVE"
+			}
+		],
+		"description": "\n    In the Linux kernel, the following vulnerability has been resolved:\n\ntcp/dccp: Don't use timer_pending() in reqsk_queue_unlink().\n\nMartin KaFai Lau reported use-after-free [0] in reqsk_timer_handler().\n\n  \"\"\"\n  We are seeing a use-after-free from a bpf prog attached to\n  trace_tcp_retransmit_synack. The program passes the req->sk to the\n  bpf_sk_storage_get_tracing kernel helper which does check for null\n  before using it.\n  \"\"\"\n\nThe commit 83fccfc3940c (\"inet: fix potential deadlock in\nreqsk_queue_unlink()\") added timer_pending() in reqsk_queue_unlink() not\nto call del_timer_sync() from reqsk_timer_handler(), but it introduced a\nsmall race window.\n\nBefore the timer is called, expire_timers() calls detach_timer(timer, true)\nto clear timer->entry.pprev and marks it as not pending.\n\nIf reqsk_queue_unlink() checks timer_pending() just after expire_timers()\ncalls detach_timer(), TCP will miss del_timer_sync(); the reqsk timer will\ncontinue running and send multiple SYN+ACKs until it expires.\n\nThe reported UAF could happen if req->sk is close()d earlier than the timer\nexpiration, which is 63s by default.\n\nThe scenario would be\n\n  1. inet_csk_complete_hashdance() calls inet_csk_reqsk_queue_drop(),\n     but del_timer_sync() is missed\n\n  2. reqsk timer is executed and scheduled again\n\n  3. req->sk is accept()ed and reqsk_put() decrements rsk_refcnt, but\n     reqsk timer still has another one, and inet_csk_accept() does not\n     clear req->sk for non-TFO sockets\n\n  4. sk is close()d\n\n  5. reqsk timer is executed again, and BPF touches req->sk\n\nLet's not use timer_pending() by passing the caller context to\n__inet_csk_reqsk_queue_drop().\n\nNote that reqsk timer is pinned, so the issue does not happen in most\nuse cases. [1]\n\n[0]\nBUG: KFENCE: use-after-free read in bpf_sk_storage_get_tracing+0x2e/0x1b0\n\nUse-after-free read at 0x00000000a891fb3a (in kfence-#1):\nbpf_sk_storage_get_tracing+0x2e/0x1b0\nbpf_prog_5ea3e95db6da0438_tcp_retransmit_synack+0x1d20/0x1dda\nbpf_trace_run2+0x4c/0xc0\ntcp_rtx_synack+0xf9/0x100\nreqsk_timer_handler+0xda/0x3d0\nrun_timer_softirq+0x292/0x8a0\nirq_exit_rcu+0xf5/0x320\nsysvec_apic_timer_interrupt+0x6d/0x80\nasm_sysvec_apic_timer_interrupt+0x16/0x20\nintel_idle_irq+0x5a/0xa0\ncpuidle_enter_state+0x94/0x273\ncpu_startup_entry+0x15e/0x260\nstart_secondary+0x8a/0x90\nsecondary_startup_64_no_verify+0xfa/0xfb\n\nkfence-#1: 0x00000000a72cc7b6-0x00000000d97616d9, size=2376, cache=TCPv6\n\nallocated by task 0 on cpu 9 at 260507.901592s:\nsk_prot_alloc+0x35/0x140\nsk_clone_lock+0x1f/0x3f0\ninet_csk_clone_lock+0x15/0x160\ntcp_create_openreq_child+0x1f/0x410\ntcp_v6_syn_recv_sock+0x1da/0x700\ntcp_check_req+0x1fb/0x510\ntcp_v6_rcv+0x98b/0x1420\nipv6_list_rcv+0x2258/0x26e0\nnapi_complete_done+0x5b1/0x2990\nmlx5e_napi_poll+0x2ae/0x8d0\nnet_rx_action+0x13e/0x590\nirq_exit_rcu+0xf5/0x320\ncommon_interrupt+0x80/0x90\nasm_common_interrupt+0x22/0x40\ncpuidle_enter_state+0xfb/0x273\ncpu_startup_entry+0x15e/0x260\nstart_secondary+0x8a/0x90\nsecondary_startup_64_no_verify+0xfa/0xfb\n\nfreed by task 0 on cpu 9 at 260507.927527s:\nrcu_core_si+0x4ff/0xf10\nirq_exit_rcu+0xf5/0x320\nsysvec_apic_timer_interrupt+0x6d/0x80\nasm_sysvec_apic_timer_interrupt+0x16/0x20\ncpuidle_enter_state+0xfb/0x273\ncpu_startup_entry+0x15e/0x260\nstart_secondary+0x8a/0x90\nsecondary_startup_64_no_verify+0xfa/0xfb\n    ",
+		"advisory": {
+			"from": "security@suse.de",
+			"severity": "Important",
+			"cve": [
+				{
+					"text": "CVE-2024-50154 at SUSE",
+					"href": "https://www.suse.com/security/cve/CVE-2024-50154/",
+					"impact": "high",
+					"cvss3": "7/CVSS:3.1/AV:L/AC:H/PR:L/UI:N/S:U/C:H/I:H/A:H"
+				},
+				{
+					"text": "CVE-2024-50154 at NVD",
+					"href": "https://nvd.nist.gov/vuln/detail/CVE-2024-50154"
+				}
+			],
+			"bugzilla": [
+				{
+					"text": "SUSE bug 1233070",
+					"href": "https://bugzilla.suse.com/1233070"
+				},
+				{
+					"text": "SUSE bug 1233072",
+					"href": "https://bugzilla.suse.com/1233072"
+				}
+			],
+			"issued": {
+				"date": "2024-11-08"
+			},
+			"updated": {
+				"date": "2024-11-08"
+			},
+			"affected_cpe_list": {
+				"cpe": [
+					"cpe:/o:suse:sle-live-patching:12:sp5",
+					"cpe:/o:suse:sles-ltss-extended-security:12:sp5",
+					"cpe:/o:suse:sles-ltss:12:sp2",
+					"cpe:/o:suse:sles-ltss:12:sp4",
+					"cpe:/o:suse:sles:12:sp5",
+					"cpe:/o:suse:sles_sap:12:sp5"
+				]
+			}
+		}
+	},
+	"criteria": {
+		"operator": "OR",
+		"criterias": [
+			{
+				"operator": "AND",
+				"criterias": [
+					{
+						"operator": "OR",
+						"criterions": [
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009338032",
+								"comment": "kernel-default is affected"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009333995",
+								"comment": "kernel-source is affected"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009340767",
+								"comment": "kernel-source-azure is affected"
+							}
+						]
+					}
+				],
+				"criterions": [
+					{
+						"test_ref": "oval:org.opensuse.security:tst:2009258806",
+						"comment": "SUSE Linux Enterprise Server for SAP Applications 12 SP5 is installed"
+					}
+				]
+			},
+			{
+				"operator": "AND",
+				"criterias": [
+					{
+						"operator": "OR",
+						"criterions": [
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009258033",
+								"comment": "SUSE Linux Enterprise Server 12 SP5 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009258033",
+								"comment": "SUSE Linux Enterprise Server 12 SP5-LTSS is installed"
+							}
+						]
+					},
+					{
+						"operator": "OR",
+						"criterions": [
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009338032",
+								"comment": "kernel-default is affected"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009338033",
+								"comment": "kernel-default-base is affected"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009338034",
+								"comment": "kernel-default-devel is affected"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009338036",
+								"comment": "kernel-default-man is affected"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009335275",
+								"comment": "kernel-devel is affected"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009335276",
+								"comment": "kernel-macros is affected"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009333995",
+								"comment": "kernel-source is affected"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009340777",
+								"comment": "kernel-devel-azure is affected"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009340767",
+								"comment": "kernel-source-azure is affected"
+							}
+						]
+					}
+				]
+			},
+			{
+				"operator": "AND",
+				"criterias": [
+					{
+						"operator": "OR",
+						"criterions": [
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009128018",
+								"comment": "SUSE Linux Enterprise Server 12 SP2-LTSS is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009240280",
+								"comment": "SUSE Linux Enterprise Server 12 SP4-LTSS is installed"
+							}
+						]
+					},
+					{
+						"operator": "OR",
+						"criterions": [
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009338032",
+								"comment": "kernel-default is affected"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009338033",
+								"comment": "kernel-default-base is affected"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009338034",
+								"comment": "kernel-default-devel is affected"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009338036",
+								"comment": "kernel-default-man is affected"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009335275",
+								"comment": "kernel-devel is affected"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009335276",
+								"comment": "kernel-macros is affected"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009333995",
+								"comment": "kernel-source is affected"
+							}
+						]
+					}
+				]
+			},
+			{
+				"operator": "AND",
+				"criterias": [
+					{
+						"operator": "OR",
+						"criterions": [
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009338035",
+								"comment": "kernel-default-kgraft is affected"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009809200",
+								"comment": "kernel-default-kgraft-devel is affected"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009333995",
+								"comment": "kernel-source is affected"
+							}
+						]
+					}
+				],
+				"criterions": [
+					{
+						"test_ref": "oval:org.opensuse.security:tst:2009273148",
+						"comment": "SUSE Linux Enterprise Live Patching 12 SP5 is installed"
+					}
+				]
+			}
+		]
+	}
+}

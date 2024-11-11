@@ -1,0 +1,123 @@
+{
+	"id": "oval:org.opensuse.security:def:202248953",
+	"version": "1",
+	"class": "vulnerability",
+	"metadata": {
+		"title": "CVE-2022-48953",
+		"affected": {
+			"family": "unix",
+			"platform": [
+				"SUSE Linux Enterprise Micro 5.0",
+				"SUSE Linux Enterprise Micro 5.1",
+				"SUSE Linux Enterprise Micro 5.2"
+			]
+		},
+		"reference": [
+			{
+				"ref_id": "Mitre CVE-2022-48953",
+				"ref_url": "https://cve.mitre.org/cgi-bin/cvename.cgi?name=CVE-2022-48953",
+				"source": "CVE"
+			},
+			{
+				"ref_id": "SUSE CVE-2022-48953",
+				"ref_url": "https://www.suse.com/security/cve/CVE-2022-48953",
+				"source": "SUSE CVE"
+			}
+		],
+		"description": "\n    In the Linux kernel, the following vulnerability has been resolved:\n\nrtc: cmos: Fix event handler registration ordering issue\n\nBecause acpi_install_fixed_event_handler() enables the event\nautomatically on success, it is incorrect to call it before the\nhandler routine passed to it is ready to handle events.\n\nUnfortunately, the rtc-cmos driver does exactly the incorrect thing\nby calling cmos_wake_setup(), which passes rtc_handler() to\nacpi_install_fixed_event_handler(), before cmos_do_probe(), because\nrtc_handler() uses dev_get_drvdata() to get to the cmos object\npointer and the driver data pointer is only populated in\ncmos_do_probe().\n\nThis leads to a NULL pointer dereference in rtc_handler() on boot\nif the RTC fixed event happens to be active at the init time.\n\nTo address this issue, change the initialization ordering of the\ndriver so that cmos_wake_setup() is always called after a successful\ncmos_do_probe() call.\n\nWhile at it, change cmos_pnp_probe() to call cmos_do_probe() after\nthe initial if () statement used for computing the IRQ argument to\nbe passed to cmos_do_probe() which is cleaner than calling it in\neach branch of that if () (local variable \"irq\" can be of type int,\nbecause it is passed to that function as an argument of type int).\n\nNote that commit 6492fed7d8c9 (\"rtc: rtc-cmos: Do not check\nACPI_FADT_LOW_POWER_S0\") caused this issue to affect a larger number\nof systems, because previously it only affected systems with\nACPI_FADT_LOW_POWER_S0 set, but it is present regardless of that\ncommit.\n    ",
+		"advisory": {
+			"from": "security@suse.de",
+			"severity": "Moderate",
+			"cve": [
+				{
+					"text": "CVE-2022-48953 at SUSE",
+					"href": "https://www.suse.com/security/cve/CVE-2022-48953/",
+					"impact": "medium",
+					"cvss3": "5.5/CVSS:3.1/AV:L/AC:L/PR:L/UI:N/S:U/C:N/I:N/A:H"
+				},
+				{
+					"text": "CVE-2022-48953 at NVD",
+					"href": "https://nvd.nist.gov/vuln/detail/CVE-2022-48953",
+					"impact": "medium",
+					"cvss3": "5.5/CVSS:3.1/AV:L/AC:L/PR:L/UI:N/S:U/C:N/I:N/A:H"
+				}
+			],
+			"bugzilla": [
+				{
+					"text": "SUSE bug 1231941",
+					"href": "https://bugzilla.suse.com/1231941"
+				}
+			],
+			"issued": {
+				"date": "2024-10-23"
+			},
+			"updated": {
+				"date": "2024-10-27"
+			},
+			"affected_cpe_list": {
+				"cpe": [
+					"cpe:/o:suse:suse-microos:5.0",
+					"cpe:/o:suse:suse-microos:5.1",
+					"cpe:/o:suse:suse-microos:5.2"
+				]
+			}
+		}
+	},
+	"criteria": {
+		"operator": "OR",
+		"criterias": [
+			{
+				"operator": "AND",
+				"criterions": [
+					{
+						"test_ref": "oval:org.opensuse.security:tst:2009704855",
+						"comment": "SUSE Linux Enterprise Micro 5.0 is installed"
+					},
+					{
+						"test_ref": "oval:org.opensuse.security:tst:2009338032",
+						"comment": "kernel-default is affected"
+					}
+				]
+			},
+			{
+				"operator": "AND",
+				"criterias": [
+					{
+						"operator": "OR",
+						"criterions": [
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009669964",
+								"comment": "SUSE Linux Enterprise Micro 5.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009681300",
+								"comment": "SUSE Linux Enterprise Micro 5.2 is installed"
+							}
+						]
+					},
+					{
+						"operator": "OR",
+						"criterions": [
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009338032",
+								"comment": "kernel-default is affected"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009705050",
+								"comment": "kernel-rt is affected"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009333995",
+								"comment": "kernel-source is affected"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009728714",
+								"comment": "kernel-source-rt is affected"
+							}
+						]
+					}
+				]
+			}
+		]
+	}
+}

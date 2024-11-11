@@ -1,0 +1,128 @@
+{
+	"id": "oval:org.opensuse.security:def:202147460",
+	"version": "1",
+	"class": "vulnerability",
+	"metadata": {
+		"title": "CVE-2021-47460",
+		"affected": {
+			"family": "unix",
+			"platform": [
+				"SUSE Linux Enterprise Micro 5.0"
+			]
+		},
+		"reference": [
+			{
+				"ref_id": "Mitre CVE-2021-47460",
+				"ref_url": "https://cve.mitre.org/cgi-bin/cvename.cgi?name=CVE-2021-47460",
+				"source": "CVE"
+			},
+			{
+				"ref_id": "SUSE CVE-2021-47460",
+				"ref_url": "https://www.suse.com/security/cve/CVE-2021-47460",
+				"source": "SUSE CVE"
+			},
+			{
+				"ref_id": "SUSE-SU-2024:1979-1",
+				"ref_url": "https://lists.suse.com/pipermail/sle-updates/2024-June/035536.html",
+				"source": "SUSE-SU"
+			},
+			{
+				"ref_id": "SUSE-SU-2024:1983-1",
+				"ref_url": "https://lists.suse.com/pipermail/sle-updates/2024-June/035554.html",
+				"source": "SUSE-SU"
+			},
+			{
+				"ref_id": "SUSE-SU-2024:2008-1",
+				"ref_url": "https://lists.suse.com/pipermail/sle-updates/2024-June/035569.html",
+				"source": "SUSE-SU"
+			},
+			{
+				"ref_id": "SUSE-SU-2024:2010-1",
+				"ref_url": "https://lists.suse.com/pipermail/sle-updates/2024-June/035576.html",
+				"source": "SUSE-SU"
+			},
+			{
+				"ref_id": "SUSE-SU-2024:2011-1",
+				"ref_url": "https://lists.suse.com/pipermail/sle-updates/2024-June/035575.html",
+				"source": "SUSE-SU"
+			},
+			{
+				"ref_id": "SUSE-SU-2024:2019-1",
+				"ref_url": "https://lists.suse.com/pipermail/sle-updates/2024-June/035578.html",
+				"source": "SUSE-SU"
+			},
+			{
+				"ref_id": "SUSE-SU-2024:2183-1",
+				"ref_url": "https://lists.suse.com/pipermail/sle-updates/2024-June/035717.html",
+				"source": "SUSE-SU"
+			},
+			{
+				"ref_id": "SUSE-SU-2024:2184-1",
+				"ref_url": "https://lists.suse.com/pipermail/sle-updates/2024-June/035716.html",
+				"source": "SUSE-SU"
+			},
+			{
+				"ref_id": "SUSE-SU-2024:2185-1",
+				"ref_url": "https://lists.suse.com/pipermail/sle-updates/2024-June/035718.html",
+				"source": "SUSE-SU"
+			},
+			{
+				"ref_id": "SUSE-SU-2024:2189-1",
+				"ref_url": "https://lists.suse.com/pipermail/sle-updates/2024-June/035721.html",
+				"source": "SUSE-SU"
+			},
+			{
+				"ref_id": "SUSE-SU-2024:2190-1",
+				"ref_url": "https://lists.suse.com/pipermail/sle-updates/2024-June/035732.html",
+				"source": "SUSE-SU"
+			}
+		],
+		"description": "\n    In the Linux kernel, the following vulnerability has been resolved:\n\nocfs2: fix data corruption after conversion from inline format\n\nCommit 6dbf7bb55598 (\"fs: Don't invalidate page buffers in\nblock_write_full_page()\") uncovered a latent bug in ocfs2 conversion\nfrom inline inode format to a normal inode format.\n\nThe code in ocfs2_convert_inline_data_to_extents() attempts to zero out\nthe whole cluster allocated for file data by grabbing, zeroing, and\ndirtying all pages covering this cluster.  However these pages are\nbeyond i_size, thus writeback code generally ignores these dirty pages\nand no blocks were ever actually zeroed on the disk.\n\nThis oversight was fixed by commit 693c241a5f6a (\"ocfs2: No need to zero\npages past i_size.\") for standard ocfs2 write path, inline conversion\npath was apparently forgotten; the commit log also has a reasoning why\nthe zeroing actually is not needed.\n\nAfter commit 6dbf7bb55598, things became worse as writeback code stopped\ninvalidating buffers on pages beyond i_size and thus these pages end up\nwith clean PageDirty bit but with buffers attached to these pages being\nstill dirty.  So when a file is converted from inline format, then\nwriteback triggers, and then the file is grown so that these pages\nbecome valid, the invalid dirtiness state is preserved,\nmark_buffer_dirty() does nothing on these pages (buffers are already\ndirty) but page is never written back because it is clean.  So data\nwritten to these pages is lost once pages are reclaimed.\n\nSimple reproducer for the problem is:\n\n  xfs_io -f -c \"pwrite 0 2000\" -c \"pwrite 2000 2000\" -c \"fsync\" \\\n    -c \"pwrite 4000 2000\" ocfs2_file\n\nAfter unmounting and mounting the fs again, you can observe that end of\n'ocfs2_file' has lost its contents.\n\nFix the problem by not doing the pointless zeroing during conversion\nfrom inline format similarly as in the standard write path.\n\n[akpm@linux-foundation.org: fix whitespace, per Joseph]\n    ",
+		"advisory": {
+			"from": "security@suse.de",
+			"severity": "Moderate",
+			"cve": [
+				{
+					"text": "CVE-2021-47460 at SUSE",
+					"href": "https://www.suse.com/security/cve/CVE-2021-47460/",
+					"impact": "medium",
+					"cvss3": "6.1/CVSS:3.1/AV:L/AC:L/PR:L/UI:N/S:U/C:N/I:L/A:H"
+				},
+				{
+					"text": "CVE-2021-47460 at NVD",
+					"href": "https://nvd.nist.gov/vuln/detail/CVE-2021-47460"
+				}
+			],
+			"bugzilla": [
+				{
+					"text": "SUSE bug 1225251",
+					"href": "https://bugzilla.suse.com/1225251"
+				}
+			],
+			"issued": {
+				"date": "2024-05-25"
+			},
+			"updated": {
+				"date": "2024-08-03"
+			},
+			"affected_cpe_list": {
+				"cpe": [
+					"cpe:/o:suse:suse-microos:5.0"
+				]
+			}
+		}
+	},
+	"criteria": {
+		"operator": "AND",
+		"criterions": [
+			{
+				"test_ref": "oval:org.opensuse.security:tst:2009704855",
+				"comment": "SUSE Linux Enterprise Micro 5.0 is installed"
+			},
+			{
+				"test_ref": "oval:org.opensuse.security:tst:2009338032",
+				"comment": "kernel-default is affected"
+			}
+		]
+	}
+}

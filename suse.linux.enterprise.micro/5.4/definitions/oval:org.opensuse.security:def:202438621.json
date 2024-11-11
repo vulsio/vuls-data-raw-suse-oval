@@ -1,0 +1,118 @@
+{
+	"id": "oval:org.opensuse.security:def:202438621",
+	"version": "1",
+	"class": "vulnerability",
+	"metadata": {
+		"title": "CVE-2024-38621",
+		"affected": {
+			"family": "unix",
+			"platform": [
+				"SUSE Linux Enterprise Micro 5.4"
+			]
+		},
+		"reference": [
+			{
+				"ref_id": "Mitre CVE-2024-38621",
+				"ref_url": "https://cve.mitre.org/cgi-bin/cvename.cgi?name=CVE-2024-38621",
+				"source": "CVE"
+			},
+			{
+				"ref_id": "SUSE CVE-2024-38621",
+				"ref_url": "https://www.suse.com/security/cve/CVE-2024-38621",
+				"source": "SUSE CVE"
+			},
+			{
+				"ref_id": "SUSE-SU-2024:2360-1",
+				"ref_url": "https://lists.suse.com/pipermail/sle-updates/2024-July/035874.html",
+				"source": "SUSE-SU"
+			},
+			{
+				"ref_id": "SUSE-SU-2024:2372-1",
+				"ref_url": "https://lists.suse.com/pipermail/sle-updates/2024-July/035868.html",
+				"source": "SUSE-SU"
+			},
+			{
+				"ref_id": "SUSE-SU-2024:2381-1",
+				"ref_url": "https://lists.suse.com/pipermail/sle-updates/2024-July/035895.html",
+				"source": "SUSE-SU"
+			},
+			{
+				"ref_id": "SUSE-SU-2024:2394-1",
+				"ref_url": "https://lists.suse.com/pipermail/sle-updates/2024-July/035907.html",
+				"source": "SUSE-SU"
+			},
+			{
+				"ref_id": "SUSE-SU-2024:2561-1",
+				"ref_url": "https://lists.suse.com/pipermail/sle-security-updates/2024-July/019001.html",
+				"source": "SUSE-SU"
+			},
+			{
+				"ref_id": "SUSE-SU-2024:2571-1",
+				"ref_url": "https://lists.suse.com/pipermail/sle-updates/2024-July/036103.html",
+				"source": "SUSE-SU"
+			},
+			{
+				"ref_id": "SUSE-SU-2024:2896-1",
+				"ref_url": "https://lists.suse.com/pipermail/sle-security-updates/2024-August/019185.html",
+				"source": "SUSE-SU"
+			},
+			{
+				"ref_id": "SUSE-SU-2024:2939-1",
+				"ref_url": "https://lists.suse.com/pipermail/sle-security-updates/2024-August/019211.html",
+				"source": "SUSE-SU"
+			},
+			{
+				"ref_id": "SUSE-SU-2024:2973-1",
+				"ref_url": "https://lists.suse.com/pipermail/sle-security-updates/2024-August/019280.html",
+				"source": "SUSE-SU"
+			}
+		],
+		"description": "\n    In the Linux kernel, the following vulnerability has been resolved:\n\nmedia: stk1160: fix bounds checking in stk1160_copy_video()\n\nThe subtract in this condition is reversed.  The ->length is the length\nof the buffer.  The ->bytesused is how many bytes we have copied thus\nfar.  When the condition is reversed that means the result of the\nsubtraction is always negative but since it's unsigned then the result\nis a very high positive value.  That means the overflow check is never\ntrue.\n\nAdditionally, the ->bytesused doesn't actually work for this purpose\nbecause we're not writing to \"buf->mem + buf->bytesused\".  Instead, the\nmath to calculate the destination where we are writing is a bit\ninvolved.  You calculate the number of full lines already written,\nmultiply by two, skip a line if necessary so that we start on an odd\nnumbered line, and add the offset into the line.\n\nTo fix this buffer overflow, just take the actual destination where we\nare writing, if the offset is already out of bounds print an error and\nreturn.  Otherwise, write up to buf->length bytes.\n    ",
+		"advisory": {
+			"from": "security@suse.de",
+			"severity": "Moderate",
+			"cve": [
+				{
+					"text": "CVE-2024-38621 at SUSE",
+					"href": "https://www.suse.com/security/cve/CVE-2024-38621/",
+					"impact": "medium",
+					"cvss3": "5.5/CVSS:3.1/AV:L/AC:L/PR:L/UI:N/S:U/C:N/I:N/A:H"
+				},
+				{
+					"text": "CVE-2024-38621 at NVD",
+					"href": "https://nvd.nist.gov/vuln/detail/CVE-2024-38621"
+				}
+			],
+			"bugzilla": [
+				{
+					"text": "SUSE bug 1226895",
+					"href": "https://bugzilla.suse.com/1226895"
+				}
+			],
+			"issued": {
+				"date": "2024-06-24"
+			},
+			"updated": {
+				"date": "2024-08-21"
+			},
+			"affected_cpe_list": {
+				"cpe": [
+					"cpe:/o:suse:sle-micro:5.4"
+				]
+			}
+		}
+	},
+	"criteria": {
+		"operator": "AND",
+		"criterions": [
+			{
+				"test_ref": "oval:org.opensuse.security:tst:2009755086",
+				"comment": "SUSE Linux Enterprise Micro 5.4 is installed"
+			},
+			{
+				"test_ref": "oval:org.opensuse.security:tst:2009338032",
+				"comment": "kernel-default is affected"
+			}
+		]
+	}
+}

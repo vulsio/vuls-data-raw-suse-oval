@@ -1,0 +1,113 @@
+{
+	"id": "oval:org.opensuse.security:def:202426859",
+	"version": "1",
+	"class": "vulnerability",
+	"metadata": {
+		"title": "CVE-2024-26859",
+		"affected": {
+			"family": "unix",
+			"platform": [
+				"SUSE Linux Enterprise Micro 5.4"
+			]
+		},
+		"reference": [
+			{
+				"ref_id": "Mitre CVE-2024-26859",
+				"ref_url": "https://cve.mitre.org/cgi-bin/cvename.cgi?name=CVE-2024-26859",
+				"source": "CVE"
+			},
+			{
+				"ref_id": "SUSE CVE-2024-26859",
+				"ref_url": "https://www.suse.com/security/cve/CVE-2024-26859",
+				"source": "SUSE CVE"
+			},
+			{
+				"ref_id": "SUSE-SU-2024:1643-1",
+				"ref_url": "https://lists.suse.com/pipermail/sle-updates/2024-May/035264.html",
+				"source": "SUSE-SU"
+			},
+			{
+				"ref_id": "SUSE-SU-2024:1646-1",
+				"ref_url": "https://lists.suse.com/pipermail/sle-updates/2024-May/035261.html",
+				"source": "SUSE-SU"
+			},
+			{
+				"ref_id": "SUSE-SU-2024:1648-1",
+				"ref_url": "https://lists.suse.com/pipermail/sle-updates/2024-May/035259.html",
+				"source": "SUSE-SU"
+			},
+			{
+				"ref_id": "SUSE-SU-2024:1648-2",
+				"ref_url": "https://lists.suse.com/pipermail/sle-updates/2024-May/035319.html",
+				"source": "SUSE-SU"
+			},
+			{
+				"ref_id": "SUSE-SU-2024:1870-1",
+				"ref_url": "https://lists.suse.com/pipermail/sle-updates/2024-May/035427.html",
+				"source": "SUSE-SU"
+			},
+			{
+				"ref_id": "SUSE-SU-2024:2008-1",
+				"ref_url": "https://lists.suse.com/pipermail/sle-updates/2024-June/035569.html",
+				"source": "SUSE-SU"
+			},
+			{
+				"ref_id": "SUSE-SU-2024:2019-1",
+				"ref_url": "https://lists.suse.com/pipermail/sle-updates/2024-June/035578.html",
+				"source": "SUSE-SU"
+			},
+			{
+				"ref_id": "SUSE-SU-2024:2190-1",
+				"ref_url": "https://lists.suse.com/pipermail/sle-updates/2024-June/035732.html",
+				"source": "SUSE-SU"
+			}
+		],
+		"description": "\n    In the Linux kernel, the following vulnerability has been resolved:\n\nnet/bnx2x: Prevent access to a freed page in page_pool\n\nFix race condition leading to system crash during EEH error handling\n\nDuring EEH error recovery, the bnx2x driver's transmit timeout logic\ncould cause a race condition when handling reset tasks. The\nbnx2x_tx_timeout() schedules reset tasks via bnx2x_sp_rtnl_task(),\nwhich ultimately leads to bnx2x_nic_unload(). In bnx2x_nic_unload()\nSGEs are freed using bnx2x_free_rx_sge_range(). However, this could\noverlap with the EEH driver's attempt to reset the device using\nbnx2x_io_slot_reset(), which also tries to free SGEs. This race\ncondition can result in system crashes due to accessing freed memory\nlocations in bnx2x_free_rx_sge()\n\n799  static inline void bnx2x_free_rx_sge(struct bnx2x *bp,\n800\t\t\t\tstruct bnx2x_fastpath *fp, u16 index)\n801  {\n802\tstruct sw_rx_page *sw_buf = &fp->rx_page_ring[index];\n803     struct page *page = sw_buf->page;\n....\nwhere sw_buf was set to NULL after the call to dma_unmap_page()\nby the preceding thread.\n\n    EEH: Beginning: 'slot_reset'\n    PCI 0011:01:00.0#10000: EEH: Invoking bnx2x->slot_reset()\n    bnx2x: [bnx2x_io_slot_reset:14228(eth1)]IO slot reset initializing...\n    bnx2x 0011:01:00.0: enabling device (0140 -> 0142)\n    bnx2x: [bnx2x_io_slot_reset:14244(eth1)]IO slot reset --> driver unload\n    Kernel attempted to read user page (0) - exploit attempt? (uid: 0)\n    BUG: Kernel NULL pointer dereference on read at 0x00000000\n    Faulting instruction address: 0xc0080000025065fc\n    Oops: Kernel access of bad area, sig: 11 [#1]\n    .....\n    Call Trace:\n    [c000000003c67a20] [c00800000250658c] bnx2x_io_slot_reset+0x204/0x610 [bnx2x] (unreliable)\n    [c000000003c67af0] [c0000000000518a8] eeh_report_reset+0xb8/0xf0\n    [c000000003c67b60] [c000000000052130] eeh_pe_report+0x180/0x550\n    [c000000003c67c70] [c00000000005318c] eeh_handle_normal_event+0x84c/0xa60\n    [c000000003c67d50] [c000000000053a84] eeh_event_handler+0xf4/0x170\n    [c000000003c67da0] [c000000000194c58] kthread+0x1c8/0x1d0\n    [c000000003c67e10] [c00000000000cf64] ret_from_kernel_thread+0x5c/0x64\n\nTo solve this issue, we need to verify page pool allocations before\nfreeing.\n    ",
+		"advisory": {
+			"from": "security@suse.de",
+			"severity": "Moderate",
+			"cve": [
+				{
+					"text": "CVE-2024-26859 at SUSE",
+					"href": "https://www.suse.com/security/cve/CVE-2024-26859/",
+					"impact": "medium",
+					"cvss3": "5.5/CVSS:3.1/AV:L/AC:L/PR:L/UI:N/S:U/C:N/I:N/A:H"
+				},
+				{
+					"text": "CVE-2024-26859 at NVD",
+					"href": "https://nvd.nist.gov/vuln/detail/CVE-2024-26859"
+				}
+			],
+			"bugzilla": [
+				{
+					"text": "SUSE bug 1223049",
+					"href": "https://bugzilla.suse.com/1223049"
+				}
+			],
+			"issued": {
+				"date": "2024-04-19"
+			},
+			"updated": {
+				"date": "2024-08-03"
+			},
+			"affected_cpe_list": {
+				"cpe": [
+					"cpe:/o:suse:sle-micro:5.4"
+				]
+			}
+		}
+	},
+	"criteria": {
+		"operator": "AND",
+		"criterions": [
+			{
+				"test_ref": "oval:org.opensuse.security:tst:2009755086",
+				"comment": "SUSE Linux Enterprise Micro 5.4 is installed"
+			},
+			{
+				"test_ref": "oval:org.opensuse.security:tst:2009338032",
+				"comment": "kernel-default is affected"
+			}
+		]
+	}
+}

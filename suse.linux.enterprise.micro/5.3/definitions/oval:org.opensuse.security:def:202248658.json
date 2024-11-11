@@ -1,0 +1,109 @@
+{
+	"id": "oval:org.opensuse.security:def:202248658",
+	"version": "1",
+	"class": "vulnerability",
+	"metadata": {
+		"title": "CVE-2022-48658",
+		"affected": {
+			"family": "unix",
+			"platform": [
+				"SUSE Linux Enterprise Micro 5.3"
+			]
+		},
+		"reference": [
+			{
+				"ref_id": "Mitre CVE-2022-48658",
+				"ref_url": "https://cve.mitre.org/cgi-bin/cvename.cgi?name=CVE-2022-48658",
+				"source": "CVE"
+			},
+			{
+				"ref_id": "SUSE CVE-2022-48658",
+				"ref_url": "https://www.suse.com/security/cve/CVE-2022-48658",
+				"source": "SUSE CVE"
+			},
+			{
+				"ref_id": "SUSE-SU-2024:1644-1",
+				"ref_url": "https://lists.suse.com/pipermail/sle-updates/2024-May/035263.html",
+				"source": "SUSE-SU"
+			},
+			{
+				"ref_id": "SUSE-SU-2024:1659-1",
+				"ref_url": "https://lists.suse.com/pipermail/sle-updates/2024-May/035281.html",
+				"source": "SUSE-SU"
+			},
+			{
+				"ref_id": "SUSE-SU-2024:1663-1",
+				"ref_url": "https://lists.suse.com/pipermail/sle-security-updates/2024-August/019268.html",
+				"source": "SUSE-SU"
+			}
+		],
+		"description": "\n    In the Linux kernel, the following vulnerability has been resolved:\n\nmm: slub: fix flush_cpu_slab()/__free_slab() invocations in task context.\n\nCommit 5a836bf6b09f (\"mm: slub: move flush_cpu_slab() invocations\n__free_slab() invocations out of IRQ context\") moved all flush_cpu_slab()\ninvocations to the global workqueue to avoid a problem related\nwith deactivate_slab()/__free_slab() being called from an IRQ context\non PREEMPT_RT kernels.\n\nWhen the flush_all_cpu_locked() function is called from a task context\nit may happen that a workqueue with WQ_MEM_RECLAIM bit set ends up\nflushing the global workqueue, this will cause a dependency issue.\n\n workqueue: WQ_MEM_RECLAIM nvme-delete-wq:nvme_delete_ctrl_work [nvme_core]\n   is flushing !WQ_MEM_RECLAIM events:flush_cpu_slab\n WARNING: CPU: 37 PID: 410 at kernel/workqueue.c:2637\n   check_flush_dependency+0x10a/0x120\n Workqueue: nvme-delete-wq nvme_delete_ctrl_work [nvme_core]\n RIP: 0010:check_flush_dependency+0x10a/0x120[  453.262125] Call Trace:\n __flush_work.isra.0+0xbf/0x220\n ? __queue_work+0x1dc/0x420\n flush_all_cpus_locked+0xfb/0x120\n __kmem_cache_shutdown+0x2b/0x320\n kmem_cache_destroy+0x49/0x100\n bioset_exit+0x143/0x190\n blk_release_queue+0xb9/0x100\n kobject_cleanup+0x37/0x130\n nvme_fc_ctrl_free+0xc6/0x150 [nvme_fc]\n nvme_free_ctrl+0x1ac/0x2b0 [nvme_core]\n\nFix this bug by creating a workqueue for the flush operation with\nthe WQ_MEM_RECLAIM bit set.\n    ",
+		"advisory": {
+			"from": "security@suse.de",
+			"severity": "Moderate",
+			"cve": [
+				{
+					"text": "CVE-2022-48658 at SUSE",
+					"href": "https://www.suse.com/security/cve/CVE-2022-48658/",
+					"impact": "medium",
+					"cvss3": "5.5/CVSS:3.1/AV:L/AC:L/PR:L/UI:N/S:U/C:N/I:N/A:H"
+				},
+				{
+					"text": "CVE-2022-48658 at NVD",
+					"href": "https://nvd.nist.gov/vuln/detail/CVE-2022-48658",
+					"impact": "high",
+					"cvss3": "7.8/CVSS:3.1/AV:L/AC:L/PR:L/UI:N/S:U/C:H/I:H/A:H"
+				}
+			],
+			"bugzilla": [
+				{
+					"text": "SUSE bug 1223496",
+					"href": "https://bugzilla.suse.com/1223496"
+				}
+			],
+			"issued": {
+				"date": "2024-04-30"
+			},
+			"updated": {
+				"date": "2024-10-09"
+			},
+			"affected_cpe_list": {
+				"cpe": [
+					"cpe:/o:suse:sle-micro:5.3"
+				]
+			}
+		}
+	},
+	"criteria": {
+		"operator": "AND",
+		"criterias": [
+			{
+				"operator": "OR",
+				"criterions": [
+					{
+						"test_ref": "oval:org.opensuse.security:tst:2009338032",
+						"comment": "kernel-default is affected"
+					},
+					{
+						"test_ref": "oval:org.opensuse.security:tst:2009705050",
+						"comment": "kernel-rt is affected"
+					},
+					{
+						"test_ref": "oval:org.opensuse.security:tst:2009333995",
+						"comment": "kernel-source is affected"
+					},
+					{
+						"test_ref": "oval:org.opensuse.security:tst:2009728714",
+						"comment": "kernel-source-rt is affected"
+					}
+				]
+			}
+		],
+		"criterions": [
+			{
+				"test_ref": "oval:org.opensuse.security:tst:2009728694",
+				"comment": "SUSE Linux Enterprise Micro 5.3 is installed"
+			}
+		]
+	}
+}

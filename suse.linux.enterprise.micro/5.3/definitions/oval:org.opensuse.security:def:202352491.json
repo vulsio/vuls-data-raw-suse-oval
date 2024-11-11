@@ -1,0 +1,92 @@
+{
+	"id": "oval:org.opensuse.security:def:202352491",
+	"version": "1",
+	"class": "vulnerability",
+	"metadata": {
+		"title": "CVE-2023-52491",
+		"affected": {
+			"family": "unix",
+			"platform": [
+				"SUSE Linux Enterprise Micro 5.3"
+			]
+		},
+		"reference": [
+			{
+				"ref_id": "Mitre CVE-2023-52491",
+				"ref_url": "https://cve.mitre.org/cgi-bin/cvename.cgi?name=CVE-2023-52491",
+				"source": "CVE"
+			},
+			{
+				"ref_id": "SUSE CVE-2023-52491",
+				"ref_url": "https://www.suse.com/security/cve/CVE-2023-52491",
+				"source": "SUSE CVE"
+			}
+		],
+		"description": "\n    In the Linux kernel, the following vulnerability has been resolved:\n\nmedia: mtk-jpeg: Fix use after free bug due to error path handling in mtk_jpeg_dec_device_run\n\nIn mtk_jpeg_probe, &jpeg->job_timeout_work is bound with\nmtk_jpeg_job_timeout_work.\n\nIn mtk_jpeg_dec_device_run, if error happens in\nmtk_jpeg_set_dec_dst, it will finally start the worker while\nmark the job as finished by invoking v4l2_m2m_job_finish.\n\nThere are two methods to trigger the bug. If we remove the\nmodule, it which will call mtk_jpeg_remove to make cleanup.\nThe possible sequence is as follows, which will cause a\nuse-after-free bug.\n\nCPU0                  CPU1\nmtk_jpeg_dec_...    |\n  start worker\t    |\n                    |mtk_jpeg_job_timeout_work\nmtk_jpeg_remove     |\n  v4l2_m2m_release  |\n    kfree(m2m_dev); |\n                    |\n                    | v4l2_m2m_get_curr_priv\n                    |   m2m_dev->curr_ctx //use\n\nIf we close the file descriptor, which will call mtk_jpeg_release,\nit will have a similar sequence.\n\nFix this bug by starting timeout worker only if started jpegdec worker\nsuccessfully. Then v4l2_m2m_job_finish will only be called in\neither mtk_jpeg_job_timeout_work or mtk_jpeg_dec_device_run.\n    ",
+		"advisory": {
+			"from": "security@suse.de",
+			"severity": "Moderate",
+			"cve": [
+				{
+					"text": "CVE-2023-52491 at SUSE",
+					"href": "https://www.suse.com/security/cve/CVE-2023-52491/",
+					"impact": "medium",
+					"cvss3": "6.2/CVSS:3.1/AV:L/AC:L/PR:N/UI:N/S:U/C:N/I:N/A:H"
+				},
+				{
+					"text": "CVE-2023-52491 at NVD",
+					"href": "https://nvd.nist.gov/vuln/detail/CVE-2023-52491"
+				}
+			],
+			"bugzilla": [
+				{
+					"text": "SUSE bug 1221281",
+					"href": "https://bugzilla.suse.com/1221281"
+				}
+			],
+			"issued": {
+				"date": "2024-03-13"
+			},
+			"updated": {
+				"date": "2024-10-09"
+			},
+			"affected_cpe_list": {
+				"cpe": [
+					"cpe:/o:suse:sle-micro:5.3"
+				]
+			}
+		}
+	},
+	"criteria": {
+		"operator": "AND",
+		"criterias": [
+			{
+				"operator": "OR",
+				"criterions": [
+					{
+						"test_ref": "oval:org.opensuse.security:tst:2009338032",
+						"comment": "kernel-default is affected"
+					},
+					{
+						"test_ref": "oval:org.opensuse.security:tst:2009705050",
+						"comment": "kernel-rt is affected"
+					},
+					{
+						"test_ref": "oval:org.opensuse.security:tst:2009333995",
+						"comment": "kernel-source is affected"
+					},
+					{
+						"test_ref": "oval:org.opensuse.security:tst:2009728714",
+						"comment": "kernel-source-rt is affected"
+					}
+				]
+			}
+		],
+		"criterions": [
+			{
+				"test_ref": "oval:org.opensuse.security:tst:2009728694",
+				"comment": "SUSE Linux Enterprise Micro 5.3 is installed"
+			}
+		]
+	}
+}

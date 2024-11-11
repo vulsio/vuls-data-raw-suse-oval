@@ -1,0 +1,103 @@
+{
+	"id": "oval:org.opensuse.security:def:202436012",
+	"version": "1",
+	"class": "vulnerability",
+	"metadata": {
+		"title": "CVE-2024-36012",
+		"affected": {
+			"family": "unix",
+			"platform": [
+				"SUSE Linux Enterprise Micro 5.4"
+			]
+		},
+		"reference": [
+			{
+				"ref_id": "Mitre CVE-2024-36012",
+				"ref_url": "https://cve.mitre.org/cgi-bin/cvename.cgi?name=CVE-2024-36012",
+				"source": "CVE"
+			},
+			{
+				"ref_id": "SUSE CVE-2024-36012",
+				"ref_url": "https://www.suse.com/security/cve/CVE-2024-36012",
+				"source": "SUSE CVE"
+			},
+			{
+				"ref_id": "SUSE-SU-2024:2008-1",
+				"ref_url": "https://lists.suse.com/pipermail/sle-updates/2024-June/035569.html",
+				"source": "SUSE-SU"
+			},
+			{
+				"ref_id": "SUSE-SU-2024:2019-1",
+				"ref_url": "https://lists.suse.com/pipermail/sle-updates/2024-June/035578.html",
+				"source": "SUSE-SU"
+			},
+			{
+				"ref_id": "SUSE-SU-2024:2135-1",
+				"ref_url": "https://lists.suse.com/pipermail/sle-updates/2024-June/035681.html",
+				"source": "SUSE-SU"
+			},
+			{
+				"ref_id": "SUSE-SU-2024:2190-1",
+				"ref_url": "https://lists.suse.com/pipermail/sle-updates/2024-June/035732.html",
+				"source": "SUSE-SU"
+			},
+			{
+				"ref_id": "SUSE-SU-2024:2203-1",
+				"ref_url": "https://lists.suse.com/pipermail/sle-security-updates/2024-August/019244.html",
+				"source": "SUSE-SU"
+			},
+			{
+				"ref_id": "SUSE-SU-2024:2973-1",
+				"ref_url": "https://lists.suse.com/pipermail/sle-security-updates/2024-August/019280.html",
+				"source": "SUSE-SU"
+			}
+		],
+		"description": "\n    In the Linux kernel, the following vulnerability has been resolved:\n\nBluetooth: msft: fix slab-use-after-free in msft_do_close()\n\nTying the msft->data lifetime to hdev by freeing it in\nhci_release_dev() to fix the following case:\n\n[use]\nmsft_do_close()\n  msft = hdev->msft_data;\n  if (!msft)                      ...(1) <- passed.\n    return;\n  mutex_lock(&msft->filter_lock); ...(4) <- used after freed.\n\n[free]\nmsft_unregister()\n  msft = hdev->msft_data;\n  hdev->msft_data = NULL;         ...(2)\n  kfree(msft);                    ...(3) <- msft is freed.\n\n==================================================================\nBUG: KASAN: slab-use-after-free in __mutex_lock_common\nkernel/locking/mutex.c:587 [inline]\nBUG: KASAN: slab-use-after-free in __mutex_lock+0x8f/0xc30\nkernel/locking/mutex.c:752\nRead of size 8 at addr ffff888106cbbca8 by task kworker/u5:2/309\n    ",
+		"advisory": {
+			"from": "security@suse.de",
+			"severity": "Moderate",
+			"cve": [
+				{
+					"text": "CVE-2024-36012 at SUSE",
+					"href": "https://www.suse.com/security/cve/CVE-2024-36012/",
+					"impact": "medium",
+					"cvss3": "6.4/CVSS:3.1/AV:L/AC:H/PR:H/UI:N/S:U/C:H/I:H/A:H"
+				},
+				{
+					"text": "CVE-2024-36012 at NVD",
+					"href": "https://nvd.nist.gov/vuln/detail/CVE-2024-36012"
+				}
+			],
+			"bugzilla": [
+				{
+					"text": "SUSE bug 1225502",
+					"href": "https://bugzilla.suse.com/1225502"
+				}
+			],
+			"issued": {
+				"date": "2024-05-29"
+			},
+			"updated": {
+				"date": "2024-08-21"
+			},
+			"affected_cpe_list": {
+				"cpe": [
+					"cpe:/o:suse:sle-micro:5.4"
+				]
+			}
+		}
+	},
+	"criteria": {
+		"operator": "AND",
+		"criterions": [
+			{
+				"test_ref": "oval:org.opensuse.security:tst:2009755086",
+				"comment": "SUSE Linux Enterprise Micro 5.4 is installed"
+			},
+			{
+				"test_ref": "oval:org.opensuse.security:tst:2009338032",
+				"comment": "kernel-default is affected"
+			}
+		]
+	}
+}

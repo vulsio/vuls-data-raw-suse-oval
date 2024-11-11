@@ -1,0 +1,132 @@
+{
+	"id": "oval:org.opensuse.security:def:202147162",
+	"version": "1",
+	"class": "vulnerability",
+	"metadata": {
+		"title": "CVE-2021-47162",
+		"affected": {
+			"family": "unix",
+			"platform": [
+				"SUSE Linux Enterprise Micro 5.0",
+				"SUSE Linux Enterprise Micro 5.1",
+				"SUSE Linux Enterprise Micro 5.2"
+			]
+		},
+		"reference": [
+			{
+				"ref_id": "Mitre CVE-2021-47162",
+				"ref_url": "https://cve.mitre.org/cgi-bin/cvename.cgi?name=CVE-2021-47162",
+				"source": "CVE"
+			},
+			{
+				"ref_id": "SUSE CVE-2021-47162",
+				"ref_url": "https://www.suse.com/security/cve/CVE-2021-47162",
+				"source": "SUSE CVE"
+			},
+			{
+				"ref_id": "SUSE-SU-2024:1643-1",
+				"ref_url": "https://lists.suse.com/pipermail/sle-updates/2024-May/035264.html",
+				"source": "SUSE-SU"
+			},
+			{
+				"ref_id": "SUSE-SU-2024:1646-1",
+				"ref_url": "https://lists.suse.com/pipermail/sle-updates/2024-May/035261.html",
+				"source": "SUSE-SU"
+			},
+			{
+				"ref_id": "SUSE-SU-2024:1648-1",
+				"ref_url": "https://lists.suse.com/pipermail/sle-updates/2024-May/035259.html",
+				"source": "SUSE-SU"
+			},
+			{
+				"ref_id": "SUSE-SU-2024:1648-2",
+				"ref_url": "https://lists.suse.com/pipermail/sle-updates/2024-May/035319.html",
+				"source": "SUSE-SU"
+			},
+			{
+				"ref_id": "SUSE-SU-2024:1870-1",
+				"ref_url": "https://lists.suse.com/pipermail/sle-updates/2024-May/035427.html",
+				"source": "SUSE-SU"
+			},
+			{
+				"ref_id": "SUSE-SU-2024:1979-1",
+				"ref_url": "https://lists.suse.com/pipermail/sle-updates/2024-June/035536.html",
+				"source": "SUSE-SU"
+			},
+			{
+				"ref_id": "SUSE-SU-2024:1983-1",
+				"ref_url": "https://lists.suse.com/pipermail/sle-updates/2024-June/035554.html",
+				"source": "SUSE-SU"
+			},
+			{
+				"ref_id": "SUSE-SU-2024:2184-1",
+				"ref_url": "https://lists.suse.com/pipermail/sle-updates/2024-June/035716.html",
+				"source": "SUSE-SU"
+			}
+		],
+		"description": "\n    In the Linux kernel, the following vulnerability has been resolved:\n\ntipc: skb_linearize the head skb when reassembling msgs\n\nIt's not a good idea to append the frag skb to a skb's frag_list if\nthe frag_list already has skbs from elsewhere, such as this skb was\ncreated by pskb_copy() where the frag_list was cloned (all the skbs\nin it were skb_get'ed) and shared by multiple skbs.\n\nHowever, the new appended frag skb should have been only seen by the\ncurrent skb. Otherwise, it will cause use after free crashes as this\nappended frag skb are seen by multiple skbs but it only got skb_get\ncalled once.\n\nThe same thing happens with a skb updated by pskb_may_pull() with a\nskb_cloned skb. Li Shuang has reported quite a few crashes caused\nby this when doing testing over macvlan devices:\n\n  [] kernel BUG at net/core/skbuff.c:1970!\n  [] Call Trace:\n  []  skb_clone+0x4d/0xb0\n  []  macvlan_broadcast+0xd8/0x160 [macvlan]\n  []  macvlan_process_broadcast+0x148/0x150 [macvlan]\n  []  process_one_work+0x1a7/0x360\n  []  worker_thread+0x30/0x390\n\n  [] kernel BUG at mm/usercopy.c:102!\n  [] Call Trace:\n  []  __check_heap_object+0xd3/0x100\n  []  __check_object_size+0xff/0x16b\n  []  simple_copy_to_iter+0x1c/0x30\n  []  __skb_datagram_iter+0x7d/0x310\n  []  __skb_datagram_iter+0x2a5/0x310\n  []  skb_copy_datagram_iter+0x3b/0x90\n  []  tipc_recvmsg+0x14a/0x3a0 [tipc]\n  []  ____sys_recvmsg+0x91/0x150\n  []  ___sys_recvmsg+0x7b/0xc0\n\n  [] kernel BUG at mm/slub.c:305!\n  [] Call Trace:\n  []  <IRQ>\n  []  kmem_cache_free+0x3ff/0x400\n  []  __netif_receive_skb_core+0x12c/0xc40\n  []  ? kmem_cache_alloc+0x12e/0x270\n  []  netif_receive_skb_internal+0x3d/0xb0\n  []  ? get_rx_page_info+0x8e/0xa0 [be2net]\n  []  be_poll+0x6ef/0xd00 [be2net]\n  []  ? irq_exit+0x4f/0x100\n  []  net_rx_action+0x149/0x3b0\n\n  ...\n\nThis patch is to fix it by linearizing the head skb if it has frag_list\nset in tipc_buf_append(). Note that we choose to do this before calling\nskb_unshare(), as __skb_linearize() will avoid skb_copy(). Also, we can\nnot just drop the frag_list either as the early time.\n    ",
+		"advisory": {
+			"from": "security@suse.de",
+			"severity": "Moderate",
+			"cve": [
+				{
+					"text": "CVE-2021-47162 at SUSE",
+					"href": "https://www.suse.com/security/cve/CVE-2021-47162/",
+					"impact": "medium",
+					"cvss3": "5.5/CVSS:3.1/AV:L/AC:L/PR:L/UI:N/S:U/C:N/I:N/A:H"
+				},
+				{
+					"text": "CVE-2021-47162 at NVD",
+					"href": "https://nvd.nist.gov/vuln/detail/CVE-2021-47162"
+				}
+			],
+			"bugzilla": [
+				{
+					"text": "SUSE bug 1221977",
+					"href": "https://bugzilla.suse.com/1221977"
+				}
+			],
+			"issued": {
+				"date": "2024-10-18"
+			},
+			"updated": {
+				"date": "2024-10-18"
+			},
+			"affected_cpe_list": {
+				"cpe": [
+					"cpe:/o:suse:suse-microos:5.0",
+					"cpe:/o:suse:suse-microos:5.1",
+					"cpe:/o:suse:suse-microos:5.2"
+				]
+			}
+		}
+	},
+	"criteria": {
+		"operator": "AND",
+		"criterias": [
+			{
+				"operator": "OR",
+				"criterions": [
+					{
+						"test_ref": "oval:org.opensuse.security:tst:2009704855",
+						"comment": "SUSE Linux Enterprise Micro 5.0 is installed"
+					},
+					{
+						"test_ref": "oval:org.opensuse.security:tst:2009669964",
+						"comment": "SUSE Linux Enterprise Micro 5.1 is installed"
+					},
+					{
+						"test_ref": "oval:org.opensuse.security:tst:2009681300",
+						"comment": "SUSE Linux Enterprise Micro 5.2 is installed"
+					}
+				]
+			}
+		],
+		"criterions": [
+			{
+				"test_ref": "oval:org.opensuse.security:tst:2009338032",
+				"comment": "kernel-default is affected"
+			}
+		]
+	}
+}

@@ -1,0 +1,103 @@
+{
+	"id": "oval:org.opensuse.security:def:202437078",
+	"version": "1",
+	"class": "vulnerability",
+	"metadata": {
+		"title": "CVE-2024-37078",
+		"affected": {
+			"family": "unix",
+			"platform": [
+				"SUSE Linux Enterprise Micro 5.0"
+			]
+		},
+		"reference": [
+			{
+				"ref_id": "Mitre CVE-2024-37078",
+				"ref_url": "https://cve.mitre.org/cgi-bin/cvename.cgi?name=CVE-2024-37078",
+				"source": "CVE"
+			},
+			{
+				"ref_id": "SUSE CVE-2024-37078",
+				"ref_url": "https://www.suse.com/security/cve/CVE-2024-37078",
+				"source": "SUSE CVE"
+			},
+			{
+				"ref_id": "SUSE-SU-2024:2372-1",
+				"ref_url": "https://lists.suse.com/pipermail/sle-updates/2024-July/035868.html",
+				"source": "SUSE-SU"
+			},
+			{
+				"ref_id": "SUSE-SU-2024:2394-1",
+				"ref_url": "https://lists.suse.com/pipermail/sle-updates/2024-July/035907.html",
+				"source": "SUSE-SU"
+			},
+			{
+				"ref_id": "SUSE-SU-2024:2571-1",
+				"ref_url": "https://lists.suse.com/pipermail/sle-updates/2024-July/036103.html",
+				"source": "SUSE-SU"
+			},
+			{
+				"ref_id": "SUSE-SU-2024:2896-1",
+				"ref_url": "https://lists.suse.com/pipermail/sle-security-updates/2024-August/019185.html",
+				"source": "SUSE-SU"
+			},
+			{
+				"ref_id": "SUSE-SU-2024:2939-1",
+				"ref_url": "https://lists.suse.com/pipermail/sle-security-updates/2024-August/019211.html",
+				"source": "SUSE-SU"
+			},
+			{
+				"ref_id": "SUSE-SU-2024:2973-1",
+				"ref_url": "https://lists.suse.com/pipermail/sle-security-updates/2024-August/019280.html",
+				"source": "SUSE-SU"
+			}
+		],
+		"description": "\n    In the Linux kernel, the following vulnerability has been resolved:\n\nnilfs2: fix potential kernel bug due to lack of writeback flag waiting\n\nDestructive writes to a block device on which nilfs2 is mounted can cause\na kernel bug in the folio/page writeback start routine or writeback end\nroutine (__folio_start_writeback in the log below):\n\n kernel BUG at mm/page-writeback.c:3070!\n Oops: invalid opcode: 0000 [#1] PREEMPT SMP KASAN PTI\n ...\n RIP: 0010:__folio_start_writeback+0xbaa/0x10e0\n Code: 25 ff 0f 00 00 0f 84 18 01 00 00 e8 40 ca c6 ff e9 17 f6 ff ff\n  e8 36 ca c6 ff 4c 89 f7 48 c7 c6 80 c0 12 84 e8 e7 b3 0f 00 90 <0f>\n  0b e8 1f ca c6 ff 4c 89 f7 48 c7 c6 a0 c6 12 84 e8 d0 b3 0f 00\n ...\n Call Trace:\n  <TASK>\n  nilfs_segctor_do_construct+0x4654/0x69d0 [nilfs2]\n  nilfs_segctor_construct+0x181/0x6b0 [nilfs2]\n  nilfs_segctor_thread+0x548/0x11c0 [nilfs2]\n  kthread+0x2f0/0x390\n  ret_from_fork+0x4b/0x80\n  ret_from_fork_asm+0x1a/0x30\n  </TASK>\n\nThis is because when the log writer starts a writeback for segment summary\nblocks or a super root block that use the backing device's page cache, it\ndoes not wait for the ongoing folio/page writeback, resulting in an\ninconsistent writeback state.\n\nFix this issue by waiting for ongoing writebacks when putting\nfolios/pages on the backing device into writeback state.\n    ",
+		"advisory": {
+			"from": "security@suse.de",
+			"severity": "Low",
+			"cve": [
+				{
+					"text": "CVE-2024-37078 at SUSE",
+					"href": "https://www.suse.com/security/cve/CVE-2024-37078/",
+					"impact": "low",
+					"cvss3": "3.3/CVSS:3.1/AV:L/AC:L/PR:L/UI:N/S:U/C:N/I:N/A:L"
+				},
+				{
+					"text": "CVE-2024-37078 at NVD",
+					"href": "https://nvd.nist.gov/vuln/detail/CVE-2024-37078"
+				}
+			],
+			"bugzilla": [
+				{
+					"text": "SUSE bug 1227066",
+					"href": "https://bugzilla.suse.com/1227066"
+				}
+			],
+			"issued": {
+				"date": "2024-06-27"
+			},
+			"updated": {
+				"date": "2024-08-21"
+			},
+			"affected_cpe_list": {
+				"cpe": [
+					"cpe:/o:suse:suse-microos:5.0"
+				]
+			}
+		}
+	},
+	"criteria": {
+		"operator": "AND",
+		"criterions": [
+			{
+				"test_ref": "oval:org.opensuse.security:tst:2009704855",
+				"comment": "SUSE Linux Enterprise Micro 5.0 is installed"
+			},
+			{
+				"test_ref": "oval:org.opensuse.security:tst:2009338032",
+				"comment": "kernel-default is affected"
+			}
+		]
+	}
+}

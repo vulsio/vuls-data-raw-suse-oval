@@ -1,0 +1,100 @@
+{
+	"id": "oval:org.opensuse.security:def:202248869",
+	"version": "1",
+	"class": "vulnerability",
+	"metadata": {
+		"title": "CVE-2022-48869",
+		"affected": {
+			"family": "unix",
+			"platform": [
+				"SUSE Linux Enterprise Micro 5.2"
+			]
+		},
+		"reference": [
+			{
+				"ref_id": "Mitre CVE-2022-48869",
+				"ref_url": "https://cve.mitre.org/cgi-bin/cvename.cgi?name=CVE-2022-48869",
+				"source": "CVE"
+			},
+			{
+				"ref_id": "SUSE CVE-2022-48869",
+				"ref_url": "https://www.suse.com/security/cve/CVE-2022-48869",
+				"source": "SUSE CVE"
+			},
+			{
+				"ref_id": "SUSE-SU-2024:3190-1",
+				"ref_url": "https://lists.suse.com/pipermail/sle-security-updates/2024-September/019403.html",
+				"source": "SUSE-SU"
+			},
+			{
+				"ref_id": "SUSE-SU-2024:3209-1",
+				"ref_url": "https://lists.suse.com/pipermail/sle-updates/2024-September/036854.html",
+				"source": "SUSE-SU"
+			},
+			{
+				"ref_id": "SUSE-SU-2024:3227-1",
+				"ref_url": "https://lists.suse.com/pipermail/sle-updates/2024-September/036874.html",
+				"source": "SUSE-SU"
+			},
+			{
+				"ref_id": "SUSE-SU-2024:3408-1",
+				"ref_url": "https://lists.suse.com/pipermail/sle-updates/2024-September/037033.html",
+				"source": "SUSE-SU"
+			},
+			{
+				"ref_id": "SUSE-SU-2024:3483-1",
+				"ref_url": "https://lists.suse.com/pipermail/sle-updates/2024-September/037089.html",
+				"source": "SUSE-SU"
+			}
+		],
+		"description": "\n    In the Linux kernel, the following vulnerability has been resolved:\n\nUSB: gadgetfs: Fix race between mounting and unmounting\n\nThe syzbot fuzzer and Gerald Lee have identified a use-after-free bug\nin the gadgetfs driver, involving processes concurrently mounting and\nunmounting the gadgetfs filesystem.  In particular, gadgetfs_fill_super()\ncan race with gadgetfs_kill_sb(), causing the latter to deallocate\nthe_device while the former is using it.  The output from KASAN says,\nin part:\n\nBUG: KASAN: use-after-free in instrument_atomic_read_write include/linux/instrumented.h:102 [inline]\nBUG: KASAN: use-after-free in atomic_fetch_sub_release include/linux/atomic/atomic-instrumented.h:176 [inline]\nBUG: KASAN: use-after-free in __refcount_sub_and_test include/linux/refcount.h:272 [inline]\nBUG: KASAN: use-after-free in __refcount_dec_and_test include/linux/refcount.h:315 [inline]\nBUG: KASAN: use-after-free in refcount_dec_and_test include/linux/refcount.h:333 [inline]\nBUG: KASAN: use-after-free in put_dev drivers/usb/gadget/legacy/inode.c:159 [inline]\nBUG: KASAN: use-after-free in gadgetfs_kill_sb+0x33/0x100 drivers/usb/gadget/legacy/inode.c:2086\nWrite of size 4 at addr ffff8880276d7840 by task syz-executor126/18689\n\nCPU: 0 PID: 18689 Comm: syz-executor126 Not tainted 6.1.0-syzkaller #0\nHardware name: Google Google Compute Engine/Google Compute Engine, BIOS Google 10/26/2022\nCall Trace:\n <TASK>\n...\n atomic_fetch_sub_release include/linux/atomic/atomic-instrumented.h:176 [inline]\n __refcount_sub_and_test include/linux/refcount.h:272 [inline]\n __refcount_dec_and_test include/linux/refcount.h:315 [inline]\n refcount_dec_and_test include/linux/refcount.h:333 [inline]\n put_dev drivers/usb/gadget/legacy/inode.c:159 [inline]\n gadgetfs_kill_sb+0x33/0x100 drivers/usb/gadget/legacy/inode.c:2086\n deactivate_locked_super+0xa7/0xf0 fs/super.c:332\n vfs_get_super fs/super.c:1190 [inline]\n get_tree_single+0xd0/0x160 fs/super.c:1207\n vfs_get_tree+0x88/0x270 fs/super.c:1531\n vfs_fsconfig_locked fs/fsopen.c:232 [inline]\n\nThe simplest solution is to ensure that gadgetfs_fill_super() and\ngadgetfs_kill_sb() are serialized by making them both acquire a new\nmutex.\n    ",
+		"advisory": {
+			"from": "security@suse.de",
+			"severity": "Moderate",
+			"cve": [
+				{
+					"text": "CVE-2022-48869 at SUSE",
+					"href": "https://www.suse.com/security/cve/CVE-2022-48869/",
+					"impact": "medium",
+					"cvss3": "6.7/CVSS:3.1/AV:L/AC:L/PR:H/UI:N/S:U/C:H/I:H/A:H"
+				},
+				{
+					"text": "CVE-2022-48869 at NVD",
+					"href": "https://nvd.nist.gov/vuln/detail/CVE-2022-48869",
+					"impact": "medium",
+					"cvss3": "4.7/CVSS:3.1/AV:L/AC:H/PR:L/UI:N/S:U/C:N/I:N/A:H"
+				}
+			],
+			"bugzilla": [
+				{
+					"text": "SUSE bug 1229507",
+					"href": "https://bugzilla.suse.com/1229507"
+				}
+			],
+			"issued": {
+				"date": "2024-08-22"
+			},
+			"updated": {
+				"date": "2024-09-30"
+			},
+			"affected_cpe_list": {
+				"cpe": [
+					"cpe:/o:suse:suse-microos:5.2"
+				]
+			}
+		}
+	},
+	"criteria": {
+		"operator": "AND",
+		"criterions": [
+			{
+				"test_ref": "oval:org.opensuse.security:tst:2009681300",
+				"comment": "SUSE Linux Enterprise Micro 5.2 is installed"
+			},
+			{
+				"test_ref": "oval:org.opensuse.security:tst:2009338032",
+				"comment": "kernel-default is affected"
+			}
+		]
+	}
+}

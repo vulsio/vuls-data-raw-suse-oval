@@ -1,0 +1,83 @@
+{
+	"id": "oval:org.opensuse.security:def:202441005",
+	"version": "1",
+	"class": "vulnerability",
+	"metadata": {
+		"title": "CVE-2024-41005",
+		"affected": {
+			"family": "unix",
+			"platform": [
+				"SUSE Linux Enterprise Micro 5.0"
+			]
+		},
+		"reference": [
+			{
+				"ref_id": "Mitre CVE-2024-41005",
+				"ref_url": "https://cve.mitre.org/cgi-bin/cvename.cgi?name=CVE-2024-41005",
+				"source": "CVE"
+			},
+			{
+				"ref_id": "SUSE CVE-2024-41005",
+				"ref_url": "https://www.suse.com/security/cve/CVE-2024-41005",
+				"source": "SUSE CVE"
+			},
+			{
+				"ref_id": "RHSA-2024:7000",
+				"ref_url": "https://lists.suse.com/pipermail/suse-liberty-linux-updates/2024-September/000095.html",
+				"source": "SUSE-SU"
+			},
+			{
+				"ref_id": "RHSA-2024:8617",
+				"ref_url": "https://lists.suse.com/pipermail/suse-liberty-linux-updates/2024-October/000161.html",
+				"source": "SUSE-SU"
+			}
+		],
+		"description": "\n    In the Linux kernel, the following vulnerability has been resolved:\n\nnetpoll: Fix race condition in netpoll_owner_active\n\nKCSAN detected a race condition in netpoll:\n\n\tBUG: KCSAN: data-race in net_rx_action / netpoll_send_skb\n\twrite (marked) to 0xffff8881164168b0 of 4 bytes by interrupt on cpu 10:\n\tnet_rx_action (./include/linux/netpoll.h:90 net/core/dev.c:6712 net/core/dev.c:6822)\n<snip>\n\tread to 0xffff8881164168b0 of 4 bytes by task 1 on cpu 2:\n\tnetpoll_send_skb (net/core/netpoll.c:319 net/core/netpoll.c:345 net/core/netpoll.c:393)\n\tnetpoll_send_udp (net/core/netpoll.c:?)\n<snip>\n\tvalue changed: 0x0000000a -> 0xffffffff\n\nThis happens because netpoll_owner_active() needs to check if the\ncurrent CPU is the owner of the lock, touching napi->poll_owner\nnon atomically. The ->poll_owner field contains the current CPU holding\nthe lock.\n\nUse an atomic read to check if the poll owner is the current CPU.\n    ",
+		"advisory": {
+			"from": "security@suse.de",
+			"severity": "Moderate",
+			"cve": [
+				{
+					"text": "CVE-2024-41005 at SUSE",
+					"href": "https://www.suse.com/security/cve/CVE-2024-41005/",
+					"impact": "medium",
+					"cvss3": "5.8/CVSS:3.1/AV:L/AC:H/PR:L/UI:N/S:U/C:L/I:L/A:H"
+				},
+				{
+					"text": "CVE-2024-41005 at NVD",
+					"href": "https://nvd.nist.gov/vuln/detail/CVE-2024-41005"
+				}
+			],
+			"bugzilla": [
+				{
+					"text": "SUSE bug 1227858",
+					"href": "https://bugzilla.suse.com/1227858"
+				}
+			],
+			"issued": {
+				"date": "2024-07-16"
+			},
+			"updated": {
+				"date": "2024-11-01"
+			},
+			"affected_cpe_list": {
+				"cpe": [
+					"cpe:/o:suse:suse-microos:5.0"
+				]
+			}
+		}
+	},
+	"criteria": {
+		"operator": "AND",
+		"criterions": [
+			{
+				"test_ref": "oval:org.opensuse.security:tst:2009704855",
+				"comment": "SUSE Linux Enterprise Micro 5.0 is installed"
+			},
+			{
+				"test_ref": "oval:org.opensuse.security:tst:2009338032",
+				"comment": "kernel-default is affected"
+			}
+		]
+	}
+}

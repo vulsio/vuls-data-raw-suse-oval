@@ -1,0 +1,328 @@
+{
+	"id": "oval:org.opensuse.security:def:202438589",
+	"version": "1",
+	"class": "vulnerability",
+	"metadata": {
+		"title": "CVE-2024-38589",
+		"affected": {
+			"family": "unix",
+			"platform": [
+				"SUSE Linux Enterprise Live Patching 12 SP5",
+				"SUSE Linux Enterprise Real Time 12 SP5",
+				"SUSE Linux Enterprise Server 12 SP4-LTSS",
+				"SUSE Linux Enterprise Server 12 SP5",
+				"SUSE Linux Enterprise Server for SAP Applications 12 SP4",
+				"SUSE Linux Enterprise Server for SAP Applications 12 SP5",
+				"SUSE Linux Enterprise Workstation Extension 12 SP5"
+			]
+		},
+		"reference": [
+			{
+				"ref_id": "Mitre CVE-2024-38589",
+				"ref_url": "https://cve.mitre.org/cgi-bin/cvename.cgi?name=CVE-2024-38589",
+				"source": "CVE"
+			},
+			{
+				"ref_id": "SUSE CVE-2024-38589",
+				"ref_url": "https://www.suse.com/security/cve/CVE-2024-38589",
+				"source": "SUSE CVE"
+			}
+		],
+		"description": "\n    In the Linux kernel, the following vulnerability has been resolved:\n\nnetrom: fix possible dead-lock in nr_rt_ioctl()\n\nsyzbot loves netrom, and found a possible deadlock in nr_rt_ioctl [1]\n\nMake sure we always acquire nr_node_list_lock before nr_node_lock(nr_node)\n\n[1]\nWARNING: possible circular locking dependency detected\n6.9.0-rc7-syzkaller-02147-g654de42f3fc6 #0 Not tainted\n------------------------------------------------------\nsyz-executor350/5129 is trying to acquire lock:\n ffff8880186e2070 (&nr_node->node_lock){+...}-{2:2}, at: spin_lock_bh include/linux/spinlock.h:356 [inline]\n ffff8880186e2070 (&nr_node->node_lock){+...}-{2:2}, at: nr_node_lock include/net/netrom.h:152 [inline]\n ffff8880186e2070 (&nr_node->node_lock){+...}-{2:2}, at: nr_dec_obs net/netrom/nr_route.c:464 [inline]\n ffff8880186e2070 (&nr_node->node_lock){+...}-{2:2}, at: nr_rt_ioctl+0x1bb/0x1090 net/netrom/nr_route.c:697\n\nbut task is already holding lock:\n ffffffff8f7053b8 (nr_node_list_lock){+...}-{2:2}, at: spin_lock_bh include/linux/spinlock.h:356 [inline]\n ffffffff8f7053b8 (nr_node_list_lock){+...}-{2:2}, at: nr_dec_obs net/netrom/nr_route.c:462 [inline]\n ffffffff8f7053b8 (nr_node_list_lock){+...}-{2:2}, at: nr_rt_ioctl+0x10a/0x1090 net/netrom/nr_route.c:697\n\nwhich lock already depends on the new lock.\n\nthe existing dependency chain (in reverse order) is:\n\n-> #1 (nr_node_list_lock){+...}-{2:2}:\n        lock_acquire+0x1ed/0x550 kernel/locking/lockdep.c:5754\n        __raw_spin_lock_bh include/linux/spinlock_api_smp.h:126 [inline]\n        _raw_spin_lock_bh+0x35/0x50 kernel/locking/spinlock.c:178\n        spin_lock_bh include/linux/spinlock.h:356 [inline]\n        nr_remove_node net/netrom/nr_route.c:299 [inline]\n        nr_del_node+0x4b4/0x820 net/netrom/nr_route.c:355\n        nr_rt_ioctl+0xa95/0x1090 net/netrom/nr_route.c:683\n        sock_do_ioctl+0x158/0x460 net/socket.c:1222\n        sock_ioctl+0x629/0x8e0 net/socket.c:1341\n        vfs_ioctl fs/ioctl.c:51 [inline]\n        __do_sys_ioctl fs/ioctl.c:904 [inline]\n        __se_sys_ioctl+0xfc/0x170 fs/ioctl.c:890\n        do_syscall_x64 arch/x86/entry/common.c:52 [inline]\n        do_syscall_64+0xf5/0x240 arch/x86/entry/common.c:83\n       entry_SYSCALL_64_after_hwframe+0x77/0x7f\n\n-> #0 (&nr_node->node_lock){+...}-{2:2}:\n        check_prev_add kernel/locking/lockdep.c:3134 [inline]\n        check_prevs_add kernel/locking/lockdep.c:3253 [inline]\n        validate_chain+0x18cb/0x58e0 kernel/locking/lockdep.c:3869\n        __lock_acquire+0x1346/0x1fd0 kernel/locking/lockdep.c:5137\n        lock_acquire+0x1ed/0x550 kernel/locking/lockdep.c:5754\n        __raw_spin_lock_bh include/linux/spinlock_api_smp.h:126 [inline]\n        _raw_spin_lock_bh+0x35/0x50 kernel/locking/spinlock.c:178\n        spin_lock_bh include/linux/spinlock.h:356 [inline]\n        nr_node_lock include/net/netrom.h:152 [inline]\n        nr_dec_obs net/netrom/nr_route.c:464 [inline]\n        nr_rt_ioctl+0x1bb/0x1090 net/netrom/nr_route.c:697\n        sock_do_ioctl+0x158/0x460 net/socket.c:1222\n        sock_ioctl+0x629/0x8e0 net/socket.c:1341\n        vfs_ioctl fs/ioctl.c:51 [inline]\n        __do_sys_ioctl fs/ioctl.c:904 [inline]\n        __se_sys_ioctl+0xfc/0x170 fs/ioctl.c:890\n        do_syscall_x64 arch/x86/entry/common.c:52 [inline]\n        do_syscall_64+0xf5/0x240 arch/x86/entry/common.c:83\n       entry_SYSCALL_64_after_hwframe+0x77/0x7f\n\nother info that might help us debug this:\n\n Possible unsafe locking scenario:\n\n       CPU0                    CPU1\n       ----                    ----\n  lock(nr_node_list_lock);\n                               lock(&nr_node->node_lock);\n                               lock(nr_node_list_lock);\n  lock(&nr_node->node_lock);\n\n *** DEADLOCK ***\n\n1 lock held by syz-executor350/5129:\n  #0: ffffffff8f7053b8 (nr_node_list_lock){+...}-{2:2}, at: spin_lock_bh include/linux/spinlock.h:356 [inline]\n  #0: ffffffff8f7053b8 (nr_node_list_lock){+...}-{2:2}, at: nr_dec_obs net/netrom/nr_route.c:462 [inline]\n  #0: ffffffff8f70\n---truncated---\n    ",
+		"advisory": {
+			"from": "security@suse.de",
+			"severity": "Moderate",
+			"cve": [
+				{
+					"text": "CVE-2024-38589 at SUSE",
+					"href": "https://www.suse.com/security/cve/CVE-2024-38589/",
+					"impact": "medium",
+					"cvss3": "5.5/CVSS:3.1/AV:L/AC:L/PR:L/UI:N/S:U/C:N/I:N/A:H"
+				},
+				{
+					"text": "CVE-2024-38589 at NVD",
+					"href": "https://nvd.nist.gov/vuln/detail/CVE-2024-38589"
+				}
+			],
+			"bugzilla": [
+				{
+					"text": "SUSE bug 1226748",
+					"href": "https://bugzilla.suse.com/1226748"
+				}
+			],
+			"issued": {
+				"date": "2024-06-22"
+			},
+			"updated": {
+				"date": "2024-10-22"
+			},
+			"affected_cpe_list": {
+				"cpe": [
+					"cpe:/o:suse:sle-live-patching:12:sp5",
+					"cpe:/o:suse:sle-we:12:sp5",
+					"cpe:/o:suse:sles-ltss:12:sp4",
+					"cpe:/o:suse:sles:12:sp5",
+					"cpe:/o:suse:sles_sap:12:sp4",
+					"cpe:/o:suse:sles_sap:12:sp5",
+					"cpe:/o:suse:suse-linux-enterprise-rt:12:sp5"
+				]
+			}
+		}
+	},
+	"criteria": {
+		"operator": "OR",
+		"criterias": [
+			{
+				"operator": "AND",
+				"criterias": [
+					{
+						"operator": "OR",
+						"criterions": [
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009338032",
+								"comment": "kernel-default is affected"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009333995",
+								"comment": "kernel-source is affected"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009340767",
+								"comment": "kernel-source-azure is affected"
+							}
+						]
+					}
+				],
+				"criterions": [
+					{
+						"test_ref": "oval:org.opensuse.security:tst:2009258806",
+						"comment": "SUSE Linux Enterprise Server for SAP Applications 12 SP5 is installed"
+					}
+				]
+			},
+			{
+				"operator": "AND",
+				"criterias": [
+					{
+						"operator": "OR",
+						"criterions": [
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009338032",
+								"comment": "kernel-default is affected"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009338033",
+								"comment": "kernel-default-base is affected"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009338034",
+								"comment": "kernel-default-devel is affected"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009335275",
+								"comment": "kernel-devel is affected"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009335276",
+								"comment": "kernel-macros is affected"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009333995",
+								"comment": "kernel-source is affected"
+							}
+						]
+					}
+				],
+				"criterions": [
+					{
+						"test_ref": "oval:org.opensuse.security:tst:2009258804",
+						"comment": "SUSE Linux Enterprise Server for SAP Applications 12 SP4 is installed"
+					}
+				]
+			},
+			{
+				"operator": "AND",
+				"criterias": [
+					{
+						"operator": "OR",
+						"criterions": [
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009338032",
+								"comment": "kernel-default is affected"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009338033",
+								"comment": "kernel-default-base is affected"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009338034",
+								"comment": "kernel-default-devel is affected"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009338036",
+								"comment": "kernel-default-man is affected"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009335275",
+								"comment": "kernel-devel is affected"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009335276",
+								"comment": "kernel-macros is affected"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009333995",
+								"comment": "kernel-source is affected"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009340777",
+								"comment": "kernel-devel-azure is affected"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009340767",
+								"comment": "kernel-source-azure is affected"
+							}
+						]
+					}
+				],
+				"criterions": [
+					{
+						"test_ref": "oval:org.opensuse.security:tst:2009258033",
+						"comment": "SUSE Linux Enterprise Server 12 SP5 is installed"
+					}
+				]
+			},
+			{
+				"operator": "AND",
+				"criterias": [
+					{
+						"operator": "OR",
+						"criterions": [
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009338032",
+								"comment": "kernel-default is affected"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009338033",
+								"comment": "kernel-default-base is affected"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009338034",
+								"comment": "kernel-default-devel is affected"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009338036",
+								"comment": "kernel-default-man is affected"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009335275",
+								"comment": "kernel-devel is affected"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009335276",
+								"comment": "kernel-macros is affected"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009333995",
+								"comment": "kernel-source is affected"
+							}
+						]
+					}
+				],
+				"criterions": [
+					{
+						"test_ref": "oval:org.opensuse.security:tst:2009240280",
+						"comment": "SUSE Linux Enterprise Server 12 SP4-LTSS is installed"
+					}
+				]
+			},
+			{
+				"operator": "AND",
+				"criterias": [
+					{
+						"operator": "OR",
+						"criterions": [
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009338035",
+								"comment": "kernel-default-kgraft is affected"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009809200",
+								"comment": "kernel-default-kgraft-devel is affected"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009333995",
+								"comment": "kernel-source is affected"
+							}
+						]
+					}
+				],
+				"criterions": [
+					{
+						"test_ref": "oval:org.opensuse.security:tst:2009273148",
+						"comment": "SUSE Linux Enterprise Live Patching 12 SP5 is installed"
+					}
+				]
+			},
+			{
+				"operator": "AND",
+				"criterias": [
+					{
+						"operator": "OR",
+						"criterions": [
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009258033",
+								"comment": "SUSE Linux Enterprise Server 12 SP5 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009258806",
+								"comment": "SUSE Linux Enterprise Server for SAP Applications 12 SP5 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009258650",
+								"comment": "SUSE Linux Enterprise Workstation Extension 12 SP5 is installed"
+							}
+						]
+					},
+					{
+						"operator": "OR",
+						"criterions": [
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009715290",
+								"comment": "kernel-default-extra is affected"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009333995",
+								"comment": "kernel-source is affected"
+							}
+						]
+					}
+				]
+			},
+			{
+				"operator": "AND",
+				"criterias": [
+					{
+						"operator": "OR",
+						"criterions": [
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009728713",
+								"comment": "kernel-devel-rt is affected"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009728714",
+								"comment": "kernel-source-rt is affected"
+							}
+						]
+					}
+				],
+				"criterions": [
+					{
+						"test_ref": "oval:org.opensuse.security:tst:2009279486",
+						"comment": "SUSE Linux Enterprise Real Time 12 SP5 is installed"
+					}
+				]
+			}
+		]
+	}
+}

@@ -1,0 +1,88 @@
+{
+	"id": "oval:org.opensuse.security:def:202426715",
+	"version": "1",
+	"class": "vulnerability",
+	"metadata": {
+		"title": "CVE-2024-26715",
+		"affected": {
+			"family": "unix",
+			"platform": [
+				"SUSE Linux Enterprise Micro 5.4"
+			]
+		},
+		"reference": [
+			{
+				"ref_id": "Mitre CVE-2024-26715",
+				"ref_url": "https://cve.mitre.org/cgi-bin/cvename.cgi?name=CVE-2024-26715",
+				"source": "CVE"
+			},
+			{
+				"ref_id": "SUSE CVE-2024-26715",
+				"ref_url": "https://www.suse.com/security/cve/CVE-2024-26715",
+				"source": "SUSE CVE"
+			},
+			{
+				"ref_id": "SUSE-SU-2024:2008-1",
+				"ref_url": "https://lists.suse.com/pipermail/sle-updates/2024-June/035569.html",
+				"source": "SUSE-SU"
+			},
+			{
+				"ref_id": "SUSE-SU-2024:2019-1",
+				"ref_url": "https://lists.suse.com/pipermail/sle-updates/2024-June/035578.html",
+				"source": "SUSE-SU"
+			},
+			{
+				"ref_id": "SUSE-SU-2024:2190-1",
+				"ref_url": "https://lists.suse.com/pipermail/sle-updates/2024-June/035732.html",
+				"source": "SUSE-SU"
+			}
+		],
+		"description": "\n    In the Linux kernel, the following vulnerability has been resolved:\n\nusb: dwc3: gadget: Fix NULL pointer dereference in dwc3_gadget_suspend\n\nIn current scenario if Plug-out and Plug-In performed continuously\nthere could be a chance while checking for dwc->gadget_driver in\ndwc3_gadget_suspend, a NULL pointer dereference may occur.\n\nCall Stack:\n\n\tCPU1:                           CPU2:\n\tgadget_unbind_driver            dwc3_suspend_common\n\tdwc3_gadget_stop                dwc3_gadget_suspend\n                                        dwc3_disconnect_gadget\n\nCPU1 basically clears the variable and CPU2 checks the variable.\nConsider CPU1 is running and right before gadget_driver is cleared\nand in parallel CPU2 executes dwc3_gadget_suspend where it finds\ndwc->gadget_driver which is not NULL and resumes execution and then\nCPU1 completes execution. CPU2 executes dwc3_disconnect_gadget where\nit checks dwc->gadget_driver is already NULL because of which the\nNULL pointer deference occur.\n    ",
+		"advisory": {
+			"from": "security@suse.de",
+			"severity": "Moderate",
+			"cve": [
+				{
+					"text": "CVE-2024-26715 at SUSE",
+					"href": "https://www.suse.com/security/cve/CVE-2024-26715/",
+					"impact": "medium",
+					"cvss3": "4.3/CVSS:3.1/AV:P/AC:L/PR:L/UI:N/S:U/C:N/I:N/A:H"
+				},
+				{
+					"text": "CVE-2024-26715 at NVD",
+					"href": "https://nvd.nist.gov/vuln/detail/CVE-2024-26715"
+				}
+			],
+			"bugzilla": [
+				{
+					"text": "SUSE bug 1222561",
+					"href": "https://bugzilla.suse.com/1222561"
+				}
+			],
+			"issued": {
+				"date": "2024-04-10"
+			},
+			"updated": {
+				"date": "2024-08-05"
+			},
+			"affected_cpe_list": {
+				"cpe": [
+					"cpe:/o:suse:sle-micro:5.4"
+				]
+			}
+		}
+	},
+	"criteria": {
+		"operator": "AND",
+		"criterions": [
+			{
+				"test_ref": "oval:org.opensuse.security:tst:2009755086",
+				"comment": "SUSE Linux Enterprise Micro 5.4 is installed"
+			},
+			{
+				"test_ref": "oval:org.opensuse.security:tst:2009338032",
+				"comment": "kernel-default is affected"
+			}
+		]
+	}
+}

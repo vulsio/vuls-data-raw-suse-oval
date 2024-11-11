@@ -1,0 +1,122 @@
+{
+	"id": "oval:org.opensuse.security:def:202442304",
+	"version": "1",
+	"class": "vulnerability",
+	"metadata": {
+		"title": "CVE-2024-42304",
+		"affected": {
+			"family": "unix",
+			"platform": [
+				"SUSE Linux Enterprise Micro 5.2"
+			]
+		},
+		"reference": [
+			{
+				"ref_id": "Mitre CVE-2024-42304",
+				"ref_url": "https://cve.mitre.org/cgi-bin/cvename.cgi?name=CVE-2024-42304",
+				"source": "CVE"
+			},
+			{
+				"ref_id": "SUSE CVE-2024-42304",
+				"ref_url": "https://www.suse.com/security/cve/CVE-2024-42304",
+				"source": "SUSE CVE"
+			},
+			{
+				"ref_id": "SUSE-SU-2024:3551-1",
+				"ref_url": "https://lists.suse.com/pipermail/sle-updates/2024-October/037163.html",
+				"source": "SUSE-SU"
+			},
+			{
+				"ref_id": "SUSE-SU-2024:3561-1",
+				"ref_url": "https://lists.suse.com/pipermail/sle-security-updates/2024-October/019580.html",
+				"source": "SUSE-SU"
+			},
+			{
+				"ref_id": "SUSE-SU-2024:3564-1",
+				"ref_url": "https://lists.suse.com/pipermail/sle-updates/2024-October/037178.html",
+				"source": "SUSE-SU"
+			},
+			{
+				"ref_id": "SUSE-SU-2024:3569-1",
+				"ref_url": "https://lists.suse.com/pipermail/sle-security-updates/2024-October/019576.html",
+				"source": "SUSE-SU"
+			},
+			{
+				"ref_id": "SUSE-SU-2024:3587-1",
+				"ref_url": "https://lists.suse.com/pipermail/sle-security-updates/2024-October/019588.html",
+				"source": "SUSE-SU"
+			},
+			{
+				"ref_id": "SUSE-SU-2024:3592-1",
+				"ref_url": "https://lists.suse.com/pipermail/sle-updates/2024-October/037209.html",
+				"source": "SUSE-SU"
+			}
+		],
+		"description": "\n    In the Linux kernel, the following vulnerability has been resolved:\n\next4: make sure the first directory block is not a hole\n\nThe syzbot constructs a directory that has no dirblock but is non-inline,\ni.e. the first directory block is a hole. And no errors are reported when\ncreating files in this directory in the following flow.\n\n    ext4_mknod\n     ...\n      ext4_add_entry\n        // Read block 0\n        ext4_read_dirblock(dir, block, DIRENT)\n          bh = ext4_bread(NULL, inode, block, 0)\n          if (!bh && (type == INDEX || type == DIRENT_HTREE))\n          // The first directory block is a hole\n          // But type == DIRENT, so no error is reported.\n\nAfter that, we get a directory block without '.' and '..' but with a valid\ndentry. This may cause some code that relies on dot or dotdot (such as\nmake_indexed_dir()) to crash.\n\nTherefore when ext4_read_dirblock() finds that the first directory block\nis a hole report that the filesystem is corrupted and return an error to\navoid loading corrupted data from disk causing something bad.\n    ",
+		"advisory": {
+			"from": "security@suse.de",
+			"severity": "Moderate",
+			"cve": [
+				{
+					"text": "CVE-2024-42304 at SUSE",
+					"href": "https://www.suse.com/security/cve/CVE-2024-42304/",
+					"impact": "medium",
+					"cvss3": "5.5/CVSS:3.1/AV:L/AC:L/PR:L/UI:N/S:U/C:N/I:N/A:H"
+				},
+				{
+					"text": "CVE-2024-42304 at NVD",
+					"href": "https://nvd.nist.gov/vuln/detail/CVE-2024-42304"
+				}
+			],
+			"bugzilla": [
+				{
+					"text": "SUSE bug 1229364",
+					"href": "https://bugzilla.suse.com/1229364"
+				}
+			],
+			"issued": {
+				"date": "2024-08-20"
+			},
+			"updated": {
+				"date": "2024-10-11"
+			},
+			"affected_cpe_list": {
+				"cpe": [
+					"cpe:/o:suse:suse-microos:5.2"
+				]
+			}
+		}
+	},
+	"criteria": {
+		"operator": "AND",
+		"criterias": [
+			{
+				"operator": "OR",
+				"criterions": [
+					{
+						"test_ref": "oval:org.opensuse.security:tst:2009338032",
+						"comment": "kernel-default is affected"
+					},
+					{
+						"test_ref": "oval:org.opensuse.security:tst:2009705050",
+						"comment": "kernel-rt is affected"
+					},
+					{
+						"test_ref": "oval:org.opensuse.security:tst:2009333995",
+						"comment": "kernel-source is affected"
+					},
+					{
+						"test_ref": "oval:org.opensuse.security:tst:2009728714",
+						"comment": "kernel-source-rt is affected"
+					}
+				]
+			}
+		],
+		"criterions": [
+			{
+				"test_ref": "oval:org.opensuse.security:tst:2009681300",
+				"comment": "SUSE Linux Enterprise Micro 5.2 is installed"
+			}
+		]
+	}
+}

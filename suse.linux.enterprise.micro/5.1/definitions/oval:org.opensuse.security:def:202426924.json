@@ -1,0 +1,112 @@
+{
+	"id": "oval:org.opensuse.security:def:202426924",
+	"version": "1",
+	"class": "vulnerability",
+	"metadata": {
+		"title": "CVE-2024-26924",
+		"affected": {
+			"family": "unix",
+			"platform": [
+				"SUSE Linux Enterprise Micro 5.1"
+			]
+		},
+		"reference": [
+			{
+				"ref_id": "Mitre CVE-2024-26924",
+				"ref_url": "https://cve.mitre.org/cgi-bin/cvename.cgi?name=CVE-2024-26924",
+				"source": "CVE"
+			},
+			{
+				"ref_id": "SUSE CVE-2024-26924",
+				"ref_url": "https://www.suse.com/security/cve/CVE-2024-26924",
+				"source": "SUSE CVE"
+			},
+			{
+				"ref_id": "RHSA-2024:8856",
+				"ref_url": "https://lists.suse.com/pipermail/suse-liberty-linux-updates/2024-November/000202.html",
+				"source": "SUSE-SU"
+			},
+			{
+				"ref_id": "SUSE-SU-2024:2892-1",
+				"ref_url": "https://lists.suse.com/pipermail/sle-security-updates/2024-August/019188.html",
+				"source": "SUSE-SU"
+			},
+			{
+				"ref_id": "SUSE-SU-2024:2901-1",
+				"ref_url": "https://lists.suse.com/pipermail/sle-updates/2024-August/036444.html",
+				"source": "SUSE-SU"
+			},
+			{
+				"ref_id": "SUSE-SU-2024:2940-1",
+				"ref_url": "https://lists.suse.com/pipermail/sle-updates/2024-August/036478.html",
+				"source": "SUSE-SU"
+			}
+		],
+		"description": "\n    In the Linux kernel, the following vulnerability has been resolved:\n\nnetfilter: nft_set_pipapo: do not free live element\n\nPablo reports a crash with large batches of elements with a\nback-to-back add/remove pattern.  Quoting Pablo:\n\n  add_elem(\"00000000\") timeout 100 ms\n  ...\n  add_elem(\"0000000X\") timeout 100 ms\n  del_elem(\"0000000X\") <---------------- delete one that was just added\n  ...\n  add_elem(\"00005000\") timeout 100 ms\n\n  1) nft_pipapo_remove() removes element 0000000X\n  Then, KASAN shows a splat.\n\nLooking at the remove function there is a chance that we will drop a\nrule that maps to a non-deactivated element.\n\nRemoval happens in two steps, first we do a lookup for key k and return the\nto-be-removed element and mark it as inactive in the next generation.\nThen, in a second step, the element gets removed from the set/map.\n\nThe _remove function does not work correctly if we have more than one\nelement that share the same key.\n\nThis can happen if we insert an element into a set when the set already\nholds an element with same key, but the element mapping to the existing\nkey has timed out or is not active in the next generation.\n\nIn such case its possible that removal will unmap the wrong element.\nIf this happens, we will leak the non-deactivated element, it becomes\nunreachable.\n\nThe element that got deactivated (and will be freed later) will\nremain reachable in the set data structure, this can result in\na crash when such an element is retrieved during lookup (stale\npointer).\n\nAdd a check that the fully matching key does in fact map to the element\nthat we have marked as inactive in the deactivation step.\nIf not, we need to continue searching.\n\nAdd a bug/warn trap at the end of the function as well, the remove\nfunction must not ever be called with an invisible/unreachable/non-existent\nelement.\n\nv2: avoid uneeded temporary variable (Stefano)\n    ",
+		"advisory": {
+			"from": "security@suse.de",
+			"severity": "Moderate",
+			"cve": [
+				{
+					"text": "CVE-2024-26924 at SUSE",
+					"href": "https://www.suse.com/security/cve/CVE-2024-26924/",
+					"impact": "medium",
+					"cvss3": "5.5/CVSS:3.1/AV:L/AC:L/PR:L/UI:N/S:U/C:N/I:N/A:H"
+				},
+				{
+					"text": "CVE-2024-26924 at NVD",
+					"href": "https://nvd.nist.gov/vuln/detail/CVE-2024-26924"
+				}
+			],
+			"bugzilla": [
+				{
+					"text": "SUSE bug 1223387",
+					"href": "https://bugzilla.suse.com/1223387"
+				}
+			],
+			"issued": {
+				"date": "2024-04-25"
+			},
+			"updated": {
+				"date": "2024-11-09"
+			},
+			"affected_cpe_list": {
+				"cpe": [
+					"cpe:/o:suse:suse-microos:5.1"
+				]
+			}
+		}
+	},
+	"criteria": {
+		"operator": "AND",
+		"criterias": [
+			{
+				"operator": "OR",
+				"criterions": [
+					{
+						"test_ref": "oval:org.opensuse.security:tst:2009338032",
+						"comment": "kernel-default is affected"
+					},
+					{
+						"test_ref": "oval:org.opensuse.security:tst:2009705050",
+						"comment": "kernel-rt is affected"
+					},
+					{
+						"test_ref": "oval:org.opensuse.security:tst:2009333995",
+						"comment": "kernel-source is affected"
+					},
+					{
+						"test_ref": "oval:org.opensuse.security:tst:2009728714",
+						"comment": "kernel-source-rt is affected"
+					}
+				]
+			}
+		],
+		"criterions": [
+			{
+				"test_ref": "oval:org.opensuse.security:tst:2009669964",
+				"comment": "SUSE Linux Enterprise Micro 5.1 is installed"
+			}
+		]
+	}
+}

@@ -1,0 +1,122 @@
+{
+	"id": "oval:org.opensuse.security:def:202426807",
+	"version": "1",
+	"class": "vulnerability",
+	"metadata": {
+		"title": "CVE-2024-26807",
+		"affected": {
+			"family": "unix",
+			"platform": [
+				"SUSE Linux Enterprise Micro 5.3"
+			]
+		},
+		"reference": [
+			{
+				"ref_id": "Mitre CVE-2024-26807",
+				"ref_url": "https://cve.mitre.org/cgi-bin/cvename.cgi?name=CVE-2024-26807",
+				"source": "CVE"
+			},
+			{
+				"ref_id": "SUSE CVE-2024-26807",
+				"ref_url": "https://www.suse.com/security/cve/CVE-2024-26807",
+				"source": "SUSE CVE"
+			},
+			{
+				"ref_id": "SUSE-SU-2024:1490-1",
+				"ref_url": "https://lists.suse.com/pipermail/sle-updates/2024-May/035140.html",
+				"source": "SUSE-SU"
+			},
+			{
+				"ref_id": "SUSE-SU-2024:1659-1",
+				"ref_url": "https://lists.suse.com/pipermail/sle-updates/2024-May/035281.html",
+				"source": "SUSE-SU"
+			},
+			{
+				"ref_id": "SUSE-SU-2024:1663-1",
+				"ref_url": "https://lists.suse.com/pipermail/sle-security-updates/2024-August/019268.html",
+				"source": "SUSE-SU"
+			},
+			{
+				"ref_id": "SUSE-SU-2024:2135-1",
+				"ref_url": "https://lists.suse.com/pipermail/sle-updates/2024-June/035681.html",
+				"source": "SUSE-SU"
+			},
+			{
+				"ref_id": "SUSE-SU-2024:2203-1",
+				"ref_url": "https://lists.suse.com/pipermail/sle-security-updates/2024-August/019244.html",
+				"source": "SUSE-SU"
+			},
+			{
+				"ref_id": "SUSE-SU-2024:2973-1",
+				"ref_url": "https://lists.suse.com/pipermail/sle-security-updates/2024-August/019280.html",
+				"source": "SUSE-SU"
+			}
+		],
+		"description": "\n    In the Linux kernel, the following vulnerability has been resolved:\n\nBoth cadence-quadspi ->runtime_suspend() and ->runtime_resume()\nimplementations start with:\n\n\tstruct cqspi_st *cqspi = dev_get_drvdata(dev);\n\tstruct spi_controller *host = dev_get_drvdata(dev);\n\nThis obviously cannot be correct, unless \"struct cqspi_st\" is the\nfirst member of \" struct spi_controller\", or the other way around, but\nit is not the case. \"struct spi_controller\" is allocated by\ndevm_spi_alloc_host(), which allocates an extra amount of memory for\nprivate data, used to store \"struct cqspi_st\".\n\nThe ->probe() function of the cadence-quadspi driver then sets the\ndevice drvdata to store the address of the \"struct cqspi_st\"\nstructure. Therefore:\n\n\tstruct cqspi_st *cqspi = dev_get_drvdata(dev);\n\nis correct, but:\n\n\tstruct spi_controller *host = dev_get_drvdata(dev);\n\nis not, as it makes \"host\" point not to a \"struct spi_controller\" but\nto the same \"struct cqspi_st\" structure as above.\n\nThis obviously leads to bad things (memory corruption, kernel crashes)\ndirectly during ->probe(), as ->probe() enables the device using PM\nruntime, leading the ->runtime_resume() hook being called, which in\nturns calls spi_controller_resume() with the wrong pointer.\n\nThis has at least been reported [0] to cause a kernel crash, but the\nexact behavior will depend on the memory contents.\n\n[0] https://lore.kernel.org/all/20240226121803.5a7r5wkpbbowcxgx@dhruva/\n\nThis issue potentially affects all platforms that are currently using\nthe cadence-quadspi driver.\n    ",
+		"advisory": {
+			"from": "security@suse.de",
+			"severity": "Moderate",
+			"cve": [
+				{
+					"text": "CVE-2024-26807 at SUSE",
+					"href": "https://www.suse.com/security/cve/CVE-2024-26807/",
+					"impact": "medium",
+					"cvss3": "5.5/CVSS:3.1/AV:L/AC:L/PR:L/UI:N/S:U/C:N/I:N/A:H"
+				},
+				{
+					"text": "CVE-2024-26807 at NVD",
+					"href": "https://nvd.nist.gov/vuln/detail/CVE-2024-26807"
+				}
+			],
+			"bugzilla": [
+				{
+					"text": "SUSE bug 1222801",
+					"href": "https://bugzilla.suse.com/1222801"
+				}
+			],
+			"issued": {
+				"date": "2024-04-16"
+			},
+			"updated": {
+				"date": "2024-10-09"
+			},
+			"affected_cpe_list": {
+				"cpe": [
+					"cpe:/o:suse:sle-micro:5.3"
+				]
+			}
+		}
+	},
+	"criteria": {
+		"operator": "AND",
+		"criterias": [
+			{
+				"operator": "OR",
+				"criterions": [
+					{
+						"test_ref": "oval:org.opensuse.security:tst:2009338032",
+						"comment": "kernel-default is affected"
+					},
+					{
+						"test_ref": "oval:org.opensuse.security:tst:2009705050",
+						"comment": "kernel-rt is affected"
+					},
+					{
+						"test_ref": "oval:org.opensuse.security:tst:2009333995",
+						"comment": "kernel-source is affected"
+					},
+					{
+						"test_ref": "oval:org.opensuse.security:tst:2009728714",
+						"comment": "kernel-source-rt is affected"
+					}
+				]
+			}
+		],
+		"criterions": [
+			{
+				"test_ref": "oval:org.opensuse.security:tst:2009728694",
+				"comment": "SUSE Linux Enterprise Micro 5.3 is installed"
+			}
+		]
+	}
+}

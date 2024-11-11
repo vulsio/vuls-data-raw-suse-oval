@@ -1,0 +1,92 @@
+{
+	"id": "oval:org.opensuse.security:def:202449933",
+	"version": "1",
+	"class": "vulnerability",
+	"metadata": {
+		"title": "CVE-2024-49933",
+		"affected": {
+			"family": "unix",
+			"platform": [
+				"SUSE Linux Enterprise Micro 5.3"
+			]
+		},
+		"reference": [
+			{
+				"ref_id": "Mitre CVE-2024-49933",
+				"ref_url": "https://cve.mitre.org/cgi-bin/cvename.cgi?name=CVE-2024-49933",
+				"source": "CVE"
+			},
+			{
+				"ref_id": "SUSE CVE-2024-49933",
+				"ref_url": "https://www.suse.com/security/cve/CVE-2024-49933",
+				"source": "SUSE CVE"
+			}
+		],
+		"description": "\n    In the Linux kernel, the following vulnerability has been resolved:\n\nblk_iocost: fix more out of bound shifts\n\nRecently running UBSAN caught few out of bound shifts in the\nioc_forgive_debts() function:\n\nUBSAN: shift-out-of-bounds in block/blk-iocost.c:2142:38\nshift exponent 80 is too large for 64-bit type 'u64' (aka 'unsigned long\nlong')\n...\nUBSAN: shift-out-of-bounds in block/blk-iocost.c:2144:30\nshift exponent 80 is too large for 64-bit type 'u64' (aka 'unsigned long\nlong')\n...\nCall Trace:\n<IRQ>\ndump_stack_lvl+0xca/0x130\n__ubsan_handle_shift_out_of_bounds+0x22c/0x280\n? __lock_acquire+0x6441/0x7c10\nioc_timer_fn+0x6cec/0x7750\n? blk_iocost_init+0x720/0x720\n? call_timer_fn+0x5d/0x470\ncall_timer_fn+0xfa/0x470\n? blk_iocost_init+0x720/0x720\n__run_timer_base+0x519/0x700\n...\n\nActual impact of this issue was not identified but I propose to fix the\nundefined behaviour.\nThe proposed fix to prevent those out of bound shifts consist of\nprecalculating exponent before using it the shift operations by taking\nmin value from the actual exponent and maximum possible number of bits.\n    ",
+		"advisory": {
+			"from": "security@suse.de",
+			"severity": "Moderate",
+			"cve": [
+				{
+					"text": "CVE-2024-49933 at SUSE",
+					"href": "https://www.suse.com/security/cve/CVE-2024-49933/",
+					"impact": "medium",
+					"cvss3": "4.7/CVSS:3.1/AV:L/AC:H/PR:L/UI:N/S:U/C:N/I:N/A:H"
+				},
+				{
+					"text": "CVE-2024-49933 at NVD",
+					"href": "https://nvd.nist.gov/vuln/detail/CVE-2024-49933"
+				}
+			],
+			"bugzilla": [
+				{
+					"text": "SUSE bug 1232368",
+					"href": "https://bugzilla.suse.com/1232368"
+				}
+			],
+			"issued": {
+				"date": "2024-10-27"
+			},
+			"updated": {
+				"date": "2024-10-27"
+			},
+			"affected_cpe_list": {
+				"cpe": [
+					"cpe:/o:suse:sle-micro:5.3"
+				]
+			}
+		}
+	},
+	"criteria": {
+		"operator": "AND",
+		"criterias": [
+			{
+				"operator": "OR",
+				"criterions": [
+					{
+						"test_ref": "oval:org.opensuse.security:tst:2009338032",
+						"comment": "kernel-default is affected"
+					},
+					{
+						"test_ref": "oval:org.opensuse.security:tst:2009705050",
+						"comment": "kernel-rt is affected"
+					},
+					{
+						"test_ref": "oval:org.opensuse.security:tst:2009333995",
+						"comment": "kernel-source is affected"
+					},
+					{
+						"test_ref": "oval:org.opensuse.security:tst:2009728714",
+						"comment": "kernel-source-rt is affected"
+					}
+				]
+			}
+		],
+		"criterions": [
+			{
+				"test_ref": "oval:org.opensuse.security:tst:2009728694",
+				"comment": "SUSE Linux Enterprise Micro 5.3 is installed"
+			}
+		]
+	}
+}
