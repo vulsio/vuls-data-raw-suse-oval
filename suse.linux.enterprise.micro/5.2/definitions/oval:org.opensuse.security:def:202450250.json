@@ -1,0 +1,92 @@
+{
+	"id": "oval:org.opensuse.security:def:202450250",
+	"version": "1",
+	"class": "vulnerability",
+	"metadata": {
+		"title": "CVE-2024-50250",
+		"affected": {
+			"family": "unix",
+			"platform": [
+				"SUSE Linux Enterprise Micro 5.2"
+			]
+		},
+		"reference": [
+			{
+				"ref_id": "Mitre CVE-2024-50250",
+				"ref_url": "https://cve.mitre.org/cgi-bin/cvename.cgi?name=CVE-2024-50250",
+				"source": "CVE"
+			},
+			{
+				"ref_id": "SUSE CVE-2024-50250",
+				"ref_url": "https://www.suse.com/security/cve/CVE-2024-50250",
+				"source": "SUSE CVE"
+			}
+		],
+		"description": "\n    In the Linux kernel, the following vulnerability has been resolved:\n\nfsdax: dax_unshare_iter needs to copy entire blocks\n\nThe code that copies data from srcmap to iomap in dax_unshare_iter is\nvery very broken, which bfoster's recent fsx changes have exposed.\n\nIf the pos and len passed to dax_file_unshare are not aligned to an\nfsblock boundary, the iter pos and length in the _iter function will\nreflect this unalignment.\n\ndax_iomap_direct_access always returns a pointer to the start of the\nkmapped fsdax page, even if its pos argument is in the middle of that\npage.  This is catastrophic for data integrity when iter->pos is not\naligned to a page, because daddr/saddr do not point to the same byte in\nthe file as iter->pos.  Hence we corrupt user data by copying it to the\nwrong place.\n\nIf iter->pos + iomap_length() in the _iter function not aligned to a\npage, then we fail to copy a full block, and only partially populate the\ndestination block.  This is catastrophic for data confidentiality\nbecause we expose stale pmem contents.\n\nFix both of these issues by aligning copy_pos/copy_len to a page\nboundary (remember, this is fsdax so 1 fsblock == 1 base page) so that\nwe always copy full blocks.\n\nWe're not done yet -- there's no call to invalidate_inode_pages2_range,\nso programs that have the file range mmap'd will continue accessing the\nold memory mapping after the file metadata updates have completed.\n\nBe careful with the return value -- if the unshare succeeds, we still\nneed to return the number of bytes that the iomap iter thinks we're\noperating on.\n    ",
+		"advisory": {
+			"from": "security@suse.de",
+			"severity": "Important",
+			"cve": [
+				{
+					"text": "CVE-2024-50250 at SUSE",
+					"href": "https://www.suse.com/security/cve/CVE-2024-50250/",
+					"impact": "high",
+					"cvss3": "7.1/CVSS:3.1/AV:L/AC:L/PR:L/UI:N/S:U/C:H/I:H/A:N"
+				},
+				{
+					"text": "CVE-2024-50250 at NVD",
+					"href": "https://nvd.nist.gov/vuln/detail/CVE-2024-50250"
+				}
+			],
+			"bugzilla": [
+				{
+					"text": "SUSE bug 1233226",
+					"href": "https://bugzilla.suse.com/1233226"
+				}
+			],
+			"issued": {
+				"date": "2024-11-12"
+			},
+			"updated": {
+				"date": "2024-11-12"
+			},
+			"affected_cpe_list": {
+				"cpe": [
+					"cpe:/o:suse:suse-microos:5.2"
+				]
+			}
+		}
+	},
+	"criteria": {
+		"operator": "AND",
+		"criterias": [
+			{
+				"operator": "OR",
+				"criterions": [
+					{
+						"test_ref": "oval:org.opensuse.security:tst:2009334017",
+						"comment": "kernel-default is not affected"
+					},
+					{
+						"test_ref": "oval:org.opensuse.security:tst:2009705046",
+						"comment": "kernel-rt is not affected"
+					},
+					{
+						"test_ref": "oval:org.opensuse.security:tst:2009333928",
+						"comment": "kernel-source is not affected"
+					},
+					{
+						"test_ref": "oval:org.opensuse.security:tst:2009728712",
+						"comment": "kernel-source-rt is not affected"
+					}
+				]
+			}
+		],
+		"criterions": [
+			{
+				"test_ref": "oval:org.opensuse.security:tst:2009681300",
+				"comment": "SUSE Linux Enterprise Micro 5.2 is installed"
+			}
+		]
+	}
+}

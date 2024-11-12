@@ -1,0 +1,100 @@
+{
+	"id": "oval:org.opensuse.security:def:202450220",
+	"version": "1",
+	"class": "vulnerability",
+	"metadata": {
+		"title": "CVE-2024-50220",
+		"affected": {
+			"family": "unix",
+			"platform": [
+				"SUSE Linux Enterprise Micro 6.0"
+			]
+		},
+		"reference": [
+			{
+				"ref_id": "Mitre CVE-2024-50220",
+				"ref_url": "https://cve.mitre.org/cgi-bin/cvename.cgi?name=CVE-2024-50220",
+				"source": "CVE"
+			},
+			{
+				"ref_id": "SUSE CVE-2024-50220",
+				"ref_url": "https://www.suse.com/security/cve/CVE-2024-50220",
+				"source": "SUSE CVE"
+			}
+		],
+		"description": "\n    In the Linux kernel, the following vulnerability has been resolved:\n\nfork: do not invoke uffd on fork if error occurs\n\nPatch series \"fork: do not expose incomplete mm on fork\".\n\nDuring fork we may place the virtual memory address space into an\ninconsistent state before the fork operation is complete.\n\nIn addition, we may encounter an error during the fork operation that\nindicates that the virtual memory address space is invalidated.\n\nAs a result, we should not be exposing it in any way to external machinery\nthat might interact with the mm or VMAs, machinery that is not designed to\ndeal with incomplete state.\n\nWe specifically update the fork logic to defer khugepaged and ksm to the\nend of the operation and only to be invoked if no error arose, and\ndisallow uffd from observing fork events should an error have occurred.\n\n\nThis patch (of 2):\n\nCurrently on fork we expose the virtual address space of a process to\nuserland unconditionally if uffd is registered in VMAs, regardless of\nwhether an error arose in the fork.\n\nThis is performed in dup_userfaultfd_complete() which is invoked\nunconditionally, and performs two duties - invoking registered handlers\nfor the UFFD_EVENT_FORK event via dup_fctx(), and clearing down\nuserfaultfd_fork_ctx objects established in dup_userfaultfd().\n\nThis is problematic, because the virtual address space may not yet be\ncorrectly initialised if an error arose.\n\nThe change in commit d24062914837 (\"fork: use __mt_dup() to duplicate\nmaple tree in dup_mmap()\") makes this more pertinent as we may be in a\nstate where entries in the maple tree are not yet consistent.\n\nWe address this by, on fork error, ensuring that we roll back state that\nwe would otherwise expect to clean up through the event being handled by\nuserland and perform the memory freeing duty otherwise performed by\ndup_userfaultfd_complete().\n\nWe do this by implementing a new function, dup_userfaultfd_fail(), which\nperforms the same loop, only decrementing reference counts.\n\nNote that we perform mmgrab() on the parent and child mm's, however\nuserfaultfd_ctx_put() will mmdrop() this once the reference count drops to\nzero, so we will avoid memory leaks correctly here.\n    ",
+		"advisory": {
+			"from": "security@suse.de",
+			"severity": "Moderate",
+			"cve": [
+				{
+					"text": "CVE-2024-50220 at SUSE",
+					"href": "https://www.suse.com/security/cve/CVE-2024-50220/",
+					"impact": "medium",
+					"cvss3": "5.5/CVSS:3.1/AV:L/AC:L/PR:L/UI:N/S:U/C:N/I:N/A:H"
+				},
+				{
+					"text": "CVE-2024-50220 at NVD",
+					"href": "https://nvd.nist.gov/vuln/detail/CVE-2024-50220"
+				}
+			],
+			"bugzilla": [
+				{
+					"text": "SUSE bug 1233175",
+					"href": "https://bugzilla.suse.com/1233175"
+				}
+			],
+			"issued": {
+				"date": "2024-11-12"
+			},
+			"updated": {
+				"date": "2024-11-12"
+			},
+			"affected_cpe_list": {
+				"cpe": [
+					"cpe:/o:suse:sl-micro:6.0"
+				]
+			}
+		}
+	},
+	"criteria": {
+		"operator": "AND",
+		"criterias": [
+			{
+				"operator": "OR",
+				"criterions": [
+					{
+						"test_ref": "oval:org.opensuse.security:tst:2009334017",
+						"comment": "kernel-default is not affected"
+					},
+					{
+						"test_ref": "oval:org.opensuse.security:tst:2009334791",
+						"comment": "kernel-devel is not affected"
+					},
+					{
+						"test_ref": "oval:org.opensuse.security:tst:2009334792",
+						"comment": "kernel-macros is not affected"
+					},
+					{
+						"test_ref": "oval:org.opensuse.security:tst:2009333928",
+						"comment": "kernel-source is not affected"
+					},
+					{
+						"test_ref": "oval:org.opensuse.security:tst:2009728711",
+						"comment": "kernel-devel-rt is not affected"
+					},
+					{
+						"test_ref": "oval:org.opensuse.security:tst:2009728712",
+						"comment": "kernel-source-rt is not affected"
+					}
+				]
+			}
+		],
+		"criterions": [
+			{
+				"test_ref": "oval:org.opensuse.security:tst:2009864179",
+				"comment": "SUSE Linux Enterprise Micro 6.0 is installed"
+			}
+		]
+	}
+}

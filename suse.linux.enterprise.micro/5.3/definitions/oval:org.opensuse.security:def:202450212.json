@@ -1,0 +1,92 @@
+{
+	"id": "oval:org.opensuse.security:def:202450212",
+	"version": "1",
+	"class": "vulnerability",
+	"metadata": {
+		"title": "CVE-2024-50212",
+		"affected": {
+			"family": "unix",
+			"platform": [
+				"SUSE Linux Enterprise Micro 5.3"
+			]
+		},
+		"reference": [
+			{
+				"ref_id": "Mitre CVE-2024-50212",
+				"ref_url": "https://cve.mitre.org/cgi-bin/cvename.cgi?name=CVE-2024-50212",
+				"source": "CVE"
+			},
+			{
+				"ref_id": "SUSE CVE-2024-50212",
+				"ref_url": "https://www.suse.com/security/cve/CVE-2024-50212",
+				"source": "SUSE CVE"
+			}
+		],
+		"description": "\n    In the Linux kernel, the following vulnerability has been resolved:\n\nlib: alloc_tag_module_unload must wait for pending kfree_rcu calls\n\nBen Greear reports following splat:\n ------------[ cut here ]------------\n net/netfilter/nf_nat_core.c:1114 module nf_nat func:nf_nat_register_fn has 256 allocated at module unload\n WARNING: CPU: 1 PID: 10421 at lib/alloc_tag.c:168 alloc_tag_module_unload+0x22b/0x3f0\n Modules linked in: nf_nat(-) btrfs ufs qnx4 hfsplus hfs minix vfat msdos fat\n...\n Hardware name: Default string Default string/SKYBAY, BIOS 5.12 08/04/2020\n RIP: 0010:alloc_tag_module_unload+0x22b/0x3f0\n  codetag_unload_module+0x19b/0x2a0\n  ? codetag_load_module+0x80/0x80\n\nnf_nat module exit calls kfree_rcu on those addresses, but the free\noperation is likely still pending by the time alloc_tag checks for leaks.\n\nWait for outstanding kfree_rcu operations to complete before checking\nresolves this warning.\n\nReproducer:\nunshare -n iptables-nft -t nat -A PREROUTING -p tcp\ngrep nf_nat /proc/allocinfo # will list 4 allocations\nrmmod nft_chain_nat\nrmmod nf_nat                # will WARN.\n\n[akpm@linux-foundation.org: add comment]\n    ",
+		"advisory": {
+			"from": "security@suse.de",
+			"severity": "Moderate",
+			"cve": [
+				{
+					"text": "CVE-2024-50212 at SUSE",
+					"href": "https://www.suse.com/security/cve/CVE-2024-50212/",
+					"impact": "medium",
+					"cvss3": "5.5/CVSS:3.1/AV:L/AC:L/PR:L/UI:N/S:U/C:N/I:N/A:H"
+				},
+				{
+					"text": "CVE-2024-50212 at NVD",
+					"href": "https://nvd.nist.gov/vuln/detail/CVE-2024-50212"
+				}
+			],
+			"bugzilla": [
+				{
+					"text": "SUSE bug 1233173",
+					"href": "https://bugzilla.suse.com/1233173"
+				}
+			],
+			"issued": {
+				"date": "2024-11-12"
+			},
+			"updated": {
+				"date": "2024-11-12"
+			},
+			"affected_cpe_list": {
+				"cpe": [
+					"cpe:/o:suse:sle-micro:5.3"
+				]
+			}
+		}
+	},
+	"criteria": {
+		"operator": "AND",
+		"criterias": [
+			{
+				"operator": "OR",
+				"criterions": [
+					{
+						"test_ref": "oval:org.opensuse.security:tst:2009334017",
+						"comment": "kernel-default is not affected"
+					},
+					{
+						"test_ref": "oval:org.opensuse.security:tst:2009705046",
+						"comment": "kernel-rt is not affected"
+					},
+					{
+						"test_ref": "oval:org.opensuse.security:tst:2009333928",
+						"comment": "kernel-source is not affected"
+					},
+					{
+						"test_ref": "oval:org.opensuse.security:tst:2009728712",
+						"comment": "kernel-source-rt is not affected"
+					}
+				]
+			}
+		],
+		"criterions": [
+			{
+				"test_ref": "oval:org.opensuse.security:tst:2009728694",
+				"comment": "SUSE Linux Enterprise Micro 5.3 is installed"
+			}
+		]
+	}
+}
