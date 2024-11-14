@@ -95,6 +95,26 @@
 				"ref_id": "SUSE-SU-2024:2973-1",
 				"ref_url": "https://lists.suse.com/pipermail/sle-security-updates/2024-August/019280.html",
 				"source": "SUSE-SU"
+			},
+			{
+				"ref_id": "SUSE-SU-2024:3983-1",
+				"ref_url": "https://lists.suse.com/pipermail/sle-security-updates/2024-November/019816.html",
+				"source": "SUSE-SU"
+			},
+			{
+				"ref_id": "SUSE-SU-2024:3984-1",
+				"ref_url": "https://lists.suse.com/pipermail/sle-security-updates/2024-November/019815.html",
+				"source": "SUSE-SU"
+			},
+			{
+				"ref_id": "SUSE-SU-2024:3985-1",
+				"ref_url": "https://lists.suse.com/pipermail/sle-security-updates/2024-November/019814.html",
+				"source": "SUSE-SU"
+			},
+			{
+				"ref_id": "SUSE-SU-2024:3986-1",
+				"ref_url": "https://lists.suse.com/pipermail/sle-security-updates/2024-November/019813.html",
+				"source": "SUSE-SU"
 			}
 		],
 		"description": "\n    In the Linux kernel, the following vulnerability has been resolved:\n\ntcp: do not accept ACK of bytes we never sent\n\nThis patch is based on a detailed report and ideas from Yepeng Pan\nand Christian Rossow.\n\nACK seq validation is currently following RFC 5961 5.2 guidelines:\n\n   The ACK value is considered acceptable only if\n   it is in the range of ((SND.UNA - MAX.SND.WND) <= SEG.ACK <=\n   SND.NXT).  All incoming segments whose ACK value doesn't satisfy the\n   above condition MUST be discarded and an ACK sent back.  It needs to\n   be noted that RFC 793 on page 72 (fifth check) says: \"If the ACK is a\n   duplicate (SEG.ACK < SND.UNA), it can be ignored.  If the ACK\n   acknowledges something not yet sent (SEG.ACK > SND.NXT) then send an\n   ACK, drop the segment, and return\".  The \"ignored\" above implies that\n   the processing of the incoming data segment continues, which means\n   the ACK value is treated as acceptable.  This mitigation makes the\n   ACK check more stringent since any ACK < SND.UNA wouldn't be\n   accepted, instead only ACKs that are in the range ((SND.UNA -\n   MAX.SND.WND) <= SEG.ACK <= SND.NXT) get through.\n\nThis can be refined for new (and possibly spoofed) flows,\nby not accepting ACK for bytes that were never sent.\n\nThis greatly improves TCP security at a little cost.\n\nI added a Fixes: tag to make sure this patch will reach stable trees,\neven if the 'blamed' patch was adhering to the RFC.\n\ntp->bytes_acked was added in linux-4.2\n\nFollowing packetdrill test (courtesy of Yepeng Pan) shows\nthe issue at hand:\n\n0 socket(..., SOCK_STREAM, IPPROTO_TCP) = 3\n+0 setsockopt(3, SOL_SOCKET, SO_REUSEADDR, [1], 4) = 0\n+0 bind(3, ..., ...) = 0\n+0 listen(3, 1024) = 0\n\n// ---------------- Handshake ------------------- //\n\n// when window scale is set to 14 the window size can be extended to\n// 65535 * (2^14) = 1073725440. Linux would accept an ACK packet\n// with ack number in (Server_ISN+1-1073725440. Server_ISN+1)\n// ,though this ack number acknowledges some data never\n// sent by the server.\n\n+0 < S 0:0(0) win 65535 <mss 1400,nop,wscale 14>\n+0 > S. 0:0(0) ack 1 <...>\n+0 < . 1:1(0) ack 1 win 65535\n+0 accept(3, ..., ...) = 4\n\n// For the established connection, we send an ACK packet,\n// the ack packet uses ack number 1 - 1073725300 + 2^32,\n// where 2^32 is used to wrap around.\n// Note: we used 1073725300 instead of 1073725440 to avoid possible\n// edge cases.\n// 1 - 1073725300 + 2^32 = 3221241997\n\n// Oops, old kernels happily accept this packet.\n+0 < . 1:1001(1000) ack 3221241997 win 65535\n\n// After the kernel fix the following will be replaced by a challenge ACK,\n// and prior malicious frame would be dropped.\n+0 > . 1:1(0) ack 1001\n    ",
@@ -130,7 +150,7 @@
 				"date": "2024-06-05"
 			},
 			"updated": {
-				"date": "2024-10-05"
+				"date": "2024-11-14"
 			},
 			"affected_cpe_list": {
 				"cpe": [
@@ -162,8 +182,8 @@
 						"operator": "AND",
 						"criterions": [
 							{
-								"test_ref": "oval:org.opensuse.security:tst:2009881081",
-								"comment": "cluster-md-kmp-azure-6.4.0-150600.8.8.2 is installed"
+								"test_ref": "oval:org.opensuse.security:tst:2009952038",
+								"comment": "cluster-md-kmp-azure-6.4.0-150600.8.17.2 is installed"
 							},
 							{
 								"test_ref": "oval:org.opensuse.security:tst:2009623277",
@@ -188,8 +208,8 @@
 						"operator": "AND",
 						"criterions": [
 							{
-								"test_ref": "oval:org.opensuse.security:tst:2009881116",
-								"comment": "cluster-md-kmp-rt-6.4.0-150600.10.5.1 is installed"
+								"test_ref": "oval:org.opensuse.security:tst:2009952053",
+								"comment": "cluster-md-kmp-rt-6.4.0-150600.10.17.1 is installed"
 							},
 							{
 								"test_ref": "oval:org.opensuse.security:tst:2009342853",
@@ -214,8 +234,8 @@
 						"operator": "AND",
 						"criterions": [
 							{
-								"test_ref": "oval:org.opensuse.security:tst:2009881082",
-								"comment": "dlm-kmp-azure-6.4.0-150600.8.8.2 is installed"
+								"test_ref": "oval:org.opensuse.security:tst:2009952039",
+								"comment": "dlm-kmp-azure-6.4.0-150600.8.17.2 is installed"
 							},
 							{
 								"test_ref": "oval:org.opensuse.security:tst:2009623279",
@@ -240,8 +260,8 @@
 						"operator": "AND",
 						"criterions": [
 							{
-								"test_ref": "oval:org.opensuse.security:tst:2009881117",
-								"comment": "dlm-kmp-rt-6.4.0-150600.10.5.1 is installed"
+								"test_ref": "oval:org.opensuse.security:tst:2009952054",
+								"comment": "dlm-kmp-rt-6.4.0-150600.10.17.1 is installed"
 							},
 							{
 								"test_ref": "oval:org.opensuse.security:tst:2009342855",
@@ -565,8 +585,8 @@
 						"operator": "AND",
 						"criterions": [
 							{
-								"test_ref": "oval:org.opensuse.security:tst:2009881083",
-								"comment": "gfs2-kmp-azure-6.4.0-150600.8.8.2 is installed"
+								"test_ref": "oval:org.opensuse.security:tst:2009952040",
+								"comment": "gfs2-kmp-azure-6.4.0-150600.8.17.2 is installed"
 							},
 							{
 								"test_ref": "oval:org.opensuse.security:tst:2009623281",
@@ -591,8 +611,8 @@
 						"operator": "AND",
 						"criterions": [
 							{
-								"test_ref": "oval:org.opensuse.security:tst:2009881118",
-								"comment": "gfs2-kmp-rt-6.4.0-150600.10.5.1 is installed"
+								"test_ref": "oval:org.opensuse.security:tst:2009952055",
+								"comment": "gfs2-kmp-rt-6.4.0-150600.10.17.1 is installed"
 							},
 							{
 								"test_ref": "oval:org.opensuse.security:tst:2009342857",
@@ -669,8 +689,8 @@
 						"operator": "AND",
 						"criterions": [
 							{
-								"test_ref": "oval:org.opensuse.security:tst:2009879345",
-								"comment": "kernel-azure-6.4.0-150600.8.8.2 is installed"
+								"test_ref": "oval:org.opensuse.security:tst:2009952041",
+								"comment": "kernel-azure-6.4.0-150600.8.17.2 is installed"
 							},
 							{
 								"test_ref": "oval:org.opensuse.security:tst:2009623283",
@@ -682,8 +702,8 @@
 						"operator": "AND",
 						"criterions": [
 							{
-								"test_ref": "oval:org.opensuse.security:tst:2009879346",
-								"comment": "kernel-azure-devel-6.4.0-150600.8.8.2 is installed"
+								"test_ref": "oval:org.opensuse.security:tst:2009952042",
+								"comment": "kernel-azure-devel-6.4.0-150600.8.17.2 is installed"
 							},
 							{
 								"test_ref": "oval:org.opensuse.security:tst:2009623285",
@@ -695,8 +715,8 @@
 						"operator": "AND",
 						"criterions": [
 							{
-								"test_ref": "oval:org.opensuse.security:tst:2009881084",
-								"comment": "kernel-azure-extra-6.4.0-150600.8.8.2 is installed"
+								"test_ref": "oval:org.opensuse.security:tst:2009952043",
+								"comment": "kernel-azure-extra-6.4.0-150600.8.17.2 is installed"
 							},
 							{
 								"test_ref": "oval:org.opensuse.security:tst:2009623286",
@@ -708,8 +728,8 @@
 						"operator": "AND",
 						"criterions": [
 							{
-								"test_ref": "oval:org.opensuse.security:tst:2009881085",
-								"comment": "kernel-azure-livepatch-devel-6.4.0-150600.8.8.2 is installed"
+								"test_ref": "oval:org.opensuse.security:tst:2009952044",
+								"comment": "kernel-azure-livepatch-devel-6.4.0-150600.8.17.2 is installed"
 							},
 							{
 								"test_ref": "oval:org.opensuse.security:tst:2009623287",
@@ -721,8 +741,8 @@
 						"operator": "AND",
 						"criterions": [
 							{
-								"test_ref": "oval:org.opensuse.security:tst:2009881086",
-								"comment": "kernel-azure-optional-6.4.0-150600.8.8.2 is installed"
+								"test_ref": "oval:org.opensuse.security:tst:2009952045",
+								"comment": "kernel-azure-optional-6.4.0-150600.8.17.2 is installed"
 							},
 							{
 								"test_ref": "oval:org.opensuse.security:tst:2009623427",
@@ -734,8 +754,8 @@
 						"operator": "AND",
 						"criterions": [
 							{
-								"test_ref": "oval:org.opensuse.security:tst:2009881087",
-								"comment": "kernel-azure-vdso-6.4.0-150600.8.8.2 is installed"
+								"test_ref": "oval:org.opensuse.security:tst:2009952046",
+								"comment": "kernel-azure-vdso-6.4.0-150600.8.17.2 is installed"
 							},
 							{
 								"test_ref": "oval:org.opensuse.security:tst:2009769740",
@@ -929,8 +949,8 @@
 						"operator": "AND",
 						"criterions": [
 							{
-								"test_ref": "oval:org.opensuse.security:tst:2009879347",
-								"comment": "kernel-devel-azure-6.4.0-150600.8.8.2 is installed"
+								"test_ref": "oval:org.opensuse.security:tst:2009952047",
+								"comment": "kernel-devel-azure-6.4.0-150600.8.17.1 is installed"
 							},
 							{
 								"test_ref": "oval:org.opensuse.security:tst:2009623293",
@@ -942,8 +962,8 @@
 						"operator": "AND",
 						"criterions": [
 							{
-								"test_ref": "oval:org.opensuse.security:tst:2009881119",
-								"comment": "kernel-devel-rt-6.4.0-150600.10.5.1 is installed"
+								"test_ref": "oval:org.opensuse.security:tst:2009952056",
+								"comment": "kernel-devel-rt-6.4.0-150600.10.17.1 is installed"
 							},
 							{
 								"test_ref": "oval:org.opensuse.security:tst:2009342859",
@@ -1072,8 +1092,8 @@
 						"operator": "AND",
 						"criterions": [
 							{
-								"test_ref": "oval:org.opensuse.security:tst:2009881120",
-								"comment": "kernel-rt-6.4.0-150600.10.5.1 is installed"
+								"test_ref": "oval:org.opensuse.security:tst:2009952057",
+								"comment": "kernel-rt-6.4.0-150600.10.17.1 is installed"
 							},
 							{
 								"test_ref": "oval:org.opensuse.security:tst:2009342860",
@@ -1085,8 +1105,8 @@
 						"operator": "AND",
 						"criterions": [
 							{
-								"test_ref": "oval:org.opensuse.security:tst:2009881121",
-								"comment": "kernel-rt-devel-6.4.0-150600.10.5.1 is installed"
+								"test_ref": "oval:org.opensuse.security:tst:2009952058",
+								"comment": "kernel-rt-devel-6.4.0-150600.10.17.1 is installed"
 							},
 							{
 								"test_ref": "oval:org.opensuse.security:tst:2009342861",
@@ -1098,8 +1118,8 @@
 						"operator": "AND",
 						"criterions": [
 							{
-								"test_ref": "oval:org.opensuse.security:tst:2009881122",
-								"comment": "kernel-rt-extra-6.4.0-150600.10.5.1 is installed"
+								"test_ref": "oval:org.opensuse.security:tst:2009952059",
+								"comment": "kernel-rt-extra-6.4.0-150600.10.17.1 is installed"
 							},
 							{
 								"test_ref": "oval:org.opensuse.security:tst:2009342862",
@@ -1111,8 +1131,8 @@
 						"operator": "AND",
 						"criterions": [
 							{
-								"test_ref": "oval:org.opensuse.security:tst:2009881123",
-								"comment": "kernel-rt-livepatch-devel-6.4.0-150600.10.5.1 is installed"
+								"test_ref": "oval:org.opensuse.security:tst:2009952060",
+								"comment": "kernel-rt-livepatch-devel-6.4.0-150600.10.17.1 is installed"
 							},
 							{
 								"test_ref": "oval:org.opensuse.security:tst:2009623297",
@@ -1124,8 +1144,8 @@
 						"operator": "AND",
 						"criterions": [
 							{
-								"test_ref": "oval:org.opensuse.security:tst:2009881124",
-								"comment": "kernel-rt-optional-6.4.0-150600.10.5.1 is installed"
+								"test_ref": "oval:org.opensuse.security:tst:2009952061",
+								"comment": "kernel-rt-optional-6.4.0-150600.10.17.1 is installed"
 							},
 							{
 								"test_ref": "oval:org.opensuse.security:tst:2009771784",
@@ -1137,8 +1157,8 @@
 						"operator": "AND",
 						"criterions": [
 							{
-								"test_ref": "oval:org.opensuse.security:tst:2009881125",
-								"comment": "kernel-rt-vdso-6.4.0-150600.10.5.1 is installed"
+								"test_ref": "oval:org.opensuse.security:tst:2009952062",
+								"comment": "kernel-rt-vdso-6.4.0-150600.10.17.1 is installed"
 							},
 							{
 								"test_ref": "oval:org.opensuse.security:tst:2009771785",
@@ -1150,8 +1170,8 @@
 						"operator": "AND",
 						"criterions": [
 							{
-								"test_ref": "oval:org.opensuse.security:tst:2009881126",
-								"comment": "kernel-rt_debug-6.4.0-150600.10.5.1 is installed"
+								"test_ref": "oval:org.opensuse.security:tst:2009952063",
+								"comment": "kernel-rt_debug-6.4.0-150600.10.17.1 is installed"
 							},
 							{
 								"test_ref": "oval:org.opensuse.security:tst:2009342863",
@@ -1163,8 +1183,8 @@
 						"operator": "AND",
 						"criterions": [
 							{
-								"test_ref": "oval:org.opensuse.security:tst:2009881127",
-								"comment": "kernel-rt_debug-devel-6.4.0-150600.10.5.1 is installed"
+								"test_ref": "oval:org.opensuse.security:tst:2009952064",
+								"comment": "kernel-rt_debug-devel-6.4.0-150600.10.17.1 is installed"
 							},
 							{
 								"test_ref": "oval:org.opensuse.security:tst:2009342864",
@@ -1176,8 +1196,8 @@
 						"operator": "AND",
 						"criterions": [
 							{
-								"test_ref": "oval:org.opensuse.security:tst:2009881128",
-								"comment": "kernel-rt_debug-livepatch-devel-6.4.0-150600.10.5.1 is installed"
+								"test_ref": "oval:org.opensuse.security:tst:2009952065",
+								"comment": "kernel-rt_debug-livepatch-devel-6.4.0-150600.10.17.1 is installed"
 							},
 							{
 								"test_ref": "oval:org.opensuse.security:tst:2009623299",
@@ -1189,8 +1209,8 @@
 						"operator": "AND",
 						"criterions": [
 							{
-								"test_ref": "oval:org.opensuse.security:tst:2009881129",
-								"comment": "kernel-rt_debug-vdso-6.4.0-150600.10.5.1 is installed"
+								"test_ref": "oval:org.opensuse.security:tst:2009952066",
+								"comment": "kernel-rt_debug-vdso-6.4.0-150600.10.17.1 is installed"
 							},
 							{
 								"test_ref": "oval:org.opensuse.security:tst:2009771786",
@@ -1215,8 +1235,8 @@
 						"operator": "AND",
 						"criterions": [
 							{
-								"test_ref": "oval:org.opensuse.security:tst:2009879348",
-								"comment": "kernel-source-azure-6.4.0-150600.8.8.2 is installed"
+								"test_ref": "oval:org.opensuse.security:tst:2009952048",
+								"comment": "kernel-source-azure-6.4.0-150600.8.17.1 is installed"
 							},
 							{
 								"test_ref": "oval:org.opensuse.security:tst:2009623300",
@@ -1228,8 +1248,8 @@
 						"operator": "AND",
 						"criterions": [
 							{
-								"test_ref": "oval:org.opensuse.security:tst:2009881130",
-								"comment": "kernel-source-rt-6.4.0-150600.10.5.1 is installed"
+								"test_ref": "oval:org.opensuse.security:tst:2009952067",
+								"comment": "kernel-source-rt-6.4.0-150600.10.17.1 is installed"
 							},
 							{
 								"test_ref": "oval:org.opensuse.security:tst:2009342866",
@@ -1267,8 +1287,8 @@
 						"operator": "AND",
 						"criterions": [
 							{
-								"test_ref": "oval:org.opensuse.security:tst:2009879349",
-								"comment": "kernel-syms-azure-6.4.0-150600.8.8.1 is installed"
+								"test_ref": "oval:org.opensuse.security:tst:2009952049",
+								"comment": "kernel-syms-azure-6.4.0-150600.8.17.1 is installed"
 							},
 							{
 								"test_ref": "oval:org.opensuse.security:tst:2009623301",
@@ -1280,8 +1300,8 @@
 						"operator": "AND",
 						"criterions": [
 							{
-								"test_ref": "oval:org.opensuse.security:tst:2009881131",
-								"comment": "kernel-syms-rt-6.4.0-150600.10.5.1 is installed"
+								"test_ref": "oval:org.opensuse.security:tst:2009952068",
+								"comment": "kernel-syms-rt-6.4.0-150600.10.17.1 is installed"
 							},
 							{
 								"test_ref": "oval:org.opensuse.security:tst:2009342867",
@@ -1319,8 +1339,8 @@
 						"operator": "AND",
 						"criterions": [
 							{
-								"test_ref": "oval:org.opensuse.security:tst:2009881088",
-								"comment": "kselftests-kmp-azure-6.4.0-150600.8.8.2 is installed"
+								"test_ref": "oval:org.opensuse.security:tst:2009952050",
+								"comment": "kselftests-kmp-azure-6.4.0-150600.8.17.2 is installed"
 							},
 							{
 								"test_ref": "oval:org.opensuse.security:tst:2009623305",
@@ -1345,8 +1365,8 @@
 						"operator": "AND",
 						"criterions": [
 							{
-								"test_ref": "oval:org.opensuse.security:tst:2009881132",
-								"comment": "kselftests-kmp-rt-6.4.0-150600.10.5.1 is installed"
+								"test_ref": "oval:org.opensuse.security:tst:2009952069",
+								"comment": "kselftests-kmp-rt-6.4.0-150600.10.17.1 is installed"
 							},
 							{
 								"test_ref": "oval:org.opensuse.security:tst:2009342868",
@@ -1371,8 +1391,8 @@
 						"operator": "AND",
 						"criterions": [
 							{
-								"test_ref": "oval:org.opensuse.security:tst:2009881089",
-								"comment": "ocfs2-kmp-azure-6.4.0-150600.8.8.2 is installed"
+								"test_ref": "oval:org.opensuse.security:tst:2009952051",
+								"comment": "ocfs2-kmp-azure-6.4.0-150600.8.17.2 is installed"
 							},
 							{
 								"test_ref": "oval:org.opensuse.security:tst:2009623306",
@@ -1397,8 +1417,8 @@
 						"operator": "AND",
 						"criterions": [
 							{
-								"test_ref": "oval:org.opensuse.security:tst:2009881133",
-								"comment": "ocfs2-kmp-rt-6.4.0-150600.10.5.1 is installed"
+								"test_ref": "oval:org.opensuse.security:tst:2009952070",
+								"comment": "ocfs2-kmp-rt-6.4.0-150600.10.17.1 is installed"
 							},
 							{
 								"test_ref": "oval:org.opensuse.security:tst:2009342870",
@@ -1423,8 +1443,8 @@
 						"operator": "AND",
 						"criterions": [
 							{
-								"test_ref": "oval:org.opensuse.security:tst:2009881090",
-								"comment": "reiserfs-kmp-azure-6.4.0-150600.8.8.2 is installed"
+								"test_ref": "oval:org.opensuse.security:tst:2009952052",
+								"comment": "reiserfs-kmp-azure-6.4.0-150600.8.17.2 is installed"
 							},
 							{
 								"test_ref": "oval:org.opensuse.security:tst:2009623308",
@@ -1449,8 +1469,8 @@
 						"operator": "AND",
 						"criterions": [
 							{
-								"test_ref": "oval:org.opensuse.security:tst:2009881134",
-								"comment": "reiserfs-kmp-rt-6.4.0-150600.10.5.1 is installed"
+								"test_ref": "oval:org.opensuse.security:tst:2009952071",
+								"comment": "reiserfs-kmp-rt-6.4.0-150600.10.17.1 is installed"
 							},
 							{
 								"test_ref": "oval:org.opensuse.security:tst:2009342872",

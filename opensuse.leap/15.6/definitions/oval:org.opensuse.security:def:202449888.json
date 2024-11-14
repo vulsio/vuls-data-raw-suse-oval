@@ -20,6 +20,16 @@
 				"ref_id": "SUSE CVE-2024-49888",
 				"ref_url": "https://www.suse.com/security/cve/CVE-2024-49888",
 				"source": "SUSE CVE"
+			},
+			{
+				"ref_id": "SUSE-SU-2024:3984-1",
+				"ref_url": "https://lists.suse.com/pipermail/sle-security-updates/2024-November/019815.html",
+				"source": "SUSE-SU"
+			},
+			{
+				"ref_id": "SUSE-SU-2024:3986-1",
+				"ref_url": "https://lists.suse.com/pipermail/sle-security-updates/2024-November/019813.html",
+				"source": "SUSE-SU"
 			}
 		],
 		"description": "\n    In the Linux kernel, the following vulnerability has been resolved:\n\nbpf: Fix a sdiv overflow issue\n\nZac Ecob reported a problem where a bpf program may cause kernel crash due\nto the following error:\n  Oops: divide error: 0000 [#1] PREEMPT SMP KASAN PTI\n\nThe failure is due to the below signed divide:\n  LLONG_MIN/-1 where LLONG_MIN equals to -9,223,372,036,854,775,808.\nLLONG_MIN/-1 is supposed to give a positive number 9,223,372,036,854,775,808,\nbut it is impossible since for 64-bit system, the maximum positive\nnumber is 9,223,372,036,854,775,807. On x86_64, LLONG_MIN/-1 will\ncause a kernel exception. On arm64, the result for LLONG_MIN/-1 is\nLLONG_MIN.\n\nFurther investigation found all the following sdiv/smod cases may trigger\nan exception when bpf program is running on x86_64 platform:\n  - LLONG_MIN/-1 for 64bit operation\n  - INT_MIN/-1 for 32bit operation\n  - LLONG_MIN%-1 for 64bit operation\n  - INT_MIN%-1 for 32bit operation\nwhere -1 can be an immediate or in a register.\n\nOn arm64, there are no exceptions:\n  - LLONG_MIN/-1 = LLONG_MIN\n  - INT_MIN/-1 = INT_MIN\n  - LLONG_MIN%-1 = 0\n  - INT_MIN%-1 = 0\nwhere -1 can be an immediate or in a register.\n\nInsn patching is needed to handle the above cases and the patched codes\nproduced results aligned with above arm64 result. The below are pseudo\ncodes to handle sdiv/smod exceptions including both divisor -1 and divisor 0\nand the divisor is stored in a register.\n\nsdiv:\n      tmp = rX\n      tmp += 1 /* [-1, 0] -> [0, 1]\n      if tmp >(unsigned) 1 goto L2\n      if tmp == 0 goto L1\n      rY = 0\n  L1:\n      rY = -rY;\n      goto L3\n  L2:\n      rY /= rX\n  L3:\n\nsmod:\n      tmp = rX\n      tmp += 1 /* [-1, 0] -> [0, 1]\n      if tmp >(unsigned) 1 goto L1\n      if tmp == 1 (is64 ? goto L2 : goto L3)\n      rY = 0;\n      goto L2\n  L1:\n      rY %= rX\n  L2:\n      goto L4  // only when !is64\n  L3:\n      wY = wY  // only when !is64\n  L4:\n\n  [1] https://lore.kernel.org/bpf/tPJLTEh7S_DxFEqAI2Ji5MBSoZVg7_G-Py2iaZpAaWtM961fFTWtsnlzwvTbzBzaUzwQAoNATXKUlt0LZOFgnDcIyKCswAnAGdUF3LBrhGQ=@protonmail.com/\n    ",
@@ -35,7 +45,9 @@
 				},
 				{
 					"text": "CVE-2024-49888 at NVD",
-					"href": "https://nvd.nist.gov/vuln/detail/CVE-2024-49888"
+					"href": "https://nvd.nist.gov/vuln/detail/CVE-2024-49888",
+					"impact": "medium",
+					"cvss3": "5.5/CVSS:3.1/AV:L/AC:L/PR:L/UI:N/S:U/C:N/I:N/A:H"
 				}
 			],
 			"bugzilla": [
@@ -48,7 +60,7 @@
 				"date": "2024-10-24"
 			},
 			"updated": {
-				"date": "2024-11-08"
+				"date": "2024-11-14"
 			},
 			"affected_cpe_list": {
 				"cpe": [
@@ -62,6 +74,450 @@
 		"criterias": [
 			{
 				"operator": "OR",
+				"criterias": [
+					{
+						"operator": "AND",
+						"criterions": [
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009952038",
+								"comment": "cluster-md-kmp-azure-6.4.0-150600.8.17.2 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009623277",
+								"comment": "cluster-md-kmp-azure is signed with openSUSE key"
+							}
+						]
+					},
+					{
+						"operator": "AND",
+						"criterions": [
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009952053",
+								"comment": "cluster-md-kmp-rt-6.4.0-150600.10.17.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009342853",
+								"comment": "cluster-md-kmp-rt is signed with openSUSE key"
+							}
+						]
+					},
+					{
+						"operator": "AND",
+						"criterions": [
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009952039",
+								"comment": "dlm-kmp-azure-6.4.0-150600.8.17.2 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009623279",
+								"comment": "dlm-kmp-azure is signed with openSUSE key"
+							}
+						]
+					},
+					{
+						"operator": "AND",
+						"criterions": [
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009952054",
+								"comment": "dlm-kmp-rt-6.4.0-150600.10.17.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009342855",
+								"comment": "dlm-kmp-rt is signed with openSUSE key"
+							}
+						]
+					},
+					{
+						"operator": "AND",
+						"criterions": [
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009952040",
+								"comment": "gfs2-kmp-azure-6.4.0-150600.8.17.2 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009623281",
+								"comment": "gfs2-kmp-azure is signed with openSUSE key"
+							}
+						]
+					},
+					{
+						"operator": "AND",
+						"criterions": [
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009952055",
+								"comment": "gfs2-kmp-rt-6.4.0-150600.10.17.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009342857",
+								"comment": "gfs2-kmp-rt is signed with openSUSE key"
+							}
+						]
+					},
+					{
+						"operator": "AND",
+						"criterions": [
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009952041",
+								"comment": "kernel-azure-6.4.0-150600.8.17.2 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009623283",
+								"comment": "kernel-azure is signed with openSUSE key"
+							}
+						]
+					},
+					{
+						"operator": "AND",
+						"criterions": [
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009952042",
+								"comment": "kernel-azure-devel-6.4.0-150600.8.17.2 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009623285",
+								"comment": "kernel-azure-devel is signed with openSUSE key"
+							}
+						]
+					},
+					{
+						"operator": "AND",
+						"criterions": [
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009952043",
+								"comment": "kernel-azure-extra-6.4.0-150600.8.17.2 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009623286",
+								"comment": "kernel-azure-extra is signed with openSUSE key"
+							}
+						]
+					},
+					{
+						"operator": "AND",
+						"criterions": [
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009952044",
+								"comment": "kernel-azure-livepatch-devel-6.4.0-150600.8.17.2 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009623287",
+								"comment": "kernel-azure-livepatch-devel is signed with openSUSE key"
+							}
+						]
+					},
+					{
+						"operator": "AND",
+						"criterions": [
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009952045",
+								"comment": "kernel-azure-optional-6.4.0-150600.8.17.2 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009623427",
+								"comment": "kernel-azure-optional is signed with openSUSE key"
+							}
+						]
+					},
+					{
+						"operator": "AND",
+						"criterions": [
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009952046",
+								"comment": "kernel-azure-vdso-6.4.0-150600.8.17.2 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009769740",
+								"comment": "kernel-azure-vdso is signed with openSUSE key"
+							}
+						]
+					},
+					{
+						"operator": "AND",
+						"criterions": [
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009952047",
+								"comment": "kernel-devel-azure-6.4.0-150600.8.17.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009623293",
+								"comment": "kernel-devel-azure is signed with openSUSE key"
+							}
+						]
+					},
+					{
+						"operator": "AND",
+						"criterions": [
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009952056",
+								"comment": "kernel-devel-rt-6.4.0-150600.10.17.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009342859",
+								"comment": "kernel-devel-rt is signed with openSUSE key"
+							}
+						]
+					},
+					{
+						"operator": "AND",
+						"criterions": [
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009952057",
+								"comment": "kernel-rt-6.4.0-150600.10.17.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009342860",
+								"comment": "kernel-rt is signed with openSUSE key"
+							}
+						]
+					},
+					{
+						"operator": "AND",
+						"criterions": [
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009952058",
+								"comment": "kernel-rt-devel-6.4.0-150600.10.17.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009342861",
+								"comment": "kernel-rt-devel is signed with openSUSE key"
+							}
+						]
+					},
+					{
+						"operator": "AND",
+						"criterions": [
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009952059",
+								"comment": "kernel-rt-extra-6.4.0-150600.10.17.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009342862",
+								"comment": "kernel-rt-extra is signed with openSUSE key"
+							}
+						]
+					},
+					{
+						"operator": "AND",
+						"criterions": [
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009952060",
+								"comment": "kernel-rt-livepatch-devel-6.4.0-150600.10.17.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009623297",
+								"comment": "kernel-rt-livepatch-devel is signed with openSUSE key"
+							}
+						]
+					},
+					{
+						"operator": "AND",
+						"criterions": [
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009952061",
+								"comment": "kernel-rt-optional-6.4.0-150600.10.17.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009771784",
+								"comment": "kernel-rt-optional is signed with openSUSE key"
+							}
+						]
+					},
+					{
+						"operator": "AND",
+						"criterions": [
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009952062",
+								"comment": "kernel-rt-vdso-6.4.0-150600.10.17.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009771785",
+								"comment": "kernel-rt-vdso is signed with openSUSE key"
+							}
+						]
+					},
+					{
+						"operator": "AND",
+						"criterions": [
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009952063",
+								"comment": "kernel-rt_debug-6.4.0-150600.10.17.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009342863",
+								"comment": "kernel-rt_debug is signed with openSUSE key"
+							}
+						]
+					},
+					{
+						"operator": "AND",
+						"criterions": [
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009952064",
+								"comment": "kernel-rt_debug-devel-6.4.0-150600.10.17.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009342864",
+								"comment": "kernel-rt_debug-devel is signed with openSUSE key"
+							}
+						]
+					},
+					{
+						"operator": "AND",
+						"criterions": [
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009952065",
+								"comment": "kernel-rt_debug-livepatch-devel-6.4.0-150600.10.17.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009623299",
+								"comment": "kernel-rt_debug-livepatch-devel is signed with openSUSE key"
+							}
+						]
+					},
+					{
+						"operator": "AND",
+						"criterions": [
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009952066",
+								"comment": "kernel-rt_debug-vdso-6.4.0-150600.10.17.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009771786",
+								"comment": "kernel-rt_debug-vdso is signed with openSUSE key"
+							}
+						]
+					},
+					{
+						"operator": "AND",
+						"criterions": [
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009952048",
+								"comment": "kernel-source-azure-6.4.0-150600.8.17.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009623300",
+								"comment": "kernel-source-azure is signed with openSUSE key"
+							}
+						]
+					},
+					{
+						"operator": "AND",
+						"criterions": [
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009952067",
+								"comment": "kernel-source-rt-6.4.0-150600.10.17.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009342866",
+								"comment": "kernel-source-rt is signed with openSUSE key"
+							}
+						]
+					},
+					{
+						"operator": "AND",
+						"criterions": [
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009952049",
+								"comment": "kernel-syms-azure-6.4.0-150600.8.17.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009623301",
+								"comment": "kernel-syms-azure is signed with openSUSE key"
+							}
+						]
+					},
+					{
+						"operator": "AND",
+						"criterions": [
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009952068",
+								"comment": "kernel-syms-rt-6.4.0-150600.10.17.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009342867",
+								"comment": "kernel-syms-rt is signed with openSUSE key"
+							}
+						]
+					},
+					{
+						"operator": "AND",
+						"criterions": [
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009952050",
+								"comment": "kselftests-kmp-azure-6.4.0-150600.8.17.2 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009623305",
+								"comment": "kselftests-kmp-azure is signed with openSUSE key"
+							}
+						]
+					},
+					{
+						"operator": "AND",
+						"criterions": [
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009952069",
+								"comment": "kselftests-kmp-rt-6.4.0-150600.10.17.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009342868",
+								"comment": "kselftests-kmp-rt is signed with openSUSE key"
+							}
+						]
+					},
+					{
+						"operator": "AND",
+						"criterions": [
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009952051",
+								"comment": "ocfs2-kmp-azure-6.4.0-150600.8.17.2 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009623306",
+								"comment": "ocfs2-kmp-azure is signed with openSUSE key"
+							}
+						]
+					},
+					{
+						"operator": "AND",
+						"criterions": [
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009952070",
+								"comment": "ocfs2-kmp-rt-6.4.0-150600.10.17.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009342870",
+								"comment": "ocfs2-kmp-rt is signed with openSUSE key"
+							}
+						]
+					},
+					{
+						"operator": "AND",
+						"criterions": [
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009952052",
+								"comment": "reiserfs-kmp-azure-6.4.0-150600.8.17.2 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009623308",
+								"comment": "reiserfs-kmp-azure is signed with openSUSE key"
+							}
+						]
+					},
+					{
+						"operator": "AND",
+						"criterions": [
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009952071",
+								"comment": "reiserfs-kmp-rt-6.4.0-150600.10.17.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009342872",
+								"comment": "reiserfs-kmp-rt is signed with openSUSE key"
+							}
+						]
+					}
+				],
 				"criterions": [
 					{
 						"test_ref": "oval:org.opensuse.security:tst:2009729794",
@@ -130,22 +586,6 @@
 					{
 						"test_ref": "oval:org.opensuse.security:tst:2009870470",
 						"comment": "kernel-source-vanilla is not affected"
-					},
-					{
-						"test_ref": "oval:org.opensuse.security:tst:2009340306",
-						"comment": "kernel-devel-azure is not affected"
-					},
-					{
-						"test_ref": "oval:org.opensuse.security:tst:2009340305",
-						"comment": "kernel-source-azure is not affected"
-					},
-					{
-						"test_ref": "oval:org.opensuse.security:tst:2009728711",
-						"comment": "kernel-devel-rt is not affected"
-					},
-					{
-						"test_ref": "oval:org.opensuse.security:tst:2009728712",
-						"comment": "kernel-source-rt is not affected"
 					}
 				]
 			}
