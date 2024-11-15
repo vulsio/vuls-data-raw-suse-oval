@@ -65,6 +65,21 @@
 				"ref_id": "SUSE-SU-2024:3591-1",
 				"ref_url": "https://lists.suse.com/pipermail/sle-security-updates/2024-October/019587.html",
 				"source": "SUSE-SU"
+			},
+			{
+				"ref_id": "SUSE-SU-2024:3984-1",
+				"ref_url": "https://lists.suse.com/pipermail/sle-security-updates/2024-November/019815.html",
+				"source": "SUSE-SU"
+			},
+			{
+				"ref_id": "SUSE-SU-2024:3985-1",
+				"ref_url": "https://lists.suse.com/pipermail/sle-security-updates/2024-November/019814.html",
+				"source": "SUSE-SU"
+			},
+			{
+				"ref_id": "SUSE-SU-2024:3986-1",
+				"ref_url": "https://lists.suse.com/pipermail/sle-security-updates/2024-November/019813.html",
+				"source": "SUSE-SU"
 			}
 		],
 		"description": "\n    In the Linux kernel, the following vulnerability has been resolved:\n\nice: Add netif_device_attach/detach into PF reset flow\n\nEthtool callbacks can be executed while reset is in progress and try to\naccess deleted resources, e.g. getting coalesce settings can result in a\nNULL pointer dereference seen below.\n\nReproduction steps:\nOnce the driver is fully initialized, trigger reset:\n\t# echo 1 > /sys/class/net/<interface>/device/reset\nwhen reset is in progress try to get coalesce settings using ethtool:\n\t# ethtool -c <interface>\n\nBUG: kernel NULL pointer dereference, address: 0000000000000020\nPGD 0 P4D 0\nOops: Oops: 0000 [#1] PREEMPT SMP PTI\nCPU: 11 PID: 19713 Comm: ethtool Tainted: G S                 6.10.0-rc7+ #7\nRIP: 0010:ice_get_q_coalesce+0x2e/0xa0 [ice]\nRSP: 0018:ffffbab1e9bcf6a8 EFLAGS: 00010206\nRAX: 000000000000000c RBX: ffff94512305b028 RCX: 0000000000000000\nRDX: 0000000000000000 RSI: ffff9451c3f2e588 RDI: ffff9451c3f2e588\nRBP: 0000000000000000 R08: 0000000000000000 R09: 0000000000000000\nR10: ffff9451c3f2e580 R11: 000000000000001f R12: ffff945121fa9000\nR13: ffffbab1e9bcf760 R14: 0000000000000013 R15: ffffffff9e65dd40\nFS:  00007faee5fbe740(0000) GS:ffff94546fd80000(0000) knlGS:0000000000000000\nCS:  0010 DS: 0000 ES: 0000 CR0: 0000000080050033\nCR2: 0000000000000020 CR3: 0000000106c2e005 CR4: 00000000001706f0\nCall Trace:\n<TASK>\nice_get_coalesce+0x17/0x30 [ice]\ncoalesce_prepare_data+0x61/0x80\nethnl_default_doit+0xde/0x340\ngenl_family_rcv_msg_doit+0xf2/0x150\ngenl_rcv_msg+0x1b3/0x2c0\nnetlink_rcv_skb+0x5b/0x110\ngenl_rcv+0x28/0x40\nnetlink_unicast+0x19c/0x290\nnetlink_sendmsg+0x222/0x490\n__sys_sendto+0x1df/0x1f0\n__x64_sys_sendto+0x24/0x30\ndo_syscall_64+0x82/0x160\nentry_SYSCALL_64_after_hwframe+0x76/0x7e\nRIP: 0033:0x7faee60d8e27\n\nCalling netif_device_detach() before reset makes the net core not call\nthe driver when ethtool command is issued, the attempt to execute an\nethtool command during reset will result in the following message:\n\n    netlink error: No such device\n\ninstead of NULL pointer dereference. Once reset is done and\nice_rebuild() is executing, the netif_device_attach() is called to allow\nfor ethtool operations to occur again in a safe manner.\n    ",
@@ -95,7 +110,7 @@
 				"date": "2024-09-20"
 			},
 			"updated": {
-				"date": "2024-11-12"
+				"date": "2024-11-15"
 			},
 			"affected_cpe_list": {
 				"cpe": [
@@ -380,45 +395,6 @@
 						"operator": "OR",
 						"criterions": [
 							{
-								"test_ref": "oval:org.opensuse.security:tst:2009856172",
-								"comment": "SUSE Linux Enterprise High Performance Computing 15 SP6 is installed"
-							},
-							{
-								"test_ref": "oval:org.opensuse.security:tst:2009856320",
-								"comment": "SUSE Linux Enterprise Module for Public Cloud 15 SP6 is installed"
-							},
-							{
-								"test_ref": "oval:org.opensuse.security:tst:2009856174",
-								"comment": "SUSE Linux Enterprise Server 15 SP6 is installed"
-							},
-							{
-								"test_ref": "oval:org.opensuse.security:tst:2009856175",
-								"comment": "SUSE Linux Enterprise Server for SAP Applications 15 SP6 is installed"
-							}
-						]
-					},
-					{
-						"operator": "OR",
-						"criterions": [
-							{
-								"test_ref": "oval:org.opensuse.security:tst:2009340777",
-								"comment": "kernel-devel-azure is affected"
-							},
-							{
-								"test_ref": "oval:org.opensuse.security:tst:2009340767",
-								"comment": "kernel-source-azure is affected"
-							}
-						]
-					}
-				]
-			},
-			{
-				"operator": "AND",
-				"criterias": [
-					{
-						"operator": "OR",
-						"criterions": [
-							{
 								"test_ref": "oval:org.opensuse.security:tst:2009288462",
 								"comment": "SUSE Linux Enterprise Live Patching 15 SP2 is installed"
 							},
@@ -429,14 +405,6 @@
 							{
 								"test_ref": "oval:org.opensuse.security:tst:2009698985",
 								"comment": "SUSE Linux Enterprise Live Patching 15 SP4 is installed"
-							},
-							{
-								"test_ref": "oval:org.opensuse.security:tst:2009764853",
-								"comment": "SUSE Linux Enterprise Live Patching 15 SP5 is installed"
-							},
-							{
-								"test_ref": "oval:org.opensuse.security:tst:2009857543",
-								"comment": "SUSE Linux Enterprise Live Patching 15 SP6 is installed"
 							}
 						]
 					},
@@ -507,6 +475,121 @@
 								"comment": "kernel-syms-azure-5.14.21-150500.33.69.1 is installed"
 							}
 						]
+					}
+				]
+			},
+			{
+				"operator": "AND",
+				"criterias": [
+					{
+						"operator": "OR",
+						"criterions": [
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009856172",
+								"comment": "SUSE Linux Enterprise High Performance Computing 15 SP6 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009856320",
+								"comment": "SUSE Linux Enterprise Module for Public Cloud 15 SP6 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009856174",
+								"comment": "SUSE Linux Enterprise Server 15 SP6 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009856175",
+								"comment": "SUSE Linux Enterprise Server for SAP Applications 15 SP6 is installed"
+							}
+						]
+					},
+					{
+						"operator": "OR",
+						"criterions": [
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009952041",
+								"comment": "kernel-azure-6.4.0-150600.8.17.2 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009952042",
+								"comment": "kernel-azure-devel-6.4.0-150600.8.17.2 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009952047",
+								"comment": "kernel-devel-azure-6.4.0-150600.8.17.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009952048",
+								"comment": "kernel-source-azure-6.4.0-150600.8.17.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009952049",
+								"comment": "kernel-syms-azure-6.4.0-150600.8.17.1 is installed"
+							}
+						]
+					}
+				]
+			},
+			{
+				"operator": "AND",
+				"criterias": [
+					{
+						"operator": "OR",
+						"criterions": [
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009952072",
+								"comment": "kernel-livepatch-5_14_21-150500_13_76-rt-1-150500.11.3.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009764854",
+								"comment": "kernel-default-livepatch is affected"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009764855",
+								"comment": "kernel-default-livepatch-devel is affected"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009333995",
+								"comment": "kernel-source is affected"
+							}
+						]
+					}
+				],
+				"criterions": [
+					{
+						"test_ref": "oval:org.opensuse.security:tst:2009764853",
+						"comment": "SUSE Linux Enterprise Live Patching 15 SP5 is installed"
+					}
+				]
+			},
+			{
+				"operator": "AND",
+				"criterias": [
+					{
+						"operator": "OR",
+						"criterions": [
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009952073",
+								"comment": "kernel-livepatch-6_4_0-150600_10_17-rt-1-150600.1.3.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009764854",
+								"comment": "kernel-default-livepatch is affected"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009764855",
+								"comment": "kernel-default-livepatch-devel is affected"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009333995",
+								"comment": "kernel-source is affected"
+							}
+						]
+					}
+				],
+				"criterions": [
+					{
+						"test_ref": "oval:org.opensuse.security:tst:2009857543",
+						"comment": "SUSE Linux Enterprise Live Patching 15 SP6 is installed"
 					}
 				]
 			}

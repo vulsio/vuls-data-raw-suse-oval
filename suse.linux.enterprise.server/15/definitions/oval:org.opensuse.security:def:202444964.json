@@ -46,6 +46,16 @@
 				"ref_id": "SUSE CVE-2024-44964",
 				"ref_url": "https://www.suse.com/security/cve/CVE-2024-44964",
 				"source": "SUSE CVE"
+			},
+			{
+				"ref_id": "SUSE-SU-2024:3984-1",
+				"ref_url": "https://lists.suse.com/pipermail/sle-security-updates/2024-November/019815.html",
+				"source": "SUSE-SU"
+			},
+			{
+				"ref_id": "SUSE-SU-2024:3986-1",
+				"ref_url": "https://lists.suse.com/pipermail/sle-security-updates/2024-November/019813.html",
+				"source": "SUSE-SU"
 			}
 		],
 		"description": "\n    In the Linux kernel, the following vulnerability has been resolved:\n\nidpf: fix memory leaks and crashes while performing a soft reset\n\nThe second tagged commit introduced a UAF, as it removed restoring\nq_vector->vport pointers after reinitializating the structures.\nThis is due to that all queue allocation functions are performed here\nwith the new temporary vport structure and those functions rewrite\nthe backpointers to the vport. Then, this new struct is freed and\nthe pointers start leading to nowhere.\n\nBut generally speaking, the current logic is very fragile. It claims\nto be more reliable when the system is low on memory, but in fact, it\nconsumes two times more memory as at the moment of running this\nfunction, there are two vports allocated with their queues and vectors.\nMoreover, it claims to prevent the driver from running into \"bad state\",\nbut in fact, any error during the rebuild leaves the old vport in the\npartially allocated state.\nFinally, if the interface is down when the function is called, it always\nallocates a new queue set, but when the user decides to enable the\ninterface later on, vport_open() allocates them once again, IOW there's\na clear memory leak here.\n\nJust don't allocate a new queue set when performing a reset, that solves\ncrashes and memory leaks. Readd the old queue number and reopen the\ninterface on rollback - that solves limbo states when the device is left\ndisabled and/or without HW queues enabled.\n    ",
@@ -76,7 +86,7 @@
 				"date": "2024-09-06"
 			},
 			"updated": {
-				"date": "2024-10-11"
+				"date": "2024-11-15"
 			},
 			"affected_cpe_list": {
 				"cpe": [
@@ -412,32 +422,16 @@
 								"comment": "SUSE Linux Enterprise High Performance Computing 15 SP5 is installed"
 							},
 							{
-								"test_ref": "oval:org.opensuse.security:tst:2009856172",
-								"comment": "SUSE Linux Enterprise High Performance Computing 15 SP6 is installed"
-							},
-							{
 								"test_ref": "oval:org.opensuse.security:tst:2009762868",
 								"comment": "SUSE Linux Enterprise Module for Public Cloud 15 SP5 is installed"
-							},
-							{
-								"test_ref": "oval:org.opensuse.security:tst:2009856320",
-								"comment": "SUSE Linux Enterprise Module for Public Cloud 15 SP6 is installed"
 							},
 							{
 								"test_ref": "oval:org.opensuse.security:tst:2009759901",
 								"comment": "SUSE Linux Enterprise Server 15 SP5 is installed"
 							},
 							{
-								"test_ref": "oval:org.opensuse.security:tst:2009856174",
-								"comment": "SUSE Linux Enterprise Server 15 SP6 is installed"
-							},
-							{
 								"test_ref": "oval:org.opensuse.security:tst:2009759902",
 								"comment": "SUSE Linux Enterprise Server for SAP Applications 15 SP5 is installed"
-							},
-							{
-								"test_ref": "oval:org.opensuse.security:tst:2009856175",
-								"comment": "SUSE Linux Enterprise Server for SAP Applications 15 SP6 is installed"
 							}
 						]
 					},
@@ -504,10 +498,6 @@
 							{
 								"test_ref": "oval:org.opensuse.security:tst:2009764853",
 								"comment": "SUSE Linux Enterprise Live Patching 15 SP5 is installed"
-							},
-							{
-								"test_ref": "oval:org.opensuse.security:tst:2009857543",
-								"comment": "SUSE Linux Enterprise Live Patching 15 SP6 is installed"
 							}
 						]
 					},
@@ -527,6 +517,89 @@
 								"comment": "kernel-source is affected"
 							}
 						]
+					}
+				]
+			},
+			{
+				"operator": "AND",
+				"criterias": [
+					{
+						"operator": "OR",
+						"criterions": [
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009856172",
+								"comment": "SUSE Linux Enterprise High Performance Computing 15 SP6 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009856320",
+								"comment": "SUSE Linux Enterprise Module for Public Cloud 15 SP6 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009856174",
+								"comment": "SUSE Linux Enterprise Server 15 SP6 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009856175",
+								"comment": "SUSE Linux Enterprise Server for SAP Applications 15 SP6 is installed"
+							}
+						]
+					},
+					{
+						"operator": "OR",
+						"criterions": [
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009952041",
+								"comment": "kernel-azure-6.4.0-150600.8.17.2 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009952042",
+								"comment": "kernel-azure-devel-6.4.0-150600.8.17.2 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009952047",
+								"comment": "kernel-devel-azure-6.4.0-150600.8.17.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009952048",
+								"comment": "kernel-source-azure-6.4.0-150600.8.17.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009952049",
+								"comment": "kernel-syms-azure-6.4.0-150600.8.17.1 is installed"
+							}
+						]
+					}
+				]
+			},
+			{
+				"operator": "AND",
+				"criterias": [
+					{
+						"operator": "OR",
+						"criterions": [
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009952073",
+								"comment": "kernel-livepatch-6_4_0-150600_10_17-rt-1-150600.1.3.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009764854",
+								"comment": "kernel-default-livepatch is affected"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009764855",
+								"comment": "kernel-default-livepatch-devel is affected"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009333995",
+								"comment": "kernel-source is affected"
+							}
+						]
+					}
+				],
+				"criterions": [
+					{
+						"test_ref": "oval:org.opensuse.security:tst:2009857543",
+						"comment": "SUSE Linux Enterprise Live Patching 15 SP6 is installed"
 					}
 				]
 			}

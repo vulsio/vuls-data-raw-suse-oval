@@ -1,0 +1,106 @@
+{
+	"id": "oval:org.opensuse.security:def:202450035",
+	"version": "1",
+	"class": "vulnerability",
+	"metadata": {
+		"title": "CVE-2024-50035",
+		"affected": {
+			"family": "unix",
+			"platform": [
+				"openSUSE Leap Micro 5.5"
+			]
+		},
+		"reference": [
+			{
+				"ref_id": "Mitre CVE-2024-50035",
+				"ref_url": "https://cve.mitre.org/cgi-bin/cvename.cgi?name=CVE-2024-50035",
+				"source": "CVE"
+			},
+			{
+				"ref_id": "SUSE CVE-2024-50035",
+				"ref_url": "https://www.suse.com/security/cve/CVE-2024-50035",
+				"source": "SUSE CVE"
+			},
+			{
+				"ref_id": "SUSE-SU-2024:3983-1",
+				"ref_url": "https://lists.suse.com/pipermail/sle-security-updates/2024-November/019816.html",
+				"source": "SUSE-SU"
+			},
+			{
+				"ref_id": "SUSE-SU-2024:3984-1",
+				"ref_url": "https://lists.suse.com/pipermail/sle-security-updates/2024-November/019815.html",
+				"source": "SUSE-SU"
+			},
+			{
+				"ref_id": "SUSE-SU-2024:3985-1",
+				"ref_url": "https://lists.suse.com/pipermail/sle-security-updates/2024-November/019814.html",
+				"source": "SUSE-SU"
+			},
+			{
+				"ref_id": "SUSE-SU-2024:3986-1",
+				"ref_url": "https://lists.suse.com/pipermail/sle-security-updates/2024-November/019813.html",
+				"source": "SUSE-SU"
+			}
+		],
+		"description": "\n    In the Linux kernel, the following vulnerability has been resolved:\n\nppp: fix ppp_async_encode() illegal access\n\nsyzbot reported an issue in ppp_async_encode() [1]\n\nIn this case, pppoe_sendmsg() is called with a zero size.\nThen ppp_async_encode() is called with an empty skb.\n\nBUG: KMSAN: uninit-value in ppp_async_encode drivers/net/ppp/ppp_async.c:545 [inline]\n BUG: KMSAN: uninit-value in ppp_async_push+0xb4f/0x2660 drivers/net/ppp/ppp_async.c:675\n  ppp_async_encode drivers/net/ppp/ppp_async.c:545 [inline]\n  ppp_async_push+0xb4f/0x2660 drivers/net/ppp/ppp_async.c:675\n  ppp_async_send+0x130/0x1b0 drivers/net/ppp/ppp_async.c:634\n  ppp_channel_bridge_input drivers/net/ppp/ppp_generic.c:2280 [inline]\n  ppp_input+0x1f1/0xe60 drivers/net/ppp/ppp_generic.c:2304\n  pppoe_rcv_core+0x1d3/0x720 drivers/net/ppp/pppoe.c:379\n  sk_backlog_rcv+0x13b/0x420 include/net/sock.h:1113\n  __release_sock+0x1da/0x330 net/core/sock.c:3072\n  release_sock+0x6b/0x250 net/core/sock.c:3626\n  pppoe_sendmsg+0x2b8/0xb90 drivers/net/ppp/pppoe.c:903\n  sock_sendmsg_nosec net/socket.c:729 [inline]\n  __sock_sendmsg+0x30f/0x380 net/socket.c:744\n  ____sys_sendmsg+0x903/0xb60 net/socket.c:2602\n  ___sys_sendmsg+0x28d/0x3c0 net/socket.c:2656\n  __sys_sendmmsg+0x3c1/0x960 net/socket.c:2742\n  __do_sys_sendmmsg net/socket.c:2771 [inline]\n  __se_sys_sendmmsg net/socket.c:2768 [inline]\n  __x64_sys_sendmmsg+0xbc/0x120 net/socket.c:2768\n  x64_sys_call+0xb6e/0x3ba0 arch/x86/include/generated/asm/syscalls_64.h:308\n  do_syscall_x64 arch/x86/entry/common.c:52 [inline]\n  do_syscall_64+0xcd/0x1e0 arch/x86/entry/common.c:83\n entry_SYSCALL_64_after_hwframe+0x77/0x7f\n\nUninit was created at:\n  slab_post_alloc_hook mm/slub.c:4092 [inline]\n  slab_alloc_node mm/slub.c:4135 [inline]\n  kmem_cache_alloc_node_noprof+0x6bf/0xb80 mm/slub.c:4187\n  kmalloc_reserve+0x13d/0x4a0 net/core/skbuff.c:587\n  __alloc_skb+0x363/0x7b0 net/core/skbuff.c:678\n  alloc_skb include/linux/skbuff.h:1322 [inline]\n  sock_wmalloc+0xfe/0x1a0 net/core/sock.c:2732\n  pppoe_sendmsg+0x3a7/0xb90 drivers/net/ppp/pppoe.c:867\n  sock_sendmsg_nosec net/socket.c:729 [inline]\n  __sock_sendmsg+0x30f/0x380 net/socket.c:744\n  ____sys_sendmsg+0x903/0xb60 net/socket.c:2602\n  ___sys_sendmsg+0x28d/0x3c0 net/socket.c:2656\n  __sys_sendmmsg+0x3c1/0x960 net/socket.c:2742\n  __do_sys_sendmmsg net/socket.c:2771 [inline]\n  __se_sys_sendmmsg net/socket.c:2768 [inline]\n  __x64_sys_sendmmsg+0xbc/0x120 net/socket.c:2768\n  x64_sys_call+0xb6e/0x3ba0 arch/x86/include/generated/asm/syscalls_64.h:308\n  do_syscall_x64 arch/x86/entry/common.c:52 [inline]\n  do_syscall_64+0xcd/0x1e0 arch/x86/entry/common.c:83\n entry_SYSCALL_64_after_hwframe+0x77/0x7f\n\nCPU: 1 UID: 0 PID: 5411 Comm: syz.1.14 Not tainted 6.12.0-rc1-syzkaller-00165-g360c1f1f24c6 #0\nHardware name: Google Google Compute Engine/Google Compute Engine, BIOS Google 09/13/2024\n    ",
+		"advisory": {
+			"from": "security@suse.de",
+			"severity": "Moderate",
+			"cve": [
+				{
+					"text": "CVE-2024-50035 at SUSE",
+					"href": "https://www.suse.com/security/cve/CVE-2024-50035/",
+					"impact": "medium",
+					"cvss3": "6.6/CVSS:3.1/AV:L/AC:L/PR:L/UI:N/S:U/C:L/I:L/A:H"
+				},
+				{
+					"text": "CVE-2024-50035 at NVD",
+					"href": "https://nvd.nist.gov/vuln/detail/CVE-2024-50035",
+					"impact": "high",
+					"cvss3": "7.1/CVSS:3.1/AV:L/AC:L/PR:L/UI:N/S:U/C:H/I:N/A:H"
+				}
+			],
+			"bugzilla": [
+				{
+					"text": "SUSE bug 1232392",
+					"href": "https://bugzilla.suse.com/1232392"
+				}
+			],
+			"issued": {
+				"date": "2024-11-15"
+			},
+			"updated": {
+				"date": "2024-11-15"
+			},
+			"affected_cpe_list": {
+				"cpe": [
+					"cpe:/o:opensuse:leap-micro:5.5"
+				]
+			}
+		}
+	},
+	"criteria": {
+		"operator": "AND",
+		"criterias": [
+			{
+				"operator": "AND",
+				"criterions": [
+					{
+						"test_ref": "oval:org.opensuse.security:tst:2009952022",
+						"comment": "kernel-rt-5.14.21-150500.13.76.1 is installed"
+					},
+					{
+						"test_ref": "oval:org.opensuse.security:tst:2009342860",
+						"comment": "kernel-rt is signed with openSUSE key"
+					}
+				]
+			}
+		],
+		"criterions": [
+			{
+				"test_ref": "oval:org.opensuse.security:tst:2009799821",
+				"comment": "openSUSE Leap Micro 5.5 is installed"
+			}
+		]
+	}
+}

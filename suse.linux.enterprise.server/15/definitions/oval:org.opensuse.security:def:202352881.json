@@ -124,6 +124,26 @@
 				"ref_id": "SUSE-SU-2024:2973-1",
 				"ref_url": "https://lists.suse.com/pipermail/sle-security-updates/2024-August/019280.html",
 				"source": "SUSE-SU"
+			},
+			{
+				"ref_id": "SUSE-SU-2024:3983-1",
+				"ref_url": "https://lists.suse.com/pipermail/sle-security-updates/2024-November/019816.html",
+				"source": "SUSE-SU"
+			},
+			{
+				"ref_id": "SUSE-SU-2024:3984-1",
+				"ref_url": "https://lists.suse.com/pipermail/sle-security-updates/2024-November/019815.html",
+				"source": "SUSE-SU"
+			},
+			{
+				"ref_id": "SUSE-SU-2024:3985-1",
+				"ref_url": "https://lists.suse.com/pipermail/sle-security-updates/2024-November/019814.html",
+				"source": "SUSE-SU"
+			},
+			{
+				"ref_id": "SUSE-SU-2024:3986-1",
+				"ref_url": "https://lists.suse.com/pipermail/sle-security-updates/2024-November/019813.html",
+				"source": "SUSE-SU"
 			}
 		],
 		"description": "\n    In the Linux kernel, the following vulnerability has been resolved:\n\ntcp: do not accept ACK of bytes we never sent\n\nThis patch is based on a detailed report and ideas from Yepeng Pan\nand Christian Rossow.\n\nACK seq validation is currently following RFC 5961 5.2 guidelines:\n\n   The ACK value is considered acceptable only if\n   it is in the range of ((SND.UNA - MAX.SND.WND) <= SEG.ACK <=\n   SND.NXT).  All incoming segments whose ACK value doesn't satisfy the\n   above condition MUST be discarded and an ACK sent back.  It needs to\n   be noted that RFC 793 on page 72 (fifth check) says: \"If the ACK is a\n   duplicate (SEG.ACK < SND.UNA), it can be ignored.  If the ACK\n   acknowledges something not yet sent (SEG.ACK > SND.NXT) then send an\n   ACK, drop the segment, and return\".  The \"ignored\" above implies that\n   the processing of the incoming data segment continues, which means\n   the ACK value is treated as acceptable.  This mitigation makes the\n   ACK check more stringent since any ACK < SND.UNA wouldn't be\n   accepted, instead only ACKs that are in the range ((SND.UNA -\n   MAX.SND.WND) <= SEG.ACK <= SND.NXT) get through.\n\nThis can be refined for new (and possibly spoofed) flows,\nby not accepting ACK for bytes that were never sent.\n\nThis greatly improves TCP security at a little cost.\n\nI added a Fixes: tag to make sure this patch will reach stable trees,\neven if the 'blamed' patch was adhering to the RFC.\n\ntp->bytes_acked was added in linux-4.2\n\nFollowing packetdrill test (courtesy of Yepeng Pan) shows\nthe issue at hand:\n\n0 socket(..., SOCK_STREAM, IPPROTO_TCP) = 3\n+0 setsockopt(3, SOL_SOCKET, SO_REUSEADDR, [1], 4) = 0\n+0 bind(3, ..., ...) = 0\n+0 listen(3, 1024) = 0\n\n// ---------------- Handshake ------------------- //\n\n// when window scale is set to 14 the window size can be extended to\n// 65535 * (2^14) = 1073725440. Linux would accept an ACK packet\n// with ack number in (Server_ISN+1-1073725440. Server_ISN+1)\n// ,though this ack number acknowledges some data never\n// sent by the server.\n\n+0 < S 0:0(0) win 65535 <mss 1400,nop,wscale 14>\n+0 > S. 0:0(0) ack 1 <...>\n+0 < . 1:1(0) ack 1 win 65535\n+0 accept(3, ..., ...) = 4\n\n// For the established connection, we send an ACK packet,\n// the ack packet uses ack number 1 - 1073725300 + 2^32,\n// where 2^32 is used to wrap around.\n// Note: we used 1073725300 instead of 1073725440 to avoid possible\n// edge cases.\n// 1 - 1073725300 + 2^32 = 3221241997\n\n// Oops, old kernels happily accept this packet.\n+0 < . 1:1001(1000) ack 3221241997 win 65535\n\n// After the kernel fix the following will be replaced by a challenge ACK,\n// and prior malicious frame would be dropped.\n+0 > . 1:1(0) ack 1001\n    ",
@@ -159,7 +179,7 @@
 				"date": "2024-05-30"
 			},
 			"updated": {
-				"date": "2024-10-05"
+				"date": "2024-11-15"
 			},
 			"affected_cpe_list": {
 				"cpe": [
@@ -320,57 +340,6 @@
 					{
 						"test_ref": "oval:org.opensuse.security:tst:2009880109",
 						"comment": "kernel-default-extra-5.14.21-150500.55.73.1 is installed"
-					}
-				]
-			},
-			{
-				"operator": "AND",
-				"criterias": [
-					{
-						"operator": "OR",
-						"criterions": [
-							{
-								"test_ref": "oval:org.opensuse.security:tst:2009759899",
-								"comment": "SUSE Linux Enterprise High Performance Computing 15 SP5 is installed"
-							},
-							{
-								"test_ref": "oval:org.opensuse.security:tst:2009762868",
-								"comment": "SUSE Linux Enterprise Module for Public Cloud 15 SP5 is installed"
-							},
-							{
-								"test_ref": "oval:org.opensuse.security:tst:2009759901",
-								"comment": "SUSE Linux Enterprise Server 15 SP5 is installed"
-							},
-							{
-								"test_ref": "oval:org.opensuse.security:tst:2009759902",
-								"comment": "SUSE Linux Enterprise Server for SAP Applications 15 SP5 is installed"
-							}
-						]
-					},
-					{
-						"operator": "OR",
-						"criterions": [
-							{
-								"test_ref": "oval:org.opensuse.security:tst:2009871894",
-								"comment": "kernel-azure-5.14.21-150500.33.60.1 is installed"
-							},
-							{
-								"test_ref": "oval:org.opensuse.security:tst:2009871895",
-								"comment": "kernel-azure-devel-5.14.21-150500.33.60.1 is installed"
-							},
-							{
-								"test_ref": "oval:org.opensuse.security:tst:2009871900",
-								"comment": "kernel-devel-azure-5.14.21-150500.33.60.1 is installed"
-							},
-							{
-								"test_ref": "oval:org.opensuse.security:tst:2009871901",
-								"comment": "kernel-source-azure-5.14.21-150500.33.60.1 is installed"
-							},
-							{
-								"test_ref": "oval:org.opensuse.security:tst:2009871902",
-								"comment": "kernel-syms-azure-5.14.21-150500.33.60.1 is installed"
-							}
-						]
 					}
 				]
 			},
@@ -1039,6 +1008,10 @@
 								"comment": "kernel-default-livepatch-devel-6.4.0-150600.23.14.2 is installed"
 							},
 							{
+								"test_ref": "oval:org.opensuse.security:tst:2009952073",
+								"comment": "kernel-livepatch-6_4_0-150600_10_17-rt-1-150600.1.3.1 is installed"
+							},
+							{
 								"test_ref": "oval:org.opensuse.security:tst:2009880646",
 								"comment": "kernel-livepatch-6_4_0-150600_10_5-rt-1-150600.1.5.1 is installed"
 							},
@@ -1053,57 +1026,6 @@
 					{
 						"test_ref": "oval:org.opensuse.security:tst:2009857543",
 						"comment": "SUSE Linux Enterprise Live Patching 15 SP6 is installed"
-					}
-				]
-			},
-			{
-				"operator": "AND",
-				"criterias": [
-					{
-						"operator": "OR",
-						"criterions": [
-							{
-								"test_ref": "oval:org.opensuse.security:tst:2009856172",
-								"comment": "SUSE Linux Enterprise High Performance Computing 15 SP6 is installed"
-							},
-							{
-								"test_ref": "oval:org.opensuse.security:tst:2009856320",
-								"comment": "SUSE Linux Enterprise Module for Public Cloud 15 SP6 is installed"
-							},
-							{
-								"test_ref": "oval:org.opensuse.security:tst:2009856174",
-								"comment": "SUSE Linux Enterprise Server 15 SP6 is installed"
-							},
-							{
-								"test_ref": "oval:org.opensuse.security:tst:2009856175",
-								"comment": "SUSE Linux Enterprise Server for SAP Applications 15 SP6 is installed"
-							}
-						]
-					},
-					{
-						"operator": "OR",
-						"criterions": [
-							{
-								"test_ref": "oval:org.opensuse.security:tst:2009879345",
-								"comment": "kernel-azure-6.4.0-150600.8.8.2 is installed"
-							},
-							{
-								"test_ref": "oval:org.opensuse.security:tst:2009879346",
-								"comment": "kernel-azure-devel-6.4.0-150600.8.8.2 is installed"
-							},
-							{
-								"test_ref": "oval:org.opensuse.security:tst:2009879347",
-								"comment": "kernel-devel-azure-6.4.0-150600.8.8.2 is installed"
-							},
-							{
-								"test_ref": "oval:org.opensuse.security:tst:2009879348",
-								"comment": "kernel-source-azure-6.4.0-150600.8.8.2 is installed"
-							},
-							{
-								"test_ref": "oval:org.opensuse.security:tst:2009879349",
-								"comment": "kernel-syms-azure-6.4.0-150600.8.8.1 is installed"
-							}
-						]
 					}
 				]
 			},
@@ -1244,6 +1166,10 @@
 								"comment": "kernel-livepatch-5_14_21-150500_13_61-rt-1-150500.11.3.1 is installed"
 							},
 							{
+								"test_ref": "oval:org.opensuse.security:tst:2009952072",
+								"comment": "kernel-livepatch-5_14_21-150500_13_76-rt-1-150500.11.3.1 is installed"
+							},
+							{
 								"test_ref": "oval:org.opensuse.security:tst:2009880108",
 								"comment": "kernel-livepatch-5_14_21-150500_55_73-default-1-150500.11.3.1 is installed"
 							}
@@ -1254,6 +1180,108 @@
 					{
 						"test_ref": "oval:org.opensuse.security:tst:2009764853",
 						"comment": "SUSE Linux Enterprise Live Patching 15 SP5 is installed"
+					}
+				]
+			},
+			{
+				"operator": "AND",
+				"criterias": [
+					{
+						"operator": "OR",
+						"criterions": [
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009759899",
+								"comment": "SUSE Linux Enterprise High Performance Computing 15 SP5 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009762868",
+								"comment": "SUSE Linux Enterprise Module for Public Cloud 15 SP5 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009759901",
+								"comment": "SUSE Linux Enterprise Server 15 SP5 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009759902",
+								"comment": "SUSE Linux Enterprise Server for SAP Applications 15 SP5 is installed"
+							}
+						]
+					},
+					{
+						"operator": "OR",
+						"criterions": [
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009952006",
+								"comment": "kernel-azure-5.14.21-150500.33.72.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009952007",
+								"comment": "kernel-azure-devel-5.14.21-150500.33.72.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009952012",
+								"comment": "kernel-devel-azure-5.14.21-150500.33.72.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009952013",
+								"comment": "kernel-source-azure-5.14.21-150500.33.72.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009952014",
+								"comment": "kernel-syms-azure-5.14.21-150500.33.72.1 is installed"
+							}
+						]
+					}
+				]
+			},
+			{
+				"operator": "AND",
+				"criterias": [
+					{
+						"operator": "OR",
+						"criterions": [
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009856172",
+								"comment": "SUSE Linux Enterprise High Performance Computing 15 SP6 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009856320",
+								"comment": "SUSE Linux Enterprise Module for Public Cloud 15 SP6 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009856174",
+								"comment": "SUSE Linux Enterprise Server 15 SP6 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009856175",
+								"comment": "SUSE Linux Enterprise Server for SAP Applications 15 SP6 is installed"
+							}
+						]
+					},
+					{
+						"operator": "OR",
+						"criterions": [
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009952041",
+								"comment": "kernel-azure-6.4.0-150600.8.17.2 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009952042",
+								"comment": "kernel-azure-devel-6.4.0-150600.8.17.2 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009952047",
+								"comment": "kernel-devel-azure-6.4.0-150600.8.17.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009952048",
+								"comment": "kernel-source-azure-6.4.0-150600.8.17.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009952049",
+								"comment": "kernel-syms-azure-6.4.0-150600.8.17.1 is installed"
+							}
+						]
 					}
 				]
 			}

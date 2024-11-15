@@ -45,6 +45,11 @@
 				"ref_id": "SUSE CVE-2024-50015",
 				"ref_url": "https://www.suse.com/security/cve/CVE-2024-50015",
 				"source": "SUSE CVE"
+			},
+			{
+				"ref_id": "SUSE-SU-2024:3984-1",
+				"ref_url": "https://lists.suse.com/pipermail/sle-security-updates/2024-November/019815.html",
+				"source": "SUSE-SU"
 			}
 		],
 		"description": "\n    In the Linux kernel, the following vulnerability has been resolved:\n\next4: dax: fix overflowing extents beyond inode size when partially writing\n\nThe dax_iomap_rw() does two things in each iteration: map written blocks\nand copy user data to blocks. If the process is killed by user(See signal\nhandling in dax_iomap_iter()), the copied data will be returned and added\non inode size, which means that the length of written extents may exceed\nthe inode size, then fsck will fail. An example is given as:\n\ndd if=/dev/urandom of=file bs=4M count=1\n dax_iomap_rw\n  iomap_iter // round 1\n   ext4_iomap_begin\n    ext4_iomap_alloc // allocate 0~2M extents(written flag)\n  dax_iomap_iter // copy 2M data\n  iomap_iter // round 2\n   iomap_iter_advance\n    iter->pos += iter->processed // iter->pos = 2M\n   ext4_iomap_begin\n    ext4_iomap_alloc // allocate 2~4M extents(written flag)\n  dax_iomap_iter\n   fatal_signal_pending\n  done = iter->pos - iocb->ki_pos // done = 2M\n ext4_handle_inode_extension\n  ext4_update_inode_size // inode size = 2M\n\nfsck reports: Inode 13, i_size is 2097152, should be 4194304.  Fix?\n\nFix the problem by truncating extents if the written length is smaller\nthan expected.\n    ",
@@ -75,7 +80,7 @@
 				"date": "2024-10-27"
 			},
 			"updated": {
-				"date": "2024-11-12"
+				"date": "2024-11-15"
 			},
 			"affected_cpe_list": {
 				"cpe": [
@@ -364,32 +369,16 @@
 								"comment": "SUSE Linux Enterprise High Performance Computing 15 SP5 is installed"
 							},
 							{
-								"test_ref": "oval:org.opensuse.security:tst:2009856172",
-								"comment": "SUSE Linux Enterprise High Performance Computing 15 SP6 is installed"
-							},
-							{
 								"test_ref": "oval:org.opensuse.security:tst:2009762868",
 								"comment": "SUSE Linux Enterprise Module for Public Cloud 15 SP5 is installed"
-							},
-							{
-								"test_ref": "oval:org.opensuse.security:tst:2009856320",
-								"comment": "SUSE Linux Enterprise Module for Public Cloud 15 SP6 is installed"
 							},
 							{
 								"test_ref": "oval:org.opensuse.security:tst:2009759901",
 								"comment": "SUSE Linux Enterprise Server 15 SP5 is installed"
 							},
 							{
-								"test_ref": "oval:org.opensuse.security:tst:2009856174",
-								"comment": "SUSE Linux Enterprise Server 15 SP6 is installed"
-							},
-							{
 								"test_ref": "oval:org.opensuse.security:tst:2009759902",
 								"comment": "SUSE Linux Enterprise Server for SAP Applications 15 SP5 is installed"
-							},
-							{
-								"test_ref": "oval:org.opensuse.security:tst:2009856175",
-								"comment": "SUSE Linux Enterprise Server for SAP Applications 15 SP6 is installed"
 							}
 						]
 					},
@@ -450,6 +439,57 @@
 							{
 								"test_ref": "oval:org.opensuse.security:tst:2009333995",
 								"comment": "kernel-source is affected"
+							}
+						]
+					}
+				]
+			},
+			{
+				"operator": "AND",
+				"criterias": [
+					{
+						"operator": "OR",
+						"criterions": [
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009856172",
+								"comment": "SUSE Linux Enterprise High Performance Computing 15 SP6 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009856320",
+								"comment": "SUSE Linux Enterprise Module for Public Cloud 15 SP6 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009856174",
+								"comment": "SUSE Linux Enterprise Server 15 SP6 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009856175",
+								"comment": "SUSE Linux Enterprise Server for SAP Applications 15 SP6 is installed"
+							}
+						]
+					},
+					{
+						"operator": "OR",
+						"criterions": [
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009952041",
+								"comment": "kernel-azure-6.4.0-150600.8.17.2 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009952042",
+								"comment": "kernel-azure-devel-6.4.0-150600.8.17.2 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009952047",
+								"comment": "kernel-devel-azure-6.4.0-150600.8.17.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009952048",
+								"comment": "kernel-source-azure-6.4.0-150600.8.17.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009952049",
+								"comment": "kernel-syms-azure-6.4.0-150600.8.17.1 is installed"
 							}
 						]
 					}

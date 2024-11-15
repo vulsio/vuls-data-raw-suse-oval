@@ -11,6 +11,7 @@
 				"SUSE Linux Enterprise Desktop 15 SP6",
 				"SUSE Linux Enterprise High Performance Computing 15 SP5",
 				"SUSE Linux Enterprise High Performance Computing 15 SP6",
+				"SUSE Linux Enterprise Live Patching 15 SP6",
 				"SUSE Linux Enterprise Module for Basesystem 15 SP5",
 				"SUSE Linux Enterprise Module for Basesystem 15 SP6",
 				"SUSE Linux Enterprise Module for Development Tools 15 SP5",
@@ -41,6 +42,16 @@
 				"ref_id": "SUSE CVE-2024-46864",
 				"ref_url": "https://www.suse.com/security/cve/CVE-2024-46864",
 				"source": "SUSE CVE"
+			},
+			{
+				"ref_id": "SUSE-SU-2024:3984-1",
+				"ref_url": "https://lists.suse.com/pipermail/sle-security-updates/2024-November/019815.html",
+				"source": "SUSE-SU"
+			},
+			{
+				"ref_id": "SUSE-SU-2024:3986-1",
+				"ref_url": "https://lists.suse.com/pipermail/sle-security-updates/2024-November/019813.html",
+				"source": "SUSE-SU"
 			}
 		],
 		"description": "\n    In the Linux kernel, the following vulnerability has been resolved:\n\nx86/hyperv: fix kexec crash due to VP assist page corruption\n\ncommit 9636be85cc5b (\"x86/hyperv: Fix hyperv_pcpu_input_arg handling when\nCPUs go online/offline\") introduces a new cpuhp state for hyperv\ninitialization.\n\ncpuhp_setup_state() returns the state number if state is\nCPUHP_AP_ONLINE_DYN or CPUHP_BP_PREPARE_DYN and 0 for all other states.\nFor the hyperv case, since a new cpuhp state was introduced it would\nreturn 0. However, in hv_machine_shutdown(), the cpuhp_remove_state() call\nis conditioned upon \"hyperv_init_cpuhp > 0\". This will never be true and\nso hv_cpu_die() won't be called on all CPUs. This means the VP assist page\nwon't be reset. When the kexec kernel tries to setup the VP assist page\nagain, the hypervisor corrupts the memory region of the old VP assist page\ncausing a panic in case the kexec kernel is using that memory elsewhere.\nThis was originally fixed in commit dfe94d4086e4 (\"x86/hyperv: Fix kexec\npanic/hang issues\").\n\nGet rid of hyperv_init_cpuhp entirely since we are no longer using a\ndynamic cpuhp state and use CPUHP_AP_HYPERV_ONLINE directly with\ncpuhp_remove_state().\n    ",
@@ -71,7 +82,7 @@
 				"date": "2024-10-01"
 			},
 			"updated": {
-				"date": "2024-10-04"
+				"date": "2024-11-15"
 			},
 			"affected_cpe_list": {
 				"cpe": [
@@ -79,6 +90,7 @@
 					"cpe:/o:suse:sle-module-basesystem:15:sp6",
 					"cpe:/o:suse:sle-module-development-tools:15:sp5",
 					"cpe:/o:suse:sle-module-development-tools:15:sp6",
+					"cpe:/o:suse:sle-module-live-patching:15:sp6",
 					"cpe:/o:suse:sle-module-public-cloud:15:sp5",
 					"cpe:/o:suse:sle-module-public-cloud:15:sp6",
 					"cpe:/o:suse:sle_hpc:15:sp5",
@@ -100,6 +112,19 @@
 	"criteria": {
 		"operator": "OR",
 		"criterias": [
+			{
+				"operator": "AND",
+				"criterions": [
+					{
+						"test_ref": "oval:org.opensuse.security:tst:2009857543",
+						"comment": "SUSE Linux Enterprise Live Patching 15 SP6 is installed"
+					},
+					{
+						"test_ref": "oval:org.opensuse.security:tst:2009952073",
+						"comment": "kernel-livepatch-6_4_0-150600_10_17-rt-1-150600.1.3.1 is installed"
+					}
+				]
+			},
 			{
 				"operator": "AND",
 				"criterias": [
@@ -363,32 +388,16 @@
 								"comment": "SUSE Linux Enterprise High Performance Computing 15 SP5 is installed"
 							},
 							{
-								"test_ref": "oval:org.opensuse.security:tst:2009856172",
-								"comment": "SUSE Linux Enterprise High Performance Computing 15 SP6 is installed"
-							},
-							{
 								"test_ref": "oval:org.opensuse.security:tst:2009762868",
 								"comment": "SUSE Linux Enterprise Module for Public Cloud 15 SP5 is installed"
-							},
-							{
-								"test_ref": "oval:org.opensuse.security:tst:2009856320",
-								"comment": "SUSE Linux Enterprise Module for Public Cloud 15 SP6 is installed"
 							},
 							{
 								"test_ref": "oval:org.opensuse.security:tst:2009759901",
 								"comment": "SUSE Linux Enterprise Server 15 SP5 is installed"
 							},
 							{
-								"test_ref": "oval:org.opensuse.security:tst:2009856174",
-								"comment": "SUSE Linux Enterprise Server 15 SP6 is installed"
-							},
-							{
 								"test_ref": "oval:org.opensuse.security:tst:2009759902",
 								"comment": "SUSE Linux Enterprise Server for SAP Applications 15 SP5 is installed"
-							},
-							{
-								"test_ref": "oval:org.opensuse.security:tst:2009856175",
-								"comment": "SUSE Linux Enterprise Server for SAP Applications 15 SP6 is installed"
 							}
 						]
 					},
@@ -402,6 +411,57 @@
 							{
 								"test_ref": "oval:org.opensuse.security:tst:2009340305",
 								"comment": "kernel-source-azure is not affected"
+							}
+						]
+					}
+				]
+			},
+			{
+				"operator": "AND",
+				"criterias": [
+					{
+						"operator": "OR",
+						"criterions": [
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009856172",
+								"comment": "SUSE Linux Enterprise High Performance Computing 15 SP6 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009856320",
+								"comment": "SUSE Linux Enterprise Module for Public Cloud 15 SP6 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009856174",
+								"comment": "SUSE Linux Enterprise Server 15 SP6 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009856175",
+								"comment": "SUSE Linux Enterprise Server for SAP Applications 15 SP6 is installed"
+							}
+						]
+					},
+					{
+						"operator": "OR",
+						"criterions": [
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009952041",
+								"comment": "kernel-azure-6.4.0-150600.8.17.2 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009952042",
+								"comment": "kernel-azure-devel-6.4.0-150600.8.17.2 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009952047",
+								"comment": "kernel-devel-azure-6.4.0-150600.8.17.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009952048",
+								"comment": "kernel-source-azure-6.4.0-150600.8.17.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009952049",
+								"comment": "kernel-syms-azure-6.4.0-150600.8.17.1 is installed"
 							}
 						]
 					}

@@ -8,19 +8,24 @@
 			"family": "unix",
 			"platform": [
 				"SUSE Linux Enterprise Desktop 15 SP6",
+				"SUSE Linux Enterprise High Performance Computing 15 SP5",
 				"SUSE Linux Enterprise High Performance Computing 15 SP6",
 				"SUSE Linux Enterprise Live Patching 15 SP2",
 				"SUSE Linux Enterprise Live Patching 15 SP3",
+				"SUSE Linux Enterprise Live Patching 15 SP5",
 				"SUSE Linux Enterprise Live Patching 15 SP6",
 				"SUSE Linux Enterprise Module for Basesystem 15 SP6",
 				"SUSE Linux Enterprise Module for Development Tools 15 SP6",
+				"SUSE Linux Enterprise Module for Public Cloud 15 SP5",
 				"SUSE Linux Enterprise Module for Public Cloud 15 SP6",
 				"SUSE Linux Enterprise Server 15 SP2-LTSS",
 				"SUSE Linux Enterprise Server 15 SP3-LTSS",
+				"SUSE Linux Enterprise Server 15 SP5",
 				"SUSE Linux Enterprise Server 15 SP6",
 				"SUSE Linux Enterprise Server 15-LTSS",
 				"SUSE Linux Enterprise Server for SAP Applications 15 SP2",
 				"SUSE Linux Enterprise Server for SAP Applications 15 SP3",
+				"SUSE Linux Enterprise Server for SAP Applications 15 SP5",
 				"SUSE Linux Enterprise Server for SAP Applications 15 SP6"
 			]
 		},
@@ -34,6 +39,16 @@
 				"ref_id": "SUSE CVE-2022-48969",
 				"ref_url": "https://www.suse.com/security/cve/CVE-2022-48969",
 				"source": "SUSE CVE"
+			},
+			{
+				"ref_id": "SUSE-SU-2024:3983-1",
+				"ref_url": "https://lists.suse.com/pipermail/sle-security-updates/2024-November/019816.html",
+				"source": "SUSE-SU"
+			},
+			{
+				"ref_id": "SUSE-SU-2024:3985-1",
+				"ref_url": "https://lists.suse.com/pipermail/sle-security-updates/2024-November/019814.html",
+				"source": "SUSE-SU"
 			}
 		],
 		"description": "\n    In the Linux kernel, the following vulnerability has been resolved:\n\nxen-netfront: Fix NULL sring after live migration\n\nA NAPI is setup for each network sring to poll data to kernel\nThe sring with source host is destroyed before live migration and\nnew sring with target host is setup after live migration.\nThe NAPI for the old sring is not deleted until setup new sring\nwith target host after migration. With busy_poll/busy_read enabled,\nthe NAPI can be polled before got deleted when resume VM.\n\nBUG: unable to handle kernel NULL pointer dereference at\n0000000000000008\nIP: xennet_poll+0xae/0xd20\nPGD 0 P4D 0\nOops: 0000 [#1] SMP PTI\nCall Trace:\n finish_task_switch+0x71/0x230\n timerqueue_del+0x1d/0x40\n hrtimer_try_to_cancel+0xb5/0x110\n xennet_alloc_rx_buffers+0x2a0/0x2a0\n napi_busy_loop+0xdb/0x270\n sock_poll+0x87/0x90\n do_sys_poll+0x26f/0x580\n tracing_map_insert+0x1d4/0x2f0\n event_hist_trigger+0x14a/0x260\n\n finish_task_switch+0x71/0x230\n __schedule+0x256/0x890\n recalc_sigpending+0x1b/0x50\n xen_sched_clock+0x15/0x20\n __rb_reserve_next+0x12d/0x140\n ring_buffer_lock_reserve+0x123/0x3d0\n event_triggers_call+0x87/0xb0\n trace_event_buffer_commit+0x1c4/0x210\n xen_clocksource_get_cycles+0x15/0x20\n ktime_get_ts64+0x51/0xf0\n SyS_ppoll+0x160/0x1a0\n SyS_ppoll+0x160/0x1a0\n do_syscall_64+0x73/0x130\n entry_SYSCALL_64_after_hwframe+0x41/0xa6\n...\nRIP: xennet_poll+0xae/0xd20 RSP: ffffb4f041933900\nCR2: 0000000000000008\n---[ end trace f8601785b354351c ]---\n\nxen frontend should remove the NAPIs for the old srings before live\nmigration as the bond srings are destroyed\n\nThere is a tiny window between the srings are set to NULL and\nthe NAPIs are disabled, It is safe as the NAPI threads are still\nfrozen at that time\n    ",
@@ -64,7 +79,7 @@
 				"date": "2024-10-23"
 			},
 			"updated": {
-				"date": "2024-11-12"
+				"date": "2024-11-15"
 			},
 			"affected_cpe_list": {
 				"cpe": [
@@ -72,13 +87,18 @@
 					"cpe:/o:suse:sle-module-development-tools:15:sp6",
 					"cpe:/o:suse:sle-module-live-patching:15:sp2",
 					"cpe:/o:suse:sle-module-live-patching:15:sp3",
+					"cpe:/o:suse:sle-module-live-patching:15:sp5",
 					"cpe:/o:suse:sle-module-live-patching:15:sp6",
+					"cpe:/o:suse:sle-module-public-cloud:15:sp5",
 					"cpe:/o:suse:sle-module-public-cloud:15:sp6",
+					"cpe:/o:suse:sle_hpc:15:sp5",
 					"cpe:/o:suse:sles-ltss:15",
 					"cpe:/o:suse:sles-ltss:15:sp2",
 					"cpe:/o:suse:sles-ltss:15:sp3",
+					"cpe:/o:suse:sles:15:sp5",
 					"cpe:/o:suse:sles_sap:15:sp2",
-					"cpe:/o:suse:sles_sap:15:sp3"
+					"cpe:/o:suse:sles_sap:15:sp3",
+					"cpe:/o:suse:sles_sap:15:sp5"
 				]
 			}
 		}
@@ -86,6 +106,19 @@
 	"criteria": {
 		"operator": "OR",
 		"criterias": [
+			{
+				"operator": "AND",
+				"criterions": [
+					{
+						"test_ref": "oval:org.opensuse.security:tst:2009764853",
+						"comment": "SUSE Linux Enterprise Live Patching 15 SP5 is installed"
+					},
+					{
+						"test_ref": "oval:org.opensuse.security:tst:2009952072",
+						"comment": "kernel-livepatch-5_14_21-150500_13_76-rt-1-150500.11.3.1 is installed"
+					}
+				]
+			},
 			{
 				"operator": "AND",
 				"criterias": [
@@ -380,6 +413,57 @@
 							{
 								"test_ref": "oval:org.opensuse.security:tst:2009333995",
 								"comment": "kernel-source is affected"
+							}
+						]
+					}
+				]
+			},
+			{
+				"operator": "AND",
+				"criterias": [
+					{
+						"operator": "OR",
+						"criterions": [
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009759899",
+								"comment": "SUSE Linux Enterprise High Performance Computing 15 SP5 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009762868",
+								"comment": "SUSE Linux Enterprise Module for Public Cloud 15 SP5 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009759901",
+								"comment": "SUSE Linux Enterprise Server 15 SP5 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009759902",
+								"comment": "SUSE Linux Enterprise Server for SAP Applications 15 SP5 is installed"
+							}
+						]
+					},
+					{
+						"operator": "OR",
+						"criterions": [
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009952006",
+								"comment": "kernel-azure-5.14.21-150500.33.72.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009952007",
+								"comment": "kernel-azure-devel-5.14.21-150500.33.72.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009952012",
+								"comment": "kernel-devel-azure-5.14.21-150500.33.72.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009952013",
+								"comment": "kernel-source-azure-5.14.21-150500.33.72.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009952014",
+								"comment": "kernel-syms-azure-5.14.21-150500.33.72.1 is installed"
 							}
 						]
 					}

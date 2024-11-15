@@ -20,6 +20,16 @@
 				"ref_id": "SUSE CVE-2024-50020",
 				"ref_url": "https://www.suse.com/security/cve/CVE-2024-50020",
 				"source": "SUSE CVE"
+			},
+			{
+				"ref_id": "SUSE-SU-2024:3984-1",
+				"ref_url": "https://lists.suse.com/pipermail/sle-security-updates/2024-November/019815.html",
+				"source": "SUSE-SU"
+			},
+			{
+				"ref_id": "SUSE-SU-2024:3986-1",
+				"ref_url": "https://lists.suse.com/pipermail/sle-security-updates/2024-November/019813.html",
+				"source": "SUSE-SU"
 			}
 		],
 		"description": "\n    In the Linux kernel, the following vulnerability has been resolved:\n\nice: Fix improper handling of refcount in ice_sriov_set_msix_vec_count()\n\nThis patch addresses an issue with improper reference count handling in the\nice_sriov_set_msix_vec_count() function.\n\nFirst, the function calls ice_get_vf_by_id(), which increments the\nreference count of the vf pointer. If the subsequent call to\nice_get_vf_vsi() fails, the function currently returns an error without\ndecrementing the reference count of the vf pointer, leading to a reference\ncount leak. The correct behavior, as implemented in this patch, is to\ndecrement the reference count using ice_put_vf(vf) before returning an\nerror when vsi is NULL.\n\nSecond, the function calls ice_sriov_get_irqs(), which sets\nvf->first_vector_idx. If this call returns a negative value, indicating an\nerror, the function returns an error without decrementing the reference\ncount of the vf pointer, resulting in another reference count leak. The\npatch addresses this by adding a call to ice_put_vf(vf) before returning\nan error when vf->first_vector_idx < 0.\n\nThis bug was identified by an experimental static analysis tool developed\nby our team. The tool specializes in analyzing reference count operations\nand identifying potential mismanagement of reference counts. In this case,\nthe tool flagged the missing decrement operation as a potential issue,\nleading to this patch.\n    ",
@@ -50,7 +60,7 @@
 				"date": "2024-10-23"
 			},
 			"updated": {
-				"date": "2024-10-27"
+				"date": "2024-11-15"
 			},
 			"affected_cpe_list": {
 				"cpe": [
@@ -86,7 +96,7 @@
 		],
 		"criterions": [
 			{
-				"test_ref": "oval:org.opensuse.security:tst:2009755086",
+				"test_ref": "oval:org.opensuse.security:tst:2009952223",
 				"comment": "SUSE Linux Enterprise Micro 5.4 is installed"
 			}
 		]

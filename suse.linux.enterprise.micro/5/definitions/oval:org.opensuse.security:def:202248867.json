@@ -30,7 +30,7 @@
 		"description": "\n    In the Linux kernel, the following vulnerability has been resolved:\n\ndmaengine: idxd: Prevent use after free on completion memory\n\nOn driver unload any pending descriptors are flushed at the\ntime the interrupt is freed:\nidxd_dmaengine_drv_remove() ->\n\tdrv_disable_wq() ->\n\t\tidxd_wq_free_irq() ->\n\t\t\tidxd_flush_pending_descs().\n\nIf there are any descriptors present that need to be flushed this\nflow triggers a \"not present\" page fault as below:\n\n BUG: unable to handle page fault for address: ff391c97c70c9040\n #PF: supervisor read access in kernel mode\n #PF: error_code(0x0000) - not-present page\n\nThe address that triggers the fault is the address of the\ndescriptor that was freed moments earlier via:\ndrv_disable_wq()->idxd_wq_free_resources()\n\nFix the use after free by freeing the descriptors after any possible\nusage. This is done after idxd_wq_reset() to ensure that the memory\nremains accessible during possible completion writes by the device.\n    ",
 		"advisory": {
 			"from": "security@suse.de",
-			"severity": "Moderate",
+			"severity": "Important",
 			"cve": [
 				{
 					"text": "CVE-2022-48867 at SUSE",
@@ -55,7 +55,7 @@
 				"date": "2024-10-18"
 			},
 			"updated": {
-				"date": "2024-10-18"
+				"date": "2024-11-15"
 			},
 			"affected_cpe_list": {
 				"cpe": [
@@ -89,7 +89,7 @@
 				"operator": "AND",
 				"criterions": [
 					{
-						"test_ref": "oval:org.opensuse.security:tst:2009800388",
+						"test_ref": "oval:org.opensuse.security:tst:2009951955",
 						"comment": "SUSE Linux Enterprise Micro 5.5 is installed"
 					},
 					{
@@ -113,11 +113,11 @@
 								"comment": "SUSE Linux Enterprise Micro 5.2 is installed"
 							},
 							{
-								"test_ref": "oval:org.opensuse.security:tst:2009728694",
+								"test_ref": "oval:org.opensuse.security:tst:2009952222",
 								"comment": "SUSE Linux Enterprise Micro 5.3 is installed"
 							},
 							{
-								"test_ref": "oval:org.opensuse.security:tst:2009755086",
+								"test_ref": "oval:org.opensuse.security:tst:2009952223",
 								"comment": "SUSE Linux Enterprise Micro 5.4 is installed"
 							}
 						]

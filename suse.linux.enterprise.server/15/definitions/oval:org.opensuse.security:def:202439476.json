@@ -63,6 +63,16 @@
 				"ref_id": "SUSE-SU-2024:3383-1",
 				"ref_url": "https://lists.suse.com/pipermail/sle-security-updates/2024-September/019497.html",
 				"source": "SUSE-SU"
+			},
+			{
+				"ref_id": "SUSE-SU-2024:3983-1",
+				"ref_url": "https://lists.suse.com/pipermail/sle-security-updates/2024-November/019816.html",
+				"source": "SUSE-SU"
+			},
+			{
+				"ref_id": "SUSE-SU-2024:3985-1",
+				"ref_url": "https://lists.suse.com/pipermail/sle-security-updates/2024-November/019814.html",
+				"source": "SUSE-SU"
 			}
 		],
 		"description": "\n    In the Linux kernel, the following vulnerability has been resolved:\n\nmd/raid5: fix deadlock that raid5d() wait for itself to clear MD_SB_CHANGE_PENDING\n\nXiao reported that lvm2 test lvconvert-raid-takeover.sh can hang with\nsmall possibility, the root cause is exactly the same as commit\nbed9e27baf52 (\"Revert \"md/raid5: Wait for MD_SB_CHANGE_PENDING in raid5d\"\")\n\nHowever, Dan reported another hang after that, and junxiao investigated\nthe problem and found out that this is caused by plugged bio can't issue\nfrom raid5d().\n\nCurrent implementation in raid5d() has a weird dependence:\n\n1) md_check_recovery() from raid5d() must hold 'reconfig_mutex' to clear\n   MD_SB_CHANGE_PENDING;\n2) raid5d() handles IO in a deadloop, until all IO are issued;\n3) IO from raid5d() must wait for MD_SB_CHANGE_PENDING to be cleared;\n\nThis behaviour is introduce before v2.6, and for consequence, if other\ncontext hold 'reconfig_mutex', and md_check_recovery() can't update\nsuper_block, then raid5d() will waste one cpu 100% by the deadloop, until\n'reconfig_mutex' is released.\n\nRefer to the implementation from raid1 and raid10, fix this problem by\nskipping issue IO if MD_SB_CHANGE_PENDING is still set after\nmd_check_recovery(), daemon thread will be woken up when 'reconfig_mutex'\nis released. Meanwhile, the hang problem will be fixed as well.\n    ",
@@ -93,7 +103,7 @@
 				"date": "2024-07-06"
 			},
 			"updated": {
-				"date": "2024-10-11"
+				"date": "2024-11-15"
 			},
 			"affected_cpe_list": {
 				"cpe": [
@@ -451,45 +461,6 @@
 						"operator": "OR",
 						"criterions": [
 							{
-								"test_ref": "oval:org.opensuse.security:tst:2009759899",
-								"comment": "SUSE Linux Enterprise High Performance Computing 15 SP5 is installed"
-							},
-							{
-								"test_ref": "oval:org.opensuse.security:tst:2009762868",
-								"comment": "SUSE Linux Enterprise Module for Public Cloud 15 SP5 is installed"
-							},
-							{
-								"test_ref": "oval:org.opensuse.security:tst:2009759901",
-								"comment": "SUSE Linux Enterprise Server 15 SP5 is installed"
-							},
-							{
-								"test_ref": "oval:org.opensuse.security:tst:2009759902",
-								"comment": "SUSE Linux Enterprise Server for SAP Applications 15 SP5 is installed"
-							}
-						]
-					},
-					{
-						"operator": "OR",
-						"criterions": [
-							{
-								"test_ref": "oval:org.opensuse.security:tst:2009340777",
-								"comment": "kernel-devel-azure is affected"
-							},
-							{
-								"test_ref": "oval:org.opensuse.security:tst:2009340767",
-								"comment": "kernel-source-azure is affected"
-							}
-						]
-					}
-				]
-			},
-			{
-				"operator": "AND",
-				"criterias": [
-					{
-						"operator": "OR",
-						"criterions": [
-							{
 								"test_ref": "oval:org.opensuse.security:tst:2009728675",
 								"comment": "kernel-default-livepatch is not affected"
 							},
@@ -524,10 +495,6 @@
 							{
 								"test_ref": "oval:org.opensuse.security:tst:2009698985",
 								"comment": "SUSE Linux Enterprise Live Patching 15 SP4 is installed"
-							},
-							{
-								"test_ref": "oval:org.opensuse.security:tst:2009764853",
-								"comment": "SUSE Linux Enterprise Live Patching 15 SP5 is installed"
 							}
 						]
 					},
@@ -748,6 +715,89 @@
 					{
 						"test_ref": "oval:org.opensuse.security:tst:2009857543",
 						"comment": "SUSE Linux Enterprise Live Patching 15 SP6 is installed"
+					}
+				]
+			},
+			{
+				"operator": "AND",
+				"criterias": [
+					{
+						"operator": "OR",
+						"criterions": [
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009759899",
+								"comment": "SUSE Linux Enterprise High Performance Computing 15 SP5 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009762868",
+								"comment": "SUSE Linux Enterprise Module for Public Cloud 15 SP5 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009759901",
+								"comment": "SUSE Linux Enterprise Server 15 SP5 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009759902",
+								"comment": "SUSE Linux Enterprise Server for SAP Applications 15 SP5 is installed"
+							}
+						]
+					},
+					{
+						"operator": "OR",
+						"criterions": [
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009952006",
+								"comment": "kernel-azure-5.14.21-150500.33.72.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009952007",
+								"comment": "kernel-azure-devel-5.14.21-150500.33.72.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009952012",
+								"comment": "kernel-devel-azure-5.14.21-150500.33.72.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009952013",
+								"comment": "kernel-source-azure-5.14.21-150500.33.72.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009952014",
+								"comment": "kernel-syms-azure-5.14.21-150500.33.72.1 is installed"
+							}
+						]
+					}
+				]
+			},
+			{
+				"operator": "AND",
+				"criterias": [
+					{
+						"operator": "OR",
+						"criterions": [
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009952072",
+								"comment": "kernel-livepatch-5_14_21-150500_13_76-rt-1-150500.11.3.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009764854",
+								"comment": "kernel-default-livepatch is affected"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009764855",
+								"comment": "kernel-default-livepatch-devel is affected"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009333995",
+								"comment": "kernel-source is affected"
+							}
+						]
+					}
+				],
+				"criterions": [
+					{
+						"test_ref": "oval:org.opensuse.security:tst:2009764853",
+						"comment": "SUSE Linux Enterprise Live Patching 15 SP5 is installed"
 					}
 				]
 			}
