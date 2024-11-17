@@ -1,0 +1,109 @@
+{
+	"id": "oval:org.opensuse.security:def:202449981",
+	"version": "1",
+	"class": "vulnerability",
+	"metadata": {
+		"title": "CVE-2024-49981",
+		"affected": {
+			"family": "unix",
+			"platform": [
+				"openSUSE Tumbleweed"
+			]
+		},
+		"reference": [
+			{
+				"ref_id": "Mitre CVE-2024-49981",
+				"ref_url": "https://cve.mitre.org/cgi-bin/cvename.cgi?name=CVE-2024-49981",
+				"source": "CVE"
+			},
+			{
+				"ref_id": "SUSE CVE-2024-49981",
+				"ref_url": "https://www.suse.com/security/cve/CVE-2024-49981",
+				"source": "SUSE CVE"
+			},
+			{
+				"ref_id": "SUSE-SU-2024:3984-1",
+				"ref_url": "https://lists.suse.com/pipermail/sle-security-updates/2024-November/019815.html",
+				"source": "SUSE-SU"
+			},
+			{
+				"ref_id": "SUSE-SU-2024:3986-1",
+				"ref_url": "https://lists.suse.com/pipermail/sle-security-updates/2024-November/019813.html",
+				"source": "SUSE-SU"
+			},
+			{
+				"ref_id": "openSUSE-SU-2024:14500-1",
+				"ref_url": "https://lists.opensuse.org/archives/list/security-announce@lists.opensuse.org/thread/2NO44GTYBSPPWKFDREFWHITK4XKTNVLP/",
+				"source": "SUSE-SU"
+			}
+		],
+		"description": "\n    In the Linux kernel, the following vulnerability has been resolved:\n\nmedia: venus: fix use after free bug in venus_remove due to race condition\n\nin venus_probe, core->work is bound with venus_sys_error_handler, which is\nused to handle error. The code use core->sys_err_done to make sync work.\nThe core->work is started in venus_event_notify.\n\nIf we call venus_remove, there might be an unfished work. The possible\nsequence is as follows:\n\nCPU0                  CPU1\n\n                     |venus_sys_error_handler\nvenus_remove         |\nhfi_destroy\t \t\t |\nvenus_hfi_destroy\t |\nkfree(hdev);\t     |\n                     |hfi_reinit\n\t\t\t\t\t |venus_hfi_queues_reinit\n                     |//use hdev\n\nFix it by canceling the work in venus_remove.\n    ",
+		"advisory": {
+			"from": "security@suse.de",
+			"severity": "Moderate",
+			"cve": [
+				{
+					"text": "CVE-2024-49981 at SUSE",
+					"href": "https://www.suse.com/security/cve/CVE-2024-49981/",
+					"impact": "medium",
+					"cvss3": "5.5/CVSS:3.1/AV:L/AC:L/PR:L/UI:N/S:U/C:N/I:N/A:H"
+				},
+				{
+					"text": "CVE-2024-49981 at NVD",
+					"href": "https://nvd.nist.gov/vuln/detail/CVE-2024-49981",
+					"impact": "high",
+					"cvss3": "7/CVSS:3.1/AV:L/AC:H/PR:L/UI:N/S:U/C:H/I:H/A:H"
+				}
+			],
+			"bugzilla": [
+				{
+					"text": "SUSE bug 1232098",
+					"href": "https://bugzilla.suse.com/1232098"
+				}
+			],
+			"issued": {
+				"date": "2024-11-17"
+			},
+			"updated": {
+				"date": "2024-11-17"
+			},
+			"affected_cpe_list": {
+				"cpe": [
+					"cpe:/o:opensuse:tumbleweed"
+				]
+			}
+		}
+	},
+	"criteria": {
+		"operator": "AND",
+		"criterias": [
+			{
+				"operator": "OR",
+				"criterions": [
+					{
+						"test_ref": "oval:org.opensuse.security:tst:2009952405",
+						"comment": "kernel-devel-6.11.8-1.1 is installed"
+					},
+					{
+						"test_ref": "oval:org.opensuse.security:tst:2009952406",
+						"comment": "kernel-macros-6.11.8-1.1 is installed"
+					},
+					{
+						"test_ref": "oval:org.opensuse.security:tst:2009952407",
+						"comment": "kernel-source-6.11.8-1.1 is installed"
+					},
+					{
+						"test_ref": "oval:org.opensuse.security:tst:2009952408",
+						"comment": "kernel-source-vanilla-6.11.8-1.1 is installed"
+					}
+				]
+			}
+		],
+		"criterions": [
+			{
+				"test_ref": "oval:org.opensuse.security:tst:2009634834",
+				"comment": "openSUSE Tumbleweed is installed"
+			}
+		]
+	}
+}

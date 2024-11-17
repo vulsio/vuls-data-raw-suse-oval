@@ -1,0 +1,119 @@
+{
+	"id": "oval:org.opensuse.security:def:202450048",
+	"version": "1",
+	"class": "vulnerability",
+	"metadata": {
+		"title": "CVE-2024-50048",
+		"affected": {
+			"family": "unix",
+			"platform": [
+				"openSUSE Tumbleweed"
+			]
+		},
+		"reference": [
+			{
+				"ref_id": "Mitre CVE-2024-50048",
+				"ref_url": "https://cve.mitre.org/cgi-bin/cvename.cgi?name=CVE-2024-50048",
+				"source": "CVE"
+			},
+			{
+				"ref_id": "SUSE CVE-2024-50048",
+				"ref_url": "https://www.suse.com/security/cve/CVE-2024-50048",
+				"source": "SUSE CVE"
+			},
+			{
+				"ref_id": "SUSE-SU-2024:3983-1",
+				"ref_url": "https://lists.suse.com/pipermail/sle-security-updates/2024-November/019816.html",
+				"source": "SUSE-SU"
+			},
+			{
+				"ref_id": "SUSE-SU-2024:3984-1",
+				"ref_url": "https://lists.suse.com/pipermail/sle-security-updates/2024-November/019815.html",
+				"source": "SUSE-SU"
+			},
+			{
+				"ref_id": "SUSE-SU-2024:3985-1",
+				"ref_url": "https://lists.suse.com/pipermail/sle-security-updates/2024-November/019814.html",
+				"source": "SUSE-SU"
+			},
+			{
+				"ref_id": "SUSE-SU-2024:3986-1",
+				"ref_url": "https://lists.suse.com/pipermail/sle-security-updates/2024-November/019813.html",
+				"source": "SUSE-SU"
+			},
+			{
+				"ref_id": "openSUSE-SU-2024:14500-1",
+				"ref_url": "https://lists.opensuse.org/archives/list/security-announce@lists.opensuse.org/thread/2NO44GTYBSPPWKFDREFWHITK4XKTNVLP/",
+				"source": "SUSE-SU"
+			}
+		],
+		"description": "\n    In the Linux kernel, the following vulnerability has been resolved:\n\nfbcon: Fix a NULL pointer dereference issue in fbcon_putcs\n\nsyzbot has found a NULL pointer dereference bug in fbcon.\nHere is the simplified C reproducer:\n\nstruct param {\n\tuint8_t type;\n\tstruct tiocl_selection ts;\n};\n\nint main()\n{\n\tstruct fb_con2fbmap con2fb;\n\tstruct param param;\n\n\tint fd = open(\"/dev/fb1\", 0, 0);\n\n\tcon2fb.console = 0x19;\n\tcon2fb.framebuffer = 0;\n\tioctl(fd, FBIOPUT_CON2FBMAP, &con2fb);\n\n\tparam.type = 2;\n\tparam.ts.xs = 0; param.ts.ys = 0;\n\tparam.ts.xe = 0; param.ts.ye = 0;\n\tparam.ts.sel_mode = 0;\n\n\tint fd1 = open(\"/dev/tty1\", O_RDWR, 0);\n\tioctl(fd1, TIOCLINUX, &param);\n\n\tcon2fb.console = 1;\n\tcon2fb.framebuffer = 0;\n\tioctl(fd, FBIOPUT_CON2FBMAP, &con2fb);\n\n\treturn 0;\n}\n\nAfter calling ioctl(fd1, TIOCLINUX, &param), the subsequent ioctl(fd, FBIOPUT_CON2FBMAP, &con2fb)\ncauses the kernel to follow a different execution path:\n\n set_con2fb_map\n  -> con2fb_init_display\n   -> fbcon_set_disp\n    -> redraw_screen\n     -> hide_cursor\n      -> clear_selection\n       -> highlight\n        -> invert_screen\n         -> do_update_region\n          -> fbcon_putcs\n           -> ops->putcs\n\nSince ops->putcs is a NULL pointer, this leads to a kernel panic.\nTo prevent this, we need to call set_blitting_type() within set_con2fb_map()\nto properly initialize ops->putcs.\n    ",
+		"advisory": {
+			"from": "security@suse.de",
+			"severity": "Moderate",
+			"cve": [
+				{
+					"text": "CVE-2024-50048 at SUSE",
+					"href": "https://www.suse.com/security/cve/CVE-2024-50048/",
+					"impact": "medium",
+					"cvss3": "5.5/CVSS:3.1/AV:L/AC:L/PR:L/UI:N/S:U/C:N/I:N/A:H"
+				},
+				{
+					"text": "CVE-2024-50048 at NVD",
+					"href": "https://nvd.nist.gov/vuln/detail/CVE-2024-50048",
+					"impact": "medium",
+					"cvss3": "5.5/CVSS:3.1/AV:L/AC:L/PR:L/UI:N/S:U/C:N/I:N/A:H"
+				}
+			],
+			"bugzilla": [
+				{
+					"text": "SUSE bug 1232310",
+					"href": "https://bugzilla.suse.com/1232310"
+				}
+			],
+			"issued": {
+				"date": "2024-11-17"
+			},
+			"updated": {
+				"date": "2024-11-17"
+			},
+			"affected_cpe_list": {
+				"cpe": [
+					"cpe:/o:opensuse:tumbleweed"
+				]
+			}
+		}
+	},
+	"criteria": {
+		"operator": "AND",
+		"criterias": [
+			{
+				"operator": "OR",
+				"criterions": [
+					{
+						"test_ref": "oval:org.opensuse.security:tst:2009952405",
+						"comment": "kernel-devel-6.11.8-1.1 is installed"
+					},
+					{
+						"test_ref": "oval:org.opensuse.security:tst:2009952406",
+						"comment": "kernel-macros-6.11.8-1.1 is installed"
+					},
+					{
+						"test_ref": "oval:org.opensuse.security:tst:2009952407",
+						"comment": "kernel-source-6.11.8-1.1 is installed"
+					},
+					{
+						"test_ref": "oval:org.opensuse.security:tst:2009952408",
+						"comment": "kernel-source-vanilla-6.11.8-1.1 is installed"
+					}
+				]
+			}
+		],
+		"criterions": [
+			{
+				"test_ref": "oval:org.opensuse.security:tst:2009634834",
+				"comment": "openSUSE Tumbleweed is installed"
+			}
+		]
+	}
+}

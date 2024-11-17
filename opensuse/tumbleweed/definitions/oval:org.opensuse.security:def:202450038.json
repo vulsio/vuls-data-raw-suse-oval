@@ -1,0 +1,99 @@
+{
+	"id": "oval:org.opensuse.security:def:202450038",
+	"version": "1",
+	"class": "vulnerability",
+	"metadata": {
+		"title": "CVE-2024-50038",
+		"affected": {
+			"family": "unix",
+			"platform": [
+				"openSUSE Tumbleweed"
+			]
+		},
+		"reference": [
+			{
+				"ref_id": "Mitre CVE-2024-50038",
+				"ref_url": "https://cve.mitre.org/cgi-bin/cvename.cgi?name=CVE-2024-50038",
+				"source": "CVE"
+			},
+			{
+				"ref_id": "SUSE CVE-2024-50038",
+				"ref_url": "https://www.suse.com/security/cve/CVE-2024-50038",
+				"source": "SUSE CVE"
+			},
+			{
+				"ref_id": "openSUSE-SU-2024:14500-1",
+				"ref_url": "https://lists.opensuse.org/archives/list/security-announce@lists.opensuse.org/thread/2NO44GTYBSPPWKFDREFWHITK4XKTNVLP/",
+				"source": "SUSE-SU"
+			}
+		],
+		"description": "\n    In the Linux kernel, the following vulnerability has been resolved:\n\nnetfilter: xtables: avoid NFPROTO_UNSPEC where needed\n\nsyzbot managed to call xt_cluster match via ebtables:\n\n WARNING: CPU: 0 PID: 11 at net/netfilter/xt_cluster.c:72 xt_cluster_mt+0x196/0x780\n [..]\n ebt_do_table+0x174b/0x2a40\n\nModule registers to NFPROTO_UNSPEC, but it assumes ipv4/ipv6 packet\nprocessing.  As this is only useful to restrict locally terminating\nTCP/UDP traffic, register this for ipv4 and ipv6 family only.\n\nPablo points out that this is a general issue, direct users of the\nset/getsockopt interface can call into targets/matches that were only\nintended for use with ip(6)tables.\n\nCheck all UNSPEC matches and targets for similar issues:\n\n- matches and targets are fine except if they assume skb_network_header()\n  is valid -- this is only true when called from inet layer: ip(6) stack\n  pulls the ip/ipv6 header into linear data area.\n- targets that return XT_CONTINUE or other xtables verdicts must be\n  restricted too, they are incompatbile with the ebtables traverser, e.g.\n  EBT_CONTINUE is a completely different value than XT_CONTINUE.\n\nMost matches/targets are changed to register for NFPROTO_IPV4/IPV6, as\nthey are provided for use by ip(6)tables.\n\nThe MARK target is also used by arptables, so register for NFPROTO_ARP too.\n\nWhile at it, bail out if connbytes fails to enable the corresponding\nconntrack family.\n\nThis change passes the selftests in iptables.git.\n    ",
+		"advisory": {
+			"from": "security@suse.de",
+			"severity": "Moderate",
+			"cve": [
+				{
+					"text": "CVE-2024-50038 at SUSE",
+					"href": "https://www.suse.com/security/cve/CVE-2024-50038/",
+					"impact": "medium",
+					"cvss3": "5.5/CVSS:3.1/AV:L/AC:L/PR:L/UI:N/S:U/C:N/I:N/A:H"
+				},
+				{
+					"text": "CVE-2024-50038 at NVD",
+					"href": "https://nvd.nist.gov/vuln/detail/CVE-2024-50038",
+					"impact": "medium",
+					"cvss3": "5.5/CVSS:3.1/AV:L/AC:L/PR:L/UI:N/S:U/C:N/I:N/A:H"
+				}
+			],
+			"bugzilla": [
+				{
+					"text": "SUSE bug 1231910",
+					"href": "https://bugzilla.suse.com/1231910"
+				}
+			],
+			"issued": {
+				"date": "2024-11-17"
+			},
+			"updated": {
+				"date": "2024-11-17"
+			},
+			"affected_cpe_list": {
+				"cpe": [
+					"cpe:/o:opensuse:tumbleweed"
+				]
+			}
+		}
+	},
+	"criteria": {
+		"operator": "AND",
+		"criterias": [
+			{
+				"operator": "OR",
+				"criterions": [
+					{
+						"test_ref": "oval:org.opensuse.security:tst:2009952405",
+						"comment": "kernel-devel-6.11.8-1.1 is installed"
+					},
+					{
+						"test_ref": "oval:org.opensuse.security:tst:2009952406",
+						"comment": "kernel-macros-6.11.8-1.1 is installed"
+					},
+					{
+						"test_ref": "oval:org.opensuse.security:tst:2009952407",
+						"comment": "kernel-source-6.11.8-1.1 is installed"
+					},
+					{
+						"test_ref": "oval:org.opensuse.security:tst:2009952408",
+						"comment": "kernel-source-vanilla-6.11.8-1.1 is installed"
+					}
+				]
+			}
+		],
+		"criterions": [
+			{
+				"test_ref": "oval:org.opensuse.security:tst:2009634834",
+				"comment": "openSUSE Tumbleweed is installed"
+			}
+		]
+	}
+}

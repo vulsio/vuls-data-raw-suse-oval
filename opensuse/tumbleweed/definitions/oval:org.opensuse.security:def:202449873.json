@@ -1,0 +1,99 @@
+{
+	"id": "oval:org.opensuse.security:def:202449873",
+	"version": "1",
+	"class": "vulnerability",
+	"metadata": {
+		"title": "CVE-2024-49873",
+		"affected": {
+			"family": "unix",
+			"platform": [
+				"openSUSE Tumbleweed"
+			]
+		},
+		"reference": [
+			{
+				"ref_id": "Mitre CVE-2024-49873",
+				"ref_url": "https://cve.mitre.org/cgi-bin/cvename.cgi?name=CVE-2024-49873",
+				"source": "CVE"
+			},
+			{
+				"ref_id": "SUSE CVE-2024-49873",
+				"ref_url": "https://www.suse.com/security/cve/CVE-2024-49873",
+				"source": "SUSE CVE"
+			},
+			{
+				"ref_id": "openSUSE-SU-2024:14500-1",
+				"ref_url": "https://lists.opensuse.org/archives/list/security-announce@lists.opensuse.org/thread/2NO44GTYBSPPWKFDREFWHITK4XKTNVLP/",
+				"source": "SUSE-SU"
+			}
+		],
+		"description": "\n    In the Linux kernel, the following vulnerability has been resolved:\n\nmm/filemap: fix filemap_get_folios_contig THP panic\n\nPatch series \"memfd-pin huge page fixes\".\n\nFix multiple bugs that occur when using memfd_pin_folios with hugetlb\npages and THP.  The hugetlb bugs only bite when the page is not yet\nfaulted in when memfd_pin_folios is called.  The THP bug bites when the\nstarting offset passed to memfd_pin_folios is not huge page aligned.  See\nthe commit messages for details.\n\n\nThis patch (of 5):\n\nmemfd_pin_folios on memory backed by THP panics if the requested start\noffset is not huge page aligned:\n\nBUG: kernel NULL pointer dereference, address: 0000000000000036\nRIP: 0010:filemap_get_folios_contig+0xdf/0x290\nRSP: 0018:ffffc9002092fbe8 EFLAGS: 00010202\nRAX: 0000000000000002 RBX: 0000000000000002 RCX: 0000000000000002\n\nThe fault occurs here, because xas_load returns a folio with value 2:\n\n    filemap_get_folios_contig()\n        for (folio = xas_load(&xas); folio && xas.xa_index <= end;\n                        folio = xas_next(&xas)) {\n                ...\n                if (!folio_try_get(folio))   <-- BOOM\n\n\"2\" is an xarray sibling entry.  We get it because memfd_pin_folios does\nnot round the indices passed to filemap_get_folios_contig to huge page\nboundaries for THP, so we load from the middle of a huge page range see a\nsibling.  (It does round for hugetlbfs, at the is_file_hugepages test).\n\nTo fix, if the folio is a sibling, then return the next index as the\nstarting point for the next call to filemap_get_folios_contig.\n    ",
+		"advisory": {
+			"from": "security@suse.de",
+			"severity": "Moderate",
+			"cve": [
+				{
+					"text": "CVE-2024-49873 at SUSE",
+					"href": "https://www.suse.com/security/cve/CVE-2024-49873/",
+					"impact": "medium",
+					"cvss3": "5.5/CVSS:3.1/AV:L/AC:L/PR:L/UI:N/S:U/C:N/I:N/A:H"
+				},
+				{
+					"text": "CVE-2024-49873 at NVD",
+					"href": "https://nvd.nist.gov/vuln/detail/CVE-2024-49873",
+					"impact": "medium",
+					"cvss3": "5.5/CVSS:3.1/AV:L/AC:L/PR:L/UI:N/S:U/C:N/I:N/A:H"
+				}
+			],
+			"bugzilla": [
+				{
+					"text": "SUSE bug 1232291",
+					"href": "https://bugzilla.suse.com/1232291"
+				}
+			],
+			"issued": {
+				"date": "2024-11-17"
+			},
+			"updated": {
+				"date": "2024-11-17"
+			},
+			"affected_cpe_list": {
+				"cpe": [
+					"cpe:/o:opensuse:tumbleweed"
+				]
+			}
+		}
+	},
+	"criteria": {
+		"operator": "AND",
+		"criterias": [
+			{
+				"operator": "OR",
+				"criterions": [
+					{
+						"test_ref": "oval:org.opensuse.security:tst:2009952405",
+						"comment": "kernel-devel-6.11.8-1.1 is installed"
+					},
+					{
+						"test_ref": "oval:org.opensuse.security:tst:2009952406",
+						"comment": "kernel-macros-6.11.8-1.1 is installed"
+					},
+					{
+						"test_ref": "oval:org.opensuse.security:tst:2009952407",
+						"comment": "kernel-source-6.11.8-1.1 is installed"
+					},
+					{
+						"test_ref": "oval:org.opensuse.security:tst:2009952408",
+						"comment": "kernel-source-vanilla-6.11.8-1.1 is installed"
+					}
+				]
+			}
+		],
+		"criterions": [
+			{
+				"test_ref": "oval:org.opensuse.security:tst:2009634834",
+				"comment": "openSUSE Tumbleweed is installed"
+			}
+		]
+	}
+}

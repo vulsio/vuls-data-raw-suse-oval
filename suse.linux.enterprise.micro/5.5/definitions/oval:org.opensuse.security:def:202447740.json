@@ -20,6 +20,11 @@
 				"ref_id": "SUSE CVE-2024-47740",
 				"ref_url": "https://www.suse.com/security/cve/CVE-2024-47740",
 				"source": "SUSE CVE"
+			},
+			{
+				"ref_id": "openSUSE-SU-2024:14500-1",
+				"ref_url": "https://lists.opensuse.org/archives/list/security-announce@lists.opensuse.org/thread/2NO44GTYBSPPWKFDREFWHITK4XKTNVLP/",
+				"source": "SUSE-SU"
 			}
 		],
 		"description": "\n    In the Linux kernel, the following vulnerability has been resolved:\n\nf2fs: Require FMODE_WRITE for atomic write ioctls\n\nThe F2FS ioctls for starting and committing atomic writes check for\ninode_owner_or_capable(), but this does not give LSMs like SELinux or\nLandlock an opportunity to deny the write access - if the caller's FSUID\nmatches the inode's UID, inode_owner_or_capable() immediately returns true.\n\nThere are scenarios where LSMs want to deny a process the ability to write\nparticular files, even files that the FSUID of the process owns; but this\ncan currently partially be bypassed using atomic write ioctls in two ways:\n\n - F2FS_IOC_START_ATOMIC_REPLACE + F2FS_IOC_COMMIT_ATOMIC_WRITE can\n   truncate an inode to size 0\n - F2FS_IOC_START_ATOMIC_WRITE + F2FS_IOC_ABORT_ATOMIC_WRITE can revert\n   changes another process concurrently made to a file\n\nFix it by requiring FMODE_WRITE for these operations, just like for\nF2FS_IOC_MOVE_RANGE. Since any legitimate caller should only be using these\nioctls when intending to write into the file, that seems unlikely to break\nanything.\n    ",
@@ -48,7 +53,7 @@
 				"date": "2024-10-22"
 			},
 			"updated": {
-				"date": "2024-11-12"
+				"date": "2024-11-17"
 			},
 			"affected_cpe_list": {
 				"cpe": [
