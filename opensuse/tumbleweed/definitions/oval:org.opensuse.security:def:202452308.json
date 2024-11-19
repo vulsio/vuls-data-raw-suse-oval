@@ -1,0 +1,90 @@
+{
+	"id": "oval:org.opensuse.security:def:202452308",
+	"version": "1",
+	"class": "vulnerability",
+	"metadata": {
+		"title": "CVE-2024-52308",
+		"affected": {
+			"family": "unix",
+			"platform": [
+				"openSUSE Tumbleweed"
+			]
+		},
+		"reference": [
+			{
+				"ref_id": "Mitre CVE-2024-52308",
+				"ref_url": "https://cve.mitre.org/cgi-bin/cvename.cgi?name=CVE-2024-52308",
+				"source": "CVE"
+			},
+			{
+				"ref_id": "SUSE CVE-2024-52308",
+				"ref_url": "https://www.suse.com/security/cve/CVE-2024-52308",
+				"source": "SUSE CVE"
+			}
+		],
+		"description": "\n    The GitHub CLI version 2.6.1 and earlier are vulnerable to remote code execution through a malicious codespace SSH server when using `gh codespace ssh` or `gh codespace logs` commands. This has been patched in the cli v2.62.0.\n\nDevelopers connect to remote codespaces through an SSH server running within the devcontainer, which is generally provided through the [default devcontainer image]( https://docs.github.com/en/codespaces/setting-up-your-project-for-codespaces/adding-a-dev-container-... https://docs.github.com/en/codespaces/setting-up-your-project-for-codespaces/adding-a-dev-container-configuration/introduction-to-dev-containers#using-the-default-dev-container-configuration) . GitHub CLI [retrieves SSH connection details]( https://github.com/cli/cli/blob/30066b0042d0c5928d959e288144300cb28196c9/internal/codespaces/rpc/inv... https://github.com/cli/cli/blob/30066b0042d0c5928d959e288144300cb28196c9/internal/codespaces/rpc/invoker.go#L230-L244 ), such as remote username, which is used in [executing `ssh` commands]( https://github.com/cli/cli/blob/e356c69a6f0125cfaac782c35acf77314f18908d/pkg/cmd/codespace/ssh.go#L2... https://github.com/cli/cli/blob/e356c69a6f0125cfaac782c35acf77314f18908d/pkg/cmd/codespace/ssh.go#L263 ) for `gh codespace ssh` or `gh codespace logs` commands.\n\nThis exploit occurs when a malicious third-party devcontainer contains a modified SSH server that injects `ssh` arguments within the SSH connection details. `gh codespace ssh` and `gh codespace logs` commands could execute arbitrary code on the user's workstation if the remote username contains something like `-oProxyCommand=\"echo hacked\" #`.  The `-oProxyCommand` flag causes `ssh` to execute the provided command while `#` shell comment causes any other `ssh` arguments to be ignored.\n\nIn `2.62.0`, the remote username information is being validated before being used.\n    ",
+		"advisory": {
+			"from": "security@suse.de",
+			"severity": "Important",
+			"cve": [
+				{
+					"text": "CVE-2024-52308 at SUSE",
+					"href": "https://www.suse.com/security/cve/CVE-2024-52308/"
+				},
+				{
+					"text": "CVE-2024-52308 at NVD",
+					"href": "https://nvd.nist.gov/vuln/detail/CVE-2024-52308"
+				}
+			],
+			"bugzilla": [
+				{
+					"text": "SUSE bug 1233387",
+					"href": "https://bugzilla.suse.com/1233387"
+				}
+			],
+			"issued": {
+				"date": "2024-11-19"
+			},
+			"updated": {
+				"date": "2024-11-19"
+			},
+			"affected_cpe_list": {
+				"cpe": [
+					"cpe:/o:opensuse:tumbleweed"
+				]
+			}
+		}
+	},
+	"criteria": {
+		"operator": "AND",
+		"criterias": [
+			{
+				"operator": "OR",
+				"criterions": [
+					{
+						"test_ref": "oval:org.opensuse.security:tst:2009953448",
+						"comment": "gh-2.62.0-1.1 is installed"
+					},
+					{
+						"test_ref": "oval:org.opensuse.security:tst:2009953449",
+						"comment": "gh-bash-completion-2.62.0-1.1 is installed"
+					},
+					{
+						"test_ref": "oval:org.opensuse.security:tst:2009953450",
+						"comment": "gh-fish-completion-2.62.0-1.1 is installed"
+					},
+					{
+						"test_ref": "oval:org.opensuse.security:tst:2009953451",
+						"comment": "gh-zsh-completion-2.62.0-1.1 is installed"
+					}
+				]
+			}
+		],
+		"criterions": [
+			{
+				"test_ref": "oval:org.opensuse.security:tst:2009634834",
+				"comment": "openSUSE Tumbleweed is installed"
+			}
+		]
+	}
+}
