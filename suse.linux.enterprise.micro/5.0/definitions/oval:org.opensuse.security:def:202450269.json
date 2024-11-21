@@ -1,0 +1,73 @@
+{
+	"id": "oval:org.opensuse.security:def:202450269",
+	"version": "1",
+	"class": "vulnerability",
+	"metadata": {
+		"title": "CVE-2024-50269",
+		"affected": {
+			"family": "unix",
+			"platform": [
+				"SUSE Linux Enterprise Micro 5.0"
+			]
+		},
+		"reference": [
+			{
+				"ref_id": "Mitre CVE-2024-50269",
+				"ref_url": "https://cve.mitre.org/cgi-bin/cvename.cgi?name=CVE-2024-50269",
+				"source": "CVE"
+			},
+			{
+				"ref_id": "SUSE CVE-2024-50269",
+				"ref_url": "https://www.suse.com/security/cve/CVE-2024-50269",
+				"source": "SUSE CVE"
+			}
+		],
+		"description": "\n    In the Linux kernel, the following vulnerability has been resolved:\n\nusb: musb: sunxi: Fix accessing an released usb phy\n\nCommit 6ed05c68cbca (\"usb: musb: sunxi: Explicitly release USB PHY on\nexit\") will cause that usb phy @glue->xceiv is accessed after released.\n\n1) register platform driver @sunxi_musb_driver\n// get the usb phy @glue->xceiv\nsunxi_musb_probe() -> devm_usb_get_phy().\n\n2) register and unregister platform driver @musb_driver\nmusb_probe() -> sunxi_musb_init()\nuse the phy here\n//the phy is released here\nmusb_remove() -> sunxi_musb_exit() -> devm_usb_put_phy()\n\n3) register @musb_driver again\nmusb_probe() -> sunxi_musb_init()\nuse the phy here but the phy has been released at 2).\n...\n\nFixed by reverting the commit, namely, removing devm_usb_put_phy()\nfrom sunxi_musb_exit().\n    ",
+		"advisory": {
+			"from": "security@suse.de",
+			"severity": "Moderate",
+			"cve": [
+				{
+					"text": "CVE-2024-50269 at SUSE",
+					"href": "https://www.suse.com/security/cve/CVE-2024-50269/",
+					"impact": "medium",
+					"cvss3": "4.3/CVSS:3.1/AV:P/AC:L/PR:L/UI:N/S:U/C:N/I:N/A:H"
+				},
+				{
+					"text": "CVE-2024-50269 at NVD",
+					"href": "https://nvd.nist.gov/vuln/detail/CVE-2024-50269"
+				}
+			],
+			"bugzilla": [
+				{
+					"text": "SUSE bug 1233458",
+					"href": "https://bugzilla.suse.com/1233458"
+				}
+			],
+			"issued": {
+				"date": "2024-11-21"
+			},
+			"updated": {
+				"date": "2024-11-21"
+			},
+			"affected_cpe_list": {
+				"cpe": [
+					"cpe:/o:suse:suse-microos:5.0"
+				]
+			}
+		}
+	},
+	"criteria": {
+		"operator": "AND",
+		"criterions": [
+			{
+				"test_ref": "oval:org.opensuse.security:tst:2009704855",
+				"comment": "SUSE Linux Enterprise Micro 5.0 is installed"
+			},
+			{
+				"test_ref": "oval:org.opensuse.security:tst:2009334017",
+				"comment": "kernel-default is not affected"
+			}
+		]
+	}
+}
