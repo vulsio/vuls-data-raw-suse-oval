@@ -1,0 +1,120 @@
+{
+	"id": "oval:org.opensuse.security:def:202426803",
+	"version": "1",
+	"class": "vulnerability",
+	"metadata": {
+		"title": "CVE-2024-26803",
+		"affected": {
+			"family": "unix",
+			"platform": [
+				"SUSE Linux Enterprise Micro 6.1"
+			]
+		},
+		"reference": [
+			{
+				"ref_id": "Mitre CVE-2024-26803",
+				"ref_url": "https://cve.mitre.org/cgi-bin/cvename.cgi?name=CVE-2024-26803",
+				"source": "CVE"
+			},
+			{
+				"ref_id": "SUSE CVE-2024-26803",
+				"ref_url": "https://www.suse.com/security/cve/CVE-2024-26803",
+				"source": "SUSE CVE"
+			}
+		],
+		"description": "\n    In the Linux kernel, the following vulnerability has been resolved:\n\nnet: veth: clear GRO when clearing XDP even when down\n\nveth sets NETIF_F_GRO automatically when XDP is enabled,\nbecause both features use the same NAPI machinery.\n\nThe logic to clear NETIF_F_GRO sits in veth_disable_xdp() which\nis called both on ndo_stop and when XDP is turned off.\nTo avoid the flag from being cleared when the device is brought\ndown, the clearing is skipped when IFF_UP is not set.\nBringing the device down should indeed not modify its features.\n\nUnfortunately, this means that clearing is also skipped when\nXDP is disabled _while_ the device is down. And there's nothing\non the open path to bring the device features back into sync.\nIOW if user enables XDP, disables it and then brings the device\nup we'll end up with a stray GRO flag set but no NAPI instances.\n\nWe don't depend on the GRO flag on the datapath, so the datapath\nwon't crash. We will crash (or hang), however, next time features\nare sync'ed (either by user via ethtool or peer changing its config).\nThe GRO flag will go away, and veth will try to disable the NAPIs.\nBut the open path never created them since XDP was off, the GRO flag\nwas a stray. If NAPI was initialized before we'll hang in napi_disable().\nIf it never was we'll crash trying to stop uninitialized hrtimer.\n\nMove the GRO flag updates to the XDP enable / disable paths,\ninstead of mixing them with the ndo_open / ndo_close paths.\n    ",
+		"advisory": {
+			"from": "security@suse.de",
+			"severity": "Moderate",
+			"cve": [
+				{
+					"text": "CVE-2024-26803 at SUSE",
+					"href": "https://www.suse.com/security/cve/CVE-2024-26803/",
+					"impact": "medium",
+					"cvss3": "5.5/CVSS:3.1/AV:L/AC:L/PR:L/UI:N/S:U/C:N/I:N/A:H"
+				},
+				{
+					"text": "CVE-2024-26803 at NVD",
+					"href": "https://nvd.nist.gov/vuln/detail/CVE-2024-26803"
+				}
+			],
+			"bugzilla": [
+				{
+					"text": "SUSE bug 1222788",
+					"href": "https://bugzilla.suse.com/1222788"
+				}
+			],
+			"issued": {
+				"date": "2024-11-24"
+			},
+			"updated": {
+				"date": "2024-11-24"
+			},
+			"affected_cpe_list": {}
+		}
+	},
+	"criteria": {
+		"operator": "AND",
+		"criterias": [
+			{
+				"operator": "OR",
+				"criterions": [
+					{
+						"test_ref": "oval:org.opensuse.security:tst:2009954203",
+						"comment": "kernel-default-6.4.0-19.1 is installed"
+					},
+					{
+						"test_ref": "oval:org.opensuse.security:tst:2009954204",
+						"comment": "kernel-default-devel-6.4.0-19.1 is installed"
+					},
+					{
+						"test_ref": "oval:org.opensuse.security:tst:2009954205",
+						"comment": "kernel-default-extra-6.4.0-19.1 is installed"
+					},
+					{
+						"test_ref": "oval:org.opensuse.security:tst:2009954206",
+						"comment": "kernel-default-livepatch-6.4.0-19.1 is installed"
+					},
+					{
+						"test_ref": "oval:org.opensuse.security:tst:2009954207",
+						"comment": "kernel-devel-6.4.0-19.1 is installed"
+					},
+					{
+						"test_ref": "oval:org.opensuse.security:tst:2009954208",
+						"comment": "kernel-devel-rt-6.4.0-10.1 is installed"
+					},
+					{
+						"test_ref": "oval:org.opensuse.security:tst:2009954209",
+						"comment": "kernel-kvmsmall-6.4.0-19.1 is installed"
+					},
+					{
+						"test_ref": "oval:org.opensuse.security:tst:2009954210",
+						"comment": "kernel-macros-6.4.0-19.1 is installed"
+					},
+					{
+						"test_ref": "oval:org.opensuse.security:tst:2009954211",
+						"comment": "kernel-rt-6.4.0-10.1 is installed"
+					},
+					{
+						"test_ref": "oval:org.opensuse.security:tst:2009954212",
+						"comment": "kernel-rt-devel-6.4.0-10.1 is installed"
+					},
+					{
+						"test_ref": "oval:org.opensuse.security:tst:2009954213",
+						"comment": "kernel-source-6.4.0-19.1 is installed"
+					},
+					{
+						"test_ref": "oval:org.opensuse.security:tst:2009954214",
+						"comment": "kernel-source-rt-6.4.0-10.1 is installed"
+					}
+				]
+			}
+		],
+		"criterions": [
+			{
+				"test_ref": "oval:org.opensuse.security:tst:2009954035",
+				"comment": "SUSE Linux Enterprise Micro 6.1 is installed"
+			}
+		]
+	}
+}

@@ -1,0 +1,165 @@
+{
+	"id": "oval:org.opensuse.security:def:202440943",
+	"version": "1",
+	"class": "vulnerability",
+	"metadata": {
+		"title": "CVE-2024-40943",
+		"affected": {
+			"family": "unix",
+			"platform": [
+				"SUSE Linux Enterprise Micro 6.1"
+			]
+		},
+		"reference": [
+			{
+				"ref_id": "Mitre CVE-2024-40943",
+				"ref_url": "https://cve.mitre.org/cgi-bin/cvename.cgi?name=CVE-2024-40943",
+				"source": "CVE"
+			},
+			{
+				"ref_id": "SUSE CVE-2024-40943",
+				"ref_url": "https://www.suse.com/security/cve/CVE-2024-40943",
+				"source": "SUSE CVE"
+			},
+			{
+				"ref_id": "SUSE-SU-2024:2892-1",
+				"ref_url": "https://lists.suse.com/pipermail/sle-security-updates/2024-August/019188.html",
+				"source": "SUSE-SU"
+			},
+			{
+				"ref_id": "SUSE-SU-2024:2894-1",
+				"ref_url": "https://lists.suse.com/pipermail/sle-updates/2024-August/036430.html",
+				"source": "SUSE-SU"
+			},
+			{
+				"ref_id": "SUSE-SU-2024:2901-1",
+				"ref_url": "https://lists.suse.com/pipermail/sle-updates/2024-August/036444.html",
+				"source": "SUSE-SU"
+			},
+			{
+				"ref_id": "SUSE-SU-2024:2939-1",
+				"ref_url": "https://lists.suse.com/pipermail/sle-security-updates/2024-August/019211.html",
+				"source": "SUSE-SU"
+			},
+			{
+				"ref_id": "SUSE-SU-2024:2940-1",
+				"ref_url": "https://lists.suse.com/pipermail/sle-updates/2024-August/036478.html",
+				"source": "SUSE-SU"
+			},
+			{
+				"ref_id": "SUSE-SU-2024:2947-1",
+				"ref_url": "https://lists.suse.com/pipermail/sle-updates/2024-August/036488.html",
+				"source": "SUSE-SU"
+			},
+			{
+				"ref_id": "SUSE-SU-2024:3194-1",
+				"ref_url": "https://lists.suse.com/pipermail/sle-updates/2024-September/036835.html",
+				"source": "SUSE-SU"
+			},
+			{
+				"ref_id": "SUSE-SU-2024:3195-1",
+				"ref_url": "https://lists.suse.com/pipermail/sle-updates/2024-September/036842.html",
+				"source": "SUSE-SU"
+			},
+			{
+				"ref_id": "SUSE-SU-2024:3383-1",
+				"ref_url": "https://lists.suse.com/pipermail/sle-security-updates/2024-September/019497.html",
+				"source": "SUSE-SU"
+			}
+		],
+		"description": "\n    In the Linux kernel, the following vulnerability has been resolved:\n\nocfs2: fix races between hole punching and AIO+DIO\n\nAfter commit \"ocfs2: return real error code in ocfs2_dio_wr_get_block\",\nfstests/generic/300 become from always failed to sometimes failed:\n\n========================================================================\n[  473.293420 ] run fstests generic/300\n\n[  475.296983 ] JBD2: Ignoring recovery information on journal\n[  475.302473 ] ocfs2: Mounting device (253,1) on (node local, slot 0) with ordered data mode.\n[  494.290998 ] OCFS2: ERROR (device dm-1): ocfs2_change_extent_flag: Owner 5668 has an extent at cpos 78723 which can no longer be found\n[  494.291609 ] On-disk corruption discovered. Please run fsck.ocfs2 once the filesystem is unmounted.\n[  494.292018 ] OCFS2: File system is now read-only.\n[  494.292224 ] (kworker/19:11,2628,19):ocfs2_mark_extent_written:5272 ERROR: status = -30\n[  494.292602 ] (kworker/19:11,2628,19):ocfs2_dio_end_io_write:2374 ERROR: status = -3\nfio: io_u error on file /mnt/scratch/racer: Read-only file system: write offset=460849152, buflen=131072\n=========================================================================\n\nIn __blockdev_direct_IO, ocfs2_dio_wr_get_block is called to add unwritten\nextents to a list.  extents are also inserted into extent tree in\nocfs2_write_begin_nolock.  Then another thread call fallocate to puch a\nhole at one of the unwritten extent.  The extent at cpos was removed by\nocfs2_remove_extent().  At end io worker thread, ocfs2_search_extent_list\nfound there is no such extent at the cpos.\n\n    T1                        T2                T3\n                              inode lock\n                                ...\n                                insert extents\n                                ...\n                              inode unlock\nocfs2_fallocate\n __ocfs2_change_file_space\n  inode lock\n  lock ip_alloc_sem\n  ocfs2_remove_inode_range inode\n   ocfs2_remove_btree_range\n    ocfs2_remove_extent\n    ^---remove the extent at cpos 78723\n  ...\n  unlock ip_alloc_sem\n  inode unlock\n                                       ocfs2_dio_end_io\n                                        ocfs2_dio_end_io_write\n                                         lock ip_alloc_sem\n                                         ocfs2_mark_extent_written\n                                          ocfs2_change_extent_flag\n                                           ocfs2_search_extent_list\n                                           ^---failed to find extent\n                                          ...\n                                          unlock ip_alloc_sem\n\nIn most filesystems, fallocate is not compatible with racing with AIO+DIO,\nso fix it by adding to wait for all dio before fallocate/punch_hole like\next4.\n    ",
+		"advisory": {
+			"from": "security@suse.de",
+			"severity": "Moderate",
+			"cve": [
+				{
+					"text": "CVE-2024-40943 at SUSE",
+					"href": "https://www.suse.com/security/cve/CVE-2024-40943/",
+					"impact": "medium",
+					"cvss3": "4.7/CVSS:3.1/AV:L/AC:H/PR:L/UI:N/S:U/C:N/I:N/A:H"
+				},
+				{
+					"text": "CVE-2024-40943 at NVD",
+					"href": "https://nvd.nist.gov/vuln/detail/CVE-2024-40943"
+				}
+			],
+			"bugzilla": [
+				{
+					"text": "SUSE bug 1227849",
+					"href": "https://bugzilla.suse.com/1227849"
+				}
+			],
+			"issued": {
+				"date": "2024-11-24"
+			},
+			"updated": {
+				"date": "2024-11-24"
+			},
+			"affected_cpe_list": {}
+		}
+	},
+	"criteria": {
+		"operator": "AND",
+		"criterias": [
+			{
+				"operator": "OR",
+				"criterions": [
+					{
+						"test_ref": "oval:org.opensuse.security:tst:2009954203",
+						"comment": "kernel-default-6.4.0-19.1 is installed"
+					},
+					{
+						"test_ref": "oval:org.opensuse.security:tst:2009954204",
+						"comment": "kernel-default-devel-6.4.0-19.1 is installed"
+					},
+					{
+						"test_ref": "oval:org.opensuse.security:tst:2009954205",
+						"comment": "kernel-default-extra-6.4.0-19.1 is installed"
+					},
+					{
+						"test_ref": "oval:org.opensuse.security:tst:2009954206",
+						"comment": "kernel-default-livepatch-6.4.0-19.1 is installed"
+					},
+					{
+						"test_ref": "oval:org.opensuse.security:tst:2009954207",
+						"comment": "kernel-devel-6.4.0-19.1 is installed"
+					},
+					{
+						"test_ref": "oval:org.opensuse.security:tst:2009954208",
+						"comment": "kernel-devel-rt-6.4.0-10.1 is installed"
+					},
+					{
+						"test_ref": "oval:org.opensuse.security:tst:2009954209",
+						"comment": "kernel-kvmsmall-6.4.0-19.1 is installed"
+					},
+					{
+						"test_ref": "oval:org.opensuse.security:tst:2009954210",
+						"comment": "kernel-macros-6.4.0-19.1 is installed"
+					},
+					{
+						"test_ref": "oval:org.opensuse.security:tst:2009954211",
+						"comment": "kernel-rt-6.4.0-10.1 is installed"
+					},
+					{
+						"test_ref": "oval:org.opensuse.security:tst:2009954212",
+						"comment": "kernel-rt-devel-6.4.0-10.1 is installed"
+					},
+					{
+						"test_ref": "oval:org.opensuse.security:tst:2009954213",
+						"comment": "kernel-source-6.4.0-19.1 is installed"
+					},
+					{
+						"test_ref": "oval:org.opensuse.security:tst:2009954214",
+						"comment": "kernel-source-rt-6.4.0-10.1 is installed"
+					}
+				]
+			}
+		],
+		"criterions": [
+			{
+				"test_ref": "oval:org.opensuse.security:tst:2009954035",
+				"comment": "SUSE Linux Enterprise Micro 6.1 is installed"
+			}
+		]
+	}
+}

@@ -1,0 +1,165 @@
+{
+	"id": "oval:org.opensuse.security:def:202426996",
+	"version": "1",
+	"class": "vulnerability",
+	"metadata": {
+		"title": "CVE-2024-26996",
+		"affected": {
+			"family": "unix",
+			"platform": [
+				"SUSE Linux Enterprise Micro 6.1"
+			]
+		},
+		"reference": [
+			{
+				"ref_id": "Mitre CVE-2024-26996",
+				"ref_url": "https://cve.mitre.org/cgi-bin/cvename.cgi?name=CVE-2024-26996",
+				"source": "CVE"
+			},
+			{
+				"ref_id": "SUSE CVE-2024-26996",
+				"ref_url": "https://www.suse.com/security/cve/CVE-2024-26996",
+				"source": "SUSE CVE"
+			},
+			{
+				"ref_id": "SUSE-SU-2024:1979-1",
+				"ref_url": "https://lists.suse.com/pipermail/sle-updates/2024-June/035536.html",
+				"source": "SUSE-SU"
+			},
+			{
+				"ref_id": "SUSE-SU-2024:1983-1",
+				"ref_url": "https://lists.suse.com/pipermail/sle-updates/2024-June/035554.html",
+				"source": "SUSE-SU"
+			},
+			{
+				"ref_id": "SUSE-SU-2024:2008-1",
+				"ref_url": "https://lists.suse.com/pipermail/sle-updates/2024-June/035569.html",
+				"source": "SUSE-SU"
+			},
+			{
+				"ref_id": "SUSE-SU-2024:2019-1",
+				"ref_url": "https://lists.suse.com/pipermail/sle-updates/2024-June/035578.html",
+				"source": "SUSE-SU"
+			},
+			{
+				"ref_id": "SUSE-SU-2024:2135-1",
+				"ref_url": "https://lists.suse.com/pipermail/sle-updates/2024-June/035681.html",
+				"source": "SUSE-SU"
+			},
+			{
+				"ref_id": "SUSE-SU-2024:2184-1",
+				"ref_url": "https://lists.suse.com/pipermail/sle-updates/2024-June/035716.html",
+				"source": "SUSE-SU"
+			},
+			{
+				"ref_id": "SUSE-SU-2024:2190-1",
+				"ref_url": "https://lists.suse.com/pipermail/sle-updates/2024-June/035732.html",
+				"source": "SUSE-SU"
+			},
+			{
+				"ref_id": "SUSE-SU-2024:2203-1",
+				"ref_url": "https://lists.suse.com/pipermail/sle-security-updates/2024-August/019244.html",
+				"source": "SUSE-SU"
+			},
+			{
+				"ref_id": "SUSE-SU-2024:2973-1",
+				"ref_url": "https://lists.suse.com/pipermail/sle-security-updates/2024-August/019280.html",
+				"source": "SUSE-SU"
+			}
+		],
+		"description": "\n    In the Linux kernel, the following vulnerability has been resolved:\n\nusb: gadget: f_ncm: Fix UAF ncm object at re-bind after usb ep transport error\n\nWhen ncm function is working and then stop usb0 interface for link down,\neth_stop() is called. At this piont, accidentally if usb transport error\nshould happen in usb_ep_enable(), 'in_ep' and/or 'out_ep' may not be enabled.\n\nAfter that, ncm_disable() is called to disable for ncm unbind\nbut gether_disconnect() is never called since 'in_ep' is not enabled.\n\nAs the result, ncm object is released in ncm unbind\nbut 'dev->port_usb' associated to 'ncm->port' is not NULL.\n\nAnd when ncm bind again to recover netdev, ncm object is reallocated\nbut usb0 interface is already associated to previous released ncm object.\n\nTherefore, once usb0 interface is up and eth_start_xmit() is called,\nreleased ncm object is dereferrenced and it might cause use-after-free memory.\n\n[function unlink via configfs]\n  usb0: eth_stop dev->port_usb=ffffff9b179c3200\n  --> error happens in usb_ep_enable().\n  NCM: ncm_disable: ncm=ffffff9b179c3200\n  --> no gether_disconnect() since ncm->port.in_ep->enabled is false.\n  NCM: ncm_unbind: ncm unbind ncm=ffffff9b179c3200\n  NCM: ncm_free: ncm free ncm=ffffff9b179c3200   <-- released ncm\n\n[function link via configfs]\n  NCM: ncm_alloc: ncm alloc ncm=ffffff9ac4f8a000\n  NCM: ncm_bind: ncm bind ncm=ffffff9ac4f8a000\n  NCM: ncm_set_alt: ncm=ffffff9ac4f8a000 alt=0\n  usb0: eth_open dev->port_usb=ffffff9b179c3200  <-- previous released ncm\n  usb0: eth_start dev->port_usb=ffffff9b179c3200 <--\n  eth_start_xmit()\n  --> dev->wrap()\n  Unable to handle kernel paging request at virtual address dead00000000014f\n\nThis patch addresses the issue by checking if 'ncm->netdev' is not NULL at\nncm_disable() to call gether_disconnect() to deassociate 'dev->port_usb'.\nIt's more reasonable to check 'ncm->netdev' to call gether_connect/disconnect\nrather than check 'ncm->port.in_ep->enabled' since it might not be enabled\nbut the gether connection might be established.\n    ",
+		"advisory": {
+			"from": "security@suse.de",
+			"severity": "Moderate",
+			"cve": [
+				{
+					"text": "CVE-2024-26996 at SUSE",
+					"href": "https://www.suse.com/security/cve/CVE-2024-26996/",
+					"impact": "medium",
+					"cvss3": "6.4/CVSS:3.1/AV:L/AC:H/PR:H/UI:N/S:U/C:H/I:H/A:H"
+				},
+				{
+					"text": "CVE-2024-26996 at NVD",
+					"href": "https://nvd.nist.gov/vuln/detail/CVE-2024-26996"
+				}
+			],
+			"bugzilla": [
+				{
+					"text": "SUSE bug 1223752",
+					"href": "https://bugzilla.suse.com/1223752"
+				}
+			],
+			"issued": {
+				"date": "2024-11-24"
+			},
+			"updated": {
+				"date": "2024-11-24"
+			},
+			"affected_cpe_list": {}
+		}
+	},
+	"criteria": {
+		"operator": "AND",
+		"criterias": [
+			{
+				"operator": "OR",
+				"criterions": [
+					{
+						"test_ref": "oval:org.opensuse.security:tst:2009954203",
+						"comment": "kernel-default-6.4.0-19.1 is installed"
+					},
+					{
+						"test_ref": "oval:org.opensuse.security:tst:2009954204",
+						"comment": "kernel-default-devel-6.4.0-19.1 is installed"
+					},
+					{
+						"test_ref": "oval:org.opensuse.security:tst:2009954205",
+						"comment": "kernel-default-extra-6.4.0-19.1 is installed"
+					},
+					{
+						"test_ref": "oval:org.opensuse.security:tst:2009954206",
+						"comment": "kernel-default-livepatch-6.4.0-19.1 is installed"
+					},
+					{
+						"test_ref": "oval:org.opensuse.security:tst:2009954207",
+						"comment": "kernel-devel-6.4.0-19.1 is installed"
+					},
+					{
+						"test_ref": "oval:org.opensuse.security:tst:2009954208",
+						"comment": "kernel-devel-rt-6.4.0-10.1 is installed"
+					},
+					{
+						"test_ref": "oval:org.opensuse.security:tst:2009954209",
+						"comment": "kernel-kvmsmall-6.4.0-19.1 is installed"
+					},
+					{
+						"test_ref": "oval:org.opensuse.security:tst:2009954210",
+						"comment": "kernel-macros-6.4.0-19.1 is installed"
+					},
+					{
+						"test_ref": "oval:org.opensuse.security:tst:2009954211",
+						"comment": "kernel-rt-6.4.0-10.1 is installed"
+					},
+					{
+						"test_ref": "oval:org.opensuse.security:tst:2009954212",
+						"comment": "kernel-rt-devel-6.4.0-10.1 is installed"
+					},
+					{
+						"test_ref": "oval:org.opensuse.security:tst:2009954213",
+						"comment": "kernel-source-6.4.0-19.1 is installed"
+					},
+					{
+						"test_ref": "oval:org.opensuse.security:tst:2009954214",
+						"comment": "kernel-source-rt-6.4.0-10.1 is installed"
+					}
+				]
+			}
+		],
+		"criterions": [
+			{
+				"test_ref": "oval:org.opensuse.security:tst:2009954035",
+				"comment": "SUSE Linux Enterprise Micro 6.1 is installed"
+			}
+		]
+	}
+}

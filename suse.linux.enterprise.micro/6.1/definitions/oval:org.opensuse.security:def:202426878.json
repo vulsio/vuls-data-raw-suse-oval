@@ -1,0 +1,175 @@
+{
+	"id": "oval:org.opensuse.security:def:202426878",
+	"version": "1",
+	"class": "vulnerability",
+	"metadata": {
+		"title": "CVE-2024-26878",
+		"affected": {
+			"family": "unix",
+			"platform": [
+				"SUSE Linux Enterprise Micro 6.1"
+			]
+		},
+		"reference": [
+			{
+				"ref_id": "Mitre CVE-2024-26878",
+				"ref_url": "https://cve.mitre.org/cgi-bin/cvename.cgi?name=CVE-2024-26878",
+				"source": "CVE"
+			},
+			{
+				"ref_id": "SUSE CVE-2024-26878",
+				"ref_url": "https://www.suse.com/security/cve/CVE-2024-26878",
+				"source": "SUSE CVE"
+			},
+			{
+				"ref_id": "SUSE-SU-2024:1643-1",
+				"ref_url": "https://lists.suse.com/pipermail/sle-updates/2024-May/035264.html",
+				"source": "SUSE-SU"
+			},
+			{
+				"ref_id": "SUSE-SU-2024:1644-1",
+				"ref_url": "https://lists.suse.com/pipermail/sle-updates/2024-May/035263.html",
+				"source": "SUSE-SU"
+			},
+			{
+				"ref_id": "SUSE-SU-2024:1646-1",
+				"ref_url": "https://lists.suse.com/pipermail/sle-updates/2024-May/035261.html",
+				"source": "SUSE-SU"
+			},
+			{
+				"ref_id": "SUSE-SU-2024:1648-1",
+				"ref_url": "https://lists.suse.com/pipermail/sle-updates/2024-May/035259.html",
+				"source": "SUSE-SU"
+			},
+			{
+				"ref_id": "SUSE-SU-2024:1648-2",
+				"ref_url": "https://lists.suse.com/pipermail/sle-updates/2024-May/035319.html",
+				"source": "SUSE-SU"
+			},
+			{
+				"ref_id": "SUSE-SU-2024:1659-1",
+				"ref_url": "https://lists.suse.com/pipermail/sle-updates/2024-May/035281.html",
+				"source": "SUSE-SU"
+			},
+			{
+				"ref_id": "SUSE-SU-2024:1663-1",
+				"ref_url": "https://lists.suse.com/pipermail/sle-security-updates/2024-August/019268.html",
+				"source": "SUSE-SU"
+			},
+			{
+				"ref_id": "SUSE-SU-2024:1870-1",
+				"ref_url": "https://lists.suse.com/pipermail/sle-updates/2024-May/035427.html",
+				"source": "SUSE-SU"
+			},
+			{
+				"ref_id": "SUSE-SU-2024:2135-1",
+				"ref_url": "https://lists.suse.com/pipermail/sle-updates/2024-June/035681.html",
+				"source": "SUSE-SU"
+			},
+			{
+				"ref_id": "SUSE-SU-2024:2203-1",
+				"ref_url": "https://lists.suse.com/pipermail/sle-security-updates/2024-August/019244.html",
+				"source": "SUSE-SU"
+			},
+			{
+				"ref_id": "SUSE-SU-2024:2973-1",
+				"ref_url": "https://lists.suse.com/pipermail/sle-security-updates/2024-August/019280.html",
+				"source": "SUSE-SU"
+			}
+		],
+		"description": "\n    In the Linux kernel, the following vulnerability has been resolved:\n\nquota: Fix potential NULL pointer dereference\n\nBelow race may cause NULL pointer dereference\n\nP1\t\t\t\t\tP2\ndquot_free_inode\t\t\tquota_off\n\t\t\t\t\t  drop_dquot_ref\n\t\t\t\t\t   remove_dquot_ref\n\t\t\t\t\t   dquots = i_dquot(inode)\n  dquots = i_dquot(inode)\n  srcu_read_lock\n  dquots[cnt]) != NULL (1)\n\t\t\t\t\t     dquots[type] = NULL (2)\n  spin_lock(&dquots[cnt]->dq_dqb_lock) (3)\n   ....\n\nIf dquot_free_inode(or other routines) checks inode's quota pointers (1)\nbefore quota_off sets it to NULL(2) and use it (3) after that, NULL pointer\ndereference will be triggered.\n\nSo let's fix it by using a temporary pointer to avoid this issue.\n    ",
+		"advisory": {
+			"from": "security@suse.de",
+			"severity": "Moderate",
+			"cve": [
+				{
+					"text": "CVE-2024-26878 at SUSE",
+					"href": "https://www.suse.com/security/cve/CVE-2024-26878/",
+					"impact": "medium",
+					"cvss3": "5.5/CVSS:3.1/AV:L/AC:L/PR:L/UI:N/S:U/C:N/I:N/A:H"
+				},
+				{
+					"text": "CVE-2024-26878 at NVD",
+					"href": "https://nvd.nist.gov/vuln/detail/CVE-2024-26878"
+				}
+			],
+			"bugzilla": [
+				{
+					"text": "SUSE bug 1223060",
+					"href": "https://bugzilla.suse.com/1223060"
+				}
+			],
+			"issued": {
+				"date": "2024-11-24"
+			},
+			"updated": {
+				"date": "2024-11-24"
+			},
+			"affected_cpe_list": {}
+		}
+	},
+	"criteria": {
+		"operator": "AND",
+		"criterias": [
+			{
+				"operator": "OR",
+				"criterions": [
+					{
+						"test_ref": "oval:org.opensuse.security:tst:2009954203",
+						"comment": "kernel-default-6.4.0-19.1 is installed"
+					},
+					{
+						"test_ref": "oval:org.opensuse.security:tst:2009954204",
+						"comment": "kernel-default-devel-6.4.0-19.1 is installed"
+					},
+					{
+						"test_ref": "oval:org.opensuse.security:tst:2009954205",
+						"comment": "kernel-default-extra-6.4.0-19.1 is installed"
+					},
+					{
+						"test_ref": "oval:org.opensuse.security:tst:2009954206",
+						"comment": "kernel-default-livepatch-6.4.0-19.1 is installed"
+					},
+					{
+						"test_ref": "oval:org.opensuse.security:tst:2009954207",
+						"comment": "kernel-devel-6.4.0-19.1 is installed"
+					},
+					{
+						"test_ref": "oval:org.opensuse.security:tst:2009954208",
+						"comment": "kernel-devel-rt-6.4.0-10.1 is installed"
+					},
+					{
+						"test_ref": "oval:org.opensuse.security:tst:2009954209",
+						"comment": "kernel-kvmsmall-6.4.0-19.1 is installed"
+					},
+					{
+						"test_ref": "oval:org.opensuse.security:tst:2009954210",
+						"comment": "kernel-macros-6.4.0-19.1 is installed"
+					},
+					{
+						"test_ref": "oval:org.opensuse.security:tst:2009954211",
+						"comment": "kernel-rt-6.4.0-10.1 is installed"
+					},
+					{
+						"test_ref": "oval:org.opensuse.security:tst:2009954212",
+						"comment": "kernel-rt-devel-6.4.0-10.1 is installed"
+					},
+					{
+						"test_ref": "oval:org.opensuse.security:tst:2009954213",
+						"comment": "kernel-source-6.4.0-19.1 is installed"
+					},
+					{
+						"test_ref": "oval:org.opensuse.security:tst:2009954214",
+						"comment": "kernel-source-rt-6.4.0-10.1 is installed"
+					}
+				]
+			}
+		],
+		"criterions": [
+			{
+				"test_ref": "oval:org.opensuse.security:tst:2009954035",
+				"comment": "SUSE Linux Enterprise Micro 6.1 is installed"
+			}
+		]
+	}
+}

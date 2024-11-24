@@ -1,0 +1,194 @@
+{
+	"id": "oval:org.opensuse.security:def:202436894",
+	"version": "1",
+	"class": "vulnerability",
+	"metadata": {
+		"title": "CVE-2024-36894",
+		"affected": {
+			"family": "unix",
+			"platform": [
+				"SUSE Linux Enterprise Micro 6.1"
+			]
+		},
+		"reference": [
+			{
+				"ref_id": "Mitre CVE-2024-36894",
+				"ref_url": "https://cve.mitre.org/cgi-bin/cvename.cgi?name=CVE-2024-36894",
+				"source": "CVE"
+			},
+			{
+				"ref_id": "SUSE CVE-2024-36894",
+				"ref_url": "https://www.suse.com/security/cve/CVE-2024-36894",
+				"source": "SUSE CVE"
+			},
+			{
+				"ref_id": "SUSE-SU-2024:2135-1",
+				"ref_url": "https://lists.suse.com/pipermail/sle-updates/2024-June/035681.html",
+				"source": "SUSE-SU"
+			},
+			{
+				"ref_id": "SUSE-SU-2024:2203-1",
+				"ref_url": "https://lists.suse.com/pipermail/sle-security-updates/2024-August/019244.html",
+				"source": "SUSE-SU"
+			},
+			{
+				"ref_id": "SUSE-SU-2024:2360-1",
+				"ref_url": "https://lists.suse.com/pipermail/sle-updates/2024-July/035874.html",
+				"source": "SUSE-SU"
+			},
+			{
+				"ref_id": "SUSE-SU-2024:2362-1",
+				"ref_url": "https://lists.suse.com/pipermail/sle-updates/2024-July/035872.html",
+				"source": "SUSE-SU"
+			},
+			{
+				"ref_id": "SUSE-SU-2024:2365-1",
+				"ref_url": "https://lists.suse.com/pipermail/sle-updates/2024-July/035864.html",
+				"source": "SUSE-SU"
+			},
+			{
+				"ref_id": "SUSE-SU-2024:2372-1",
+				"ref_url": "https://lists.suse.com/pipermail/sle-updates/2024-July/035868.html",
+				"source": "SUSE-SU"
+			},
+			{
+				"ref_id": "SUSE-SU-2024:2381-1",
+				"ref_url": "https://lists.suse.com/pipermail/sle-updates/2024-July/035895.html",
+				"source": "SUSE-SU"
+			},
+			{
+				"ref_id": "SUSE-SU-2024:2384-1",
+				"ref_url": "https://lists.suse.com/pipermail/sle-updates/2024-July/035906.html",
+				"source": "SUSE-SU"
+			},
+			{
+				"ref_id": "SUSE-SU-2024:2385-1",
+				"ref_url": "https://lists.suse.com/pipermail/sle-updates/2024-July/035905.html",
+				"source": "SUSE-SU"
+			},
+			{
+				"ref_id": "SUSE-SU-2024:2394-1",
+				"ref_url": "https://lists.suse.com/pipermail/sle-updates/2024-July/035907.html",
+				"source": "SUSE-SU"
+			},
+			{
+				"ref_id": "SUSE-SU-2024:2495-1",
+				"ref_url": "https://lists.suse.com/pipermail/sle-security-updates/2024-July/018982.html",
+				"source": "SUSE-SU"
+			},
+			{
+				"ref_id": "SUSE-SU-2024:2561-1",
+				"ref_url": "https://lists.suse.com/pipermail/sle-security-updates/2024-July/019001.html",
+				"source": "SUSE-SU"
+			},
+			{
+				"ref_id": "SUSE-SU-2024:2939-1",
+				"ref_url": "https://lists.suse.com/pipermail/sle-security-updates/2024-August/019211.html",
+				"source": "SUSE-SU"
+			},
+			{
+				"ref_id": "SUSE-SU-2024:2973-1",
+				"ref_url": "https://lists.suse.com/pipermail/sle-security-updates/2024-August/019280.html",
+				"source": "SUSE-SU"
+			}
+		],
+		"description": "\n    In the Linux kernel, the following vulnerability has been resolved:\n\nusb: gadget: f_fs: Fix race between aio_cancel() and AIO request complete\n\nFFS based applications can utilize the aio_cancel() callback to dequeue\npending USB requests submitted to the UDC.  There is a scenario where the\nFFS application issues an AIO cancel call, while the UDC is handling a\nsoft disconnect.  For a DWC3 based implementation, the callstack looks\nlike the following:\n\n    DWC3 Gadget                               FFS Application\ndwc3_gadget_soft_disconnect()              ...\n  --> dwc3_stop_active_transfers()\n    --> dwc3_gadget_giveback(-ESHUTDOWN)\n      --> ffs_epfile_async_io_complete()   ffs_aio_cancel()\n        --> usb_ep_free_request()            --> usb_ep_dequeue()\n\nThere is currently no locking implemented between the AIO completion\nhandler and AIO cancel, so the issue occurs if the completion routine is\nrunning in parallel to an AIO cancel call coming from the FFS application.\nAs the completion call frees the USB request (io_data->req) the FFS\napplication is also referencing it for the usb_ep_dequeue() call.  This can\nlead to accessing a stale/hanging pointer.\n\ncommit b566d38857fc (\"usb: gadget: f_fs: use io_data->status consistently\")\nrelocated the usb_ep_free_request() into ffs_epfile_async_io_complete().\nHowever, in order to properly implement locking to mitigate this issue, the\nspinlock can't be added to ffs_epfile_async_io_complete(), as\nusb_ep_dequeue() (if successfully dequeuing a USB request) will call the\nfunction driver's completion handler in the same context.  Hence, leading\ninto a deadlock.\n\nFix this issue by moving the usb_ep_free_request() back to\nffs_user_copy_worker(), and ensuring that it explicitly sets io_data->req\nto NULL after freeing it within the ffs->eps_lock.  This resolves the race\ncondition above, as the ffs_aio_cancel() routine will not continue\nattempting to dequeue a request that has already been freed, or the\nffs_user_copy_work() not freeing the USB request until the AIO cancel is\ndone referencing it.\n\nThis fix depends on\n  commit b566d38857fc (\"usb: gadget: f_fs: use io_data->status\n  consistently\")\n    ",
+		"advisory": {
+			"from": "security@suse.de",
+			"severity": "Moderate",
+			"cve": [
+				{
+					"text": "CVE-2024-36894 at SUSE",
+					"href": "https://www.suse.com/security/cve/CVE-2024-36894/",
+					"impact": "high",
+					"cvss3": "7/CVSS:3.1/AV:L/AC:H/PR:L/UI:N/S:U/C:H/I:H/A:H"
+				},
+				{
+					"text": "CVE-2024-36894 at NVD",
+					"href": "https://nvd.nist.gov/vuln/detail/CVE-2024-36894"
+				}
+			],
+			"bugzilla": [
+				{
+					"text": "SUSE bug 1225749",
+					"href": "https://bugzilla.suse.com/1225749"
+				},
+				{
+					"text": "SUSE bug 1226139",
+					"href": "https://bugzilla.suse.com/1226139"
+				}
+			],
+			"issued": {
+				"date": "2024-11-24"
+			},
+			"updated": {
+				"date": "2024-11-24"
+			},
+			"affected_cpe_list": {}
+		}
+	},
+	"criteria": {
+		"operator": "AND",
+		"criterias": [
+			{
+				"operator": "OR",
+				"criterions": [
+					{
+						"test_ref": "oval:org.opensuse.security:tst:2009954203",
+						"comment": "kernel-default-6.4.0-19.1 is installed"
+					},
+					{
+						"test_ref": "oval:org.opensuse.security:tst:2009954204",
+						"comment": "kernel-default-devel-6.4.0-19.1 is installed"
+					},
+					{
+						"test_ref": "oval:org.opensuse.security:tst:2009954205",
+						"comment": "kernel-default-extra-6.4.0-19.1 is installed"
+					},
+					{
+						"test_ref": "oval:org.opensuse.security:tst:2009954206",
+						"comment": "kernel-default-livepatch-6.4.0-19.1 is installed"
+					},
+					{
+						"test_ref": "oval:org.opensuse.security:tst:2009954207",
+						"comment": "kernel-devel-6.4.0-19.1 is installed"
+					},
+					{
+						"test_ref": "oval:org.opensuse.security:tst:2009954208",
+						"comment": "kernel-devel-rt-6.4.0-10.1 is installed"
+					},
+					{
+						"test_ref": "oval:org.opensuse.security:tst:2009954209",
+						"comment": "kernel-kvmsmall-6.4.0-19.1 is installed"
+					},
+					{
+						"test_ref": "oval:org.opensuse.security:tst:2009954210",
+						"comment": "kernel-macros-6.4.0-19.1 is installed"
+					},
+					{
+						"test_ref": "oval:org.opensuse.security:tst:2009954211",
+						"comment": "kernel-rt-6.4.0-10.1 is installed"
+					},
+					{
+						"test_ref": "oval:org.opensuse.security:tst:2009954212",
+						"comment": "kernel-rt-devel-6.4.0-10.1 is installed"
+					},
+					{
+						"test_ref": "oval:org.opensuse.security:tst:2009954213",
+						"comment": "kernel-source-6.4.0-19.1 is installed"
+					},
+					{
+						"test_ref": "oval:org.opensuse.security:tst:2009954214",
+						"comment": "kernel-source-rt-6.4.0-10.1 is installed"
+					}
+				]
+			}
+		],
+		"criterions": [
+			{
+				"test_ref": "oval:org.opensuse.security:tst:2009954035",
+				"comment": "SUSE Linux Enterprise Micro 6.1 is installed"
+			}
+		]
+	}
+}
