@@ -34,6 +34,16 @@
 				"ref_id": "SUSE-SU-2024:3985-1",
 				"ref_url": "https://lists.suse.com/pipermail/sle-security-updates/2024-November/019814.html",
 				"source": "SUSE-SU"
+			},
+			{
+				"ref_id": "SUSE-SU-2024:4081-1",
+				"ref_url": "https://lists.suse.com/pipermail/sle-security-updates/2024-November/019852.html",
+				"source": "SUSE-SU"
+			},
+			{
+				"ref_id": "SUSE-SU-2024:4082-1",
+				"ref_url": "https://lists.suse.com/pipermail/sle-security-updates/2024-November/019851.html",
+				"source": "SUSE-SU"
 			}
 		],
 		"description": "\n    In the Linux kernel, the following vulnerability has been resolved:\n\nmemcg: fix possible use-after-free in memcg_write_event_control()\n\nmemcg_write_event_control() accesses the dentry->d_name of the specified\ncontrol fd to route the write call.  As a cgroup interface file can't be\nrenamed, it's safe to access d_name as long as the specified file is a\nregular cgroup file.  Also, as these cgroup interface files can't be\nremoved before the directory, it's safe to access the parent too.\n\nPrior to 347c4a874710 (\"memcg: remove cgroup_event->cft\"), there was a\ncall to __file_cft() which verified that the specified file is a regular\ncgroupfs file before further accesses.  The cftype pointer returned from\n__file_cft() was no longer necessary and the commit inadvertently dropped\nthe file type check with it allowing any file to slip through.  With the\ninvarients broken, the d_name and parent accesses can now race against\nrenames and removals of arbitrary files and cause use-after-free's.\n\nFix the bug by resurrecting the file type check in __file_cft().  Now that\ncgroupfs is implemented through kernfs, checking the file operations needs\nto go through a layer of indirection.  Instead, let's check the superblock\nand dentry type.\n    ",
@@ -68,7 +78,7 @@
 				"date": "2024-10-27"
 			},
 			"updated": {
-				"date": "2024-11-15"
+				"date": "2024-11-28"
 			},
 			"affected_cpe_list": {
 				"cpe": [
@@ -84,53 +94,6 @@
 	"criteria": {
 		"operator": "OR",
 		"criterias": [
-			{
-				"operator": "AND",
-				"criterias": [
-					{
-						"operator": "OR",
-						"criterions": [
-							{
-								"test_ref": "oval:org.opensuse.security:tst:2009669964",
-								"comment": "SUSE Linux Enterprise Micro 5.1 is installed"
-							},
-							{
-								"test_ref": "oval:org.opensuse.security:tst:2009681300",
-								"comment": "SUSE Linux Enterprise Micro 5.2 is installed"
-							},
-							{
-								"test_ref": "oval:org.opensuse.security:tst:2009952222",
-								"comment": "SUSE Linux Enterprise Micro 5.3 is installed"
-							},
-							{
-								"test_ref": "oval:org.opensuse.security:tst:2009952223",
-								"comment": "SUSE Linux Enterprise Micro 5.4 is installed"
-							}
-						]
-					},
-					{
-						"operator": "OR",
-						"criterions": [
-							{
-								"test_ref": "oval:org.opensuse.security:tst:2009334017",
-								"comment": "kernel-default is not affected"
-							},
-							{
-								"test_ref": "oval:org.opensuse.security:tst:2009705046",
-								"comment": "kernel-rt is not affected"
-							},
-							{
-								"test_ref": "oval:org.opensuse.security:tst:2009333928",
-								"comment": "kernel-source is not affected"
-							},
-							{
-								"test_ref": "oval:org.opensuse.security:tst:2009728712",
-								"comment": "kernel-source-rt is not affected"
-							}
-						]
-					}
-				]
-			},
 			{
 				"operator": "AND",
 				"criterias": [
@@ -160,6 +123,84 @@
 					{
 						"test_ref": "oval:org.opensuse.security:tst:2009951955",
 						"comment": "SUSE Linux Enterprise Micro 5.5 is installed"
+					}
+				]
+			},
+			{
+				"operator": "AND",
+				"criterias": [
+					{
+						"operator": "OR",
+						"criterions": [
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009669964",
+								"comment": "SUSE Linux Enterprise Micro 5.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009681300",
+								"comment": "SUSE Linux Enterprise Micro 5.2 is installed"
+							}
+						]
+					},
+					{
+						"operator": "OR",
+						"criterions": [
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009955217",
+								"comment": "kernel-rt-5.3.18-150300.191.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009955218",
+								"comment": "kernel-source-rt-5.3.18-150300.191.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009334017",
+								"comment": "kernel-default is not affected"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009333928",
+								"comment": "kernel-source is not affected"
+							}
+						]
+					}
+				]
+			},
+			{
+				"operator": "AND",
+				"criterias": [
+					{
+						"operator": "OR",
+						"criterions": [
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009952222",
+								"comment": "SUSE Linux Enterprise Micro 5.3 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009952223",
+								"comment": "SUSE Linux Enterprise Micro 5.4 is installed"
+							}
+						]
+					},
+					{
+						"operator": "OR",
+						"criterions": [
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009955224",
+								"comment": "kernel-rt-5.14.21-150400.15.100.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009955225",
+								"comment": "kernel-source-rt-5.14.21-150400.15.100.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009334017",
+								"comment": "kernel-default is not affected"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009333928",
+								"comment": "kernel-source is not affected"
+							}
+						]
 					}
 				]
 			}
