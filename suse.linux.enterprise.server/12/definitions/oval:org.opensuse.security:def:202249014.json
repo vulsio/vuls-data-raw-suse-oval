@@ -18,6 +18,7 @@
 				"SUSE Linux Enterprise Server 12 SP4-LTSS",
 				"SUSE Linux Enterprise Server 12 SP5",
 				"SUSE Linux Enterprise Server 12 SP5-LTSS",
+				"SUSE Linux Enterprise Server LTSS Extended Security 12 SP5",
 				"SUSE Linux Enterprise Server for SAP Applications 12",
 				"SUSE Linux Enterprise Server for SAP Applications 12 SP3",
 				"SUSE Linux Enterprise Server for SAP Applications 12 SP4",
@@ -55,6 +56,16 @@
 				"ref_id": "SUSE-SU-2024:4082-1",
 				"ref_url": "https://lists.suse.com/pipermail/sle-security-updates/2024-November/019851.html",
 				"source": "SUSE-SU"
+			},
+			{
+				"ref_id": "SUSE-SU-2024:4100-1",
+				"ref_url": "https://lists.suse.com/pipermail/sle-security-updates/2024-November/019864.html",
+				"source": "SUSE-SU"
+			},
+			{
+				"ref_id": "SUSE-SU-2024:4103-1",
+				"ref_url": "https://lists.suse.com/pipermail/sle-security-updates/2024-November/019863.html",
+				"source": "SUSE-SU"
 			}
 		],
 		"description": "\n    In the Linux kernel, the following vulnerability has been resolved:\n\nnet: tun: Fix use-after-free in tun_detach()\n\nsyzbot reported use-after-free in tun_detach() [1].  This causes call\ntrace like below:\n\n==================================================================\nBUG: KASAN: use-after-free in notifier_call_chain+0x1ee/0x200 kernel/notifier.c:75\nRead of size 8 at addr ffff88807324e2a8 by task syz-executor.0/3673\n\nCPU: 0 PID: 3673 Comm: syz-executor.0 Not tainted 6.1.0-rc5-syzkaller-00044-gcc675d22e422 #0\nHardware name: Google Google Compute Engine/Google Compute Engine, BIOS Google 10/26/2022\nCall Trace:\n <TASK>\n __dump_stack lib/dump_stack.c:88 [inline]\n dump_stack_lvl+0xd1/0x138 lib/dump_stack.c:106\n print_address_description mm/kasan/report.c:284 [inline]\n print_report+0x15e/0x461 mm/kasan/report.c:395\n kasan_report+0xbf/0x1f0 mm/kasan/report.c:495\n notifier_call_chain+0x1ee/0x200 kernel/notifier.c:75\n call_netdevice_notifiers_info+0x86/0x130 net/core/dev.c:1942\n call_netdevice_notifiers_extack net/core/dev.c:1983 [inline]\n call_netdevice_notifiers net/core/dev.c:1997 [inline]\n netdev_wait_allrefs_any net/core/dev.c:10237 [inline]\n netdev_run_todo+0xbc6/0x1100 net/core/dev.c:10351\n tun_detach drivers/net/tun.c:704 [inline]\n tun_chr_close+0xe4/0x190 drivers/net/tun.c:3467\n __fput+0x27c/0xa90 fs/file_table.c:320\n task_work_run+0x16f/0x270 kernel/task_work.c:179\n exit_task_work include/linux/task_work.h:38 [inline]\n do_exit+0xb3d/0x2a30 kernel/exit.c:820\n do_group_exit+0xd4/0x2a0 kernel/exit.c:950\n get_signal+0x21b1/0x2440 kernel/signal.c:2858\n arch_do_signal_or_restart+0x86/0x2300 arch/x86/kernel/signal.c:869\n exit_to_user_mode_loop kernel/entry/common.c:168 [inline]\n exit_to_user_mode_prepare+0x15f/0x250 kernel/entry/common.c:203\n __syscall_exit_to_user_mode_work kernel/entry/common.c:285 [inline]\n syscall_exit_to_user_mode+0x1d/0x50 kernel/entry/common.c:296\n do_syscall_64+0x46/0xb0 arch/x86/entry/common.c:86\n entry_SYSCALL_64_after_hwframe+0x63/0xcd\n\nThe cause of the issue is that sock_put() from __tun_detach() drops\nlast reference count for struct net, and then notifier_call_chain()\nfrom netdev_state_change() accesses that struct net.\n\nThis patch fixes the issue by calling sock_put() from tun_detach()\nafter all necessary accesses for the struct net has done.\n    ",
@@ -89,7 +100,7 @@
 				"date": "2024-10-27"
 			},
 			"updated": {
-				"date": "2024-11-28"
+				"date": "2024-11-29"
 			},
 			"affected_cpe_list": {
 				"cpe": [
@@ -214,19 +225,6 @@
 						"operator": "OR",
 						"criterions": [
 							{
-								"test_ref": "oval:org.opensuse.security:tst:2009258033",
-								"comment": "SUSE Linux Enterprise Server 12 SP5 is installed"
-							},
-							{
-								"test_ref": "oval:org.opensuse.security:tst:2009258033",
-								"comment": "SUSE Linux Enterprise Server 12 SP5-LTSS is installed"
-							}
-						]
-					},
-					{
-						"operator": "OR",
-						"criterions": [
-							{
 								"test_ref": "oval:org.opensuse.security:tst:2009334017",
 								"comment": "kernel-default is not affected"
 							},
@@ -263,6 +261,12 @@
 								"comment": "kernel-source-azure is not affected"
 							}
 						]
+					}
+				],
+				"criterions": [
+					{
+						"test_ref": "oval:org.opensuse.security:tst:2009258033",
+						"comment": "SUSE Linux Enterprise Server 12 SP5 is installed"
 					}
 				]
 			},
@@ -359,12 +363,40 @@
 						"operator": "OR",
 						"criterions": [
 							{
-								"test_ref": "oval:org.opensuse.security:tst:2009338031",
-								"comment": "kernel-default-kgraft is not affected"
+								"test_ref": "oval:org.opensuse.security:tst:2009728711",
+								"comment": "kernel-devel-rt is not affected"
 							},
 							{
-								"test_ref": "oval:org.opensuse.security:tst:2009696923",
-								"comment": "kernel-default-kgraft-devel is not affected"
+								"test_ref": "oval:org.opensuse.security:tst:2009728712",
+								"comment": "kernel-source-rt is not affected"
+							}
+						]
+					}
+				],
+				"criterions": [
+					{
+						"test_ref": "oval:org.opensuse.security:tst:2009279486",
+						"comment": "SUSE Linux Enterprise Real Time 12 SP5 is installed"
+					}
+				]
+			},
+			{
+				"operator": "AND",
+				"criterias": [
+					{
+						"operator": "OR",
+						"criterions": [
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009955428",
+								"comment": "kernel-default-kgraft-4.12.14-122.234.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009955429",
+								"comment": "kernel-default-kgraft-devel-4.12.14-122.234.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009955430",
+								"comment": "kgraft-patch-4_12_14-122_234-default-1-8.3.1 is installed"
 							},
 							{
 								"test_ref": "oval:org.opensuse.security:tst:2009333928",
@@ -387,20 +419,96 @@
 						"operator": "OR",
 						"criterions": [
 							{
-								"test_ref": "oval:org.opensuse.security:tst:2009728711",
-								"comment": "kernel-devel-rt is not affected"
+								"test_ref": "oval:org.opensuse.security:tst:2009955452",
+								"comment": "kernel-default-4.12.14-122.234.1 is installed"
 							},
 							{
-								"test_ref": "oval:org.opensuse.security:tst:2009728712",
-								"comment": "kernel-source-rt is not affected"
+								"test_ref": "oval:org.opensuse.security:tst:2009955453",
+								"comment": "kernel-default-base-4.12.14-122.234.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009955454",
+								"comment": "kernel-default-devel-4.12.14-122.234.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009955455",
+								"comment": "kernel-default-man-4.12.14-122.234.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009955456",
+								"comment": "kernel-devel-4.12.14-122.234.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009955457",
+								"comment": "kernel-macros-4.12.14-122.234.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009955458",
+								"comment": "kernel-source-4.12.14-122.234.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009955459",
+								"comment": "kernel-syms-4.12.14-122.234.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009340306",
+								"comment": "kernel-devel-azure is not affected"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009340305",
+								"comment": "kernel-source-azure is not affected"
 							}
 						]
 					}
 				],
 				"criterions": [
 					{
-						"test_ref": "oval:org.opensuse.security:tst:2009279486",
-						"comment": "SUSE Linux Enterprise Real Time 12 SP5 is installed"
+						"test_ref": "oval:org.opensuse.security:tst:2009258033",
+						"comment": "SUSE Linux Enterprise Server 12 SP5-LTSS is installed"
+					}
+				]
+			},
+			{
+				"operator": "AND",
+				"criterias": [
+					{
+						"operator": "OR",
+						"criterions": [
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009955478",
+								"comment": "kernel-default-4.12.14-122.234.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009955479",
+								"comment": "kernel-default-base-4.12.14-122.234.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009955480",
+								"comment": "kernel-default-devel-4.12.14-122.234.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009955456",
+								"comment": "kernel-devel-4.12.14-122.234.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009955457",
+								"comment": "kernel-macros-4.12.14-122.234.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009955458",
+								"comment": "kernel-source-4.12.14-122.234.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009955481",
+								"comment": "kernel-syms-4.12.14-122.234.1 is installed"
+							}
+						]
+					}
+				],
+				"criterions": [
+					{
+						"test_ref": "oval:org.opensuse.security:tst:2009952096",
+						"comment": "SUSE Linux Enterprise Server LTSS Extended Security 12 SP5 is installed"
 					}
 				]
 			}

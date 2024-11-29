@@ -13,6 +13,8 @@
 				"SUSE Linux Enterprise Server 12 SP3-TERADATA",
 				"SUSE Linux Enterprise Server 12 SP4-LTSS",
 				"SUSE Linux Enterprise Server 12 SP5",
+				"SUSE Linux Enterprise Server 12 SP5-LTSS",
+				"SUSE Linux Enterprise Server LTSS Extended Security 12 SP5",
 				"SUSE Linux Enterprise Server for SAP Applications 12 SP2",
 				"SUSE Linux Enterprise Server for SAP Applications 12 SP4",
 				"SUSE Linux Enterprise Server for SAP Applications 12 SP5",
@@ -29,6 +31,11 @@
 				"ref_id": "SUSE CVE-2021-47163",
 				"ref_url": "https://www.suse.com/security/cve/CVE-2021-47163",
 				"source": "SUSE CVE"
+			},
+			{
+				"ref_id": "SUSE-SU-2024:4100-1",
+				"ref_url": "https://lists.suse.com/pipermail/sle-security-updates/2024-November/019864.html",
+				"source": "SUSE-SU"
 			}
 		],
 		"description": "\n    In the Linux kernel, the following vulnerability has been resolved:\n\ntipc: wait and exit until all work queues are done\n\nOn some host, a crash could be triggered simply by repeating these\ncommands several times:\n\n  # modprobe tipc\n  # tipc bearer enable media udp name UDP1 localip 127.0.0.1\n  # rmmod tipc\n\n  [] BUG: unable to handle kernel paging request at ffffffffc096bb00\n  [] Workqueue: events 0xffffffffc096bb00\n  [] Call Trace:\n  []  ? process_one_work+0x1a7/0x360\n  []  ? worker_thread+0x30/0x390\n  []  ? create_worker+0x1a0/0x1a0\n  []  ? kthread+0x116/0x130\n  []  ? kthread_flush_work_fn+0x10/0x10\n  []  ? ret_from_fork+0x35/0x40\n\nWhen removing the TIPC module, the UDP tunnel sock will be delayed to\nrelease in a work queue as sock_release() can't be done in rtnl_lock().\nIf the work queue is schedule to run after the TIPC module is removed,\nkernel will crash as the work queue function cleanup_beareri() code no\nlonger exists when trying to invoke it.\n\nTo fix it, this patch introduce a member wq_count in tipc_net to track\nthe numbers of work queues in schedule, and  wait and exit until all\nwork queues are done in tipc_exit_net().\n    ",
@@ -57,12 +64,13 @@
 				"date": "2024-03-28"
 			},
 			"updated": {
-				"date": "2024-11-28"
+				"date": "2024-11-29"
 			},
 			"affected_cpe_list": {
 				"cpe": [
 					"cpe:/o:suse:sle-live-patching:12:sp5",
 					"cpe:/o:suse:sle-we:12:sp5",
+					"cpe:/o:suse:sles-ltss-extended-security:12:sp5",
 					"cpe:/o:suse:sles-ltss:12:sp2",
 					"cpe:/o:suse:sles-ltss:12:sp4",
 					"cpe:/o:suse:sles:12:sp5",
@@ -263,34 +271,6 @@
 						"operator": "OR",
 						"criterions": [
 							{
-								"test_ref": "oval:org.opensuse.security:tst:2009338035",
-								"comment": "kernel-default-kgraft is affected"
-							},
-							{
-								"test_ref": "oval:org.opensuse.security:tst:2009809200",
-								"comment": "kernel-default-kgraft-devel is affected"
-							},
-							{
-								"test_ref": "oval:org.opensuse.security:tst:2009333995",
-								"comment": "kernel-source is affected"
-							}
-						]
-					}
-				],
-				"criterions": [
-					{
-						"test_ref": "oval:org.opensuse.security:tst:2009273148",
-						"comment": "SUSE Linux Enterprise Live Patching 12 SP5 is installed"
-					}
-				]
-			},
-			{
-				"operator": "AND",
-				"criterias": [
-					{
-						"operator": "OR",
-						"criterions": [
-							{
 								"test_ref": "oval:org.opensuse.security:tst:2009258033",
 								"comment": "SUSE Linux Enterprise Server 12 SP5 is installed"
 							},
@@ -384,6 +364,130 @@
 					{
 						"test_ref": "oval:org.opensuse.security:tst:2009876317",
 						"comment": "SUSE Linux Enterprise Server 12 SP3-TERADATA is installed"
+					}
+				]
+			},
+			{
+				"operator": "AND",
+				"criterias": [
+					{
+						"operator": "OR",
+						"criterions": [
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009955428",
+								"comment": "kernel-default-kgraft-4.12.14-122.234.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009955429",
+								"comment": "kernel-default-kgraft-devel-4.12.14-122.234.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009955430",
+								"comment": "kgraft-patch-4_12_14-122_234-default-1-8.3.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009333995",
+								"comment": "kernel-source is affected"
+							}
+						]
+					}
+				],
+				"criterions": [
+					{
+						"test_ref": "oval:org.opensuse.security:tst:2009273148",
+						"comment": "SUSE Linux Enterprise Live Patching 12 SP5 is installed"
+					}
+				]
+			},
+			{
+				"operator": "AND",
+				"criterias": [
+					{
+						"operator": "OR",
+						"criterions": [
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009955452",
+								"comment": "kernel-default-4.12.14-122.234.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009955453",
+								"comment": "kernel-default-base-4.12.14-122.234.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009955454",
+								"comment": "kernel-default-devel-4.12.14-122.234.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009955455",
+								"comment": "kernel-default-man-4.12.14-122.234.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009955456",
+								"comment": "kernel-devel-4.12.14-122.234.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009955457",
+								"comment": "kernel-macros-4.12.14-122.234.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009955458",
+								"comment": "kernel-source-4.12.14-122.234.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009955459",
+								"comment": "kernel-syms-4.12.14-122.234.1 is installed"
+							}
+						]
+					}
+				],
+				"criterions": [
+					{
+						"test_ref": "oval:org.opensuse.security:tst:2009258033",
+						"comment": "SUSE Linux Enterprise Server 12 SP5-LTSS is installed"
+					}
+				]
+			},
+			{
+				"operator": "AND",
+				"criterias": [
+					{
+						"operator": "OR",
+						"criterions": [
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009955478",
+								"comment": "kernel-default-4.12.14-122.234.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009955479",
+								"comment": "kernel-default-base-4.12.14-122.234.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009955480",
+								"comment": "kernel-default-devel-4.12.14-122.234.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009955456",
+								"comment": "kernel-devel-4.12.14-122.234.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009955457",
+								"comment": "kernel-macros-4.12.14-122.234.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009955458",
+								"comment": "kernel-source-4.12.14-122.234.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009955481",
+								"comment": "kernel-syms-4.12.14-122.234.1 is installed"
+							}
+						]
+					}
+				],
+				"criterions": [
+					{
+						"test_ref": "oval:org.opensuse.security:tst:2009952096",
+						"comment": "SUSE Linux Enterprise Server LTSS Extended Security 12 SP5 is installed"
 					}
 				]
 			}
