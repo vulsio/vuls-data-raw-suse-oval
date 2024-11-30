@@ -1,0 +1,150 @@
+{
+	"id": "oval:org.opensuse.security:def:202436937",
+	"version": "1",
+	"class": "vulnerability",
+	"metadata": {
+		"title": "CVE-2024-36937",
+		"affected": {
+			"family": "unix",
+			"platform": [
+				"SUSE Linux Enterprise Micro 6.0"
+			]
+		},
+		"reference": [
+			{
+				"ref_id": "Mitre CVE-2024-36937",
+				"ref_url": "https://cve.mitre.org/cgi-bin/cvename.cgi?name=CVE-2024-36937",
+				"source": "CVE"
+			},
+			{
+				"ref_id": "SUSE CVE-2024-36937",
+				"ref_url": "https://www.suse.com/security/cve/CVE-2024-36937",
+				"source": "SUSE CVE"
+			},
+			{
+				"ref_id": "SUSE-SU-2024:2372-1",
+				"ref_url": "https://lists.suse.com/pipermail/sle-updates/2024-July/035868.html",
+				"source": "SUSE-SU"
+			},
+			{
+				"ref_id": "SUSE-SU-2024:2394-1",
+				"ref_url": "https://lists.suse.com/pipermail/sle-updates/2024-July/035907.html",
+				"source": "SUSE-SU"
+			},
+			{
+				"ref_id": "SUSE-SU-2024:2571-1",
+				"ref_url": "https://lists.suse.com/pipermail/sle-updates/2024-July/036103.html",
+				"source": "SUSE-SU"
+			},
+			{
+				"ref_id": "SUSE-SU-2024:2896-1",
+				"ref_url": "https://lists.suse.com/pipermail/sle-security-updates/2024-August/019185.html",
+				"source": "SUSE-SU"
+			},
+			{
+				"ref_id": "SUSE-SU-2024:2939-1",
+				"ref_url": "https://lists.suse.com/pipermail/sle-security-updates/2024-August/019211.html",
+				"source": "SUSE-SU"
+			},
+			{
+				"ref_id": "SUSE-SU-2024:2973-1",
+				"ref_url": "https://lists.suse.com/pipermail/sle-security-updates/2024-August/019280.html",
+				"source": "SUSE-SU"
+			}
+		],
+		"description": "\n    In the Linux kernel, the following vulnerability has been resolved:\n\nxdp: use flags field to disambiguate broadcast redirect\n\nWhen redirecting a packet using XDP, the bpf_redirect_map() helper will set\nup the redirect destination information in struct bpf_redirect_info (using\nthe __bpf_xdp_redirect_map() helper function), and the xdp_do_redirect()\nfunction will read this information after the XDP program returns and pass\nthe frame on to the right redirect destination.\n\nWhen using the BPF_F_BROADCAST flag to do multicast redirect to a whole\nmap, __bpf_xdp_redirect_map() sets the 'map' pointer in struct\nbpf_redirect_info to point to the destination map to be broadcast. And\nxdp_do_redirect() reacts to the value of this map pointer to decide whether\nit's dealing with a broadcast or a single-value redirect. However, if the\ndestination map is being destroyed before xdp_do_redirect() is called, the\nmap pointer will be cleared out (by bpf_clear_redirect_map()) without\nwaiting for any XDP programs to stop running. This causes xdp_do_redirect()\nto think that the redirect was to a single target, but the target pointer\nis also NULL (since broadcast redirects don't have a single target), so\nthis causes a crash when a NULL pointer is passed to dev_map_enqueue().\n\nTo fix this, change xdp_do_redirect() to react directly to the presence of\nthe BPF_F_BROADCAST flag in the 'flags' value in struct bpf_redirect_info\nto disambiguate between a single-target and a broadcast redirect. And only\nread the 'map' pointer if the broadcast flag is set, aborting if that has\nbeen cleared out in the meantime. This prevents the crash, while keeping\nthe atomic (cmpxchg-based) clearing of the map pointer itself, and without\nadding any more checks in the non-broadcast fast path.\n    ",
+		"advisory": {
+			"from": "security@suse.de",
+			"severity": "Moderate",
+			"cve": [
+				{
+					"text": "CVE-2024-36937 at SUSE",
+					"href": "https://www.suse.com/security/cve/CVE-2024-36937/",
+					"impact": "medium",
+					"cvss3": "4.7/CVSS:3.1/AV:L/AC:H/PR:L/UI:N/S:U/C:N/I:N/A:H"
+				},
+				{
+					"text": "CVE-2024-36937 at NVD",
+					"href": "https://nvd.nist.gov/vuln/detail/CVE-2024-36937"
+				}
+			],
+			"bugzilla": [
+				{
+					"text": "SUSE bug 1225834",
+					"href": "https://bugzilla.suse.com/1225834"
+				}
+			],
+			"issued": {
+				"date": "2024-11-30"
+			},
+			"updated": {
+				"date": "2024-11-30"
+			},
+			"affected_cpe_list": {
+				"cpe": [
+					"cpe:/o:suse:sl-micro:6.0"
+				]
+			}
+		}
+	},
+	"criteria": {
+		"operator": "AND",
+		"criterias": [
+			{
+				"operator": "OR",
+				"criterions": [
+					{
+						"test_ref": "oval:org.opensuse.security:tst:2009881568",
+						"comment": "kernel-default-6.4.0-18.1 is installed"
+					},
+					{
+						"test_ref": "oval:org.opensuse.security:tst:2009881569",
+						"comment": "kernel-default-base-6.4.0-17.1.1.51 is installed"
+					},
+					{
+						"test_ref": "oval:org.opensuse.security:tst:2009881570",
+						"comment": "kernel-default-extra-6.4.0-18.1 is installed"
+					},
+					{
+						"test_ref": "oval:org.opensuse.security:tst:2009950906",
+						"comment": "kernel-default-livepatch-6.4.0-18.1 is installed"
+					},
+					{
+						"test_ref": "oval:org.opensuse.security:tst:2009881571",
+						"comment": "kernel-devel-6.4.0-18.1 is installed"
+					},
+					{
+						"test_ref": "oval:org.opensuse.security:tst:2009942881",
+						"comment": "kernel-devel-rt-6.4.0-9.1 is installed"
+					},
+					{
+						"test_ref": "oval:org.opensuse.security:tst:2009881572",
+						"comment": "kernel-kvmsmall-6.4.0-18.1 is installed"
+					},
+					{
+						"test_ref": "oval:org.opensuse.security:tst:2009881573",
+						"comment": "kernel-macros-6.4.0-18.1 is installed"
+					},
+					{
+						"test_ref": "oval:org.opensuse.security:tst:2009942882",
+						"comment": "kernel-rt-6.4.0-9.1 is installed"
+					},
+					{
+						"test_ref": "oval:org.opensuse.security:tst:2009881574",
+						"comment": "kernel-source-6.4.0-18.1 is installed"
+					},
+					{
+						"test_ref": "oval:org.opensuse.security:tst:2009942883",
+						"comment": "kernel-source-rt-6.4.0-9.1 is installed"
+					}
+				]
+			}
+		],
+		"criterions": [
+			{
+				"test_ref": "oval:org.opensuse.security:tst:2009864179",
+				"comment": "SUSE Linux Enterprise Micro 6.0 is installed"
+			}
+		]
+	}
+}

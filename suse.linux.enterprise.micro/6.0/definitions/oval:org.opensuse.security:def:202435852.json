@@ -1,0 +1,150 @@
+{
+	"id": "oval:org.opensuse.security:def:202435852",
+	"version": "1",
+	"class": "vulnerability",
+	"metadata": {
+		"title": "CVE-2024-35852",
+		"affected": {
+			"family": "unix",
+			"platform": [
+				"SUSE Linux Enterprise Micro 6.0"
+			]
+		},
+		"reference": [
+			{
+				"ref_id": "Mitre CVE-2024-35852",
+				"ref_url": "https://cve.mitre.org/cgi-bin/cvename.cgi?name=CVE-2024-35852",
+				"source": "CVE"
+			},
+			{
+				"ref_id": "SUSE CVE-2024-35852",
+				"ref_url": "https://www.suse.com/security/cve/CVE-2024-35852",
+				"source": "SUSE CVE"
+			},
+			{
+				"ref_id": "SUSE-SU-2024:2008-1",
+				"ref_url": "https://lists.suse.com/pipermail/sle-updates/2024-June/035569.html",
+				"source": "SUSE-SU"
+			},
+			{
+				"ref_id": "SUSE-SU-2024:2019-1",
+				"ref_url": "https://lists.suse.com/pipermail/sle-updates/2024-June/035578.html",
+				"source": "SUSE-SU"
+			},
+			{
+				"ref_id": "SUSE-SU-2024:2135-1",
+				"ref_url": "https://lists.suse.com/pipermail/sle-updates/2024-June/035681.html",
+				"source": "SUSE-SU"
+			},
+			{
+				"ref_id": "SUSE-SU-2024:2190-1",
+				"ref_url": "https://lists.suse.com/pipermail/sle-updates/2024-June/035732.html",
+				"source": "SUSE-SU"
+			},
+			{
+				"ref_id": "SUSE-SU-2024:2203-1",
+				"ref_url": "https://lists.suse.com/pipermail/sle-security-updates/2024-August/019244.html",
+				"source": "SUSE-SU"
+			},
+			{
+				"ref_id": "SUSE-SU-2024:2973-1",
+				"ref_url": "https://lists.suse.com/pipermail/sle-security-updates/2024-August/019280.html",
+				"source": "SUSE-SU"
+			}
+		],
+		"description": "\n    In the Linux kernel, the following vulnerability has been resolved:\n\nmlxsw: spectrum_acl_tcam: Fix memory leak when canceling rehash work\n\nThe rehash delayed work is rescheduled with a delay if the number of\ncredits at end of the work is not negative as supposedly it means that\nthe migration ended. Otherwise, it is rescheduled immediately.\n\nAfter \"mlxsw: spectrum_acl_tcam: Fix possible use-after-free during\nrehash\" the above is no longer accurate as a non-negative number of\ncredits is no longer indicative of the migration being done. It can also\nhappen if the work encountered an error in which case the migration will\nresume the next time the work is scheduled.\n\nThe significance of the above is that it is possible for the work to be\npending and associated with hints that were allocated when the migration\nstarted. This leads to the hints being leaked [1] when the work is\ncanceled while pending as part of ACL region dismantle.\n\nFix by freeing the hints if hints are associated with a work that was\ncanceled while pending.\n\nBlame the original commit since the reliance on not having a pending\nwork associated with hints is fragile.\n\n[1]\nunreferenced object 0xffff88810e7c3000 (size 256):\n  comm \"kworker/0:16\", pid 176, jiffies 4295460353\n  hex dump (first 32 bytes):\n    00 30 95 11 81 88 ff ff 61 00 00 00 00 00 00 80  .0......a.......\n    00 00 61 00 40 00 00 00 00 00 00 00 04 00 00 00  ..a.@...........\n  backtrace (crc 2544ddb9):\n    [<00000000cf8cfab3>] kmalloc_trace+0x23f/0x2a0\n    [<000000004d9a1ad9>] objagg_hints_get+0x42/0x390\n    [<000000000b143cf3>] mlxsw_sp_acl_erp_rehash_hints_get+0xca/0x400\n    [<0000000059bdb60a>] mlxsw_sp_acl_tcam_vregion_rehash_work+0x868/0x1160\n    [<00000000e81fd734>] process_one_work+0x59c/0xf20\n    [<00000000ceee9e81>] worker_thread+0x799/0x12c0\n    [<00000000bda6fe39>] kthread+0x246/0x300\n    [<0000000070056d23>] ret_from_fork+0x34/0x70\n    [<00000000dea2b93e>] ret_from_fork_asm+0x1a/0x30\n    ",
+		"advisory": {
+			"from": "security@suse.de",
+			"severity": "Moderate",
+			"cve": [
+				{
+					"text": "CVE-2024-35852 at SUSE",
+					"href": "https://www.suse.com/security/cve/CVE-2024-35852/",
+					"impact": "medium",
+					"cvss3": "5.5/CVSS:3.1/AV:L/AC:L/PR:L/UI:N/S:U/C:N/I:N/A:H"
+				},
+				{
+					"text": "CVE-2024-35852 at NVD",
+					"href": "https://nvd.nist.gov/vuln/detail/CVE-2024-35852"
+				}
+			],
+			"bugzilla": [
+				{
+					"text": "SUSE bug 1224502",
+					"href": "https://bugzilla.suse.com/1224502"
+				}
+			],
+			"issued": {
+				"date": "2024-11-30"
+			},
+			"updated": {
+				"date": "2024-11-30"
+			},
+			"affected_cpe_list": {
+				"cpe": [
+					"cpe:/o:suse:sl-micro:6.0"
+				]
+			}
+		}
+	},
+	"criteria": {
+		"operator": "AND",
+		"criterias": [
+			{
+				"operator": "OR",
+				"criterions": [
+					{
+						"test_ref": "oval:org.opensuse.security:tst:2009881568",
+						"comment": "kernel-default-6.4.0-18.1 is installed"
+					},
+					{
+						"test_ref": "oval:org.opensuse.security:tst:2009881569",
+						"comment": "kernel-default-base-6.4.0-17.1.1.51 is installed"
+					},
+					{
+						"test_ref": "oval:org.opensuse.security:tst:2009881570",
+						"comment": "kernel-default-extra-6.4.0-18.1 is installed"
+					},
+					{
+						"test_ref": "oval:org.opensuse.security:tst:2009950906",
+						"comment": "kernel-default-livepatch-6.4.0-18.1 is installed"
+					},
+					{
+						"test_ref": "oval:org.opensuse.security:tst:2009881571",
+						"comment": "kernel-devel-6.4.0-18.1 is installed"
+					},
+					{
+						"test_ref": "oval:org.opensuse.security:tst:2009942881",
+						"comment": "kernel-devel-rt-6.4.0-9.1 is installed"
+					},
+					{
+						"test_ref": "oval:org.opensuse.security:tst:2009881572",
+						"comment": "kernel-kvmsmall-6.4.0-18.1 is installed"
+					},
+					{
+						"test_ref": "oval:org.opensuse.security:tst:2009881573",
+						"comment": "kernel-macros-6.4.0-18.1 is installed"
+					},
+					{
+						"test_ref": "oval:org.opensuse.security:tst:2009942882",
+						"comment": "kernel-rt-6.4.0-9.1 is installed"
+					},
+					{
+						"test_ref": "oval:org.opensuse.security:tst:2009881574",
+						"comment": "kernel-source-6.4.0-18.1 is installed"
+					},
+					{
+						"test_ref": "oval:org.opensuse.security:tst:2009942883",
+						"comment": "kernel-source-rt-6.4.0-9.1 is installed"
+					}
+				]
+			}
+		],
+		"criterions": [
+			{
+				"test_ref": "oval:org.opensuse.security:tst:2009864179",
+				"comment": "SUSE Linux Enterprise Micro 6.0 is installed"
+			}
+		]
+	}
+}

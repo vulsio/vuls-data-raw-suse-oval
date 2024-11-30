@@ -1,0 +1,135 @@
+{
+	"id": "oval:org.opensuse.security:def:202352842",
+	"version": "1",
+	"class": "vulnerability",
+	"metadata": {
+		"title": "CVE-2023-52842",
+		"affected": {
+			"family": "unix",
+			"platform": [
+				"SUSE Linux Enterprise Micro 6.0"
+			]
+		},
+		"reference": [
+			{
+				"ref_id": "Mitre CVE-2023-52842",
+				"ref_url": "https://cve.mitre.org/cgi-bin/cvename.cgi?name=CVE-2023-52842",
+				"source": "CVE"
+			},
+			{
+				"ref_id": "SUSE CVE-2023-52842",
+				"ref_url": "https://www.suse.com/security/cve/CVE-2023-52842",
+				"source": "SUSE CVE"
+			},
+			{
+				"ref_id": "SUSE-SU-2024:2571-1",
+				"ref_url": "https://lists.suse.com/pipermail/sle-updates/2024-July/036103.html",
+				"source": "SUSE-SU"
+			},
+			{
+				"ref_id": "SUSE-SU-2024:2896-1",
+				"ref_url": "https://lists.suse.com/pipermail/sle-security-updates/2024-August/019185.html",
+				"source": "SUSE-SU"
+			},
+			{
+				"ref_id": "SUSE-SU-2024:2973-1",
+				"ref_url": "https://lists.suse.com/pipermail/sle-security-updates/2024-August/019280.html",
+				"source": "SUSE-SU"
+			}
+		],
+		"description": "\n    In the Linux kernel, the following vulnerability has been resolved:\n\nvirtio/vsock: Fix uninit-value in virtio_transport_recv_pkt()\n\nKMSAN reported the following uninit-value access issue:\n\n=====================================================\nBUG: KMSAN: uninit-value in virtio_transport_recv_pkt+0x1dfb/0x26a0 net/vmw_vsock/virtio_transport_common.c:1421\n virtio_transport_recv_pkt+0x1dfb/0x26a0 net/vmw_vsock/virtio_transport_common.c:1421\n vsock_loopback_work+0x3bb/0x5a0 net/vmw_vsock/vsock_loopback.c:120\n process_one_work kernel/workqueue.c:2630 [inline]\n process_scheduled_works+0xff6/0x1e60 kernel/workqueue.c:2703\n worker_thread+0xeca/0x14d0 kernel/workqueue.c:2784\n kthread+0x3cc/0x520 kernel/kthread.c:388\n ret_from_fork+0x66/0x80 arch/x86/kernel/process.c:147\n ret_from_fork_asm+0x11/0x20 arch/x86/entry/entry_64.S:304\n\nUninit was stored to memory at:\n virtio_transport_space_update net/vmw_vsock/virtio_transport_common.c:1274 [inline]\n virtio_transport_recv_pkt+0x1ee8/0x26a0 net/vmw_vsock/virtio_transport_common.c:1415\n vsock_loopback_work+0x3bb/0x5a0 net/vmw_vsock/vsock_loopback.c:120\n process_one_work kernel/workqueue.c:2630 [inline]\n process_scheduled_works+0xff6/0x1e60 kernel/workqueue.c:2703\n worker_thread+0xeca/0x14d0 kernel/workqueue.c:2784\n kthread+0x3cc/0x520 kernel/kthread.c:388\n ret_from_fork+0x66/0x80 arch/x86/kernel/process.c:147\n ret_from_fork_asm+0x11/0x20 arch/x86/entry/entry_64.S:304\n\nUninit was created at:\n slab_post_alloc_hook+0x105/0xad0 mm/slab.h:767\n slab_alloc_node mm/slub.c:3478 [inline]\n kmem_cache_alloc_node+0x5a2/0xaf0 mm/slub.c:3523\n kmalloc_reserve+0x13c/0x4a0 net/core/skbuff.c:559\n __alloc_skb+0x2fd/0x770 net/core/skbuff.c:650\n alloc_skb include/linux/skbuff.h:1286 [inline]\n virtio_vsock_alloc_skb include/linux/virtio_vsock.h:66 [inline]\n virtio_transport_alloc_skb+0x90/0x11e0 net/vmw_vsock/virtio_transport_common.c:58\n virtio_transport_reset_no_sock net/vmw_vsock/virtio_transport_common.c:957 [inline]\n virtio_transport_recv_pkt+0x1279/0x26a0 net/vmw_vsock/virtio_transport_common.c:1387\n vsock_loopback_work+0x3bb/0x5a0 net/vmw_vsock/vsock_loopback.c:120\n process_one_work kernel/workqueue.c:2630 [inline]\n process_scheduled_works+0xff6/0x1e60 kernel/workqueue.c:2703\n worker_thread+0xeca/0x14d0 kernel/workqueue.c:2784\n kthread+0x3cc/0x520 kernel/kthread.c:388\n ret_from_fork+0x66/0x80 arch/x86/kernel/process.c:147\n ret_from_fork_asm+0x11/0x20 arch/x86/entry/entry_64.S:304\n\nCPU: 1 PID: 10664 Comm: kworker/1:5 Not tainted 6.6.0-rc3-00146-g9f3ebbef746f #3\nHardware name: QEMU Standard PC (i440FX + PIIX, 1996), BIOS 1.16.2-1.fc38 04/01/2014\nWorkqueue: vsock-loopback vsock_loopback_work\n=====================================================\n\nThe following simple reproducer can cause the issue described above:\n\nint main(void)\n{\n  int sock;\n  struct sockaddr_vm addr = {\n    .svm_family = AF_VSOCK,\n    .svm_cid = VMADDR_CID_ANY,\n    .svm_port = 1234,\n  };\n\n  sock = socket(AF_VSOCK, SOCK_STREAM, 0);\n  connect(sock, (struct sockaddr *)&addr, sizeof(addr));\n  return 0;\n}\n\nThis issue occurs because the `buf_alloc` and `fwd_cnt` fields of the\n`struct virtio_vsock_hdr` are not initialized when a new skb is allocated\nin `virtio_transport_init_hdr()`. This patch resolves the issue by\ninitializing these fields during allocation.\n    ",
+		"advisory": {
+			"from": "security@suse.de",
+			"severity": "Moderate",
+			"cve": [
+				{
+					"text": "CVE-2023-52842 at SUSE",
+					"href": "https://www.suse.com/security/cve/CVE-2023-52842/",
+					"impact": "medium",
+					"cvss3": "5.5/CVSS:3.1/AV:L/AC:L/PR:L/UI:N/S:U/C:N/I:N/A:H"
+				},
+				{
+					"text": "CVE-2023-52842 at NVD",
+					"href": "https://nvd.nist.gov/vuln/detail/CVE-2023-52842"
+				}
+			],
+			"bugzilla": [
+				{
+					"text": "SUSE bug 1225025",
+					"href": "https://bugzilla.suse.com/1225025"
+				}
+			],
+			"issued": {
+				"date": "2024-11-30"
+			},
+			"updated": {
+				"date": "2024-11-30"
+			},
+			"affected_cpe_list": {
+				"cpe": [
+					"cpe:/o:suse:sl-micro:6.0"
+				]
+			}
+		}
+	},
+	"criteria": {
+		"operator": "AND",
+		"criterias": [
+			{
+				"operator": "OR",
+				"criterions": [
+					{
+						"test_ref": "oval:org.opensuse.security:tst:2009881568",
+						"comment": "kernel-default-6.4.0-18.1 is installed"
+					},
+					{
+						"test_ref": "oval:org.opensuse.security:tst:2009881569",
+						"comment": "kernel-default-base-6.4.0-17.1.1.51 is installed"
+					},
+					{
+						"test_ref": "oval:org.opensuse.security:tst:2009881570",
+						"comment": "kernel-default-extra-6.4.0-18.1 is installed"
+					},
+					{
+						"test_ref": "oval:org.opensuse.security:tst:2009950906",
+						"comment": "kernel-default-livepatch-6.4.0-18.1 is installed"
+					},
+					{
+						"test_ref": "oval:org.opensuse.security:tst:2009881571",
+						"comment": "kernel-devel-6.4.0-18.1 is installed"
+					},
+					{
+						"test_ref": "oval:org.opensuse.security:tst:2009942881",
+						"comment": "kernel-devel-rt-6.4.0-9.1 is installed"
+					},
+					{
+						"test_ref": "oval:org.opensuse.security:tst:2009881572",
+						"comment": "kernel-kvmsmall-6.4.0-18.1 is installed"
+					},
+					{
+						"test_ref": "oval:org.opensuse.security:tst:2009881573",
+						"comment": "kernel-macros-6.4.0-18.1 is installed"
+					},
+					{
+						"test_ref": "oval:org.opensuse.security:tst:2009942882",
+						"comment": "kernel-rt-6.4.0-9.1 is installed"
+					},
+					{
+						"test_ref": "oval:org.opensuse.security:tst:2009881574",
+						"comment": "kernel-source-6.4.0-18.1 is installed"
+					},
+					{
+						"test_ref": "oval:org.opensuse.security:tst:2009942883",
+						"comment": "kernel-source-rt-6.4.0-9.1 is installed"
+					}
+				]
+			}
+		],
+		"criterions": [
+			{
+				"test_ref": "oval:org.opensuse.security:tst:2009864179",
+				"comment": "SUSE Linux Enterprise Micro 6.0 is installed"
+			}
+		]
+	}
+}

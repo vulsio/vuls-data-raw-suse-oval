@@ -1,0 +1,150 @@
+{
+	"id": "oval:org.opensuse.security:def:202436906",
+	"version": "1",
+	"class": "vulnerability",
+	"metadata": {
+		"title": "CVE-2024-36906",
+		"affected": {
+			"family": "unix",
+			"platform": [
+				"SUSE Linux Enterprise Micro 6.0"
+			]
+		},
+		"reference": [
+			{
+				"ref_id": "Mitre CVE-2024-36906",
+				"ref_url": "https://cve.mitre.org/cgi-bin/cvename.cgi?name=CVE-2024-36906",
+				"source": "CVE"
+			},
+			{
+				"ref_id": "SUSE CVE-2024-36906",
+				"ref_url": "https://www.suse.com/security/cve/CVE-2024-36906",
+				"source": "SUSE CVE"
+			},
+			{
+				"ref_id": "SUSE-SU-2024:2008-1",
+				"ref_url": "https://lists.suse.com/pipermail/sle-updates/2024-June/035569.html",
+				"source": "SUSE-SU"
+			},
+			{
+				"ref_id": "SUSE-SU-2024:2019-1",
+				"ref_url": "https://lists.suse.com/pipermail/sle-updates/2024-June/035578.html",
+				"source": "SUSE-SU"
+			},
+			{
+				"ref_id": "SUSE-SU-2024:2135-1",
+				"ref_url": "https://lists.suse.com/pipermail/sle-updates/2024-June/035681.html",
+				"source": "SUSE-SU"
+			},
+			{
+				"ref_id": "SUSE-SU-2024:2190-1",
+				"ref_url": "https://lists.suse.com/pipermail/sle-updates/2024-June/035732.html",
+				"source": "SUSE-SU"
+			},
+			{
+				"ref_id": "SUSE-SU-2024:2203-1",
+				"ref_url": "https://lists.suse.com/pipermail/sle-security-updates/2024-August/019244.html",
+				"source": "SUSE-SU"
+			},
+			{
+				"ref_id": "SUSE-SU-2024:2973-1",
+				"ref_url": "https://lists.suse.com/pipermail/sle-security-updates/2024-August/019280.html",
+				"source": "SUSE-SU"
+			}
+		],
+		"description": "\n    In the Linux kernel, the following vulnerability has been resolved:\n\nARM: 9381/1: kasan: clear stale stack poison\n\nWe found below OOB crash:\n\n[   33.452494] ==================================================================\n[   33.453513] BUG: KASAN: stack-out-of-bounds in refresh_cpu_vm_stats.constprop.0+0xcc/0x2ec\n[   33.454660] Write of size 164 at addr c1d03d30 by task swapper/0/0\n[   33.455515]\n[   33.455767] CPU: 0 PID: 0 Comm: swapper/0 Tainted: G           O       6.1.25-mainline #1\n[   33.456880] Hardware name: Generic DT based system\n[   33.457555]  unwind_backtrace from show_stack+0x18/0x1c\n[   33.458326]  show_stack from dump_stack_lvl+0x40/0x4c\n[   33.459072]  dump_stack_lvl from print_report+0x158/0x4a4\n[   33.459863]  print_report from kasan_report+0x9c/0x148\n[   33.460616]  kasan_report from kasan_check_range+0x94/0x1a0\n[   33.461424]  kasan_check_range from memset+0x20/0x3c\n[   33.462157]  memset from refresh_cpu_vm_stats.constprop.0+0xcc/0x2ec\n[   33.463064]  refresh_cpu_vm_stats.constprop.0 from tick_nohz_idle_stop_tick+0x180/0x53c\n[   33.464181]  tick_nohz_idle_stop_tick from do_idle+0x264/0x354\n[   33.465029]  do_idle from cpu_startup_entry+0x20/0x24\n[   33.465769]  cpu_startup_entry from rest_init+0xf0/0xf4\n[   33.466528]  rest_init from arch_post_acpi_subsys_init+0x0/0x18\n[   33.467397]\n[   33.467644] The buggy address belongs to stack of task swapper/0/0\n[   33.468493]  and is located at offset 112 in frame:\n[   33.469172]  refresh_cpu_vm_stats.constprop.0+0x0/0x2ec\n[   33.469917]\n[   33.470165] This frame has 2 objects:\n[   33.470696]  [32, 76) 'global_zone_diff'\n[   33.470729]  [112, 276) 'global_node_diff'\n[   33.471294]\n[   33.472095] The buggy address belongs to the physical page:\n[   33.472862] page:3cd72da8 refcount:1 mapcount:0 mapping:00000000 index:0x0 pfn:0x41d03\n[   33.473944] flags: 0x1000(reserved|zone=0)\n[   33.474565] raw: 00001000 ed741470 ed741470 00000000 00000000 00000000 ffffffff 00000001\n[   33.475656] raw: 00000000\n[   33.476050] page dumped because: kasan: bad access detected\n[   33.476816]\n[   33.477061] Memory state around the buggy address:\n[   33.477732]  c1d03c00: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00\n[   33.478630]  c1d03c80: 00 00 00 00 00 00 00 00 f1 f1 f1 f1 00 00 00 00\n[   33.479526] >c1d03d00: 00 04 f2 f2 f2 f2 00 00 00 00 00 00 f1 f1 f1 f1\n[   33.480415]                                                ^\n[   33.481195]  c1d03d80: 00 00 00 00 00 00 00 00 00 00 04 f3 f3 f3 f3 f3\n[   33.482088]  c1d03e00: f3 f3 f3 f3 00 00 00 00 00 00 00 00 00 00 00 00\n[   33.482978] ==================================================================\n\nWe find the root cause of this OOB is that arm does not clear stale stack\npoison in the case of cpuidle.\n\nThis patch refer to arch/arm64/kernel/sleep.S to resolve this issue.\n\nFrom cited commit [1] that explain the problem\n\nFunctions which the compiler has instrumented for KASAN place poison on\nthe stack shadow upon entry and remove this poison prior to returning.\n\nIn the case of cpuidle, CPUs exit the kernel a number of levels deep in\nC code.  Any instrumented functions on this critical path will leave\nportions of the stack shadow poisoned.\n\nIf CPUs lose context and return to the kernel via a cold path, we\nrestore a prior context saved in __cpu_suspend_enter are forgotten, and\nwe never remove the poison they placed in the stack shadow area by\nfunctions calls between this and the actual exit of the kernel.\n\nThus, (depending on stackframe layout) subsequent calls to instrumented\nfunctions may hit this stale poison, resulting in (spurious) KASAN\nsplats to the console.\n\nTo avoid this, clear any stale poison from the idle thread for a CPU\nprior to bringing a CPU online.\n\nFrom cited commit [2]\n\nExtend to check for CONFIG_KASAN_STACK\n\n[1] commit 0d97e6d8024c (\"arm64: kasan: clear stale stack poison\")\n[2] commit d56a9ef84bd0 (\"kasan, arm64: unpoison stack only with CONFIG_KASAN_STACK\")\n    ",
+		"advisory": {
+			"from": "security@suse.de",
+			"severity": "Low",
+			"cve": [
+				{
+					"text": "CVE-2024-36906 at SUSE",
+					"href": "https://www.suse.com/security/cve/CVE-2024-36906/",
+					"impact": "low",
+					"cvss3": "0/CVSS:3.1/AV:L/AC:L/PR:L/UI:N/S:U/C:N/I:N/A:N"
+				},
+				{
+					"text": "CVE-2024-36906 at NVD",
+					"href": "https://nvd.nist.gov/vuln/detail/CVE-2024-36906"
+				}
+			],
+			"bugzilla": [
+				{
+					"text": "SUSE bug 1225715",
+					"href": "https://bugzilla.suse.com/1225715"
+				}
+			],
+			"issued": {
+				"date": "2024-11-30"
+			},
+			"updated": {
+				"date": "2024-11-30"
+			},
+			"affected_cpe_list": {
+				"cpe": [
+					"cpe:/o:suse:sl-micro:6.0"
+				]
+			}
+		}
+	},
+	"criteria": {
+		"operator": "AND",
+		"criterias": [
+			{
+				"operator": "OR",
+				"criterions": [
+					{
+						"test_ref": "oval:org.opensuse.security:tst:2009881568",
+						"comment": "kernel-default-6.4.0-18.1 is installed"
+					},
+					{
+						"test_ref": "oval:org.opensuse.security:tst:2009881569",
+						"comment": "kernel-default-base-6.4.0-17.1.1.51 is installed"
+					},
+					{
+						"test_ref": "oval:org.opensuse.security:tst:2009881570",
+						"comment": "kernel-default-extra-6.4.0-18.1 is installed"
+					},
+					{
+						"test_ref": "oval:org.opensuse.security:tst:2009950906",
+						"comment": "kernel-default-livepatch-6.4.0-18.1 is installed"
+					},
+					{
+						"test_ref": "oval:org.opensuse.security:tst:2009881571",
+						"comment": "kernel-devel-6.4.0-18.1 is installed"
+					},
+					{
+						"test_ref": "oval:org.opensuse.security:tst:2009942881",
+						"comment": "kernel-devel-rt-6.4.0-9.1 is installed"
+					},
+					{
+						"test_ref": "oval:org.opensuse.security:tst:2009881572",
+						"comment": "kernel-kvmsmall-6.4.0-18.1 is installed"
+					},
+					{
+						"test_ref": "oval:org.opensuse.security:tst:2009881573",
+						"comment": "kernel-macros-6.4.0-18.1 is installed"
+					},
+					{
+						"test_ref": "oval:org.opensuse.security:tst:2009942882",
+						"comment": "kernel-rt-6.4.0-9.1 is installed"
+					},
+					{
+						"test_ref": "oval:org.opensuse.security:tst:2009881574",
+						"comment": "kernel-source-6.4.0-18.1 is installed"
+					},
+					{
+						"test_ref": "oval:org.opensuse.security:tst:2009942883",
+						"comment": "kernel-source-rt-6.4.0-9.1 is installed"
+					}
+				]
+			}
+		],
+		"criterions": [
+			{
+				"test_ref": "oval:org.opensuse.security:tst:2009864179",
+				"comment": "SUSE Linux Enterprise Micro 6.0 is installed"
+			}
+		]
+	}
+}

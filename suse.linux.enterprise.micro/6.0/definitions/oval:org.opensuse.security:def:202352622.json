@@ -1,0 +1,165 @@
+{
+	"id": "oval:org.opensuse.security:def:202352622",
+	"version": "1",
+	"class": "vulnerability",
+	"metadata": {
+		"title": "CVE-2023-52622",
+		"affected": {
+			"family": "unix",
+			"platform": [
+				"SUSE Linux Enterprise Micro 6.0"
+			]
+		},
+		"reference": [
+			{
+				"ref_id": "Mitre CVE-2023-52622",
+				"ref_url": "https://cve.mitre.org/cgi-bin/cvename.cgi?name=CVE-2023-52622",
+				"source": "CVE"
+			},
+			{
+				"ref_id": "SUSE CVE-2023-52622",
+				"ref_url": "https://www.suse.com/security/cve/CVE-2023-52622",
+				"source": "SUSE CVE"
+			},
+			{
+				"ref_id": "SUSE-SU-2024:2360-1",
+				"ref_url": "https://lists.suse.com/pipermail/sle-updates/2024-July/035874.html",
+				"source": "SUSE-SU"
+			},
+			{
+				"ref_id": "SUSE-SU-2024:2372-1",
+				"ref_url": "https://lists.suse.com/pipermail/sle-updates/2024-July/035868.html",
+				"source": "SUSE-SU"
+			},
+			{
+				"ref_id": "SUSE-SU-2024:2381-1",
+				"ref_url": "https://lists.suse.com/pipermail/sle-updates/2024-July/035895.html",
+				"source": "SUSE-SU"
+			},
+			{
+				"ref_id": "SUSE-SU-2024:2394-1",
+				"ref_url": "https://lists.suse.com/pipermail/sle-updates/2024-July/035907.html",
+				"source": "SUSE-SU"
+			},
+			{
+				"ref_id": "SUSE-SU-2024:2561-1",
+				"ref_url": "https://lists.suse.com/pipermail/sle-security-updates/2024-July/019001.html",
+				"source": "SUSE-SU"
+			},
+			{
+				"ref_id": "SUSE-SU-2024:2571-1",
+				"ref_url": "https://lists.suse.com/pipermail/sle-updates/2024-July/036103.html",
+				"source": "SUSE-SU"
+			},
+			{
+				"ref_id": "SUSE-SU-2024:2896-1",
+				"ref_url": "https://lists.suse.com/pipermail/sle-security-updates/2024-August/019185.html",
+				"source": "SUSE-SU"
+			},
+			{
+				"ref_id": "SUSE-SU-2024:2939-1",
+				"ref_url": "https://lists.suse.com/pipermail/sle-security-updates/2024-August/019211.html",
+				"source": "SUSE-SU"
+			},
+			{
+				"ref_id": "SUSE-SU-2024:2973-1",
+				"ref_url": "https://lists.suse.com/pipermail/sle-security-updates/2024-August/019280.html",
+				"source": "SUSE-SU"
+			}
+		],
+		"description": "\n    In the Linux kernel, the following vulnerability has been resolved:\n\next4: avoid online resizing failures due to oversized flex bg\n\nWhen we online resize an ext4 filesystem with a oversized flexbg_size,\n\n     mkfs.ext4 -F -G 67108864 $dev -b 4096 100M\n     mount $dev $dir\n     resize2fs $dev 16G\n\nthe following WARN_ON is triggered:\n==================================================================\nWARNING: CPU: 0 PID: 427 at mm/page_alloc.c:4402 __alloc_pages+0x411/0x550\nModules linked in: sg(E)\nCPU: 0 PID: 427 Comm: resize2fs Tainted: G  E  6.6.0-rc5+ #314\nRIP: 0010:__alloc_pages+0x411/0x550\nCall Trace:\n <TASK>\n __kmalloc_large_node+0xa2/0x200\n __kmalloc+0x16e/0x290\n ext4_resize_fs+0x481/0xd80\n __ext4_ioctl+0x1616/0x1d90\n ext4_ioctl+0x12/0x20\n __x64_sys_ioctl+0xf0/0x150\n do_syscall_64+0x3b/0x90\n==================================================================\n\nThis is because flexbg_size is too large and the size of the new_group_data\narray to be allocated exceeds MAX_ORDER. Currently, the minimum value of\nMAX_ORDER is 8, the minimum value of PAGE_SIZE is 4096, the corresponding\nmaximum number of groups that can be allocated is:\n\n (PAGE_SIZE << MAX_ORDER) / sizeof(struct ext4_new_group_data) ~ 21845\n\nAnd the value that is down-aligned to the power of 2 is 16384. Therefore,\nthis value is defined as MAX_RESIZE_BG, and the number of groups added\neach time does not exceed this value during resizing, and is added multiple\ntimes to complete the online resizing. The difference is that the metadata\nin a flex_bg may be more dispersed.\n    ",
+		"advisory": {
+			"from": "security@suse.de",
+			"severity": "Moderate",
+			"cve": [
+				{
+					"text": "CVE-2023-52622 at SUSE",
+					"href": "https://www.suse.com/security/cve/CVE-2023-52622/",
+					"impact": "medium",
+					"cvss3": "4.4/CVSS:3.1/AV:L/AC:L/PR:H/UI:N/S:U/C:N/I:N/A:H"
+				},
+				{
+					"text": "CVE-2023-52622 at NVD",
+					"href": "https://nvd.nist.gov/vuln/detail/CVE-2023-52622"
+				}
+			],
+			"bugzilla": [
+				{
+					"text": "SUSE bug 1222080",
+					"href": "https://bugzilla.suse.com/1222080"
+				}
+			],
+			"issued": {
+				"date": "2024-11-30"
+			},
+			"updated": {
+				"date": "2024-11-30"
+			},
+			"affected_cpe_list": {
+				"cpe": [
+					"cpe:/o:suse:sl-micro:6.0"
+				]
+			}
+		}
+	},
+	"criteria": {
+		"operator": "AND",
+		"criterias": [
+			{
+				"operator": "OR",
+				"criterions": [
+					{
+						"test_ref": "oval:org.opensuse.security:tst:2009881568",
+						"comment": "kernel-default-6.4.0-18.1 is installed"
+					},
+					{
+						"test_ref": "oval:org.opensuse.security:tst:2009881569",
+						"comment": "kernel-default-base-6.4.0-17.1.1.51 is installed"
+					},
+					{
+						"test_ref": "oval:org.opensuse.security:tst:2009881570",
+						"comment": "kernel-default-extra-6.4.0-18.1 is installed"
+					},
+					{
+						"test_ref": "oval:org.opensuse.security:tst:2009950906",
+						"comment": "kernel-default-livepatch-6.4.0-18.1 is installed"
+					},
+					{
+						"test_ref": "oval:org.opensuse.security:tst:2009881571",
+						"comment": "kernel-devel-6.4.0-18.1 is installed"
+					},
+					{
+						"test_ref": "oval:org.opensuse.security:tst:2009942881",
+						"comment": "kernel-devel-rt-6.4.0-9.1 is installed"
+					},
+					{
+						"test_ref": "oval:org.opensuse.security:tst:2009881572",
+						"comment": "kernel-kvmsmall-6.4.0-18.1 is installed"
+					},
+					{
+						"test_ref": "oval:org.opensuse.security:tst:2009881573",
+						"comment": "kernel-macros-6.4.0-18.1 is installed"
+					},
+					{
+						"test_ref": "oval:org.opensuse.security:tst:2009942882",
+						"comment": "kernel-rt-6.4.0-9.1 is installed"
+					},
+					{
+						"test_ref": "oval:org.opensuse.security:tst:2009881574",
+						"comment": "kernel-source-6.4.0-18.1 is installed"
+					},
+					{
+						"test_ref": "oval:org.opensuse.security:tst:2009942883",
+						"comment": "kernel-source-rt-6.4.0-9.1 is installed"
+					}
+				]
+			}
+		],
+		"criterions": [
+			{
+				"test_ref": "oval:org.opensuse.security:tst:2009864179",
+				"comment": "SUSE Linux Enterprise Micro 6.0 is installed"
+			}
+		]
+	}
+}
