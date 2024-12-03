@@ -11,6 +11,7 @@
 				"SUSE Linux Enterprise High Performance Computing 15 SP5",
 				"SUSE Linux Enterprise High Performance Computing 15 SP6",
 				"SUSE Linux Enterprise Live Patching 15 SP2",
+				"SUSE Linux Enterprise Live Patching 15 SP4",
 				"SUSE Linux Enterprise Live Patching 15 SP5",
 				"SUSE Linux Enterprise Live Patching 15 SP6",
 				"SUSE Linux Enterprise Module for Basesystem 15 SP6",
@@ -19,10 +20,13 @@
 				"SUSE Linux Enterprise Module for Public Cloud 15 SP6",
 				"SUSE Linux Enterprise Server 15 SP1-LTSS",
 				"SUSE Linux Enterprise Server 15 SP2-LTSS",
+				"SUSE Linux Enterprise Server 15 SP4-LTSS",
+				"SUSE Linux Enterprise Server 15 SP4-TERADATA",
 				"SUSE Linux Enterprise Server 15 SP5",
 				"SUSE Linux Enterprise Server 15 SP6",
 				"SUSE Linux Enterprise Server 15-LTSS",
 				"SUSE Linux Enterprise Server for SAP Applications 15 SP2",
+				"SUSE Linux Enterprise Server for SAP Applications 15 SP4",
 				"SUSE Linux Enterprise Server for SAP Applications 15 SP5",
 				"SUSE Linux Enterprise Server for SAP Applications 15 SP6"
 			]
@@ -57,6 +61,11 @@
 				"ref_id": "SUSE-SU-2024:4100-1",
 				"ref_url": "https://lists.suse.com/pipermail/sle-security-updates/2024-November/019864.html",
 				"source": "SUSE-SU"
+			},
+			{
+				"ref_id": "SUSE-SU-2024:4131-1",
+				"ref_url": "https://lists.suse.com/pipermail/sle-security-updates/2024-December/019887.html",
+				"source": "SUSE-SU"
 			}
 		],
 		"description": "\n    In the Linux kernel, the following vulnerability has been resolved:\n\nchar: tpm: Protect tpm_pm_suspend with locks\n\nCurrently tpm transactions are executed unconditionally in\ntpm_pm_suspend() function, which may lead to races with other tpm\naccessors in the system.\n\nSpecifically, the hw_random tpm driver makes use of tpm_get_random(),\nand this function is called in a loop from a kthread, which means it's\nnot frozen alongside userspace, and so can race with the work done\nduring system suspend:\n\n  tpm tpm0: tpm_transmit: tpm_recv: error -52\n  tpm tpm0: invalid TPM_STS.x 0xff, dumping stack for forensics\n  CPU: 0 PID: 1 Comm: init Not tainted 6.1.0-rc5+ #135\n  Hardware name: QEMU Standard PC (Q35 + ICH9, 2009), BIOS 1.16.0-20220807_005459-localhost 04/01/2014\n  Call Trace:\n   tpm_tis_status.cold+0x19/0x20\n   tpm_transmit+0x13b/0x390\n   tpm_transmit_cmd+0x20/0x80\n   tpm1_pm_suspend+0xa6/0x110\n   tpm_pm_suspend+0x53/0x80\n   __pnp_bus_suspend+0x35/0xe0\n   __device_suspend+0x10f/0x350\n\nFix this by calling tpm_try_get_ops(), which itself is a wrapper around\ntpm_chip_start(), but takes the appropriate mutex.\n\n[Jason: reworked commit message, added metadata]\n    ",
@@ -87,13 +96,14 @@
 				"date": "2024-10-23"
 			},
 			"updated": {
-				"date": "2024-11-29"
+				"date": "2024-12-03"
 			},
 			"affected_cpe_list": {
 				"cpe": [
 					"cpe:/o:suse:sle-module-basesystem:15:sp6",
 					"cpe:/o:suse:sle-module-development-tools:15:sp6",
 					"cpe:/o:suse:sle-module-live-patching:15:sp2",
+					"cpe:/o:suse:sle-module-live-patching:15:sp4",
 					"cpe:/o:suse:sle-module-live-patching:15:sp5",
 					"cpe:/o:suse:sle-module-live-patching:15:sp6",
 					"cpe:/o:suse:sle-module-public-cloud:15:sp5",
@@ -102,8 +112,10 @@
 					"cpe:/o:suse:sles-ltss:15",
 					"cpe:/o:suse:sles-ltss:15:sp1",
 					"cpe:/o:suse:sles-ltss:15:sp2",
+					"cpe:/o:suse:sles-ltss:15:sp4",
 					"cpe:/o:suse:sles:15:sp5",
 					"cpe:/o:suse:sles_sap:15:sp2",
+					"cpe:/o:suse:sles_sap:15:sp4",
 					"cpe:/o:suse:sles_sap:15:sp5"
 				]
 			}
@@ -464,6 +476,214 @@
 								"comment": "kernel-syms-azure-5.14.21-150500.33.72.1 is installed"
 							}
 						]
+					}
+				]
+			},
+			{
+				"operator": "AND",
+				"criterias": [
+					{
+						"operator": "OR",
+						"criterions": [
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009955811",
+								"comment": "kernel-default-livepatch-5.14.21-150400.24.141.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009955812",
+								"comment": "kernel-default-livepatch-devel-5.14.21-150400.24.141.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009955813",
+								"comment": "kernel-livepatch-5_14_21-150400_24_141-default-1-150400.9.5.1 is installed"
+							}
+						]
+					}
+				],
+				"criterions": [
+					{
+						"test_ref": "oval:org.opensuse.security:tst:2009698985",
+						"comment": "SUSE Linux Enterprise Live Patching 15 SP4 is installed"
+					}
+				]
+			},
+			{
+				"operator": "AND",
+				"criterias": [
+					{
+						"operator": "OR",
+						"criterions": [
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009955818",
+								"comment": "kernel-64kb-5.14.21-150400.24.141.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009955819",
+								"comment": "kernel-64kb-devel-5.14.21-150400.24.141.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009955830",
+								"comment": "kernel-default-5.14.21-150400.24.141.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009955831",
+								"comment": "kernel-default-base-5.14.21-150400.24.141.1.150400.24.68.2 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009955832",
+								"comment": "kernel-default-devel-5.14.21-150400.24.141.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009955823",
+								"comment": "kernel-devel-5.14.21-150400.24.141.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009955824",
+								"comment": "kernel-docs-5.14.21-150400.24.141.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009955825",
+								"comment": "kernel-macros-5.14.21-150400.24.141.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009955833",
+								"comment": "kernel-obs-build-5.14.21-150400.24.141.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009955827",
+								"comment": "kernel-source-5.14.21-150400.24.141.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009955834",
+								"comment": "kernel-syms-5.14.21-150400.24.141.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009955835",
+								"comment": "kernel-zfcpdump-5.14.21-150400.24.141.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009955836",
+								"comment": "reiserfs-kmp-default-5.14.21-150400.24.141.1 is installed"
+							}
+						]
+					}
+				],
+				"criterions": [
+					{
+						"test_ref": "oval:org.opensuse.security:tst:2009816749",
+						"comment": "SUSE Linux Enterprise Server 15 SP4-LTSS is installed"
+					}
+				]
+			},
+			{
+				"operator": "AND",
+				"criterias": [
+					{
+						"operator": "OR",
+						"criterions": [
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009955837",
+								"comment": "kernel-default-5.14.21-150400.24.141.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009955838",
+								"comment": "kernel-default-base-5.14.21-150400.24.141.1.150400.24.68.2 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009955839",
+								"comment": "kernel-default-devel-5.14.21-150400.24.141.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009955823",
+								"comment": "kernel-devel-5.14.21-150400.24.141.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009955824",
+								"comment": "kernel-docs-5.14.21-150400.24.141.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009955825",
+								"comment": "kernel-macros-5.14.21-150400.24.141.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009955840",
+								"comment": "kernel-obs-build-5.14.21-150400.24.141.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009955827",
+								"comment": "kernel-source-5.14.21-150400.24.141.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009955841",
+								"comment": "kernel-syms-5.14.21-150400.24.141.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009955842",
+								"comment": "reiserfs-kmp-default-5.14.21-150400.24.141.1 is installed"
+							}
+						]
+					}
+				],
+				"criterions": [
+					{
+						"test_ref": "oval:org.opensuse.security:tst:2009876405",
+						"comment": "SUSE Linux Enterprise Server 15 SP4-TERADATA is installed"
+					}
+				]
+			},
+			{
+				"operator": "AND",
+				"criterias": [
+					{
+						"operator": "OR",
+						"criterions": [
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009955845",
+								"comment": "kernel-default-5.14.21-150400.24.141.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009955846",
+								"comment": "kernel-default-base-5.14.21-150400.24.141.1.150400.24.68.2 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009955847",
+								"comment": "kernel-default-devel-5.14.21-150400.24.141.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009955823",
+								"comment": "kernel-devel-5.14.21-150400.24.141.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009955824",
+								"comment": "kernel-docs-5.14.21-150400.24.141.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009955825",
+								"comment": "kernel-macros-5.14.21-150400.24.141.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009955848",
+								"comment": "kernel-obs-build-5.14.21-150400.24.141.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009955827",
+								"comment": "kernel-source-5.14.21-150400.24.141.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009955849",
+								"comment": "kernel-syms-5.14.21-150400.24.141.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009955850",
+								"comment": "reiserfs-kmp-default-5.14.21-150400.24.141.1 is installed"
+							}
+						]
+					}
+				],
+				"criterions": [
+					{
+						"test_ref": "oval:org.opensuse.security:tst:2009669928",
+						"comment": "SUSE Linux Enterprise Server for SAP Applications 15 SP4 is installed"
 					}
 				]
 			}
