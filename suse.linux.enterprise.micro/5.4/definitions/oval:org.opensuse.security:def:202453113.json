@@ -1,0 +1,92 @@
+{
+	"id": "oval:org.opensuse.security:def:202453113",
+	"version": "1",
+	"class": "vulnerability",
+	"metadata": {
+		"title": "CVE-2024-53113",
+		"affected": {
+			"family": "unix",
+			"platform": [
+				"SUSE Linux Enterprise Micro 5.4"
+			]
+		},
+		"reference": [
+			{
+				"ref_id": "Mitre CVE-2024-53113",
+				"ref_url": "https://cve.mitre.org/cgi-bin/cvename.cgi?name=CVE-2024-53113",
+				"source": "CVE"
+			},
+			{
+				"ref_id": "SUSE CVE-2024-53113",
+				"ref_url": "https://www.suse.com/security/cve/CVE-2024-53113",
+				"source": "SUSE CVE"
+			}
+		],
+		"description": "\n    In the Linux kernel, the following vulnerability has been resolved:\n\nmm: fix NULL pointer dereference in alloc_pages_bulk_noprof\n\nWe triggered a NULL pointer dereference for ac.preferred_zoneref->zone in\nalloc_pages_bulk_noprof() when the task is migrated between cpusets.\n\nWhen cpuset is enabled, in prepare_alloc_pages(), ac->nodemask may be\n&current->mems_allowed.  when first_zones_zonelist() is called to find\npreferred_zoneref, the ac->nodemask may be modified concurrently if the\ntask is migrated between different cpusets.  Assuming we have 2 NUMA Node,\nwhen traversing Node1 in ac->zonelist, the nodemask is 2, and when\ntraversing Node2 in ac->zonelist, the nodemask is 1.  As a result, the\nac->preferred_zoneref points to NULL zone.\n\nIn alloc_pages_bulk_noprof(), for_each_zone_zonelist_nodemask() finds a\nallowable zone and calls zonelist_node_idx(ac.preferred_zoneref), leading\nto NULL pointer dereference.\n\n__alloc_pages_noprof() fixes this issue by checking NULL pointer in commit\nea57485af8f4 (\"mm, page_alloc: fix check for NULL preferred_zone\") and\ncommit df76cee6bbeb (\"mm, page_alloc: remove redundant checks from alloc\nfastpath\").\n\nTo fix it, check NULL pointer for preferred_zoneref->zone.\n    ",
+		"advisory": {
+			"from": "security@suse.de",
+			"severity": "Moderate",
+			"cve": [
+				{
+					"text": "CVE-2024-53113 at SUSE",
+					"href": "https://www.suse.com/security/cve/CVE-2024-53113/",
+					"impact": "medium",
+					"cvss3": "5.5/CVSS:3.1/AV:L/AC:L/PR:L/UI:N/S:U/C:N/I:N/A:H"
+				},
+				{
+					"text": "CVE-2024-53113 at NVD",
+					"href": "https://nvd.nist.gov/vuln/detail/CVE-2024-53113"
+				}
+			],
+			"bugzilla": [
+				{
+					"text": "SUSE bug 1234077",
+					"href": "https://bugzilla.suse.com/1234077"
+				}
+			],
+			"issued": {
+				"date": "2024-12-04"
+			},
+			"updated": {
+				"date": "2024-12-04"
+			},
+			"affected_cpe_list": {
+				"cpe": [
+					"cpe:/o:suse:sle-micro:5.4"
+				]
+			}
+		}
+	},
+	"criteria": {
+		"operator": "AND",
+		"criterias": [
+			{
+				"operator": "OR",
+				"criterions": [
+					{
+						"test_ref": "oval:org.opensuse.security:tst:2009338032",
+						"comment": "kernel-default is affected"
+					},
+					{
+						"test_ref": "oval:org.opensuse.security:tst:2009705050",
+						"comment": "kernel-rt is affected"
+					},
+					{
+						"test_ref": "oval:org.opensuse.security:tst:2009333995",
+						"comment": "kernel-source is affected"
+					},
+					{
+						"test_ref": "oval:org.opensuse.security:tst:2009728714",
+						"comment": "kernel-source-rt is affected"
+					}
+				]
+			}
+		],
+		"criterions": [
+			{
+				"test_ref": "oval:org.opensuse.security:tst:2009952223",
+				"comment": "SUSE Linux Enterprise Micro 5.4 is installed"
+			}
+		]
+	}
+}

@@ -1,0 +1,107 @@
+{
+	"id": "oval:org.opensuse.security:def:202440979",
+	"version": "1",
+	"class": "vulnerability",
+	"metadata": {
+		"title": "CVE-2024-40979",
+		"affected": {
+			"family": "unix",
+			"platform": [
+				"SUSE Linux Enterprise Micro 5.1"
+			]
+		},
+		"reference": [
+			{
+				"ref_id": "Mitre CVE-2024-40979",
+				"ref_url": "https://cve.mitre.org/cgi-bin/cvename.cgi?name=CVE-2024-40979",
+				"source": "CVE"
+			},
+			{
+				"ref_id": "SUSE CVE-2024-40979",
+				"ref_url": "https://www.suse.com/security/cve/CVE-2024-40979",
+				"source": "SUSE CVE"
+			},
+			{
+				"ref_id": "SUSE-SU-2024:2802-1",
+				"ref_url": "https://lists.suse.com/pipermail/sle-security-updates/2024-August/019133.html",
+				"source": "SUSE-SU"
+			},
+			{
+				"ref_id": "SUSE-SU-2024:2896-1",
+				"ref_url": "https://lists.suse.com/pipermail/sle-security-updates/2024-August/019185.html",
+				"source": "SUSE-SU"
+			},
+			{
+				"ref_id": "SUSE-SU-2024:2973-1",
+				"ref_url": "https://lists.suse.com/pipermail/sle-security-updates/2024-August/019280.html",
+				"source": "SUSE-SU"
+			}
+		],
+		"description": "\n    In the Linux kernel, the following vulnerability has been resolved:\n\nwifi: ath12k: fix kernel crash during resume\n\nCurrently during resume, QMI target memory is not properly handled, resulting\nin kernel crash in case DMA remap is not supported:\n\nBUG: Bad page state in process kworker/u16:54  pfn:36e80\npage: refcount:1 mapcount:0 mapping:0000000000000000 index:0x0 pfn:0x36e80\npage dumped because: nonzero _refcount\nCall Trace:\n bad_page\n free_page_is_bad_report\n __free_pages_ok\n __free_pages\n dma_direct_free\n dma_free_attrs\n ath12k_qmi_free_target_mem_chunk\n ath12k_qmi_msg_mem_request_cb\n\nThe reason is:\nOnce ath12k module is loaded, firmware sends memory request to host. In case\nDMA remap not supported, ath12k refuses the first request due to failure in\nallocating with large segment size:\n\nath12k_pci 0000:04:00.0: qmi firmware request memory request\nath12k_pci 0000:04:00.0: qmi mem seg type 1 size 7077888\nath12k_pci 0000:04:00.0: qmi mem seg type 4 size 8454144\nath12k_pci 0000:04:00.0: qmi dma allocation failed (7077888 B type 1), will try later with small size\nath12k_pci 0000:04:00.0: qmi delays mem_request 2\nath12k_pci 0000:04:00.0: qmi firmware request memory request\n\nLater firmware comes back with more but small segments and allocation\nsucceeds:\n\nath12k_pci 0000:04:00.0: qmi mem seg type 1 size 524288\nath12k_pci 0000:04:00.0: qmi mem seg type 1 size 524288\nath12k_pci 0000:04:00.0: qmi mem seg type 1 size 524288\nath12k_pci 0000:04:00.0: qmi mem seg type 1 size 524288\nath12k_pci 0000:04:00.0: qmi mem seg type 1 size 524288\nath12k_pci 0000:04:00.0: qmi mem seg type 1 size 524288\nath12k_pci 0000:04:00.0: qmi mem seg type 1 size 524288\nath12k_pci 0000:04:00.0: qmi mem seg type 1 size 262144\nath12k_pci 0000:04:00.0: qmi mem seg type 1 size 524288\nath12k_pci 0000:04:00.0: qmi mem seg type 1 size 524288\nath12k_pci 0000:04:00.0: qmi mem seg type 1 size 524288\nath12k_pci 0000:04:00.0: qmi mem seg type 1 size 524288\nath12k_pci 0000:04:00.0: qmi mem seg type 1 size 524288\nath12k_pci 0000:04:00.0: qmi mem seg type 4 size 524288\nath12k_pci 0000:04:00.0: qmi mem seg type 4 size 524288\nath12k_pci 0000:04:00.0: qmi mem seg type 4 size 524288\nath12k_pci 0000:04:00.0: qmi mem seg type 4 size 524288\nath12k_pci 0000:04:00.0: qmi mem seg type 4 size 524288\nath12k_pci 0000:04:00.0: qmi mem seg type 4 size 524288\nath12k_pci 0000:04:00.0: qmi mem seg type 4 size 524288\nath12k_pci 0000:04:00.0: qmi mem seg type 4 size 524288\nath12k_pci 0000:04:00.0: qmi mem seg type 4 size 524288\nath12k_pci 0000:04:00.0: qmi mem seg type 4 size 524288\nath12k_pci 0000:04:00.0: qmi mem seg type 4 size 524288\nath12k_pci 0000:04:00.0: qmi mem seg type 4 size 524288\nath12k_pci 0000:04:00.0: qmi mem seg type 4 size 524288\nath12k_pci 0000:04:00.0: qmi mem seg type 4 size 524288\nath12k_pci 0000:04:00.0: qmi mem seg type 4 size 524288\nath12k_pci 0000:04:00.0: qmi mem seg type 4 size 524288\nath12k_pci 0000:04:00.0: qmi mem seg type 4 size 65536\nath12k_pci 0000:04:00.0: qmi mem seg type 1 size 524288\n\nNow ath12k is working. If suspend is triggered, firmware will be reloaded\nduring resume. As same as before, firmware requests two large segments at\nfirst. In ath12k_qmi_msg_mem_request_cb() segment count and size are\nassigned:\n\n\tab->qmi.mem_seg_count == 2\n\tab->qmi.target_mem[0].size == 7077888\n\tab->qmi.target_mem[1].size == 8454144\n\nThen allocation failed like before and ath12k_qmi_free_target_mem_chunk()\nis called to free all allocated segments. Note the first segment is skipped\nbecause its v.addr is cleared due to allocation failure:\n\n\tchunk->v.addr = dma_alloc_coherent()\n\nAlso note that this leaks that segment because it has not been freed.\n\nWhile freeing the second segment, a size of 8454144 is passed to\ndma_free_coherent(). However remember that this segment is allocated at\nthe first time firmware is loaded, before suspend. So its real size is\n524288, much smaller than 8454144. As a result kernel found we are freeing\nsome memory which is in use and thus cras\n---truncated---\n    ",
+		"advisory": {
+			"from": "security@suse.de",
+			"severity": "Moderate",
+			"cve": [
+				{
+					"text": "CVE-2024-40979 at SUSE",
+					"href": "https://www.suse.com/security/cve/CVE-2024-40979/",
+					"impact": "medium",
+					"cvss3": "5.5/CVSS:3.1/AV:L/AC:L/PR:L/UI:N/S:U/C:N/I:N/A:H"
+				},
+				{
+					"text": "CVE-2024-40979 at NVD",
+					"href": "https://nvd.nist.gov/vuln/detail/CVE-2024-40979"
+				}
+			],
+			"bugzilla": [
+				{
+					"text": "SUSE bug 1227855",
+					"href": "https://bugzilla.suse.com/1227855"
+				}
+			],
+			"issued": {
+				"date": "2024-12-04"
+			},
+			"updated": {
+				"date": "2024-12-04"
+			},
+			"affected_cpe_list": {
+				"cpe": [
+					"cpe:/o:suse:suse-microos:5.1"
+				]
+			}
+		}
+	},
+	"criteria": {
+		"operator": "AND",
+		"criterias": [
+			{
+				"operator": "OR",
+				"criterions": [
+					{
+						"test_ref": "oval:org.opensuse.security:tst:2009334017",
+						"comment": "kernel-default is not affected"
+					},
+					{
+						"test_ref": "oval:org.opensuse.security:tst:2009705046",
+						"comment": "kernel-rt is not affected"
+					},
+					{
+						"test_ref": "oval:org.opensuse.security:tst:2009333928",
+						"comment": "kernel-source is not affected"
+					},
+					{
+						"test_ref": "oval:org.opensuse.security:tst:2009728712",
+						"comment": "kernel-source-rt is not affected"
+					}
+				]
+			}
+		],
+		"criterions": [
+			{
+				"test_ref": "oval:org.opensuse.security:tst:2009669964",
+				"comment": "SUSE Linux Enterprise Micro 5.1 is installed"
+			}
+		]
+	}
+}
