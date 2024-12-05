@@ -1,0 +1,158 @@
+{
+	"id": "oval:org.opensuse.security:def:202453125",
+	"version": "1",
+	"class": "vulnerability",
+	"metadata": {
+		"title": "CVE-2024-53125",
+		"affected": {
+			"family": "unix",
+			"platform": [
+				"openSUSE Leap 15.5"
+			]
+		},
+		"reference": [
+			{
+				"ref_id": "Mitre CVE-2024-53125",
+				"ref_url": "https://cve.mitre.org/cgi-bin/cvename.cgi?name=CVE-2024-53125",
+				"source": "CVE"
+			},
+			{
+				"ref_id": "SUSE CVE-2024-53125",
+				"ref_url": "https://www.suse.com/security/cve/CVE-2024-53125",
+				"source": "SUSE CVE"
+			}
+		],
+		"description": "\n    In the Linux kernel, the following vulnerability has been resolved:\n\nbpf: sync_linked_regs() must preserve subreg_def\n\nRange propagation must not affect subreg_def marks, otherwise the\nfollowing example is rewritten by verifier incorrectly when\nBPF_F_TEST_RND_HI32 flag is set:\n\n  0: call bpf_ktime_get_ns                   call bpf_ktime_get_ns\n  1: r0 &= 0x7fffffff       after verifier   r0 &= 0x7fffffff\n  2: w1 = w0                rewrites         w1 = w0\n  3: if w0 < 10 goto +0     -------------->  r11 = 0x2f5674a6     (r)\n  4: r1 >>= 32                               r11 <<= 32           (r)\n  5: r0 = r1                                 r1 |= r11            (r)\n  6: exit;                                   if w0 < 0xa goto pc+0\n                                             r1 >>= 32\n                                             r0 = r1\n                                             exit\n\n(or zero extension of w1 at (2) is missing for architectures that\n require zero extension for upper register half).\n\nThe following happens w/o this patch:\n- r0 is marked as not a subreg at (0);\n- w1 is marked as subreg at (2);\n- w1 subreg_def is overridden at (3) by copy_register_state();\n- w1 is read at (5) but mark_insn_zext() does not mark (2)\n  for zero extension, because w1 subreg_def is not set;\n- because of BPF_F_TEST_RND_HI32 flag verifier inserts random\n  value for hi32 bits of (2) (marked (r));\n- this random value is read at (5).\n    ",
+		"advisory": {
+			"from": "security@suse.de",
+			"severity": "Low",
+			"cve": [
+				{
+					"text": "CVE-2024-53125 at SUSE",
+					"href": "https://www.suse.com/security/cve/CVE-2024-53125/"
+				},
+				{
+					"text": "CVE-2024-53125 at NVD",
+					"href": "https://nvd.nist.gov/vuln/detail/CVE-2024-53125"
+				}
+			],
+			"bugzilla": [
+				{
+					"text": "SUSE bug 1234156",
+					"href": "https://bugzilla.suse.com/1234156"
+				}
+			],
+			"issued": {
+				"date": "2024-12-05"
+			},
+			"updated": {
+				"date": "2024-12-05"
+			},
+			"affected_cpe_list": {
+				"cpe": [
+					"cpe:/o:opensuse:leap:15.5"
+				]
+			}
+		}
+	},
+	"criteria": {
+		"operator": "AND",
+		"criterias": [
+			{
+				"operator": "OR",
+				"criterions": [
+					{
+						"test_ref": "oval:org.opensuse.security:tst:2009766997",
+						"comment": "cluster-md-kmp-default is affected"
+					},
+					{
+						"test_ref": "oval:org.opensuse.security:tst:2009766998",
+						"comment": "dlm-kmp-default is affected"
+					},
+					{
+						"test_ref": "oval:org.opensuse.security:tst:2009766999",
+						"comment": "gfs2-kmp-default is affected"
+					},
+					{
+						"test_ref": "oval:org.opensuse.security:tst:2009338032",
+						"comment": "kernel-default is affected"
+					},
+					{
+						"test_ref": "oval:org.opensuse.security:tst:2009338034",
+						"comment": "kernel-default-devel is affected"
+					},
+					{
+						"test_ref": "oval:org.opensuse.security:tst:2009715290",
+						"comment": "kernel-default-extra is affected"
+					},
+					{
+						"test_ref": "oval:org.opensuse.security:tst:2009764854",
+						"comment": "kernel-default-livepatch is affected"
+					},
+					{
+						"test_ref": "oval:org.opensuse.security:tst:2009764855",
+						"comment": "kernel-default-livepatch-devel is affected"
+					},
+					{
+						"test_ref": "oval:org.opensuse.security:tst:2009870815",
+						"comment": "kernel-default-optional is affected"
+					},
+					{
+						"test_ref": "oval:org.opensuse.security:tst:2009870816",
+						"comment": "kernel-default-vdso is affected"
+					},
+					{
+						"test_ref": "oval:org.opensuse.security:tst:2009870817",
+						"comment": "kselftests-kmp-default is affected"
+					},
+					{
+						"test_ref": "oval:org.opensuse.security:tst:2009767000",
+						"comment": "ocfs2-kmp-default is affected"
+					},
+					{
+						"test_ref": "oval:org.opensuse.security:tst:2009338038",
+						"comment": "reiserfs-kmp-default is affected"
+					},
+					{
+						"test_ref": "oval:org.opensuse.security:tst:2009335275",
+						"comment": "kernel-devel is affected"
+					},
+					{
+						"test_ref": "oval:org.opensuse.security:tst:2009335276",
+						"comment": "kernel-macros is affected"
+					},
+					{
+						"test_ref": "oval:org.opensuse.security:tst:2009333995",
+						"comment": "kernel-source is affected"
+					},
+					{
+						"test_ref": "oval:org.opensuse.security:tst:2009870818",
+						"comment": "kernel-source-vanilla is affected"
+					},
+					{
+						"test_ref": "oval:org.opensuse.security:tst:2009340777",
+						"comment": "kernel-devel-azure is affected"
+					},
+					{
+						"test_ref": "oval:org.opensuse.security:tst:2009340767",
+						"comment": "kernel-source-azure is affected"
+					},
+					{
+						"test_ref": "oval:org.opensuse.security:tst:2009728713",
+						"comment": "kernel-devel-rt is affected"
+					},
+					{
+						"test_ref": "oval:org.opensuse.security:tst:2009728714",
+						"comment": "kernel-source-rt is affected"
+					}
+				]
+			}
+		],
+		"criterions": [
+			{
+				"test_ref": "oval:org.opensuse.security:tst:2009752682",
+				"comment": "openSUSE Leap 15.5 is installed"
+			}
+		]
+	}
+}
