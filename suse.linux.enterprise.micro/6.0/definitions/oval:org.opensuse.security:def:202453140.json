@@ -1,0 +1,100 @@
+{
+	"id": "oval:org.opensuse.security:def:202453140",
+	"version": "1",
+	"class": "vulnerability",
+	"metadata": {
+		"title": "CVE-2024-53140",
+		"affected": {
+			"family": "unix",
+			"platform": [
+				"SUSE Linux Enterprise Micro 6.0"
+			]
+		},
+		"reference": [
+			{
+				"ref_id": "Mitre CVE-2024-53140",
+				"ref_url": "https://cve.mitre.org/cgi-bin/cvename.cgi?name=CVE-2024-53140",
+				"source": "CVE"
+			},
+			{
+				"ref_id": "SUSE CVE-2024-53140",
+				"ref_url": "https://www.suse.com/security/cve/CVE-2024-53140",
+				"source": "SUSE CVE"
+			}
+		],
+		"description": "\n    In the Linux kernel, the following vulnerability has been resolved:\n\nnetlink: terminate outstanding dump on socket close\n\nNetlink supports iterative dumping of data. It provides the families\nthe following ops:\n - start - (optional) kicks off the dumping process\n - dump  - actual dump helper, keeps getting called until it returns 0\n - done  - (optional) pairs with .start, can be used for cleanup\nThe whole process is asynchronous and the repeated calls to .dump\ndon't actually happen in a tight loop, but rather are triggered\nin response to recvmsg() on the socket.\n\nThis gives the user full control over the dump, but also means that\nthe user can close the socket without getting to the end of the dump.\nTo make sure .start is always paired with .done we check if there\nis an ongoing dump before freeing the socket, and if so call .done.\n\nThe complication is that sockets can get freed from BH and .done\nis allowed to sleep. So we use a workqueue to defer the call, when\nneeded.\n\nUnfortunately this does not work correctly. What we defer is not\nthe cleanup but rather releasing a reference on the socket.\nWe have no guarantee that we own the last reference, if someone\nelse holds the socket they may release it in BH and we're back\nto square one.\n\nThe whole dance, however, appears to be unnecessary. Only the user\ncan interact with dumps, so we can clean up when socket is closed.\nAnd close always happens in process context. Some async code may\nstill access the socket after close, queue notification skbs to it etc.\nbut no dumps can start, end or otherwise make progress.\n\nDelete the workqueue and flush the dump state directly from the release\nhandler. Note that further cleanup is possible in -next, for instance\nwe now always call .done before releasing the main module reference,\nso dump doesn't have to take a reference of its own.\n    ",
+		"advisory": {
+			"from": "security@suse.de",
+			"severity": "Moderate",
+			"cve": [
+				{
+					"text": "CVE-2024-53140 at SUSE",
+					"href": "https://www.suse.com/security/cve/CVE-2024-53140/",
+					"impact": "medium",
+					"cvss3": "5.5/CVSS:3.1/AV:L/AC:L/PR:L/UI:N/S:U/C:N/I:N/A:H"
+				},
+				{
+					"text": "CVE-2024-53140 at NVD",
+					"href": "https://nvd.nist.gov/vuln/detail/CVE-2024-53140"
+				}
+			],
+			"bugzilla": [
+				{
+					"text": "SUSE bug 1234222",
+					"href": "https://bugzilla.suse.com/1234222"
+				}
+			],
+			"issued": {
+				"date": "2024-12-06"
+			},
+			"updated": {
+				"date": "2024-12-06"
+			},
+			"affected_cpe_list": {
+				"cpe": [
+					"cpe:/o:suse:sl-micro:6.0"
+				]
+			}
+		}
+	},
+	"criteria": {
+		"operator": "AND",
+		"criterias": [
+			{
+				"operator": "OR",
+				"criterions": [
+					{
+						"test_ref": "oval:org.opensuse.security:tst:2009338032",
+						"comment": "kernel-default is affected"
+					},
+					{
+						"test_ref": "oval:org.opensuse.security:tst:2009335275",
+						"comment": "kernel-devel is affected"
+					},
+					{
+						"test_ref": "oval:org.opensuse.security:tst:2009335276",
+						"comment": "kernel-macros is affected"
+					},
+					{
+						"test_ref": "oval:org.opensuse.security:tst:2009333995",
+						"comment": "kernel-source is affected"
+					},
+					{
+						"test_ref": "oval:org.opensuse.security:tst:2009728713",
+						"comment": "kernel-devel-rt is affected"
+					},
+					{
+						"test_ref": "oval:org.opensuse.security:tst:2009728714",
+						"comment": "kernel-source-rt is affected"
+					}
+				]
+			}
+		],
+		"criterions": [
+			{
+				"test_ref": "oval:org.opensuse.security:tst:2009864179",
+				"comment": "SUSE Linux Enterprise Micro 6.0 is installed"
+			}
+		]
+	}
+}
