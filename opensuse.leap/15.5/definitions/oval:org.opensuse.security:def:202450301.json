@@ -20,6 +20,36 @@
 				"ref_id": "SUSE CVE-2024-50301",
 				"ref_url": "https://www.suse.com/security/cve/CVE-2024-50301",
 				"source": "SUSE CVE"
+			},
+			{
+				"ref_id": "SUSE-SU-2024:4313-1",
+				"ref_url": "https://lists.suse.com/pipermail/sle-security-updates/2024-December/020002.html",
+				"source": "SUSE-SU"
+			},
+			{
+				"ref_id": "SUSE-SU-2024:4314-1",
+				"ref_url": "https://lists.suse.com/pipermail/sle-security-updates/2024-December/019998.html",
+				"source": "SUSE-SU"
+			},
+			{
+				"ref_id": "SUSE-SU-2024:4315-1",
+				"ref_url": "https://lists.suse.com/pipermail/sle-security-updates/2024-December/019997.html",
+				"source": "SUSE-SU"
+			},
+			{
+				"ref_id": "SUSE-SU-2024:4316-1",
+				"ref_url": "https://lists.suse.com/pipermail/sle-security-updates/2024-December/020001.html",
+				"source": "SUSE-SU"
+			},
+			{
+				"ref_id": "SUSE-SU-2024:4317-1",
+				"ref_url": "https://lists.suse.com/pipermail/sle-security-updates/2024-December/020000.html",
+				"source": "SUSE-SU"
+			},
+			{
+				"ref_id": "SUSE-SU-2024:4318-1",
+				"ref_url": "https://lists.suse.com/pipermail/sle-security-updates/2024-December/019999.html",
+				"source": "SUSE-SU"
 			}
 		],
 		"description": "\n    In the Linux kernel, the following vulnerability has been resolved:\n\nsecurity/keys: fix slab-out-of-bounds in key_task_permission\n\nKASAN reports an out of bounds read:\nBUG: KASAN: slab-out-of-bounds in __kuid_val include/linux/uidgid.h:36\nBUG: KASAN: slab-out-of-bounds in uid_eq include/linux/uidgid.h:63 [inline]\nBUG: KASAN: slab-out-of-bounds in key_task_permission+0x394/0x410\nsecurity/keys/permission.c:54\nRead of size 4 at addr ffff88813c3ab618 by task stress-ng/4362\n\nCPU: 2 PID: 4362 Comm: stress-ng Not tainted 5.10.0-14930-gafbffd6c3ede #15\nCall Trace:\n __dump_stack lib/dump_stack.c:82 [inline]\n dump_stack+0x107/0x167 lib/dump_stack.c:123\n print_address_description.constprop.0+0x19/0x170 mm/kasan/report.c:400\n __kasan_report.cold+0x6c/0x84 mm/kasan/report.c:560\n kasan_report+0x3a/0x50 mm/kasan/report.c:585\n __kuid_val include/linux/uidgid.h:36 [inline]\n uid_eq include/linux/uidgid.h:63 [inline]\n key_task_permission+0x394/0x410 security/keys/permission.c:54\n search_nested_keyrings+0x90e/0xe90 security/keys/keyring.c:793\n\nThis issue was also reported by syzbot.\n\nIt can be reproduced by following these steps(more details [1]):\n1. Obtain more than 32 inputs that have similar hashes, which ends with the\n   pattern '0xxxxxxxe6'.\n2. Reboot and add the keys obtained in step 1.\n\nThe reproducer demonstrates how this issue happened:\n1. In the search_nested_keyrings function, when it iterates through the\n   slots in a node(below tag ascend_to_node), if the slot pointer is meta\n   and node->back_pointer != NULL(it means a root), it will proceed to\n   descend_to_node. However, there is an exception. If node is the root,\n   and one of the slots points to a shortcut, it will be treated as a\n   keyring.\n2. Whether the ptr is keyring decided by keyring_ptr_is_keyring function.\n   However, KEYRING_PTR_SUBTYPE is 0x2UL, the same as\n   ASSOC_ARRAY_PTR_SUBTYPE_MASK.\n3. When 32 keys with the similar hashes are added to the tree, the ROOT\n   has keys with hashes that are not similar (e.g. slot 0) and it splits\n   NODE A without using a shortcut. When NODE A is filled with keys that\n   all hashes are xxe6, the keys are similar, NODE A will split with a\n   shortcut. Finally, it forms the tree as shown below, where slot 6 points\n   to a shortcut.\n\n                      NODE A\n              +------>+---+\n      ROOT    |       | 0 | xxe6\n      +---+   |       +---+\n xxxx | 0 | shortcut  :   : xxe6\n      +---+   |       +---+\n xxe6 :   :   |       |   | xxe6\n      +---+   |       +---+\n      | 6 |---+       :   : xxe6\n      +---+           +---+\n xxe6 :   :           | f | xxe6\n      +---+           +---+\n xxe6 | f |\n      +---+\n\n4. As mentioned above, If a slot(slot 6) of the root points to a shortcut,\n   it may be mistakenly transferred to a key*, leading to a read\n   out-of-bounds read.\n\nTo fix this issue, one should jump to descend_to_node if the ptr is a\nshortcut, regardless of whether the node is root or not.\n\n[1] https://lore.kernel.org/linux-kernel/1cfa878e-8c7b-4570-8606-21daf5e13ce7@huaweicloud.com/\n\n[jarkko: tweaked the commit message a bit to have an appropriate closes\n tag.]\n    ",
@@ -54,7 +84,7 @@
 				"date": "2024-11-21"
 			},
 			"updated": {
-				"date": "2024-11-24"
+				"date": "2024-12-14"
 			},
 			"affected_cpe_list": {
 				"cpe": [
@@ -68,6 +98,255 @@
 		"criterias": [
 			{
 				"operator": "OR",
+				"criterias": [
+					{
+						"operator": "AND",
+						"criterions": [
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009957796",
+								"comment": "cluster-md-kmp-rt-5.14.21-150500.13.79.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009342853",
+								"comment": "cluster-md-kmp-rt is signed with openSUSE key"
+							}
+						]
+					},
+					{
+						"operator": "AND",
+						"criterions": [
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009957797",
+								"comment": "dlm-kmp-rt-5.14.21-150500.13.79.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009342855",
+								"comment": "dlm-kmp-rt is signed with openSUSE key"
+							}
+						]
+					},
+					{
+						"operator": "AND",
+						"criterions": [
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009957798",
+								"comment": "gfs2-kmp-rt-5.14.21-150500.13.79.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009342857",
+								"comment": "gfs2-kmp-rt is signed with openSUSE key"
+							}
+						]
+					},
+					{
+						"operator": "AND",
+						"criterions": [
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009957799",
+								"comment": "kernel-devel-rt-5.14.21-150500.13.79.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009342859",
+								"comment": "kernel-devel-rt is signed with openSUSE key"
+							}
+						]
+					},
+					{
+						"operator": "AND",
+						"criterions": [
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009957800",
+								"comment": "kernel-rt-5.14.21-150500.13.79.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009342860",
+								"comment": "kernel-rt is signed with openSUSE key"
+							}
+						]
+					},
+					{
+						"operator": "AND",
+						"criterions": [
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009957801",
+								"comment": "kernel-rt-devel-5.14.21-150500.13.79.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009342861",
+								"comment": "kernel-rt-devel is signed with openSUSE key"
+							}
+						]
+					},
+					{
+						"operator": "AND",
+						"criterions": [
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009957802",
+								"comment": "kernel-rt-extra-5.14.21-150500.13.79.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009342862",
+								"comment": "kernel-rt-extra is signed with openSUSE key"
+							}
+						]
+					},
+					{
+						"operator": "AND",
+						"criterions": [
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009957803",
+								"comment": "kernel-rt-livepatch-5.14.21-150500.13.79.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009771783",
+								"comment": "kernel-rt-livepatch is signed with openSUSE key"
+							}
+						]
+					},
+					{
+						"operator": "AND",
+						"criterions": [
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009957804",
+								"comment": "kernel-rt-livepatch-devel-5.14.21-150500.13.79.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009623297",
+								"comment": "kernel-rt-livepatch-devel is signed with openSUSE key"
+							}
+						]
+					},
+					{
+						"operator": "AND",
+						"criterions": [
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009957805",
+								"comment": "kernel-rt-optional-5.14.21-150500.13.79.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009771784",
+								"comment": "kernel-rt-optional is signed with openSUSE key"
+							}
+						]
+					},
+					{
+						"operator": "AND",
+						"criterions": [
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009957806",
+								"comment": "kernel-rt-vdso-5.14.21-150500.13.79.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009771785",
+								"comment": "kernel-rt-vdso is signed with openSUSE key"
+							}
+						]
+					},
+					{
+						"operator": "AND",
+						"criterions": [
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009957807",
+								"comment": "kernel-rt_debug-5.14.21-150500.13.79.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009342863",
+								"comment": "kernel-rt_debug is signed with openSUSE key"
+							}
+						]
+					},
+					{
+						"operator": "AND",
+						"criterions": [
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009957808",
+								"comment": "kernel-rt_debug-devel-5.14.21-150500.13.79.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009342864",
+								"comment": "kernel-rt_debug-devel is signed with openSUSE key"
+							}
+						]
+					},
+					{
+						"operator": "AND",
+						"criterions": [
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009957809",
+								"comment": "kernel-rt_debug-vdso-5.14.21-150500.13.79.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009771786",
+								"comment": "kernel-rt_debug-vdso is signed with openSUSE key"
+							}
+						]
+					},
+					{
+						"operator": "AND",
+						"criterions": [
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009957810",
+								"comment": "kernel-source-rt-5.14.21-150500.13.79.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009342866",
+								"comment": "kernel-source-rt is signed with openSUSE key"
+							}
+						]
+					},
+					{
+						"operator": "AND",
+						"criterions": [
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009957811",
+								"comment": "kernel-syms-rt-5.14.21-150500.13.79.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009342867",
+								"comment": "kernel-syms-rt is signed with openSUSE key"
+							}
+						]
+					},
+					{
+						"operator": "AND",
+						"criterions": [
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009957812",
+								"comment": "kselftests-kmp-rt-5.14.21-150500.13.79.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009342868",
+								"comment": "kselftests-kmp-rt is signed with openSUSE key"
+							}
+						]
+					},
+					{
+						"operator": "AND",
+						"criterions": [
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009957813",
+								"comment": "ocfs2-kmp-rt-5.14.21-150500.13.79.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009342870",
+								"comment": "ocfs2-kmp-rt is signed with openSUSE key"
+							}
+						]
+					},
+					{
+						"operator": "AND",
+						"criterions": [
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009957814",
+								"comment": "reiserfs-kmp-rt-5.14.21-150500.13.79.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009342872",
+								"comment": "reiserfs-kmp-rt is signed with openSUSE key"
+							}
+						]
+					}
+				],
 				"criterions": [
 					{
 						"test_ref": "oval:org.opensuse.security:tst:2009766997",
@@ -144,14 +423,6 @@
 					{
 						"test_ref": "oval:org.opensuse.security:tst:2009340767",
 						"comment": "kernel-source-azure is affected"
-					},
-					{
-						"test_ref": "oval:org.opensuse.security:tst:2009728713",
-						"comment": "kernel-devel-rt is affected"
-					},
-					{
-						"test_ref": "oval:org.opensuse.security:tst:2009728714",
-						"comment": "kernel-source-rt is affected"
 					}
 				]
 			}

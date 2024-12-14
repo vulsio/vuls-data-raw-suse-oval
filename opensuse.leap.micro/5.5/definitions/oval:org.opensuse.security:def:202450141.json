@@ -1,0 +1,111 @@
+{
+	"id": "oval:org.opensuse.security:def:202450141",
+	"version": "1",
+	"class": "vulnerability",
+	"metadata": {
+		"title": "CVE-2024-50141",
+		"affected": {
+			"family": "unix",
+			"platform": [
+				"openSUSE Leap Micro 5.5"
+			]
+		},
+		"reference": [
+			{
+				"ref_id": "Mitre CVE-2024-50141",
+				"ref_url": "https://cve.mitre.org/cgi-bin/cvename.cgi?name=CVE-2024-50141",
+				"source": "CVE"
+			},
+			{
+				"ref_id": "SUSE CVE-2024-50141",
+				"ref_url": "https://www.suse.com/security/cve/CVE-2024-50141",
+				"source": "SUSE CVE"
+			},
+			{
+				"ref_id": "SUSE-SU-2024:4314-1",
+				"ref_url": "https://lists.suse.com/pipermail/sle-security-updates/2024-December/019998.html",
+				"source": "SUSE-SU"
+			},
+			{
+				"ref_id": "SUSE-SU-2024:4315-1",
+				"ref_url": "https://lists.suse.com/pipermail/sle-security-updates/2024-December/019997.html",
+				"source": "SUSE-SU"
+			},
+			{
+				"ref_id": "SUSE-SU-2024:4316-1",
+				"ref_url": "https://lists.suse.com/pipermail/sle-security-updates/2024-December/020001.html",
+				"source": "SUSE-SU"
+			},
+			{
+				"ref_id": "SUSE-SU-2024:4318-1",
+				"ref_url": "https://lists.suse.com/pipermail/sle-security-updates/2024-December/019999.html",
+				"source": "SUSE-SU"
+			},
+			{
+				"ref_id": "openSUSE-SU-2024:14500-1",
+				"ref_url": "https://lists.opensuse.org/archives/list/security-announce@lists.opensuse.org/thread/2NO44GTYBSPPWKFDREFWHITK4XKTNVLP/",
+				"source": "SUSE-SU"
+			}
+		],
+		"description": "\n    In the Linux kernel, the following vulnerability has been resolved:\n\nACPI: PRM: Find EFI_MEMORY_RUNTIME block for PRM handler and context\n\nPRMT needs to find the correct type of block to translate the PA-VA\nmapping for EFI runtime services.\n\nThe issue arises because the PRMT is finding a block of type\nEFI_CONVENTIONAL_MEMORY, which is not appropriate for runtime services\nas described in Section 2.2.2 (Runtime Services) of the UEFI\nSpecification [1]. Since the PRM handler is a type of runtime service,\nthis causes an exception when the PRM handler is called.\n\n    [Firmware Bug]: Unable to handle paging request in EFI runtime service\n    WARNING: CPU: 22 PID: 4330 at drivers/firmware/efi/runtime-wrappers.c:341\n        __efi_queue_work+0x11c/0x170\n    Call trace:\n\nLet PRMT find a block with EFI_MEMORY_RUNTIME for PRM handler and PRM\ncontext.\n\nIf no suitable block is found, a warning message will be printed, but\nthe procedure continues to manage the next PRM handler.\n\nHowever, if the PRM handler is actually called without proper allocation,\nit would result in a failure during error handling.\n\nBy using the correct memory types for runtime services, ensure that the\nPRM handler and the context are properly mapped in the virtual address\nspace during runtime, preventing the paging request error.\n\nThe issue is really that only memory that has been remapped for runtime\nby the firmware can be used by the PRM handler, and so the region needs\nto have the EFI_MEMORY_RUNTIME attribute.\n\n[ rjw: Subject and changelog edits ]\n    ",
+		"advisory": {
+			"from": "security@suse.de",
+			"severity": "Moderate",
+			"cve": [
+				{
+					"text": "CVE-2024-50141 at SUSE",
+					"href": "https://www.suse.com/security/cve/CVE-2024-50141/",
+					"impact": "medium",
+					"cvss3": "5.5/CVSS:3.1/AV:L/AC:L/PR:L/UI:N/S:U/C:N/I:N/A:H"
+				},
+				{
+					"text": "CVE-2024-50141 at NVD",
+					"href": "https://nvd.nist.gov/vuln/detail/CVE-2024-50141",
+					"impact": "medium",
+					"cvss3": "5.5/CVSS:3.1/AV:L/AC:L/PR:L/UI:N/S:U/C:N/I:N/A:H"
+				}
+			],
+			"bugzilla": [
+				{
+					"text": "SUSE bug 1233065",
+					"href": "https://bugzilla.suse.com/1233065"
+				}
+			],
+			"issued": {
+				"date": "2024-12-14"
+			},
+			"updated": {
+				"date": "2024-12-14"
+			},
+			"affected_cpe_list": {
+				"cpe": [
+					"cpe:/o:opensuse:leap-micro:5.5"
+				]
+			}
+		}
+	},
+	"criteria": {
+		"operator": "AND",
+		"criterias": [
+			{
+				"operator": "AND",
+				"criterions": [
+					{
+						"test_ref": "oval:org.opensuse.security:tst:2009957800",
+						"comment": "kernel-rt-5.14.21-150500.13.79.1 is installed"
+					},
+					{
+						"test_ref": "oval:org.opensuse.security:tst:2009342860",
+						"comment": "kernel-rt is signed with openSUSE key"
+					}
+				]
+			}
+		],
+		"criterions": [
+			{
+				"test_ref": "oval:org.opensuse.security:tst:2009799821",
+				"comment": "openSUSE Leap Micro 5.5 is installed"
+			}
+		]
+	}
+}

@@ -145,6 +145,11 @@
 				"ref_id": "SUSE-SU-2024:4140-1",
 				"ref_url": "https://lists.suse.com/pipermail/sle-security-updates/2024-December/019890.html",
 				"source": "SUSE-SU"
+			},
+			{
+				"ref_id": "SUSE-SU-2024:4318-1",
+				"ref_url": "https://lists.suse.com/pipermail/sle-security-updates/2024-December/019999.html",
+				"source": "SUSE-SU"
 			}
 		],
 		"description": "\n    In the Linux kernel, the following vulnerability has been resolved:\n\ntcp: do not accept ACK of bytes we never sent\n\nThis patch is based on a detailed report and ideas from Yepeng Pan\nand Christian Rossow.\n\nACK seq validation is currently following RFC 5961 5.2 guidelines:\n\n   The ACK value is considered acceptable only if\n   it is in the range of ((SND.UNA - MAX.SND.WND) <= SEG.ACK <=\n   SND.NXT).  All incoming segments whose ACK value doesn't satisfy the\n   above condition MUST be discarded and an ACK sent back.  It needs to\n   be noted that RFC 793 on page 72 (fifth check) says: \"If the ACK is a\n   duplicate (SEG.ACK < SND.UNA), it can be ignored.  If the ACK\n   acknowledges something not yet sent (SEG.ACK > SND.NXT) then send an\n   ACK, drop the segment, and return\".  The \"ignored\" above implies that\n   the processing of the incoming data segment continues, which means\n   the ACK value is treated as acceptable.  This mitigation makes the\n   ACK check more stringent since any ACK < SND.UNA wouldn't be\n   accepted, instead only ACKs that are in the range ((SND.UNA -\n   MAX.SND.WND) <= SEG.ACK <= SND.NXT) get through.\n\nThis can be refined for new (and possibly spoofed) flows,\nby not accepting ACK for bytes that were never sent.\n\nThis greatly improves TCP security at a little cost.\n\nI added a Fixes: tag to make sure this patch will reach stable trees,\neven if the 'blamed' patch was adhering to the RFC.\n\ntp->bytes_acked was added in linux-4.2\n\nFollowing packetdrill test (courtesy of Yepeng Pan) shows\nthe issue at hand:\n\n0 socket(..., SOCK_STREAM, IPPROTO_TCP) = 3\n+0 setsockopt(3, SOL_SOCKET, SO_REUSEADDR, [1], 4) = 0\n+0 bind(3, ..., ...) = 0\n+0 listen(3, 1024) = 0\n\n// ---------------- Handshake ------------------- //\n\n// when window scale is set to 14 the window size can be extended to\n// 65535 * (2^14) = 1073725440. Linux would accept an ACK packet\n// with ack number in (Server_ISN+1-1073725440. Server_ISN+1)\n// ,though this ack number acknowledges some data never\n// sent by the server.\n\n+0 < S 0:0(0) win 65535 <mss 1400,nop,wscale 14>\n+0 > S. 0:0(0) ack 1 <...>\n+0 < . 1:1(0) ack 1 win 65535\n+0 accept(3, ..., ...) = 4\n\n// For the established connection, we send an ACK packet,\n// the ack packet uses ack number 1 - 1073725300 + 2^32,\n// where 2^32 is used to wrap around.\n// Note: we used 1073725300 instead of 1073725440 to avoid possible\n// edge cases.\n// 1 - 1073725300 + 2^32 = 3221241997\n\n// Oops, old kernels happily accept this packet.\n+0 < . 1:1001(1000) ack 3221241997 win 65535\n\n// After the kernel fix the following will be replaced by a challenge ACK,\n// and prior malicious frame would be dropped.\n+0 > . 1:1(0) ack 1001\n    ",
@@ -181,7 +186,7 @@
 				"date": "2024-06-05"
 			},
 			"updated": {
-				"date": "2024-12-03"
+				"date": "2024-12-14"
 			},
 			"affected_cpe_list": {
 				"cpe": [
@@ -200,8 +205,8 @@
 						"operator": "AND",
 						"criterions": [
 							{
-								"test_ref": "oval:org.opensuse.security:tst:2009875084",
-								"comment": "cluster-md-kmp-64kb-6.4.0-150600.23.14.1 is installed"
+								"test_ref": "oval:org.opensuse.security:tst:2009957861",
+								"comment": "cluster-md-kmp-64kb-6.4.0-150600.23.30.1 is installed"
 							},
 							{
 								"test_ref": "oval:org.opensuse.security:tst:2009623416",
@@ -226,8 +231,8 @@
 						"operator": "AND",
 						"criterions": [
 							{
-								"test_ref": "oval:org.opensuse.security:tst:2009875085",
-								"comment": "cluster-md-kmp-default-6.4.0-150600.23.14.2 is installed"
+								"test_ref": "oval:org.opensuse.security:tst:2009957862",
+								"comment": "cluster-md-kmp-default-6.4.0-150600.23.30.1 is installed"
 							},
 							{
 								"test_ref": "oval:org.opensuse.security:tst:2009623278",
@@ -252,8 +257,8 @@
 						"operator": "AND",
 						"criterions": [
 							{
-								"test_ref": "oval:org.opensuse.security:tst:2009875086",
-								"comment": "dlm-kmp-64kb-6.4.0-150600.23.14.1 is installed"
+								"test_ref": "oval:org.opensuse.security:tst:2009957863",
+								"comment": "dlm-kmp-64kb-6.4.0-150600.23.30.1 is installed"
 							},
 							{
 								"test_ref": "oval:org.opensuse.security:tst:2009623418",
@@ -278,8 +283,8 @@
 						"operator": "AND",
 						"criterions": [
 							{
-								"test_ref": "oval:org.opensuse.security:tst:2009875087",
-								"comment": "dlm-kmp-default-6.4.0-150600.23.14.2 is installed"
+								"test_ref": "oval:org.opensuse.security:tst:2009957864",
+								"comment": "dlm-kmp-default-6.4.0-150600.23.30.1 is installed"
 							},
 							{
 								"test_ref": "oval:org.opensuse.security:tst:2009623280",
@@ -304,8 +309,8 @@
 						"operator": "AND",
 						"criterions": [
 							{
-								"test_ref": "oval:org.opensuse.security:tst:2009875088",
-								"comment": "dtb-allwinner-6.4.0-150600.23.14.1 is installed"
+								"test_ref": "oval:org.opensuse.security:tst:2009957865",
+								"comment": "dtb-allwinner-6.4.0-150600.23.30.1 is installed"
 							},
 							{
 								"test_ref": "oval:org.opensuse.security:tst:2009630924",
@@ -317,8 +322,8 @@
 						"operator": "AND",
 						"criterions": [
 							{
-								"test_ref": "oval:org.opensuse.security:tst:2009875089",
-								"comment": "dtb-altera-6.4.0-150600.23.14.1 is installed"
+								"test_ref": "oval:org.opensuse.security:tst:2009957866",
+								"comment": "dtb-altera-6.4.0-150600.23.30.1 is installed"
 							},
 							{
 								"test_ref": "oval:org.opensuse.security:tst:2009630925",
@@ -330,8 +335,8 @@
 						"operator": "AND",
 						"criterions": [
 							{
-								"test_ref": "oval:org.opensuse.security:tst:2009875090",
-								"comment": "dtb-amazon-6.4.0-150600.23.14.1 is installed"
+								"test_ref": "oval:org.opensuse.security:tst:2009957867",
+								"comment": "dtb-amazon-6.4.0-150600.23.30.1 is installed"
 							},
 							{
 								"test_ref": "oval:org.opensuse.security:tst:2009701757",
@@ -343,8 +348,8 @@
 						"operator": "AND",
 						"criterions": [
 							{
-								"test_ref": "oval:org.opensuse.security:tst:2009875091",
-								"comment": "dtb-amd-6.4.0-150600.23.14.1 is installed"
+								"test_ref": "oval:org.opensuse.security:tst:2009957868",
+								"comment": "dtb-amd-6.4.0-150600.23.30.1 is installed"
 							},
 							{
 								"test_ref": "oval:org.opensuse.security:tst:2009630926",
@@ -356,8 +361,8 @@
 						"operator": "AND",
 						"criterions": [
 							{
-								"test_ref": "oval:org.opensuse.security:tst:2009875092",
-								"comment": "dtb-amlogic-6.4.0-150600.23.14.1 is installed"
+								"test_ref": "oval:org.opensuse.security:tst:2009957869",
+								"comment": "dtb-amlogic-6.4.0-150600.23.30.1 is installed"
 							},
 							{
 								"test_ref": "oval:org.opensuse.security:tst:2009630927",
@@ -369,8 +374,8 @@
 						"operator": "AND",
 						"criterions": [
 							{
-								"test_ref": "oval:org.opensuse.security:tst:2009875093",
-								"comment": "dtb-apm-6.4.0-150600.23.14.1 is installed"
+								"test_ref": "oval:org.opensuse.security:tst:2009957870",
+								"comment": "dtb-apm-6.4.0-150600.23.30.1 is installed"
 							},
 							{
 								"test_ref": "oval:org.opensuse.security:tst:2009630928",
@@ -382,8 +387,8 @@
 						"operator": "AND",
 						"criterions": [
 							{
-								"test_ref": "oval:org.opensuse.security:tst:2009875094",
-								"comment": "dtb-apple-6.4.0-150600.23.14.1 is installed"
+								"test_ref": "oval:org.opensuse.security:tst:2009957871",
+								"comment": "dtb-apple-6.4.0-150600.23.30.1 is installed"
 							},
 							{
 								"test_ref": "oval:org.opensuse.security:tst:2009701758",
@@ -395,8 +400,8 @@
 						"operator": "AND",
 						"criterions": [
 							{
-								"test_ref": "oval:org.opensuse.security:tst:2009875095",
-								"comment": "dtb-arm-6.4.0-150600.23.14.1 is installed"
+								"test_ref": "oval:org.opensuse.security:tst:2009957872",
+								"comment": "dtb-arm-6.4.0-150600.23.30.1 is installed"
 							},
 							{
 								"test_ref": "oval:org.opensuse.security:tst:2009630929",
@@ -408,8 +413,8 @@
 						"operator": "AND",
 						"criterions": [
 							{
-								"test_ref": "oval:org.opensuse.security:tst:2009875096",
-								"comment": "dtb-broadcom-6.4.0-150600.23.14.1 is installed"
+								"test_ref": "oval:org.opensuse.security:tst:2009957873",
+								"comment": "dtb-broadcom-6.4.0-150600.23.30.1 is installed"
 							},
 							{
 								"test_ref": "oval:org.opensuse.security:tst:2009630930",
@@ -421,8 +426,8 @@
 						"operator": "AND",
 						"criterions": [
 							{
-								"test_ref": "oval:org.opensuse.security:tst:2009875097",
-								"comment": "dtb-cavium-6.4.0-150600.23.14.1 is installed"
+								"test_ref": "oval:org.opensuse.security:tst:2009957874",
+								"comment": "dtb-cavium-6.4.0-150600.23.30.1 is installed"
 							},
 							{
 								"test_ref": "oval:org.opensuse.security:tst:2009630931",
@@ -434,8 +439,8 @@
 						"operator": "AND",
 						"criterions": [
 							{
-								"test_ref": "oval:org.opensuse.security:tst:2009875098",
-								"comment": "dtb-exynos-6.4.0-150600.23.14.1 is installed"
+								"test_ref": "oval:org.opensuse.security:tst:2009957875",
+								"comment": "dtb-exynos-6.4.0-150600.23.30.1 is installed"
 							},
 							{
 								"test_ref": "oval:org.opensuse.security:tst:2009630932",
@@ -447,8 +452,8 @@
 						"operator": "AND",
 						"criterions": [
 							{
-								"test_ref": "oval:org.opensuse.security:tst:2009875099",
-								"comment": "dtb-freescale-6.4.0-150600.23.14.1 is installed"
+								"test_ref": "oval:org.opensuse.security:tst:2009957876",
+								"comment": "dtb-freescale-6.4.0-150600.23.30.1 is installed"
 							},
 							{
 								"test_ref": "oval:org.opensuse.security:tst:2009630933",
@@ -460,8 +465,8 @@
 						"operator": "AND",
 						"criterions": [
 							{
-								"test_ref": "oval:org.opensuse.security:tst:2009875100",
-								"comment": "dtb-hisilicon-6.4.0-150600.23.14.1 is installed"
+								"test_ref": "oval:org.opensuse.security:tst:2009957877",
+								"comment": "dtb-hisilicon-6.4.0-150600.23.30.1 is installed"
 							},
 							{
 								"test_ref": "oval:org.opensuse.security:tst:2009630934",
@@ -473,8 +478,8 @@
 						"operator": "AND",
 						"criterions": [
 							{
-								"test_ref": "oval:org.opensuse.security:tst:2009875101",
-								"comment": "dtb-lg-6.4.0-150600.23.14.1 is installed"
+								"test_ref": "oval:org.opensuse.security:tst:2009957878",
+								"comment": "dtb-lg-6.4.0-150600.23.30.1 is installed"
 							},
 							{
 								"test_ref": "oval:org.opensuse.security:tst:2009630935",
@@ -486,8 +491,8 @@
 						"operator": "AND",
 						"criterions": [
 							{
-								"test_ref": "oval:org.opensuse.security:tst:2009875102",
-								"comment": "dtb-marvell-6.4.0-150600.23.14.1 is installed"
+								"test_ref": "oval:org.opensuse.security:tst:2009957879",
+								"comment": "dtb-marvell-6.4.0-150600.23.30.1 is installed"
 							},
 							{
 								"test_ref": "oval:org.opensuse.security:tst:2009630936",
@@ -499,8 +504,8 @@
 						"operator": "AND",
 						"criterions": [
 							{
-								"test_ref": "oval:org.opensuse.security:tst:2009875103",
-								"comment": "dtb-mediatek-6.4.0-150600.23.14.1 is installed"
+								"test_ref": "oval:org.opensuse.security:tst:2009957880",
+								"comment": "dtb-mediatek-6.4.0-150600.23.30.1 is installed"
 							},
 							{
 								"test_ref": "oval:org.opensuse.security:tst:2009630937",
@@ -512,8 +517,8 @@
 						"operator": "AND",
 						"criterions": [
 							{
-								"test_ref": "oval:org.opensuse.security:tst:2009875104",
-								"comment": "dtb-nvidia-6.4.0-150600.23.14.1 is installed"
+								"test_ref": "oval:org.opensuse.security:tst:2009957881",
+								"comment": "dtb-nvidia-6.4.0-150600.23.30.1 is installed"
 							},
 							{
 								"test_ref": "oval:org.opensuse.security:tst:2009630938",
@@ -525,8 +530,8 @@
 						"operator": "AND",
 						"criterions": [
 							{
-								"test_ref": "oval:org.opensuse.security:tst:2009875105",
-								"comment": "dtb-qcom-6.4.0-150600.23.14.1 is installed"
+								"test_ref": "oval:org.opensuse.security:tst:2009957882",
+								"comment": "dtb-qcom-6.4.0-150600.23.30.1 is installed"
 							},
 							{
 								"test_ref": "oval:org.opensuse.security:tst:2009630939",
@@ -538,8 +543,8 @@
 						"operator": "AND",
 						"criterions": [
 							{
-								"test_ref": "oval:org.opensuse.security:tst:2009875106",
-								"comment": "dtb-renesas-6.4.0-150600.23.14.1 is installed"
+								"test_ref": "oval:org.opensuse.security:tst:2009957883",
+								"comment": "dtb-renesas-6.4.0-150600.23.30.1 is installed"
 							},
 							{
 								"test_ref": "oval:org.opensuse.security:tst:2009630940",
@@ -551,8 +556,8 @@
 						"operator": "AND",
 						"criterions": [
 							{
-								"test_ref": "oval:org.opensuse.security:tst:2009875107",
-								"comment": "dtb-rockchip-6.4.0-150600.23.14.1 is installed"
+								"test_ref": "oval:org.opensuse.security:tst:2009957884",
+								"comment": "dtb-rockchip-6.4.0-150600.23.30.1 is installed"
 							},
 							{
 								"test_ref": "oval:org.opensuse.security:tst:2009630941",
@@ -564,8 +569,8 @@
 						"operator": "AND",
 						"criterions": [
 							{
-								"test_ref": "oval:org.opensuse.security:tst:2009875108",
-								"comment": "dtb-socionext-6.4.0-150600.23.14.1 is installed"
+								"test_ref": "oval:org.opensuse.security:tst:2009957885",
+								"comment": "dtb-socionext-6.4.0-150600.23.30.1 is installed"
 							},
 							{
 								"test_ref": "oval:org.opensuse.security:tst:2009630942",
@@ -577,8 +582,8 @@
 						"operator": "AND",
 						"criterions": [
 							{
-								"test_ref": "oval:org.opensuse.security:tst:2009875109",
-								"comment": "dtb-sprd-6.4.0-150600.23.14.1 is installed"
+								"test_ref": "oval:org.opensuse.security:tst:2009957886",
+								"comment": "dtb-sprd-6.4.0-150600.23.30.1 is installed"
 							},
 							{
 								"test_ref": "oval:org.opensuse.security:tst:2009630943",
@@ -590,8 +595,8 @@
 						"operator": "AND",
 						"criterions": [
 							{
-								"test_ref": "oval:org.opensuse.security:tst:2009875110",
-								"comment": "dtb-xilinx-6.4.0-150600.23.14.1 is installed"
+								"test_ref": "oval:org.opensuse.security:tst:2009957887",
+								"comment": "dtb-xilinx-6.4.0-150600.23.30.1 is installed"
 							},
 							{
 								"test_ref": "oval:org.opensuse.security:tst:2009630944",
@@ -603,8 +608,8 @@
 						"operator": "AND",
 						"criterions": [
 							{
-								"test_ref": "oval:org.opensuse.security:tst:2009875111",
-								"comment": "gfs2-kmp-64kb-6.4.0-150600.23.14.1 is installed"
+								"test_ref": "oval:org.opensuse.security:tst:2009957888",
+								"comment": "gfs2-kmp-64kb-6.4.0-150600.23.30.1 is installed"
 							},
 							{
 								"test_ref": "oval:org.opensuse.security:tst:2009623420",
@@ -629,8 +634,8 @@
 						"operator": "AND",
 						"criterions": [
 							{
-								"test_ref": "oval:org.opensuse.security:tst:2009875112",
-								"comment": "gfs2-kmp-default-6.4.0-150600.23.14.2 is installed"
+								"test_ref": "oval:org.opensuse.security:tst:2009957889",
+								"comment": "gfs2-kmp-default-6.4.0-150600.23.30.1 is installed"
 							},
 							{
 								"test_ref": "oval:org.opensuse.security:tst:2009623282",
@@ -655,8 +660,8 @@
 						"operator": "AND",
 						"criterions": [
 							{
-								"test_ref": "oval:org.opensuse.security:tst:2009875113",
-								"comment": "kernel-64kb-6.4.0-150600.23.14.1 is installed"
+								"test_ref": "oval:org.opensuse.security:tst:2009957890",
+								"comment": "kernel-64kb-6.4.0-150600.23.30.1 is installed"
 							},
 							{
 								"test_ref": "oval:org.opensuse.security:tst:2009623422",
@@ -668,8 +673,8 @@
 						"operator": "AND",
 						"criterions": [
 							{
-								"test_ref": "oval:org.opensuse.security:tst:2009875114",
-								"comment": "kernel-64kb-devel-6.4.0-150600.23.14.1 is installed"
+								"test_ref": "oval:org.opensuse.security:tst:2009957891",
+								"comment": "kernel-64kb-devel-6.4.0-150600.23.30.1 is installed"
 							},
 							{
 								"test_ref": "oval:org.opensuse.security:tst:2009623423",
@@ -681,8 +686,8 @@
 						"operator": "AND",
 						"criterions": [
 							{
-								"test_ref": "oval:org.opensuse.security:tst:2009875115",
-								"comment": "kernel-64kb-extra-6.4.0-150600.23.14.1 is installed"
+								"test_ref": "oval:org.opensuse.security:tst:2009957892",
+								"comment": "kernel-64kb-extra-6.4.0-150600.23.30.1 is installed"
 							},
 							{
 								"test_ref": "oval:org.opensuse.security:tst:2009623424",
@@ -707,8 +712,8 @@
 						"operator": "AND",
 						"criterions": [
 							{
-								"test_ref": "oval:org.opensuse.security:tst:2009875117",
-								"comment": "kernel-64kb-optional-6.4.0-150600.23.14.1 is installed"
+								"test_ref": "oval:org.opensuse.security:tst:2009957893",
+								"comment": "kernel-64kb-optional-6.4.0-150600.23.30.1 is installed"
 							},
 							{
 								"test_ref": "oval:org.opensuse.security:tst:2009623426",
@@ -798,8 +803,8 @@
 						"operator": "AND",
 						"criterions": [
 							{
-								"test_ref": "oval:org.opensuse.security:tst:2009875118",
-								"comment": "kernel-debug-6.4.0-150600.23.14.2 is installed"
+								"test_ref": "oval:org.opensuse.security:tst:2009957894",
+								"comment": "kernel-debug-6.4.0-150600.23.30.1 is installed"
 							},
 							{
 								"test_ref": "oval:org.opensuse.security:tst:2009151957",
@@ -811,8 +816,8 @@
 						"operator": "AND",
 						"criterions": [
 							{
-								"test_ref": "oval:org.opensuse.security:tst:2009875119",
-								"comment": "kernel-debug-devel-6.4.0-150600.23.14.2 is installed"
+								"test_ref": "oval:org.opensuse.security:tst:2009957895",
+								"comment": "kernel-debug-devel-6.4.0-150600.23.30.1 is installed"
 							},
 							{
 								"test_ref": "oval:org.opensuse.security:tst:2009151959",
@@ -837,8 +842,8 @@
 						"operator": "AND",
 						"criterions": [
 							{
-								"test_ref": "oval:org.opensuse.security:tst:2009875121",
-								"comment": "kernel-debug-vdso-6.4.0-150600.23.14.2 is installed"
+								"test_ref": "oval:org.opensuse.security:tst:2009957896",
+								"comment": "kernel-debug-vdso-6.4.0-150600.23.30.1 is installed"
 							},
 							{
 								"test_ref": "oval:org.opensuse.security:tst:2009772192",
@@ -850,8 +855,8 @@
 						"operator": "AND",
 						"criterions": [
 							{
-								"test_ref": "oval:org.opensuse.security:tst:2009875122",
-								"comment": "kernel-default-6.4.0-150600.23.14.2 is installed"
+								"test_ref": "oval:org.opensuse.security:tst:2009957897",
+								"comment": "kernel-default-6.4.0-150600.23.30.1 is installed"
 							},
 							{
 								"test_ref": "oval:org.opensuse.security:tst:2009151354",
@@ -863,8 +868,8 @@
 						"operator": "AND",
 						"criterions": [
 							{
-								"test_ref": "oval:org.opensuse.security:tst:2009875123",
-								"comment": "kernel-default-base-6.4.0-150600.23.14.2.150600.12.4.3 is installed"
+								"test_ref": "oval:org.opensuse.security:tst:2009957898",
+								"comment": "kernel-default-base-6.4.0-150600.23.30.1.150600.12.12.6 is installed"
 							},
 							{
 								"test_ref": "oval:org.opensuse.security:tst:2009151960",
@@ -876,8 +881,8 @@
 						"operator": "AND",
 						"criterions": [
 							{
-								"test_ref": "oval:org.opensuse.security:tst:2009875124",
-								"comment": "kernel-default-base-rebuild-6.4.0-150600.23.14.2.150600.12.4.3 is installed"
+								"test_ref": "oval:org.opensuse.security:tst:2009957899",
+								"comment": "kernel-default-base-rebuild-6.4.0-150600.23.30.1.150600.12.12.6 is installed"
 							},
 							{
 								"test_ref": "oval:org.opensuse.security:tst:2009291400",
@@ -889,8 +894,8 @@
 						"operator": "AND",
 						"criterions": [
 							{
-								"test_ref": "oval:org.opensuse.security:tst:2009875125",
-								"comment": "kernel-default-devel-6.4.0-150600.23.14.2 is installed"
+								"test_ref": "oval:org.opensuse.security:tst:2009957900",
+								"comment": "kernel-default-devel-6.4.0-150600.23.30.1 is installed"
 							},
 							{
 								"test_ref": "oval:org.opensuse.security:tst:2009151355",
@@ -902,8 +907,8 @@
 						"operator": "AND",
 						"criterions": [
 							{
-								"test_ref": "oval:org.opensuse.security:tst:2009875126",
-								"comment": "kernel-default-extra-6.4.0-150600.23.14.2 is installed"
+								"test_ref": "oval:org.opensuse.security:tst:2009957901",
+								"comment": "kernel-default-extra-6.4.0-150600.23.30.1 is installed"
 							},
 							{
 								"test_ref": "oval:org.opensuse.security:tst:2009623289",
@@ -915,8 +920,8 @@
 						"operator": "AND",
 						"criterions": [
 							{
-								"test_ref": "oval:org.opensuse.security:tst:2009875127",
-								"comment": "kernel-default-livepatch-6.4.0-150600.23.14.2 is installed"
+								"test_ref": "oval:org.opensuse.security:tst:2009957902",
+								"comment": "kernel-default-livepatch-6.4.0-150600.23.30.1 is installed"
 							},
 							{
 								"test_ref": "oval:org.opensuse.security:tst:2009623290",
@@ -928,8 +933,8 @@
 						"operator": "AND",
 						"criterions": [
 							{
-								"test_ref": "oval:org.opensuse.security:tst:2009875128",
-								"comment": "kernel-default-livepatch-devel-6.4.0-150600.23.14.2 is installed"
+								"test_ref": "oval:org.opensuse.security:tst:2009957903",
+								"comment": "kernel-default-livepatch-devel-6.4.0-150600.23.30.1 is installed"
 							},
 							{
 								"test_ref": "oval:org.opensuse.security:tst:2009623291",
@@ -941,8 +946,8 @@
 						"operator": "AND",
 						"criterions": [
 							{
-								"test_ref": "oval:org.opensuse.security:tst:2009875129",
-								"comment": "kernel-default-optional-6.4.0-150600.23.14.2 is installed"
+								"test_ref": "oval:org.opensuse.security:tst:2009957904",
+								"comment": "kernel-default-optional-6.4.0-150600.23.30.1 is installed"
 							},
 							{
 								"test_ref": "oval:org.opensuse.security:tst:2009623428",
@@ -954,8 +959,8 @@
 						"operator": "AND",
 						"criterions": [
 							{
-								"test_ref": "oval:org.opensuse.security:tst:2009875130",
-								"comment": "kernel-default-vdso-6.4.0-150600.23.14.2 is installed"
+								"test_ref": "oval:org.opensuse.security:tst:2009957905",
+								"comment": "kernel-default-vdso-6.4.0-150600.23.30.1 is installed"
 							},
 							{
 								"test_ref": "oval:org.opensuse.security:tst:2009772193",
@@ -967,8 +972,8 @@
 						"operator": "AND",
 						"criterions": [
 							{
-								"test_ref": "oval:org.opensuse.security:tst:2009875131",
-								"comment": "kernel-devel-6.4.0-150600.23.14.2 is installed"
+								"test_ref": "oval:org.opensuse.security:tst:2009957906",
+								"comment": "kernel-devel-6.4.0-150600.23.30.1 is installed"
 							},
 							{
 								"test_ref": "oval:org.opensuse.security:tst:2009151356",
@@ -1006,8 +1011,8 @@
 						"operator": "AND",
 						"criterions": [
 							{
-								"test_ref": "oval:org.opensuse.security:tst:2009875132",
-								"comment": "kernel-docs-6.4.0-150600.23.14.2 is installed"
+								"test_ref": "oval:org.opensuse.security:tst:2009957907",
+								"comment": "kernel-docs-6.4.0-150600.23.30.1 is installed"
 							},
 							{
 								"test_ref": "oval:org.opensuse.security:tst:2009151357",
@@ -1019,8 +1024,8 @@
 						"operator": "AND",
 						"criterions": [
 							{
-								"test_ref": "oval:org.opensuse.security:tst:2009875133",
-								"comment": "kernel-docs-html-6.4.0-150600.23.14.2 is installed"
+								"test_ref": "oval:org.opensuse.security:tst:2009957908",
+								"comment": "kernel-docs-html-6.4.0-150600.23.30.1 is installed"
 							},
 							{
 								"test_ref": "oval:org.opensuse.security:tst:2009151961",
@@ -1032,8 +1037,8 @@
 						"operator": "AND",
 						"criterions": [
 							{
-								"test_ref": "oval:org.opensuse.security:tst:2009875134",
-								"comment": "kernel-kvmsmall-6.4.0-150600.23.14.2 is installed"
+								"test_ref": "oval:org.opensuse.security:tst:2009957909",
+								"comment": "kernel-kvmsmall-6.4.0-150600.23.30.1 is installed"
 							},
 							{
 								"test_ref": "oval:org.opensuse.security:tst:2009177719",
@@ -1045,8 +1050,8 @@
 						"operator": "AND",
 						"criterions": [
 							{
-								"test_ref": "oval:org.opensuse.security:tst:2009875135",
-								"comment": "kernel-kvmsmall-devel-6.4.0-150600.23.14.2 is installed"
+								"test_ref": "oval:org.opensuse.security:tst:2009957910",
+								"comment": "kernel-kvmsmall-devel-6.4.0-150600.23.30.1 is installed"
 							},
 							{
 								"test_ref": "oval:org.opensuse.security:tst:2009177721",
@@ -1071,8 +1076,8 @@
 						"operator": "AND",
 						"criterions": [
 							{
-								"test_ref": "oval:org.opensuse.security:tst:2009875137",
-								"comment": "kernel-kvmsmall-vdso-6.4.0-150600.23.14.2 is installed"
+								"test_ref": "oval:org.opensuse.security:tst:2009957911",
+								"comment": "kernel-kvmsmall-vdso-6.4.0-150600.23.30.1 is installed"
 							},
 							{
 								"test_ref": "oval:org.opensuse.security:tst:2009772194",
@@ -1084,8 +1089,8 @@
 						"operator": "AND",
 						"criterions": [
 							{
-								"test_ref": "oval:org.opensuse.security:tst:2009875138",
-								"comment": "kernel-macros-6.4.0-150600.23.14.2 is installed"
+								"test_ref": "oval:org.opensuse.security:tst:2009957912",
+								"comment": "kernel-macros-6.4.0-150600.23.30.1 is installed"
 							},
 							{
 								"test_ref": "oval:org.opensuse.security:tst:2009151358",
@@ -1097,8 +1102,8 @@
 						"operator": "AND",
 						"criterions": [
 							{
-								"test_ref": "oval:org.opensuse.security:tst:2009875139",
-								"comment": "kernel-obs-build-6.4.0-150600.23.14.2 is installed"
+								"test_ref": "oval:org.opensuse.security:tst:2009957913",
+								"comment": "kernel-obs-build-6.4.0-150600.23.30.1 is installed"
 							},
 							{
 								"test_ref": "oval:org.opensuse.security:tst:2009151966",
@@ -1110,8 +1115,8 @@
 						"operator": "AND",
 						"criterions": [
 							{
-								"test_ref": "oval:org.opensuse.security:tst:2009875140",
-								"comment": "kernel-obs-qa-6.4.0-150600.23.14.2 is installed"
+								"test_ref": "oval:org.opensuse.security:tst:2009957914",
+								"comment": "kernel-obs-qa-6.4.0-150600.23.30.1 is installed"
 							},
 							{
 								"test_ref": "oval:org.opensuse.security:tst:2009151967",
@@ -1253,8 +1258,8 @@
 						"operator": "AND",
 						"criterions": [
 							{
-								"test_ref": "oval:org.opensuse.security:tst:2009875141",
-								"comment": "kernel-source-6.4.0-150600.23.14.2 is installed"
+								"test_ref": "oval:org.opensuse.security:tst:2009957915",
+								"comment": "kernel-source-6.4.0-150600.23.30.1 is installed"
 							},
 							{
 								"test_ref": "oval:org.opensuse.security:tst:2009151360",
@@ -1292,8 +1297,8 @@
 						"operator": "AND",
 						"criterions": [
 							{
-								"test_ref": "oval:org.opensuse.security:tst:2009875142",
-								"comment": "kernel-source-vanilla-6.4.0-150600.23.14.2 is installed"
+								"test_ref": "oval:org.opensuse.security:tst:2009957916",
+								"comment": "kernel-source-vanilla-6.4.0-150600.23.30.1 is installed"
 							},
 							{
 								"test_ref": "oval:org.opensuse.security:tst:2009151974",
@@ -1305,8 +1310,8 @@
 						"operator": "AND",
 						"criterions": [
 							{
-								"test_ref": "oval:org.opensuse.security:tst:2009875143",
-								"comment": "kernel-syms-6.4.0-150600.23.14.2 is installed"
+								"test_ref": "oval:org.opensuse.security:tst:2009957917",
+								"comment": "kernel-syms-6.4.0-150600.23.30.1 is installed"
 							},
 							{
 								"test_ref": "oval:org.opensuse.security:tst:2009151361",
@@ -1344,8 +1349,8 @@
 						"operator": "AND",
 						"criterions": [
 							{
-								"test_ref": "oval:org.opensuse.security:tst:2009875144",
-								"comment": "kernel-zfcpdump-6.4.0-150600.23.14.2 is installed"
+								"test_ref": "oval:org.opensuse.security:tst:2009957918",
+								"comment": "kernel-zfcpdump-6.4.0-150600.23.30.1 is installed"
 							},
 							{
 								"test_ref": "oval:org.opensuse.security:tst:2009623303",
@@ -1357,8 +1362,8 @@
 						"operator": "AND",
 						"criterions": [
 							{
-								"test_ref": "oval:org.opensuse.security:tst:2009875145",
-								"comment": "kselftests-kmp-64kb-6.4.0-150600.23.14.1 is installed"
+								"test_ref": "oval:org.opensuse.security:tst:2009957919",
+								"comment": "kselftests-kmp-64kb-6.4.0-150600.23.30.1 is installed"
 							},
 							{
 								"test_ref": "oval:org.opensuse.security:tst:2009623436",
@@ -1383,8 +1388,8 @@
 						"operator": "AND",
 						"criterions": [
 							{
-								"test_ref": "oval:org.opensuse.security:tst:2009875146",
-								"comment": "kselftests-kmp-default-6.4.0-150600.23.14.2 is installed"
+								"test_ref": "oval:org.opensuse.security:tst:2009957920",
+								"comment": "kselftests-kmp-default-6.4.0-150600.23.30.1 is installed"
 							},
 							{
 								"test_ref": "oval:org.opensuse.security:tst:2009168714",
@@ -1409,8 +1414,8 @@
 						"operator": "AND",
 						"criterions": [
 							{
-								"test_ref": "oval:org.opensuse.security:tst:2009875147",
-								"comment": "ocfs2-kmp-64kb-6.4.0-150600.23.14.1 is installed"
+								"test_ref": "oval:org.opensuse.security:tst:2009957921",
+								"comment": "ocfs2-kmp-64kb-6.4.0-150600.23.30.1 is installed"
 							},
 							{
 								"test_ref": "oval:org.opensuse.security:tst:2009623438",
@@ -1435,8 +1440,8 @@
 						"operator": "AND",
 						"criterions": [
 							{
-								"test_ref": "oval:org.opensuse.security:tst:2009875148",
-								"comment": "ocfs2-kmp-default-6.4.0-150600.23.14.2 is installed"
+								"test_ref": "oval:org.opensuse.security:tst:2009957922",
+								"comment": "ocfs2-kmp-default-6.4.0-150600.23.30.1 is installed"
 							},
 							{
 								"test_ref": "oval:org.opensuse.security:tst:2009623307",
@@ -1461,8 +1466,8 @@
 						"operator": "AND",
 						"criterions": [
 							{
-								"test_ref": "oval:org.opensuse.security:tst:2009875149",
-								"comment": "reiserfs-kmp-64kb-6.4.0-150600.23.14.1 is installed"
+								"test_ref": "oval:org.opensuse.security:tst:2009957923",
+								"comment": "reiserfs-kmp-64kb-6.4.0-150600.23.30.1 is installed"
 							},
 							{
 								"test_ref": "oval:org.opensuse.security:tst:2009623440",
@@ -1487,8 +1492,8 @@
 						"operator": "AND",
 						"criterions": [
 							{
-								"test_ref": "oval:org.opensuse.security:tst:2009875150",
-								"comment": "reiserfs-kmp-default-6.4.0-150600.23.14.2 is installed"
+								"test_ref": "oval:org.opensuse.security:tst:2009957924",
+								"comment": "reiserfs-kmp-default-6.4.0-150600.23.30.1 is installed"
 							},
 							{
 								"test_ref": "oval:org.opensuse.security:tst:2009623309",

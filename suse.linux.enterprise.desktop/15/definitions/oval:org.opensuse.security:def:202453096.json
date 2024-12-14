@@ -31,6 +31,21 @@
 				"ref_id": "SUSE CVE-2024-53096",
 				"ref_url": "https://www.suse.com/security/cve/CVE-2024-53096",
 				"source": "SUSE CVE"
+			},
+			{
+				"ref_id": "SUSE-SU-2024:4314-1",
+				"ref_url": "https://lists.suse.com/pipermail/sle-security-updates/2024-December/019998.html",
+				"source": "SUSE-SU"
+			},
+			{
+				"ref_id": "SUSE-SU-2024:4316-1",
+				"ref_url": "https://lists.suse.com/pipermail/sle-security-updates/2024-December/020001.html",
+				"source": "SUSE-SU"
+			},
+			{
+				"ref_id": "SUSE-SU-2024:4318-1",
+				"ref_url": "https://lists.suse.com/pipermail/sle-security-updates/2024-December/019999.html",
+				"source": "SUSE-SU"
 			}
 		],
 		"description": "\n    In the Linux kernel, the following vulnerability has been resolved:\n\nmm: resolve faulty mmap_region() error path behaviour\n\nThe mmap_region() function is somewhat terrifying, with spaghetti-like\ncontrol flow and numerous means by which issues can arise and incomplete\nstate, memory leaks and other unpleasantness can occur.\n\nA large amount of the complexity arises from trying to handle errors late\nin the process of mapping a VMA, which forms the basis of recently\nobserved issues with resource leaks and observable inconsistent state.\n\nTaking advantage of previous patches in this series we move a number of\nchecks earlier in the code, simplifying things by moving the core of the\nlogic into a static internal function __mmap_region().\n\nDoing this allows us to perform a number of checks up front before we do\nany real work, and allows us to unwind the writable unmap check\nunconditionally as required and to perform a CONFIG_DEBUG_VM_MAPLE_TREE\nvalidation unconditionally also.\n\nWe move a number of things here:\n\n1. We preallocate memory for the iterator before we call the file-backed\n   memory hook, allowing us to exit early and avoid having to perform\n   complicated and error-prone close/free logic. We carefully free\n   iterator state on both success and error paths.\n\n2. The enclosing mmap_region() function handles the mapping_map_writable()\n   logic early. Previously the logic had the mapping_map_writable() at the\n   point of mapping a newly allocated file-backed VMA, and a matching\n   mapping_unmap_writable() on success and error paths.\n\n   We now do this unconditionally if this is a file-backed, shared writable\n   mapping. If a driver changes the flags to eliminate VM_MAYWRITE, however\n   doing so does not invalidate the seal check we just performed, and we in\n   any case always decrement the counter in the wrapper.\n\n   We perform a debug assert to ensure a driver does not attempt to do the\n   opposite.\n\n3. We also move arch_validate_flags() up into the mmap_region()\n   function. This is only relevant on arm64 and sparc64, and the check is\n   only meaningful for SPARC with ADI enabled. We explicitly add a warning\n   for this arch if a driver invalidates this check, though the code ought\n   eventually to be fixed to eliminate the need for this.\n\nWith all of these measures in place, we no longer need to explicitly close\nthe VMA on error paths, as we place all checks which might fail prior to a\ncall to any driver mmap hook.\n\nThis eliminates an entire class of errors, makes the code easier to reason\nabout and more robust.\n    ",
@@ -59,7 +74,7 @@
 				"date": "2024-11-27"
 			},
 			"updated": {
-				"date": "2024-11-27"
+				"date": "2024-12-14"
 			},
 			"affected_cpe_list": {
 				"cpe": [
@@ -187,8 +202,8 @@
 								"comment": "SUSE Linux Enterprise High Performance Computing 15 SP6 is installed"
 							},
 							{
-								"test_ref": "oval:org.opensuse.security:tst:2009856253",
-								"comment": "SUSE Linux Enterprise Module for Development Tools 15 SP6 is installed"
+								"test_ref": "oval:org.opensuse.security:tst:2009856173",
+								"comment": "SUSE Linux Enterprise Module for Basesystem 15 SP6 is installed"
 							},
 							{
 								"test_ref": "oval:org.opensuse.security:tst:2009856174",
@@ -204,12 +219,36 @@
 						"operator": "OR",
 						"criterions": [
 							{
-								"test_ref": "oval:org.opensuse.security:tst:2009338032",
-								"comment": "kernel-default is affected"
+								"test_ref": "oval:org.opensuse.security:tst:2009957890",
+								"comment": "kernel-64kb-6.4.0-150600.23.30.1 is installed"
 							},
 							{
-								"test_ref": "oval:org.opensuse.security:tst:2009333995",
-								"comment": "kernel-source is affected"
+								"test_ref": "oval:org.opensuse.security:tst:2009957891",
+								"comment": "kernel-64kb-devel-6.4.0-150600.23.30.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009957897",
+								"comment": "kernel-default-6.4.0-150600.23.30.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009957898",
+								"comment": "kernel-default-base-6.4.0-150600.23.30.1.150600.12.12.6 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009957900",
+								"comment": "kernel-default-devel-6.4.0-150600.23.30.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009957906",
+								"comment": "kernel-devel-6.4.0-150600.23.30.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009957912",
+								"comment": "kernel-macros-6.4.0-150600.23.30.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009957918",
+								"comment": "kernel-zfcpdump-6.4.0-150600.23.30.1 is installed"
 							}
 						]
 					}
@@ -230,8 +269,8 @@
 								"comment": "SUSE Linux Enterprise High Performance Computing 15 SP6 is installed"
 							},
 							{
-								"test_ref": "oval:org.opensuse.security:tst:2009856173",
-								"comment": "SUSE Linux Enterprise Module for Basesystem 15 SP6 is installed"
+								"test_ref": "oval:org.opensuse.security:tst:2009856253",
+								"comment": "SUSE Linux Enterprise Module for Development Tools 15 SP6 is installed"
 							},
 							{
 								"test_ref": "oval:org.opensuse.security:tst:2009856174",
@@ -247,20 +286,20 @@
 						"operator": "OR",
 						"criterions": [
 							{
-								"test_ref": "oval:org.opensuse.security:tst:2009338032",
-								"comment": "kernel-default is affected"
+								"test_ref": "oval:org.opensuse.security:tst:2009957907",
+								"comment": "kernel-docs-6.4.0-150600.23.30.1 is installed"
 							},
 							{
-								"test_ref": "oval:org.opensuse.security:tst:2009338034",
-								"comment": "kernel-default-devel is affected"
+								"test_ref": "oval:org.opensuse.security:tst:2009957913",
+								"comment": "kernel-obs-build-6.4.0-150600.23.30.1 is installed"
 							},
 							{
-								"test_ref": "oval:org.opensuse.security:tst:2009335275",
-								"comment": "kernel-devel is affected"
+								"test_ref": "oval:org.opensuse.security:tst:2009957915",
+								"comment": "kernel-source-6.4.0-150600.23.30.1 is installed"
 							},
 							{
-								"test_ref": "oval:org.opensuse.security:tst:2009335276",
-								"comment": "kernel-macros is affected"
+								"test_ref": "oval:org.opensuse.security:tst:2009957917",
+								"comment": "kernel-syms-6.4.0-150600.23.30.1 is installed"
 							}
 						]
 					}

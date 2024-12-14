@@ -76,6 +76,11 @@
 				"ref_id": "SUSE-SU-2024:4140-1",
 				"ref_url": "https://lists.suse.com/pipermail/sle-security-updates/2024-December/019890.html",
 				"source": "SUSE-SU"
+			},
+			{
+				"ref_id": "SUSE-SU-2024:4318-1",
+				"ref_url": "https://lists.suse.com/pipermail/sle-security-updates/2024-December/019999.html",
+				"source": "SUSE-SU"
 			}
 		],
 		"description": "\n    In the Linux kernel, the following vulnerability has been resolved:\n\nnetem: fix return value if duplicate enqueue fails\n\nThere is a bug in netem_enqueue() introduced by\ncommit 5845f706388a (\"net: netem: fix skb length BUG_ON in __skb_to_sgvec\")\nthat can lead to a use-after-free.\n\nThis commit made netem_enqueue() always return NET_XMIT_SUCCESS\nwhen a packet is duplicated, which can cause the parent qdisc's q.qlen\nto be mistakenly incremented. When this happens qlen_notify() may be\nskipped on the parent during destruction, leaving a dangling pointer\nfor some classful qdiscs like DRR.\n\nThere are two ways for the bug happen:\n\n- If the duplicated packet is dropped by rootq->enqueue() and then\n  the original packet is also dropped.\n- If rootq->enqueue() sends the duplicated packet to a different qdisc\n  and the original packet is dropped.\n\nIn both cases NET_XMIT_SUCCESS is returned even though no packets\nare enqueued at the netem qdisc.\n\nThe fix is to defer the enqueue of the duplicate packet until after\nthe original packet has been guaranteed to return NET_XMIT_SUCCESS.\n    ",
@@ -110,7 +115,7 @@
 				"date": "2024-09-13"
 			},
 			"updated": {
-				"date": "2024-12-03"
+				"date": "2024-12-14"
 			},
 			"affected_cpe_list": {
 				"cpe": [
@@ -140,40 +145,20 @@
 								"comment": "SUSE Linux Enterprise Desktop 15 SP5 is installed"
 							},
 							{
-								"test_ref": "oval:org.opensuse.security:tst:2009856171",
-								"comment": "SUSE Linux Enterprise Desktop 15 SP6 is installed"
-							},
-							{
 								"test_ref": "oval:org.opensuse.security:tst:2009759899",
 								"comment": "SUSE Linux Enterprise High Performance Computing 15 SP5 is installed"
-							},
-							{
-								"test_ref": "oval:org.opensuse.security:tst:2009856172",
-								"comment": "SUSE Linux Enterprise High Performance Computing 15 SP6 is installed"
 							},
 							{
 								"test_ref": "oval:org.opensuse.security:tst:2009760583",
 								"comment": "SUSE Linux Enterprise Module for Development Tools 15 SP5 is installed"
 							},
 							{
-								"test_ref": "oval:org.opensuse.security:tst:2009856253",
-								"comment": "SUSE Linux Enterprise Module for Development Tools 15 SP6 is installed"
-							},
-							{
 								"test_ref": "oval:org.opensuse.security:tst:2009759901",
 								"comment": "SUSE Linux Enterprise Server 15 SP5 is installed"
 							},
 							{
-								"test_ref": "oval:org.opensuse.security:tst:2009856174",
-								"comment": "SUSE Linux Enterprise Server 15 SP6 is installed"
-							},
-							{
 								"test_ref": "oval:org.opensuse.security:tst:2009759902",
 								"comment": "SUSE Linux Enterprise Server for SAP Applications 15 SP5 is installed"
-							},
-							{
-								"test_ref": "oval:org.opensuse.security:tst:2009856175",
-								"comment": "SUSE Linux Enterprise Server for SAP Applications 15 SP6 is installed"
 							}
 						]
 					},
@@ -203,40 +188,20 @@
 								"comment": "SUSE Linux Enterprise Desktop 15 SP5 is installed"
 							},
 							{
-								"test_ref": "oval:org.opensuse.security:tst:2009856171",
-								"comment": "SUSE Linux Enterprise Desktop 15 SP6 is installed"
-							},
-							{
 								"test_ref": "oval:org.opensuse.security:tst:2009759899",
 								"comment": "SUSE Linux Enterprise High Performance Computing 15 SP5 is installed"
-							},
-							{
-								"test_ref": "oval:org.opensuse.security:tst:2009856172",
-								"comment": "SUSE Linux Enterprise High Performance Computing 15 SP6 is installed"
 							},
 							{
 								"test_ref": "oval:org.opensuse.security:tst:2009759900",
 								"comment": "SUSE Linux Enterprise Module for Basesystem 15 SP5 is installed"
 							},
 							{
-								"test_ref": "oval:org.opensuse.security:tst:2009856173",
-								"comment": "SUSE Linux Enterprise Module for Basesystem 15 SP6 is installed"
-							},
-							{
 								"test_ref": "oval:org.opensuse.security:tst:2009759901",
 								"comment": "SUSE Linux Enterprise Server 15 SP5 is installed"
 							},
 							{
-								"test_ref": "oval:org.opensuse.security:tst:2009856174",
-								"comment": "SUSE Linux Enterprise Server 15 SP6 is installed"
-							},
-							{
 								"test_ref": "oval:org.opensuse.security:tst:2009759902",
 								"comment": "SUSE Linux Enterprise Server for SAP Applications 15 SP5 is installed"
-							},
-							{
-								"test_ref": "oval:org.opensuse.security:tst:2009856175",
-								"comment": "SUSE Linux Enterprise Server for SAP Applications 15 SP6 is installed"
 							}
 						]
 					},
@@ -258,6 +223,124 @@
 							{
 								"test_ref": "oval:org.opensuse.security:tst:2009335276",
 								"comment": "kernel-macros is affected"
+							}
+						]
+					}
+				]
+			},
+			{
+				"operator": "AND",
+				"criterias": [
+					{
+						"operator": "OR",
+						"criterions": [
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009856171",
+								"comment": "SUSE Linux Enterprise Desktop 15 SP6 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009856172",
+								"comment": "SUSE Linux Enterprise High Performance Computing 15 SP6 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009856173",
+								"comment": "SUSE Linux Enterprise Module for Basesystem 15 SP6 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009856174",
+								"comment": "SUSE Linux Enterprise Server 15 SP6 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009856175",
+								"comment": "SUSE Linux Enterprise Server for SAP Applications 15 SP6 is installed"
+							}
+						]
+					},
+					{
+						"operator": "OR",
+						"criterions": [
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009957890",
+								"comment": "kernel-64kb-6.4.0-150600.23.30.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009957891",
+								"comment": "kernel-64kb-devel-6.4.0-150600.23.30.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009957897",
+								"comment": "kernel-default-6.4.0-150600.23.30.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009957898",
+								"comment": "kernel-default-base-6.4.0-150600.23.30.1.150600.12.12.6 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009957900",
+								"comment": "kernel-default-devel-6.4.0-150600.23.30.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009957906",
+								"comment": "kernel-devel-6.4.0-150600.23.30.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009957912",
+								"comment": "kernel-macros-6.4.0-150600.23.30.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009957918",
+								"comment": "kernel-zfcpdump-6.4.0-150600.23.30.1 is installed"
+							}
+						]
+					}
+				]
+			},
+			{
+				"operator": "AND",
+				"criterias": [
+					{
+						"operator": "OR",
+						"criterions": [
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009856171",
+								"comment": "SUSE Linux Enterprise Desktop 15 SP6 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009856172",
+								"comment": "SUSE Linux Enterprise High Performance Computing 15 SP6 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009856253",
+								"comment": "SUSE Linux Enterprise Module for Development Tools 15 SP6 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009856174",
+								"comment": "SUSE Linux Enterprise Server 15 SP6 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009856175",
+								"comment": "SUSE Linux Enterprise Server for SAP Applications 15 SP6 is installed"
+							}
+						]
+					},
+					{
+						"operator": "OR",
+						"criterions": [
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009957907",
+								"comment": "kernel-docs-6.4.0-150600.23.30.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009957913",
+								"comment": "kernel-obs-build-6.4.0-150600.23.30.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009957915",
+								"comment": "kernel-source-6.4.0-150600.23.30.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009957917",
+								"comment": "kernel-syms-6.4.0-150600.23.30.1 is installed"
 							}
 						]
 					}
