@@ -40,6 +40,21 @@
 				"ref_id": "SUSE-SU-2024:4318-1",
 				"ref_url": "https://lists.suse.com/pipermail/sle-security-updates/2024-December/019999.html",
 				"source": "SUSE-SU"
+			},
+			{
+				"ref_id": "SUSE-SU-2024:4345-1",
+				"ref_url": "https://lists.suse.com/pipermail/sle-security-updates/2024-December/020018.html",
+				"source": "SUSE-SU"
+			},
+			{
+				"ref_id": "SUSE-SU-2024:4346-1",
+				"ref_url": "https://lists.suse.com/pipermail/sle-security-updates/2024-December/020017.html",
+				"source": "SUSE-SU"
+			},
+			{
+				"ref_id": "SUSE-SU-2024:4364-1",
+				"ref_url": "https://lists.suse.com/pipermail/sle-security-updates/2024-December/020019.html",
+				"source": "SUSE-SU"
 			}
 		],
 		"description": "\n    In the Linux kernel, the following vulnerability has been resolved:\n\nidpf: fix UAFs when destroying the queues\n\nThe second tagged commit started sometimes (very rarely, but possible)\nthrowing WARNs from\nnet/core/page_pool.c:page_pool_disable_direct_recycling().\nTurned out idpf frees interrupt vectors with embedded NAPIs *before*\nfreeing the queues making page_pools' NAPI pointers lead to freed\nmemory before these pools are destroyed by libeth.\nIt's not clear whether there are other accesses to the freed vectors\nwhen destroying the queues, but anyway, we usually free queue/interrupt\nvectors only when the queues are destroyed and the NAPIs are guaranteed\nto not be referenced anywhere.\n\nInvert the allocation and freeing logic making queue/interrupt vectors\nbe allocated first and freed last. Vectors don't require queues to be\npresent, so this is safe. Additionally, this change allows to remove\nthat useless queue->q_vector pointer cleanup, as vectors are still\nvalid when freeing the queues (+ both are freed within one function,\nso it's not clear why nullify the pointers at all).\n    ",
@@ -70,7 +85,7 @@
 				"date": "2024-08-28"
 			},
 			"updated": {
-				"date": "2024-12-14"
+				"date": "2024-12-18"
 			},
 			"affected_cpe_list": {
 				"cpe": [
@@ -86,16 +101,20 @@
 				"operator": "OR",
 				"criterions": [
 					{
+						"test_ref": "oval:org.opensuse.security:tst:2009958338",
+						"comment": "kernel-default-5.14.21-150500.55.88.1 is installed"
+					},
+					{
+						"test_ref": "oval:org.opensuse.security:tst:2009958516",
+						"comment": "kernel-default-base-5.14.21-150500.55.88.1.150500.6.39.4 is installed"
+					},
+					{
 						"test_ref": "oval:org.opensuse.security:tst:2009957800",
 						"comment": "kernel-rt-5.14.21-150500.13.79.1 is installed"
 					},
 					{
 						"test_ref": "oval:org.opensuse.security:tst:2009957810",
 						"comment": "kernel-source-rt-5.14.21-150500.13.79.1 is installed"
-					},
-					{
-						"test_ref": "oval:org.opensuse.security:tst:2009338032",
-						"comment": "kernel-default is affected"
 					},
 					{
 						"test_ref": "oval:org.opensuse.security:tst:2009333995",

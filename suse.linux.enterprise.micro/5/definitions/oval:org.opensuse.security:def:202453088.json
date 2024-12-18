@@ -45,6 +45,16 @@
 				"ref_id": "SUSE-SU-2024:4318-1",
 				"ref_url": "https://lists.suse.com/pipermail/sle-security-updates/2024-December/019999.html",
 				"source": "SUSE-SU"
+			},
+			{
+				"ref_id": "SUSE-SU-2024:4364-1",
+				"ref_url": "https://lists.suse.com/pipermail/sle-security-updates/2024-December/020019.html",
+				"source": "SUSE-SU"
+			},
+			{
+				"ref_id": "SUSE-SU-2024:4367-1",
+				"ref_url": "https://lists.suse.com/pipermail/sle-security-updates/2024-December/020025.html",
+				"source": "SUSE-SU"
 			}
 		],
 		"description": "\n    In the Linux kernel, the following vulnerability has been resolved:\n\ni40e: fix race condition by adding filter's intermediate sync state\n\nFix a race condition in the i40e driver that leads to MAC/VLAN filters\nbecoming corrupted and leaking. Address the issue that occurs under\nheavy load when multiple threads are concurrently modifying MAC/VLAN\nfilters by setting mac and port VLAN.\n\n1. Thread T0 allocates a filter in i40e_add_filter() within\n        i40e_ndo_set_vf_port_vlan().\n2. Thread T1 concurrently frees the filter in __i40e_del_filter() within\n        i40e_ndo_set_vf_mac().\n3. Subsequently, i40e_service_task() calls i40e_sync_vsi_filters(), which\n        refers to the already freed filter memory, causing corruption.\n\nReproduction steps:\n1. Spawn multiple VFs.\n2. Apply a concurrent heavy load by running parallel operations to change\n        MAC addresses on the VFs and change port VLANs on the host.\n3. Observe errors in dmesg:\n\"Error I40E_AQ_RC_ENOSPC adding RX filters on VF XX,\n\tplease set promiscuous on manually for VF XX\".\n\nExact code for stable reproduction Intel can't open-source now.\n\nThe fix involves implementing a new intermediate filter state,\nI40E_FILTER_NEW_SYNC, for the time when a filter is on a tmp_add_list.\nThese filters cannot be deleted from the hash list directly but\nmust be removed using the full process.\n    ",
@@ -75,7 +85,7 @@
 				"date": "2024-11-22"
 			},
 			"updated": {
-				"date": "2024-12-14"
+				"date": "2024-12-18"
 			},
 			"affected_cpe_list": {
 				"cpe": [
@@ -159,16 +169,20 @@
 						"operator": "OR",
 						"criterions": [
 							{
+								"test_ref": "oval:org.opensuse.security:tst:2009958338",
+								"comment": "kernel-default-5.14.21-150500.55.88.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009958516",
+								"comment": "kernel-default-base-5.14.21-150500.55.88.1.150500.6.39.4 is installed"
+							},
+							{
 								"test_ref": "oval:org.opensuse.security:tst:2009957800",
 								"comment": "kernel-rt-5.14.21-150500.13.79.1 is installed"
 							},
 							{
 								"test_ref": "oval:org.opensuse.security:tst:2009957810",
 								"comment": "kernel-source-rt-5.14.21-150500.13.79.1 is installed"
-							},
-							{
-								"test_ref": "oval:org.opensuse.security:tst:2009338032",
-								"comment": "kernel-default is affected"
 							},
 							{
 								"test_ref": "oval:org.opensuse.security:tst:2009333995",

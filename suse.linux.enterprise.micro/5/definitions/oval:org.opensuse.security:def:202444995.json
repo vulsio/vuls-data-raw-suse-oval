@@ -44,6 +44,16 @@
 				"ref_id": "SUSE-SU-2024:4318-1",
 				"ref_url": "https://lists.suse.com/pipermail/sle-security-updates/2024-December/019999.html",
 				"source": "SUSE-SU"
+			},
+			{
+				"ref_id": "SUSE-SU-2024:4364-1",
+				"ref_url": "https://lists.suse.com/pipermail/sle-security-updates/2024-December/020019.html",
+				"source": "SUSE-SU"
+			},
+			{
+				"ref_id": "SUSE-SU-2024:4367-1",
+				"ref_url": "https://lists.suse.com/pipermail/sle-security-updates/2024-December/020025.html",
+				"source": "SUSE-SU"
 			}
 		],
 		"description": "\n    In the Linux kernel, the following vulnerability has been resolved:\n\nnet: hns3: fix a deadlock problem when config TC during resetting\n\nWhen config TC during the reset process, may cause a deadlock, the flow is\nas below:\n                             pf reset start\n                                 |\n                                 ▼\n                              ......\nsetup tc                         |\n    |                            ▼\n    ▼                      DOWN: napi_disable()\nnapi_disable()(skip)             |\n    |                            |\n    ▼                            ▼\n  ......                      ......\n    |                            |\n    ▼                            |\nnapi_enable()                    |\n                                 ▼\n                           UINIT: netif_napi_del()\n                                 |\n                                 ▼\n                              ......\n                                 |\n                                 ▼\n                           INIT: netif_napi_add()\n                                 |\n                                 ▼\n                              ......                 global reset start\n                                 |                      |\n                                 ▼                      ▼\n                           UP: napi_enable()(skip)    ......\n                                 |                      |\n                                 ▼                      ▼\n                              ......                 napi_disable()\n\nIn reset process, the driver will DOWN the port and then UINIT, in this\ncase, the setup tc process will UP the port before UINIT, so cause the\nproblem. Adds a DOWN process in UINIT to fix it.\n    ",
@@ -74,7 +84,7 @@
 				"date": "2024-10-18"
 			},
 			"updated": {
-				"date": "2024-12-14"
+				"date": "2024-12-18"
 			},
 			"affected_cpe_list": {
 				"cpe": [
@@ -144,16 +154,20 @@
 						"operator": "OR",
 						"criterions": [
 							{
+								"test_ref": "oval:org.opensuse.security:tst:2009958338",
+								"comment": "kernel-default-5.14.21-150500.55.88.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009958516",
+								"comment": "kernel-default-base-5.14.21-150500.55.88.1.150500.6.39.4 is installed"
+							},
+							{
 								"test_ref": "oval:org.opensuse.security:tst:2009957800",
 								"comment": "kernel-rt-5.14.21-150500.13.79.1 is installed"
 							},
 							{
 								"test_ref": "oval:org.opensuse.security:tst:2009957810",
 								"comment": "kernel-source-rt-5.14.21-150500.13.79.1 is installed"
-							},
-							{
-								"test_ref": "oval:org.opensuse.security:tst:2009338032",
-								"comment": "kernel-default is affected"
 							},
 							{
 								"test_ref": "oval:org.opensuse.security:tst:2009333995",

@@ -40,6 +40,11 @@
 				"ref_id": "SUSE-SU-2024:4318-1",
 				"ref_url": "https://lists.suse.com/pipermail/sle-security-updates/2024-December/019999.html",
 				"source": "SUSE-SU"
+			},
+			{
+				"ref_id": "SUSE-SU-2024:4364-1",
+				"ref_url": "https://lists.suse.com/pipermail/sle-security-updates/2024-December/020019.html",
+				"source": "SUSE-SU"
 			}
 		],
 		"description": "\n    In the Linux kernel, the following vulnerability has been resolved:\n\nsignal: restore the override_rlimit logic\n\nPrior to commit d64696905554 (\"Reimplement RLIMIT_SIGPENDING on top of\nucounts\") UCOUNT_RLIMIT_SIGPENDING rlimit was not enforced for a class of\nsignals.  However now it's enforced unconditionally, even if\noverride_rlimit is set.  This behavior change caused production issues.  \n\nFor example, if the limit is reached and a process receives a SIGSEGV\nsignal, sigqueue_alloc fails to allocate the necessary resources for the\nsignal delivery, preventing the signal from being delivered with siginfo. \nThis prevents the process from correctly identifying the fault address and\nhandling the error.  From the user-space perspective, applications are\nunaware that the limit has been reached and that the siginfo is\neffectively 'corrupted'.  This can lead to unpredictable behavior and\ncrashes, as we observed with java applications.\n\nFix this by passing override_rlimit into inc_rlimit_get_ucounts() and skip\nthe comparison to max there if override_rlimit is set.  This effectively\nrestores the old behavior.\n    ",
@@ -70,7 +75,7 @@
 				"date": "2024-11-21"
 			},
 			"updated": {
-				"date": "2024-12-14"
+				"date": "2024-12-18"
 			},
 			"affected_cpe_list": {
 				"cpe": [
@@ -86,16 +91,20 @@
 				"operator": "OR",
 				"criterions": [
 					{
+						"test_ref": "oval:org.opensuse.security:tst:2009958338",
+						"comment": "kernel-default-5.14.21-150500.55.88.1 is installed"
+					},
+					{
+						"test_ref": "oval:org.opensuse.security:tst:2009958516",
+						"comment": "kernel-default-base-5.14.21-150500.55.88.1.150500.6.39.4 is installed"
+					},
+					{
 						"test_ref": "oval:org.opensuse.security:tst:2009957800",
 						"comment": "kernel-rt-5.14.21-150500.13.79.1 is installed"
 					},
 					{
 						"test_ref": "oval:org.opensuse.security:tst:2009957810",
 						"comment": "kernel-source-rt-5.14.21-150500.13.79.1 is installed"
-					},
-					{
-						"test_ref": "oval:org.opensuse.security:tst:2009338032",
-						"comment": "kernel-default is affected"
 					},
 					{
 						"test_ref": "oval:org.opensuse.security:tst:2009333995",
