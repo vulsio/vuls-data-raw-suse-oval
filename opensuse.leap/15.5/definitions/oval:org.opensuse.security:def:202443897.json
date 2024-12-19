@@ -45,6 +45,11 @@
 				"ref_id": "SUSE-SU-2024:4364-1",
 				"ref_url": "https://lists.suse.com/pipermail/sle-security-updates/2024-December/020019.html",
 				"source": "SUSE-SU"
+			},
+			{
+				"ref_id": "SUSE-SU-2024:4376-1",
+				"ref_url": "https://lists.suse.com/pipermail/sle-security-updates/2024-December/020028.html",
+				"source": "SUSE-SU"
 			}
 		],
 		"description": "\n    In the Linux kernel, the following vulnerability has been resolved:\n\nnet: drop bad gso csum_start and offset in virtio_net_hdr\n\nTighten csum_start and csum_offset checks in virtio_net_hdr_to_skb\nfor GSO packets.\n\nThe function already checks that a checksum requested with\nVIRTIO_NET_HDR_F_NEEDS_CSUM is in skb linear. But for GSO packets\nthis might not hold for segs after segmentation.\n\nSyzkaller demonstrated to reach this warning in skb_checksum_help\n\n\toffset = skb_checksum_start_offset(skb);\n\tret = -EINVAL;\n\tif (WARN_ON_ONCE(offset >= skb_headlen(skb)))\n\nBy injecting a TSO packet:\n\nWARNING: CPU: 1 PID: 3539 at net/core/dev.c:3284 skb_checksum_help+0x3d0/0x5b0\n ip_do_fragment+0x209/0x1b20 net/ipv4/ip_output.c:774\n ip_finish_output_gso net/ipv4/ip_output.c:279 [inline]\n __ip_finish_output+0x2bd/0x4b0 net/ipv4/ip_output.c:301\n iptunnel_xmit+0x50c/0x930 net/ipv4/ip_tunnel_core.c:82\n ip_tunnel_xmit+0x2296/0x2c70 net/ipv4/ip_tunnel.c:813\n __gre_xmit net/ipv4/ip_gre.c:469 [inline]\n ipgre_xmit+0x759/0xa60 net/ipv4/ip_gre.c:661\n __netdev_start_xmit include/linux/netdevice.h:4850 [inline]\n netdev_start_xmit include/linux/netdevice.h:4864 [inline]\n xmit_one net/core/dev.c:3595 [inline]\n dev_hard_start_xmit+0x261/0x8c0 net/core/dev.c:3611\n __dev_queue_xmit+0x1b97/0x3c90 net/core/dev.c:4261\n packet_snd net/packet/af_packet.c:3073 [inline]\n\nThe geometry of the bad input packet at tcp_gso_segment:\n\n[   52.003050][ T8403] skb len=12202 headroom=244 headlen=12093 tailroom=0\n[   52.003050][ T8403] mac=(168,24) mac_len=24 net=(192,52) trans=244\n[   52.003050][ T8403] shinfo(txflags=0 nr_frags=1 gso(size=1552 type=3 segs=0))\n[   52.003050][ T8403] csum(0x60000c7 start=199 offset=1536\nip_summed=3 complete_sw=0 valid=0 level=0)\n\nMitigate with stricter input validation.\n\ncsum_offset: for GSO packets, deduce the correct value from gso_type.\nThis is already done for USO. Extend it to TSO. Let UFO be:\nudp[46]_ufo_fragment ignores these fields and always computes the\nchecksum in software.\n\ncsum_start: finding the real offset requires parsing to the transport\nheader. Do not add a parser, use existing segmentation parsing. Thanks\nto SKB_GSO_DODGY, that also catches bad packets that are hw offloaded.\nAgain test both TSO and USO. Do not test UFO for the above reason, and\ndo not test UDP tunnel offload.\n\nGSO packet are almost always CHECKSUM_PARTIAL. USO packets may be\nCHECKSUM_NONE since commit 10154dbded6d6 (\"udp: Allow GSO transmit\nfrom devices with no checksum offload\"), but then still these fields\nare initialized correctly in udp4_hwcsum/udp6_hwcsum_outgoing. So no\nneed to test for ip_summed == CHECKSUM_PARTIAL first.\n\nThis revises an existing fix mentioned in the Fixes tag, which broke\nsmall packets with GSO offload, as detected by kselftests.\n    ",
@@ -75,7 +80,7 @@
 				"date": "2024-08-27"
 			},
 			"updated": {
-				"date": "2024-12-18"
+				"date": "2024-12-19"
 			},
 			"affected_cpe_list": {
 				"cpe": [
@@ -100,6 +105,19 @@
 							{
 								"test_ref": "oval:org.opensuse.security:tst:2009623416",
 								"comment": "cluster-md-kmp-64kb is signed with openSUSE key"
+							}
+						]
+					},
+					{
+						"operator": "AND",
+						"criterions": [
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009958548",
+								"comment": "cluster-md-kmp-azure-5.14.21-150500.33.75.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009623277",
+								"comment": "cluster-md-kmp-azure is signed with openSUSE key"
 							}
 						]
 					},
@@ -139,6 +157,19 @@
 							{
 								"test_ref": "oval:org.opensuse.security:tst:2009623418",
 								"comment": "dlm-kmp-64kb is signed with openSUSE key"
+							}
+						]
+					},
+					{
+						"operator": "AND",
+						"criterions": [
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009958549",
+								"comment": "dlm-kmp-azure-5.14.21-150500.33.75.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009623279",
+								"comment": "dlm-kmp-azure is signed with openSUSE key"
 							}
 						]
 					},
@@ -484,6 +515,19 @@
 						"operator": "AND",
 						"criterions": [
 							{
+								"test_ref": "oval:org.opensuse.security:tst:2009958550",
+								"comment": "gfs2-kmp-azure-5.14.21-150500.33.75.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009623281",
+								"comment": "gfs2-kmp-azure is signed with openSUSE key"
+							}
+						]
+					},
+					{
+						"operator": "AND",
+						"criterions": [
+							{
 								"test_ref": "oval:org.opensuse.security:tst:2009958330",
 								"comment": "gfs2-kmp-default-5.14.21-150500.55.88.1 is installed"
 							},
@@ -555,6 +599,71 @@
 							{
 								"test_ref": "oval:org.opensuse.security:tst:2009623426",
 								"comment": "kernel-64kb-optional is signed with openSUSE key"
+							}
+						]
+					},
+					{
+						"operator": "AND",
+						"criterions": [
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009958551",
+								"comment": "kernel-azure-5.14.21-150500.33.75.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009623283",
+								"comment": "kernel-azure is signed with openSUSE key"
+							}
+						]
+					},
+					{
+						"operator": "AND",
+						"criterions": [
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009958552",
+								"comment": "kernel-azure-devel-5.14.21-150500.33.75.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009623285",
+								"comment": "kernel-azure-devel is signed with openSUSE key"
+							}
+						]
+					},
+					{
+						"operator": "AND",
+						"criterions": [
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009958553",
+								"comment": "kernel-azure-extra-5.14.21-150500.33.75.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009623286",
+								"comment": "kernel-azure-extra is signed with openSUSE key"
+							}
+						]
+					},
+					{
+						"operator": "AND",
+						"criterions": [
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009958554",
+								"comment": "kernel-azure-optional-5.14.21-150500.33.75.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009623427",
+								"comment": "kernel-azure-optional is signed with openSUSE key"
+							}
+						]
+					},
+					{
+						"operator": "AND",
+						"criterions": [
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009958555",
+								"comment": "kernel-azure-vdso-5.14.21-150500.33.75.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009769740",
+								"comment": "kernel-azure-vdso is signed with openSUSE key"
 							}
 						]
 					},
@@ -724,6 +833,19 @@
 							{
 								"test_ref": "oval:org.opensuse.security:tst:2009151356",
 								"comment": "kernel-devel is signed with openSUSE key"
+							}
+						]
+					},
+					{
+						"operator": "AND",
+						"criterions": [
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009958556",
+								"comment": "kernel-devel-azure-5.14.21-150500.33.75.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009623293",
+								"comment": "kernel-devel-azure is signed with openSUSE key"
 							}
 						]
 					},
@@ -991,6 +1113,19 @@
 						"operator": "AND",
 						"criterions": [
 							{
+								"test_ref": "oval:org.opensuse.security:tst:2009958557",
+								"comment": "kernel-source-azure-5.14.21-150500.33.75.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009623300",
+								"comment": "kernel-source-azure is signed with openSUSE key"
+							}
+						]
+					},
+					{
+						"operator": "AND",
+						"criterions": [
+							{
 								"test_ref": "oval:org.opensuse.security:tst:2009957810",
 								"comment": "kernel-source-rt-5.14.21-150500.13.79.1 is installed"
 							},
@@ -1023,6 +1158,19 @@
 							{
 								"test_ref": "oval:org.opensuse.security:tst:2009151361",
 								"comment": "kernel-syms is signed with openSUSE key"
+							}
+						]
+					},
+					{
+						"operator": "AND",
+						"criterions": [
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009958558",
+								"comment": "kernel-syms-azure-5.14.21-150500.33.75.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009623301",
+								"comment": "kernel-syms-azure is signed with openSUSE key"
 							}
 						]
 					},
@@ -1069,6 +1217,19 @@
 						"operator": "AND",
 						"criterions": [
 							{
+								"test_ref": "oval:org.opensuse.security:tst:2009958559",
+								"comment": "kselftests-kmp-azure-5.14.21-150500.33.75.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009623305",
+								"comment": "kselftests-kmp-azure is signed with openSUSE key"
+							}
+						]
+					},
+					{
+						"operator": "AND",
+						"criterions": [
+							{
 								"test_ref": "oval:org.opensuse.security:tst:2009958361",
 								"comment": "kselftests-kmp-default-5.14.21-150500.55.88.1 is installed"
 							},
@@ -1101,6 +1262,19 @@
 							{
 								"test_ref": "oval:org.opensuse.security:tst:2009623438",
 								"comment": "ocfs2-kmp-64kb is signed with openSUSE key"
+							}
+						]
+					},
+					{
+						"operator": "AND",
+						"criterions": [
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009958560",
+								"comment": "ocfs2-kmp-azure-5.14.21-150500.33.75.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009623306",
+								"comment": "ocfs2-kmp-azure is signed with openSUSE key"
 							}
 						]
 					},
@@ -1147,6 +1321,19 @@
 						"operator": "AND",
 						"criterions": [
 							{
+								"test_ref": "oval:org.opensuse.security:tst:2009958561",
+								"comment": "reiserfs-kmp-azure-5.14.21-150500.33.75.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009623308",
+								"comment": "reiserfs-kmp-azure is signed with openSUSE key"
+							}
+						]
+					},
+					{
+						"operator": "AND",
+						"criterions": [
+							{
 								"test_ref": "oval:org.opensuse.security:tst:2009958365",
 								"comment": "reiserfs-kmp-default-5.14.21-150500.55.88.1 is installed"
 							},
@@ -1168,16 +1355,6 @@
 								"comment": "reiserfs-kmp-rt is signed with openSUSE key"
 							}
 						]
-					}
-				],
-				"criterions": [
-					{
-						"test_ref": "oval:org.opensuse.security:tst:2009340306",
-						"comment": "kernel-devel-azure is not affected"
-					},
-					{
-						"test_ref": "oval:org.opensuse.security:tst:2009340305",
-						"comment": "kernel-source-azure is not affected"
 					}
 				]
 			}
