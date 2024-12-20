@@ -40,6 +40,11 @@
 				"ref_id": "SUSE-SU-2024:4318-1",
 				"ref_url": "https://lists.suse.com/pipermail/sle-security-updates/2024-December/019999.html",
 				"source": "SUSE-SU"
+			},
+			{
+				"ref_id": "SUSE-SU-2024:4387-1",
+				"ref_url": "https://lists.suse.com/pipermail/sle-security-updates/2024-December/020032.html",
+				"source": "SUSE-SU"
 			}
 		],
 		"description": "\n    In the Linux kernel, the following vulnerability has been resolved:\n\ndrm/amd/display: Avoid race between dcn10_set_drr() and dc_state_destruct()\n\ndc_state_destruct() nulls the resource context of the DC state. The pipe\ncontext passed to dcn10_set_drr() is a member of this resource context.\n\nIf dc_state_destruct() is called parallel to the IRQ processing (which\ncalls dcn10_set_drr() at some point), we can end up using already nulled\nfunction callback fields of struct stream_resource.\n\nThe logic in dcn10_set_drr() already tries to avoid this, by checking tg\nagainst NULL. But if the nulling happens exactly after the NULL check and\nbefore the next access, then we get a race.\n\nAvoid this by copying tg first to a local variable, and then use this\nvariable for all the operations. This should work, as long as nobody\nfrees the resource pool where the timing generators live.\n\n(cherry picked from commit a3cc326a43bdc48fbdf53443e1027a03e309b643)\n    ",
@@ -70,7 +75,7 @@
 				"date": "2024-10-18"
 			},
 			"updated": {
-				"date": "2024-12-14"
+				"date": "2024-12-20"
 			},
 			"affected_cpe_list": {
 				"cpe": [
