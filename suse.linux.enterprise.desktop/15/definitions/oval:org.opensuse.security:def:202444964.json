@@ -51,6 +51,31 @@
 				"ref_id": "SUSE-SU-2024:4318-1",
 				"ref_url": "https://lists.suse.com/pipermail/sle-security-updates/2024-December/019999.html",
 				"source": "SUSE-SU"
+			},
+			{
+				"ref_id": "SUSE-SU-2024:4345-1",
+				"ref_url": "https://lists.suse.com/pipermail/sle-security-updates/2024-December/020018.html",
+				"source": "SUSE-SU"
+			},
+			{
+				"ref_id": "SUSE-SU-2024:4346-1",
+				"ref_url": "https://lists.suse.com/pipermail/sle-security-updates/2024-December/020017.html",
+				"source": "SUSE-SU"
+			},
+			{
+				"ref_id": "SUSE-SU-2024:4364-1",
+				"ref_url": "https://lists.suse.com/pipermail/sle-security-updates/2024-December/020019.html",
+				"source": "SUSE-SU"
+			},
+			{
+				"ref_id": "SUSE-SU-2024:4376-1",
+				"ref_url": "https://lists.suse.com/pipermail/sle-security-updates/2024-December/020028.html",
+				"source": "SUSE-SU"
+			},
+			{
+				"ref_id": "SUSE-SU-2024:4387-1",
+				"ref_url": "https://lists.suse.com/pipermail/sle-security-updates/2024-December/020032.html",
+				"source": "SUSE-SU"
 			}
 		],
 		"description": "\n    In the Linux kernel, the following vulnerability has been resolved:\n\nidpf: fix memory leaks and crashes while performing a soft reset\n\nThe second tagged commit introduced a UAF, as it removed restoring\nq_vector->vport pointers after reinitializating the structures.\nThis is due to that all queue allocation functions are performed here\nwith the new temporary vport structure and those functions rewrite\nthe backpointers to the vport. Then, this new struct is freed and\nthe pointers start leading to nowhere.\n\nBut generally speaking, the current logic is very fragile. It claims\nto be more reliable when the system is low on memory, but in fact, it\nconsumes two times more memory as at the moment of running this\nfunction, there are two vports allocated with their queues and vectors.\nMoreover, it claims to prevent the driver from running into \"bad state\",\nbut in fact, any error during the rebuild leaves the old vport in the\npartially allocated state.\nFinally, if the interface is down when the function is called, it always\nallocates a new queue set, but when the user decides to enable the\ninterface later on, vport_open() allocates them once again, IOW there's\na clear memory leak here.\n\nJust don't allocate a new queue set when performing a reset, that solves\ncrashes and memory leaks. Readd the old queue number and reopen the\ninterface on rollback - that solves limbo states when the device is left\ndisabled and/or without HW queues enabled.\n    ",
@@ -81,7 +106,7 @@
 				"date": "2024-09-06"
 			},
 			"updated": {
-				"date": "2024-12-14"
+				"date": "2024-12-23"
 			},
 			"affected_cpe_list": {
 				"cpe": [
@@ -100,100 +125,6 @@
 	"criteria": {
 		"operator": "OR",
 		"criterias": [
-			{
-				"operator": "AND",
-				"criterias": [
-					{
-						"operator": "OR",
-						"criterions": [
-							{
-								"test_ref": "oval:org.opensuse.security:tst:2009759898",
-								"comment": "SUSE Linux Enterprise Desktop 15 SP5 is installed"
-							},
-							{
-								"test_ref": "oval:org.opensuse.security:tst:2009759899",
-								"comment": "SUSE Linux Enterprise High Performance Computing 15 SP5 is installed"
-							},
-							{
-								"test_ref": "oval:org.opensuse.security:tst:2009760583",
-								"comment": "SUSE Linux Enterprise Module for Development Tools 15 SP5 is installed"
-							},
-							{
-								"test_ref": "oval:org.opensuse.security:tst:2009759901",
-								"comment": "SUSE Linux Enterprise Server 15 SP5 is installed"
-							},
-							{
-								"test_ref": "oval:org.opensuse.security:tst:2009759902",
-								"comment": "SUSE Linux Enterprise Server for SAP Applications 15 SP5 is installed"
-							}
-						]
-					},
-					{
-						"operator": "OR",
-						"criterions": [
-							{
-								"test_ref": "oval:org.opensuse.security:tst:2009338032",
-								"comment": "kernel-default is affected"
-							},
-							{
-								"test_ref": "oval:org.opensuse.security:tst:2009333995",
-								"comment": "kernel-source is affected"
-							}
-						]
-					}
-				]
-			},
-			{
-				"operator": "AND",
-				"criterias": [
-					{
-						"operator": "OR",
-						"criterions": [
-							{
-								"test_ref": "oval:org.opensuse.security:tst:2009759898",
-								"comment": "SUSE Linux Enterprise Desktop 15 SP5 is installed"
-							},
-							{
-								"test_ref": "oval:org.opensuse.security:tst:2009759899",
-								"comment": "SUSE Linux Enterprise High Performance Computing 15 SP5 is installed"
-							},
-							{
-								"test_ref": "oval:org.opensuse.security:tst:2009759900",
-								"comment": "SUSE Linux Enterprise Module for Basesystem 15 SP5 is installed"
-							},
-							{
-								"test_ref": "oval:org.opensuse.security:tst:2009759901",
-								"comment": "SUSE Linux Enterprise Server 15 SP5 is installed"
-							},
-							{
-								"test_ref": "oval:org.opensuse.security:tst:2009759902",
-								"comment": "SUSE Linux Enterprise Server for SAP Applications 15 SP5 is installed"
-							}
-						]
-					},
-					{
-						"operator": "OR",
-						"criterions": [
-							{
-								"test_ref": "oval:org.opensuse.security:tst:2009338032",
-								"comment": "kernel-default is affected"
-							},
-							{
-								"test_ref": "oval:org.opensuse.security:tst:2009338034",
-								"comment": "kernel-default-devel is affected"
-							},
-							{
-								"test_ref": "oval:org.opensuse.security:tst:2009335275",
-								"comment": "kernel-devel is affected"
-							},
-							{
-								"test_ref": "oval:org.opensuse.security:tst:2009335276",
-								"comment": "kernel-macros is affected"
-							}
-						]
-					}
-				]
-			},
 			{
 				"operator": "AND",
 				"criterias": [
@@ -307,6 +238,124 @@
 							{
 								"test_ref": "oval:org.opensuse.security:tst:2009957917",
 								"comment": "kernel-syms-6.4.0-150600.23.30.1 is installed"
+							}
+						]
+					}
+				]
+			},
+			{
+				"operator": "AND",
+				"criterias": [
+					{
+						"operator": "OR",
+						"criterions": [
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009759898",
+								"comment": "SUSE Linux Enterprise Desktop 15 SP5 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009759899",
+								"comment": "SUSE Linux Enterprise High Performance Computing 15 SP5 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009759900",
+								"comment": "SUSE Linux Enterprise Module for Basesystem 15 SP5 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009759901",
+								"comment": "SUSE Linux Enterprise Server 15 SP5 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009759902",
+								"comment": "SUSE Linux Enterprise Server for SAP Applications 15 SP5 is installed"
+							}
+						]
+					},
+					{
+						"operator": "OR",
+						"criterions": [
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009958331",
+								"comment": "kernel-64kb-5.14.21-150500.55.88.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009958332",
+								"comment": "kernel-64kb-devel-5.14.21-150500.55.88.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009958338",
+								"comment": "kernel-default-5.14.21-150500.55.88.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009958339",
+								"comment": "kernel-default-base-5.14.21-150500.55.88.1.150500.6.39.4 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009958341",
+								"comment": "kernel-default-devel-5.14.21-150500.55.88.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009958347",
+								"comment": "kernel-devel-5.14.21-150500.55.88.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009958353",
+								"comment": "kernel-macros-5.14.21-150500.55.88.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009958359",
+								"comment": "kernel-zfcpdump-5.14.21-150500.55.88.1 is installed"
+							}
+						]
+					}
+				]
+			},
+			{
+				"operator": "AND",
+				"criterias": [
+					{
+						"operator": "OR",
+						"criterions": [
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009759898",
+								"comment": "SUSE Linux Enterprise Desktop 15 SP5 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009759899",
+								"comment": "SUSE Linux Enterprise High Performance Computing 15 SP5 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009760583",
+								"comment": "SUSE Linux Enterprise Module for Development Tools 15 SP5 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009759901",
+								"comment": "SUSE Linux Enterprise Server 15 SP5 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009759902",
+								"comment": "SUSE Linux Enterprise Server for SAP Applications 15 SP5 is installed"
+							}
+						]
+					},
+					{
+						"operator": "OR",
+						"criterions": [
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009958348",
+								"comment": "kernel-docs-5.14.21-150500.55.88.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009958354",
+								"comment": "kernel-obs-build-5.14.21-150500.55.88.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009958356",
+								"comment": "kernel-source-5.14.21-150500.55.88.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009958358",
+								"comment": "kernel-syms-5.14.21-150500.55.88.1 is installed"
 							}
 						]
 					}

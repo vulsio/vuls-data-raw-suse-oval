@@ -51,6 +51,21 @@
 				"ref_id": "SUSE-SU-2024:4318-1",
 				"ref_url": "https://lists.suse.com/pipermail/sle-security-updates/2024-December/019999.html",
 				"source": "SUSE-SU"
+			},
+			{
+				"ref_id": "SUSE-SU-2024:4364-1",
+				"ref_url": "https://lists.suse.com/pipermail/sle-security-updates/2024-December/020019.html",
+				"source": "SUSE-SU"
+			},
+			{
+				"ref_id": "SUSE-SU-2024:4376-1",
+				"ref_url": "https://lists.suse.com/pipermail/sle-security-updates/2024-December/020028.html",
+				"source": "SUSE-SU"
+			},
+			{
+				"ref_id": "SUSE-SU-2024:4387-1",
+				"ref_url": "https://lists.suse.com/pipermail/sle-security-updates/2024-December/020032.html",
+				"source": "SUSE-SU"
 			}
 		],
 		"description": "\n    In the Linux kernel, the following vulnerability has been resolved:\n\narm64: tlb: Fix TLBI RANGE operand\n\nKVM/arm64 relies on TLBI RANGE feature to flush TLBs when the dirty\npages are collected by VMM and the page table entries become write\nprotected during live migration. Unfortunately, the operand passed\nto the TLBI RANGE instruction isn't correctly sorted out due to the\ncommit 117940aa6e5f (\"KVM: arm64: Define kvm_tlb_flush_vmid_range()\").\nIt leads to crash on the destination VM after live migration because\nTLBs aren't flushed completely and some of the dirty pages are missed.\n\nFor example, I have a VM where 8GB memory is assigned, starting from\n0x40000000 (1GB). Note that the host has 4KB as the base page size.\nIn the middile of migration, kvm_tlb_flush_vmid_range() is executed\nto flush TLBs. It passes MAX_TLBI_RANGE_PAGES as the argument to\n__kvm_tlb_flush_vmid_range() and __flush_s2_tlb_range_op(). SCALE#3\nand NUM#31, corresponding to MAX_TLBI_RANGE_PAGES, isn't supported\nby __TLBI_RANGE_NUM(). In this specific case, -1 has been returned\nfrom __TLBI_RANGE_NUM() for SCALE#3/2/1/0 and rejected by the loop\nin the __flush_tlb_range_op() until the variable @scale underflows\nand becomes -9, 0xffff708000040000 is set as the operand. The operand\nis wrong since it's sorted out by __TLBI_VADDR_RANGE() according to\ninvalid @scale and @num.\n\nFix it by extending __TLBI_RANGE_NUM() to support the combination of\nSCALE#3 and NUM#31. With the changes, [-1 31] instead of [-1 30] can\nbe returned from the macro, meaning the TLBs for 0x200000 pages in the\nabove example can be flushed in one shoot with SCALE#3 and NUM#31. The\nmacro TLBI_RANGE_MASK is dropped since no one uses it any more. The\ncomments are also adjusted accordingly.\n    ",
@@ -77,7 +92,7 @@
 				"date": "2024-05-21"
 			},
 			"updated": {
-				"date": "2024-12-14"
+				"date": "2024-12-23"
 			},
 			"affected_cpe_list": {
 				"cpe": [
@@ -96,100 +111,6 @@
 	"criteria": {
 		"operator": "OR",
 		"criterias": [
-			{
-				"operator": "AND",
-				"criterias": [
-					{
-						"operator": "OR",
-						"criterions": [
-							{
-								"test_ref": "oval:org.opensuse.security:tst:2009759898",
-								"comment": "SUSE Linux Enterprise Desktop 15 SP5 is installed"
-							},
-							{
-								"test_ref": "oval:org.opensuse.security:tst:2009759899",
-								"comment": "SUSE Linux Enterprise High Performance Computing 15 SP5 is installed"
-							},
-							{
-								"test_ref": "oval:org.opensuse.security:tst:2009760583",
-								"comment": "SUSE Linux Enterprise Module for Development Tools 15 SP5 is installed"
-							},
-							{
-								"test_ref": "oval:org.opensuse.security:tst:2009759901",
-								"comment": "SUSE Linux Enterprise Server 15 SP5 is installed"
-							},
-							{
-								"test_ref": "oval:org.opensuse.security:tst:2009759902",
-								"comment": "SUSE Linux Enterprise Server for SAP Applications 15 SP5 is installed"
-							}
-						]
-					},
-					{
-						"operator": "OR",
-						"criterions": [
-							{
-								"test_ref": "oval:org.opensuse.security:tst:2009334017",
-								"comment": "kernel-default is not affected"
-							},
-							{
-								"test_ref": "oval:org.opensuse.security:tst:2009333928",
-								"comment": "kernel-source is not affected"
-							}
-						]
-					}
-				]
-			},
-			{
-				"operator": "AND",
-				"criterias": [
-					{
-						"operator": "OR",
-						"criterions": [
-							{
-								"test_ref": "oval:org.opensuse.security:tst:2009759898",
-								"comment": "SUSE Linux Enterprise Desktop 15 SP5 is installed"
-							},
-							{
-								"test_ref": "oval:org.opensuse.security:tst:2009759899",
-								"comment": "SUSE Linux Enterprise High Performance Computing 15 SP5 is installed"
-							},
-							{
-								"test_ref": "oval:org.opensuse.security:tst:2009759900",
-								"comment": "SUSE Linux Enterprise Module for Basesystem 15 SP5 is installed"
-							},
-							{
-								"test_ref": "oval:org.opensuse.security:tst:2009759901",
-								"comment": "SUSE Linux Enterprise Server 15 SP5 is installed"
-							},
-							{
-								"test_ref": "oval:org.opensuse.security:tst:2009759902",
-								"comment": "SUSE Linux Enterprise Server for SAP Applications 15 SP5 is installed"
-							}
-						]
-					},
-					{
-						"operator": "OR",
-						"criterions": [
-							{
-								"test_ref": "oval:org.opensuse.security:tst:2009334017",
-								"comment": "kernel-default is not affected"
-							},
-							{
-								"test_ref": "oval:org.opensuse.security:tst:2009335423",
-								"comment": "kernel-default-devel is not affected"
-							},
-							{
-								"test_ref": "oval:org.opensuse.security:tst:2009334791",
-								"comment": "kernel-devel is not affected"
-							},
-							{
-								"test_ref": "oval:org.opensuse.security:tst:2009334792",
-								"comment": "kernel-macros is not affected"
-							}
-						]
-					}
-				]
-			},
 			{
 				"operator": "AND",
 				"criterias": [
@@ -303,6 +224,124 @@
 							{
 								"test_ref": "oval:org.opensuse.security:tst:2009957917",
 								"comment": "kernel-syms-6.4.0-150600.23.30.1 is installed"
+							}
+						]
+					}
+				]
+			},
+			{
+				"operator": "AND",
+				"criterias": [
+					{
+						"operator": "OR",
+						"criterions": [
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009759898",
+								"comment": "SUSE Linux Enterprise Desktop 15 SP5 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009759899",
+								"comment": "SUSE Linux Enterprise High Performance Computing 15 SP5 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009759900",
+								"comment": "SUSE Linux Enterprise Module for Basesystem 15 SP5 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009759901",
+								"comment": "SUSE Linux Enterprise Server 15 SP5 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009759902",
+								"comment": "SUSE Linux Enterprise Server for SAP Applications 15 SP5 is installed"
+							}
+						]
+					},
+					{
+						"operator": "OR",
+						"criterions": [
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009958331",
+								"comment": "kernel-64kb-5.14.21-150500.55.88.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009958332",
+								"comment": "kernel-64kb-devel-5.14.21-150500.55.88.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009958338",
+								"comment": "kernel-default-5.14.21-150500.55.88.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009958339",
+								"comment": "kernel-default-base-5.14.21-150500.55.88.1.150500.6.39.4 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009958341",
+								"comment": "kernel-default-devel-5.14.21-150500.55.88.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009958347",
+								"comment": "kernel-devel-5.14.21-150500.55.88.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009958353",
+								"comment": "kernel-macros-5.14.21-150500.55.88.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009958359",
+								"comment": "kernel-zfcpdump-5.14.21-150500.55.88.1 is installed"
+							}
+						]
+					}
+				]
+			},
+			{
+				"operator": "AND",
+				"criterias": [
+					{
+						"operator": "OR",
+						"criterions": [
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009759898",
+								"comment": "SUSE Linux Enterprise Desktop 15 SP5 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009759899",
+								"comment": "SUSE Linux Enterprise High Performance Computing 15 SP5 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009760583",
+								"comment": "SUSE Linux Enterprise Module for Development Tools 15 SP5 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009759901",
+								"comment": "SUSE Linux Enterprise Server 15 SP5 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009759902",
+								"comment": "SUSE Linux Enterprise Server for SAP Applications 15 SP5 is installed"
+							}
+						]
+					},
+					{
+						"operator": "OR",
+						"criterions": [
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009958348",
+								"comment": "kernel-docs-5.14.21-150500.55.88.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009958354",
+								"comment": "kernel-obs-build-5.14.21-150500.55.88.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009958356",
+								"comment": "kernel-source-5.14.21-150500.55.88.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009958358",
+								"comment": "kernel-syms-5.14.21-150500.55.88.1 is installed"
 							}
 						]
 					}

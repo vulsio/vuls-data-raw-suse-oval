@@ -18,8 +18,10 @@
 				"SUSE Linux Enterprise Live Patching 15 SP6",
 				"SUSE Linux Enterprise Module for Basesystem 15 SP5",
 				"SUSE Linux Enterprise Module for Basesystem 15 SP6",
+				"SUSE Linux Enterprise Module for Confidential Computing Technical Preview 15 SP6",
 				"SUSE Linux Enterprise Module for Development Tools 15 SP5",
 				"SUSE Linux Enterprise Module for Development Tools 15 SP6",
+				"SUSE Linux Enterprise Module for Legacy 15 SP5",
 				"SUSE Linux Enterprise Module for Legacy 15 SP6",
 				"SUSE Linux Enterprise Module for Public Cloud 15 SP5",
 				"SUSE Linux Enterprise Module for Public Cloud 15 SP6",
@@ -63,6 +65,11 @@
 				"ref_id": "SUSE-SU-2024:4318-1",
 				"ref_url": "https://lists.suse.com/pipermail/sle-security-updates/2024-December/019999.html",
 				"source": "SUSE-SU"
+			},
+			{
+				"ref_id": "SUSE-SU-2024:4387-1",
+				"ref_url": "https://lists.suse.com/pipermail/sle-security-updates/2024-December/020032.html",
+				"source": "SUSE-SU"
 			}
 		],
 		"description": "\n    In the Linux kernel, the following vulnerability has been resolved:\n\nmm: resolve faulty mmap_region() error path behaviour\n\nThe mmap_region() function is somewhat terrifying, with spaghetti-like\ncontrol flow and numerous means by which issues can arise and incomplete\nstate, memory leaks and other unpleasantness can occur.\n\nA large amount of the complexity arises from trying to handle errors late\nin the process of mapping a VMA, which forms the basis of recently\nobserved issues with resource leaks and observable inconsistent state.\n\nTaking advantage of previous patches in this series we move a number of\nchecks earlier in the code, simplifying things by moving the core of the\nlogic into a static internal function __mmap_region().\n\nDoing this allows us to perform a number of checks up front before we do\nany real work, and allows us to unwind the writable unmap check\nunconditionally as required and to perform a CONFIG_DEBUG_VM_MAPLE_TREE\nvalidation unconditionally also.\n\nWe move a number of things here:\n\n1. We preallocate memory for the iterator before we call the file-backed\n   memory hook, allowing us to exit early and avoid having to perform\n   complicated and error-prone close/free logic. We carefully free\n   iterator state on both success and error paths.\n\n2. The enclosing mmap_region() function handles the mapping_map_writable()\n   logic early. Previously the logic had the mapping_map_writable() at the\n   point of mapping a newly allocated file-backed VMA, and a matching\n   mapping_unmap_writable() on success and error paths.\n\n   We now do this unconditionally if this is a file-backed, shared writable\n   mapping. If a driver changes the flags to eliminate VM_MAYWRITE, however\n   doing so does not invalidate the seal check we just performed, and we in\n   any case always decrement the counter in the wrapper.\n\n   We perform a debug assert to ensure a driver does not attempt to do the\n   opposite.\n\n3. We also move arch_validate_flags() up into the mmap_region()\n   function. This is only relevant on arm64 and sparc64, and the check is\n   only meaningful for SPARC with ADI enabled. We explicitly add a warning\n   for this arch if a driver invalidates this check, though the code ought\n   eventually to be fixed to eliminate the need for this.\n\nWith all of these measures in place, we no longer need to explicitly close\nthe VMA on error paths, as we place all checks which might fail prior to a\ncall to any driver mmap hook.\n\nThis eliminates an entire class of errors, makes the code easier to reason\nabout and more robust.\n    ",
@@ -91,7 +98,7 @@
 				"date": "2024-11-27"
 			},
 			"updated": {
-				"date": "2024-12-14"
+				"date": "2024-12-23"
 			},
 			"affected_cpe_list": {
 				"cpe": [
@@ -99,6 +106,7 @@
 					"cpe:/o:suse:sle-module-basesystem:15:sp6",
 					"cpe:/o:suse:sle-module-development-tools:15:sp5",
 					"cpe:/o:suse:sle-module-development-tools:15:sp6",
+					"cpe:/o:suse:sle-module-legacy:15:sp5",
 					"cpe:/o:suse:sle-module-legacy:15:sp6",
 					"cpe:/o:suse:sle-module-live-patching:15:sp2",
 					"cpe:/o:suse:sle-module-live-patching:15:sp3",
@@ -414,6 +422,45 @@
 								"comment": "SUSE Linux Enterprise High Performance Computing 15 SP5 is installed"
 							},
 							{
+								"test_ref": "oval:org.opensuse.security:tst:2009760608",
+								"comment": "SUSE Linux Enterprise Module for Legacy 15 SP5 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009759901",
+								"comment": "SUSE Linux Enterprise Server 15 SP5 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009759902",
+								"comment": "SUSE Linux Enterprise Server for SAP Applications 15 SP5 is installed"
+							}
+						]
+					},
+					{
+						"operator": "OR",
+						"criterions": [
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009338037",
+								"comment": "reiserfs-kmp-default is not affected"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009333928",
+								"comment": "kernel-source is not affected"
+							}
+						]
+					}
+				]
+			},
+			{
+				"operator": "AND",
+				"criterias": [
+					{
+						"operator": "OR",
+						"criterions": [
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009759899",
+								"comment": "SUSE Linux Enterprise High Performance Computing 15 SP5 is installed"
+							},
+							{
 								"test_ref": "oval:org.opensuse.security:tst:2009762868",
 								"comment": "SUSE Linux Enterprise Module for Public Cloud 15 SP5 is installed"
 							},
@@ -687,6 +734,54 @@
 					{
 						"test_ref": "oval:org.opensuse.security:tst:2009857543",
 						"comment": "SUSE Linux Enterprise Live Patching 15 SP6 is installed"
+					}
+				]
+			},
+			{
+				"operator": "AND",
+				"criterias": [
+					{
+						"operator": "OR",
+						"criterions": [
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009958626",
+								"comment": "kernel-coco-6.4.0-15061.9.coco15sp6.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009958627",
+								"comment": "kernel-coco-devel-6.4.0-15061.9.coco15sp6.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009958628",
+								"comment": "kernel-coco_debug-6.4.0-15061.9.coco15sp6.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009958629",
+								"comment": "kernel-coco_debug-devel-6.4.0-15061.9.coco15sp6.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009958630",
+								"comment": "kernel-devel-coco-6.4.0-15061.9.coco15sp6.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009958631",
+								"comment": "kernel-source-coco-6.4.0-15061.9.coco15sp6.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009958632",
+								"comment": "kernel-syms-coco-6.4.0-15061.9.coco15sp6.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009958633",
+								"comment": "reiserfs-kmp-coco-6.4.0-15061.9.coco15sp6.1 is installed"
+							}
+						]
+					}
+				],
+				"criterions": [
+					{
+						"test_ref": "oval:org.opensuse.security:tst:2009945160",
+						"comment": "SUSE Linux Enterprise Module for Confidential Computing Technical Preview 15 SP6 is installed"
 					}
 				]
 			}

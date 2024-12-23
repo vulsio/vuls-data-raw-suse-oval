@@ -1,0 +1,106 @@
+{
+	"id": "oval:org.opensuse.security:def:202443806",
+	"version": "1",
+	"class": "vulnerability",
+	"metadata": {
+		"title": "CVE-2024-43806",
+		"affected": {
+			"family": "unix",
+			"platform": [
+				"SUSE Linux Micro 6.1"
+			]
+		},
+		"reference": [
+			{
+				"ref_id": "Mitre CVE-2024-43806",
+				"ref_url": "https://cve.mitre.org/cgi-bin/cvename.cgi?name=CVE-2024-43806",
+				"source": "CVE"
+			},
+			{
+				"ref_id": "SUSE CVE-2024-43806",
+				"ref_url": "https://www.suse.com/security/cve/CVE-2024-43806",
+				"source": "SUSE CVE"
+			},
+			{
+				"ref_id": "SUSE-SU-2024:3404-1",
+				"ref_url": "https://lists.suse.com/pipermail/sle-security-updates/2024-September/019502.html",
+				"source": "SUSE-SU"
+			},
+			{
+				"ref_id": "openSUSE-SU-2024:14354-1",
+				"ref_url": "https://lists.opensuse.org/archives/list/security-announce@lists.opensuse.org/thread/TXPZZSAXTA6CTQAGWASRTKWJQ3DFB7GG/",
+				"source": "SUSE-SU"
+			}
+		],
+		"description": "\n    Rustix is a set of safe Rust bindings to POSIX-ish APIs. When using `rustix::fs::Dir` using the `linux_raw` backend, it's possible for the iterator to \"get stuck\" when an IO error is encountered. Combined with a memory over-allocation issue in `rustix::fs::Dir::read_more`, this can cause quick and unbounded memory explosion (gigabytes in a few seconds if used on a hot path) and eventually lead to an OOM crash of the application. The symptoms were initially discovered in https://github.com/imsnif/bandwhich/issues/284. That post has lots of details of our investigation. Full details can be read on the GHSA-c827-hfw6-qwvm repo advisory. If a program tries to access a directory with its file descriptor after the file has been unlinked (or any other action that leaves the `Dir` iterator in the stuck state), and the implementation does not break after seeing an error, it can cause a memory explosion. As an example, Linux's various virtual file systems (e.g. `/proc`, `/sys`) can contain directories that spontaneously pop in and out of existence. Attempting to iterate over them using `rustix::fs::Dir` directly or indirectly (e.g. with the `procfs` crate) can trigger this fault condition if the implementation decides to continue on errors. An attacker knowledgeable about the implementation details of a vulnerable target can therefore try to trigger this fault condition via any one or a combination of several available APIs. If successful, the application host will quickly run out of memory, after which the application will likely be terminated by an OOM killer, leading to denial of service. This issue has been addressed in release versions 0.35.15, 0.36.16, 0.37.25, and 0.38.19. Users are advised to upgrade. There are no known workarounds for this issue.\n    ",
+		"advisory": {
+			"from": "security@suse.de",
+			"severity": "Moderate",
+			"cve": [
+				{
+					"text": "CVE-2024-43806 at SUSE",
+					"href": "https://www.suse.com/security/cve/CVE-2024-43806/",
+					"impact": "medium",
+					"cvss3": "6.5/CVSS:3.1/AV:N/AC:L/PR:L/UI:N/S:U/C:N/I:N/A:H"
+				},
+				{
+					"text": "CVE-2024-43806 at NVD",
+					"href": "https://nvd.nist.gov/vuln/detail/CVE-2024-43806"
+				}
+			],
+			"bugzilla": [
+				{
+					"text": "SUSE bug 1229376",
+					"href": "https://bugzilla.suse.com/1229376"
+				}
+			],
+			"issued": {
+				"date": "2024-12-23"
+			},
+			"updated": {
+				"date": "2024-12-23"
+			},
+			"affected_cpe_list": {
+				"cpe": [
+					"cpe:/o:suse:sl-micro:6.1"
+				]
+			}
+		}
+	},
+	"criteria": {
+		"operator": "AND",
+		"criterias": [
+			{
+				"operator": "OR",
+				"criterions": [
+					{
+						"test_ref": "oval:org.opensuse.security:tst:2009714476",
+						"comment": "afterburn is affected"
+					},
+					{
+						"test_ref": "oval:org.opensuse.security:tst:2009714477",
+						"comment": "afterburn-dracut is affected"
+					},
+					{
+						"test_ref": "oval:org.opensuse.security:tst:2009336405",
+						"comment": "gdk-pixbuf-loader-rsvg is affected"
+					},
+					{
+						"test_ref": "oval:org.opensuse.security:tst:2009336406",
+						"comment": "librsvg-2-2 is affected"
+					},
+					{
+						"test_ref": "oval:org.opensuse.security:tst:2009753845",
+						"comment": "rust-keylime is affected"
+					}
+				]
+			}
+		],
+		"criterions": [
+			{
+				"test_ref": "oval:org.opensuse.security:tst:2009954035",
+				"comment": "SUSE Linux Micro 6.1 is installed"
+			}
+		]
+	}
+}

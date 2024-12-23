@@ -1,0 +1,100 @@
+{
+	"id": "oval:org.opensuse.security:def:202436908",
+	"version": "1",
+	"class": "vulnerability",
+	"metadata": {
+		"title": "CVE-2024-36908",
+		"affected": {
+			"family": "unix",
+			"platform": [
+				"SUSE Linux Micro 6.1"
+			]
+		},
+		"reference": [
+			{
+				"ref_id": "Mitre CVE-2024-36908",
+				"ref_url": "https://cve.mitre.org/cgi-bin/cvename.cgi?name=CVE-2024-36908",
+				"source": "CVE"
+			},
+			{
+				"ref_id": "SUSE CVE-2024-36908",
+				"ref_url": "https://www.suse.com/security/cve/CVE-2024-36908",
+				"source": "SUSE CVE"
+			}
+		],
+		"description": "\n    In the Linux kernel, the following vulnerability has been resolved:\n\nblk-iocost: do not WARN if iocg was already offlined\n\nIn iocg_pay_debt(), warn is triggered if 'active_list' is empty, which\nis intended to confirm iocg is active when it has debt. However, warn\ncan be triggered during a blkcg or disk removal, if iocg_waitq_timer_fn()\nis run at that time:\n\n  WARNING: CPU: 0 PID: 2344971 at block/blk-iocost.c:1402 iocg_pay_debt+0x14c/0x190\n  Call trace:\n  iocg_pay_debt+0x14c/0x190\n  iocg_kick_waitq+0x438/0x4c0\n  iocg_waitq_timer_fn+0xd8/0x130\n  __run_hrtimer+0x144/0x45c\n  __hrtimer_run_queues+0x16c/0x244\n  hrtimer_interrupt+0x2cc/0x7b0\n\nThe warn in this situation is meaningless. Since this iocg is being\nremoved, the state of the 'active_list' is irrelevant, and 'waitq_timer'\nis canceled after removing 'active_list' in ioc_pd_free(), which ensures\niocg is freed after iocg_waitq_timer_fn() returns.\n\nTherefore, add the check if iocg was already offlined to avoid warn\nwhen removing a blkcg or disk.\n    ",
+		"advisory": {
+			"from": "security@suse.de",
+			"severity": "Moderate",
+			"cve": [
+				{
+					"text": "CVE-2024-36908 at SUSE",
+					"href": "https://www.suse.com/security/cve/CVE-2024-36908/",
+					"impact": "medium",
+					"cvss3": "5.5/CVSS:3.1/AV:L/AC:L/PR:L/UI:N/S:U/C:N/I:N/A:H"
+				},
+				{
+					"text": "CVE-2024-36908 at NVD",
+					"href": "https://nvd.nist.gov/vuln/detail/CVE-2024-36908"
+				}
+			],
+			"bugzilla": [
+				{
+					"text": "SUSE bug 1225743",
+					"href": "https://bugzilla.suse.com/1225743"
+				}
+			],
+			"issued": {
+				"date": "2024-12-23"
+			},
+			"updated": {
+				"date": "2024-12-23"
+			},
+			"affected_cpe_list": {
+				"cpe": [
+					"cpe:/o:suse:sl-micro:6.1"
+				]
+			}
+		}
+	},
+	"criteria": {
+		"operator": "AND",
+		"criterias": [
+			{
+				"operator": "OR",
+				"criterions": [
+					{
+						"test_ref": "oval:org.opensuse.security:tst:2009338032",
+						"comment": "kernel-default is affected"
+					},
+					{
+						"test_ref": "oval:org.opensuse.security:tst:2009335275",
+						"comment": "kernel-devel is affected"
+					},
+					{
+						"test_ref": "oval:org.opensuse.security:tst:2009335276",
+						"comment": "kernel-macros is affected"
+					},
+					{
+						"test_ref": "oval:org.opensuse.security:tst:2009333995",
+						"comment": "kernel-source is affected"
+					},
+					{
+						"test_ref": "oval:org.opensuse.security:tst:2009728713",
+						"comment": "kernel-devel-rt is affected"
+					},
+					{
+						"test_ref": "oval:org.opensuse.security:tst:2009728714",
+						"comment": "kernel-source-rt is affected"
+					}
+				]
+			}
+		],
+		"criterions": [
+			{
+				"test_ref": "oval:org.opensuse.security:tst:2009954035",
+				"comment": "SUSE Linux Micro 6.1 is installed"
+			}
+		]
+	}
+}

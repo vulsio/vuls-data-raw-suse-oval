@@ -7,22 +7,14 @@
 		"affected": {
 			"family": "unix",
 			"platform": [
-				"SUSE Linux Enterprise Desktop 15 SP5",
-				"SUSE Linux Enterprise High Performance Computing 15 SP5",
 				"SUSE Linux Enterprise Live Patching 15 SP2",
 				"SUSE Linux Enterprise Live Patching 15 SP3",
 				"SUSE Linux Enterprise Live Patching 15 SP4",
 				"SUSE Linux Enterprise Live Patching 15 SP5",
 				"SUSE Linux Enterprise Live Patching 15 SP6",
-				"SUSE Linux Enterprise Module for Basesystem 15 SP5",
-				"SUSE Linux Enterprise Module for Development Tools 15 SP5",
-				"SUSE Linux Enterprise Module for Public Cloud 15 SP5",
-				"SUSE Linux Enterprise Server 15 SP1-LTSS",
 				"SUSE Linux Enterprise Server 15 SP2-LTSS",
-				"SUSE Linux Enterprise Server 15 SP5",
 				"SUSE Linux Enterprise Server 15-LTSS",
-				"SUSE Linux Enterprise Server for SAP Applications 15 SP2",
-				"SUSE Linux Enterprise Server for SAP Applications 15 SP5"
+				"SUSE Linux Enterprise Server for SAP Applications 15 SP2"
 			]
 		},
 		"reference": [
@@ -35,6 +27,16 @@
 				"ref_id": "SUSE CVE-2024-53142",
 				"ref_url": "https://www.suse.com/security/cve/CVE-2024-53142",
 				"source": "SUSE CVE"
+			},
+			{
+				"ref_id": "SUSE-SU-2024:4367-1",
+				"ref_url": "https://lists.suse.com/pipermail/sle-security-updates/2024-December/020025.html",
+				"source": "SUSE-SU"
+			},
+			{
+				"ref_id": "SUSE-SU-2024:4388-1",
+				"ref_url": "https://lists.suse.com/pipermail/sle-security-updates/2024-December/020034.html",
+				"source": "SUSE-SU"
 			}
 		],
 		"description": "\n    In the Linux kernel, the following vulnerability has been resolved:\n\ninitramfs: avoid filename buffer overrun\n\nThe initramfs filename field is defined in\nDocumentation/driver-api/early-userspace/buffer-format.rst as:\n\n 37 cpio_file := ALGN(4) + cpio_header + filename + \"\\0\" + ALGN(4) + data\n...\n 55 ============= ================== =========================\n 56 Field name    Field size         Meaning\n 57 ============= ================== =========================\n...\n 70 c_namesize    8 bytes            Length of filename, including final \\0\n\nWhen extracting an initramfs cpio archive, the kernel's do_name() path\nhandler assumes a zero-terminated path at @collected, passing it\ndirectly to filp_open() / init_mkdir() / init_mknod().\n\nIf a specially crafted cpio entry carries a non-zero-terminated filename\nand is followed by uninitialized memory, then a file may be created with\ntrailing characters that represent the uninitialized memory. The ability\nto create an initramfs entry would imply already having full control of\nthe system, so the buffer overrun shouldn't be considered a security\nvulnerability.\n\nAppend the output of the following bash script to an existing initramfs\nand observe any created /initramfs_test_fname_overrunAA* path. E.g.\n  ./reproducer.sh | gzip >> /myinitramfs\n\nIt's easiest to observe non-zero uninitialized memory when the output is\ngzipped, as it'll overflow the heap allocated @out_buf in __gunzip(),\nrather than the initrd_start+initrd_size block.\n\n---- reproducer.sh ----\nnilchar=\"A\"\t# change to \"\\0\" to properly zero terminate / pad\nmagic=\"070701\"\nino=1\nmode=$(( 0100777 ))\nuid=0\ngid=0\nnlink=1\nmtime=1\nfilesize=0\ndevmajor=0\ndevminor=1\nrdevmajor=0\nrdevminor=0\ncsum=0\nfname=\"initramfs_test_fname_overrun\"\nnamelen=$(( ${#fname} + 1 ))\t# plus one to account for terminator\n\nprintf \"%s%08x%08x%08x%08x%08x%08x%08x%08x%08x%08x%08x%08x%08x%s\" \\\n\t$magic $ino $mode $uid $gid $nlink $mtime $filesize \\\n\t$devmajor $devminor $rdevmajor $rdevminor $namelen $csum $fname\n\ntermpadlen=$(( 1 + ((4 - ((110 + $namelen) & 3)) % 4) ))\nprintf \"%.s${nilchar}\" $(seq 1 $termpadlen)\n---- reproducer.sh ----\n\nSymlink filename fields handled in do_symlink() won't overrun past the\ndata segment, due to the explicit zero-termination of the symlink\ntarget.\n\nFix filename buffer overrun by aborting the initramfs FSM if any cpio\nentry doesn't carry a zero-terminator at the expected (name_len - 1)\noffset.\n    ",
@@ -65,26 +67,18 @@
 				"date": "2024-12-07"
 			},
 			"updated": {
-				"date": "2024-12-14"
+				"date": "2024-12-23"
 			},
 			"affected_cpe_list": {
 				"cpe": [
-					"cpe:/o:suse:sle-module-basesystem:15:sp5",
-					"cpe:/o:suse:sle-module-development-tools:15:sp5",
 					"cpe:/o:suse:sle-module-live-patching:15:sp2",
 					"cpe:/o:suse:sle-module-live-patching:15:sp3",
 					"cpe:/o:suse:sle-module-live-patching:15:sp4",
 					"cpe:/o:suse:sle-module-live-patching:15:sp5",
 					"cpe:/o:suse:sle-module-live-patching:15:sp6",
-					"cpe:/o:suse:sle-module-public-cloud:15:sp5",
-					"cpe:/o:suse:sle_hpc:15:sp5",
-					"cpe:/o:suse:sled:15:sp5",
 					"cpe:/o:suse:sles-ltss:15",
-					"cpe:/o:suse:sles-ltss:15:sp1",
 					"cpe:/o:suse:sles-ltss:15:sp2",
-					"cpe:/o:suse:sles:15:sp5",
-					"cpe:/o:suse:sles_sap:15:sp2",
-					"cpe:/o:suse:sles_sap:15:sp5"
+					"cpe:/o:suse:sles_sap:15:sp2"
 				]
 			}
 		}
@@ -95,62 +89,6 @@
 			{
 				"operator": "AND",
 				"criterias": [
-					{
-						"operator": "OR",
-						"criterions": [
-							{
-								"test_ref": "oval:org.opensuse.security:tst:2009759898",
-								"comment": "SUSE Linux Enterprise Desktop 15 SP5 is installed"
-							},
-							{
-								"test_ref": "oval:org.opensuse.security:tst:2009759899",
-								"comment": "SUSE Linux Enterprise High Performance Computing 15 SP5 is installed"
-							},
-							{
-								"test_ref": "oval:org.opensuse.security:tst:2009760583",
-								"comment": "SUSE Linux Enterprise Module for Development Tools 15 SP5 is installed"
-							},
-							{
-								"test_ref": "oval:org.opensuse.security:tst:2009759901",
-								"comment": "SUSE Linux Enterprise Server 15 SP5 is installed"
-							},
-							{
-								"test_ref": "oval:org.opensuse.security:tst:2009759902",
-								"comment": "SUSE Linux Enterprise Server for SAP Applications 15 SP5 is installed"
-							}
-						]
-					},
-					{
-						"operator": "OR",
-						"criterions": [
-							{
-								"test_ref": "oval:org.opensuse.security:tst:2009338032",
-								"comment": "kernel-default is affected"
-							},
-							{
-								"test_ref": "oval:org.opensuse.security:tst:2009333995",
-								"comment": "kernel-source is affected"
-							}
-						]
-					}
-				]
-			},
-			{
-				"operator": "AND",
-				"criterias": [
-					{
-						"operator": "OR",
-						"criterions": [
-							{
-								"test_ref": "oval:org.opensuse.security:tst:2009341508",
-								"comment": "SUSE Linux Enterprise Server 15 SP1-LTSS is installed"
-							},
-							{
-								"test_ref": "oval:org.opensuse.security:tst:2009302033",
-								"comment": "SUSE Linux Enterprise Server 15-LTSS is installed"
-							}
-						]
-					},
 					{
 						"operator": "OR",
 						"criterions": [
@@ -188,142 +126,11 @@
 							}
 						]
 					}
-				]
-			},
-			{
-				"operator": "AND",
-				"criterias": [
+				],
+				"criterions": [
 					{
-						"operator": "OR",
-						"criterions": [
-							{
-								"test_ref": "oval:org.opensuse.security:tst:2009759898",
-								"comment": "SUSE Linux Enterprise Desktop 15 SP5 is installed"
-							},
-							{
-								"test_ref": "oval:org.opensuse.security:tst:2009759899",
-								"comment": "SUSE Linux Enterprise High Performance Computing 15 SP5 is installed"
-							},
-							{
-								"test_ref": "oval:org.opensuse.security:tst:2009759900",
-								"comment": "SUSE Linux Enterprise Module for Basesystem 15 SP5 is installed"
-							},
-							{
-								"test_ref": "oval:org.opensuse.security:tst:2009759901",
-								"comment": "SUSE Linux Enterprise Server 15 SP5 is installed"
-							},
-							{
-								"test_ref": "oval:org.opensuse.security:tst:2009759902",
-								"comment": "SUSE Linux Enterprise Server for SAP Applications 15 SP5 is installed"
-							}
-						]
-					},
-					{
-						"operator": "OR",
-						"criterions": [
-							{
-								"test_ref": "oval:org.opensuse.security:tst:2009338032",
-								"comment": "kernel-default is affected"
-							},
-							{
-								"test_ref": "oval:org.opensuse.security:tst:2009338034",
-								"comment": "kernel-default-devel is affected"
-							},
-							{
-								"test_ref": "oval:org.opensuse.security:tst:2009335275",
-								"comment": "kernel-devel is affected"
-							},
-							{
-								"test_ref": "oval:org.opensuse.security:tst:2009335276",
-								"comment": "kernel-macros is affected"
-							}
-						]
-					}
-				]
-			},
-			{
-				"operator": "AND",
-				"criterias": [
-					{
-						"operator": "OR",
-						"criterions": [
-							{
-								"test_ref": "oval:org.opensuse.security:tst:2009660213",
-								"comment": "SUSE Linux Enterprise Server 15 SP2-LTSS is installed"
-							},
-							{
-								"test_ref": "oval:org.opensuse.security:tst:2009659637",
-								"comment": "SUSE Linux Enterprise Server for SAP Applications 15 SP2 is installed"
-							}
-						]
-					},
-					{
-						"operator": "OR",
-						"criterions": [
-							{
-								"test_ref": "oval:org.opensuse.security:tst:2009338032",
-								"comment": "kernel-default is affected"
-							},
-							{
-								"test_ref": "oval:org.opensuse.security:tst:2009338034",
-								"comment": "kernel-default-devel is affected"
-							},
-							{
-								"test_ref": "oval:org.opensuse.security:tst:2009338038",
-								"comment": "reiserfs-kmp-default is affected"
-							},
-							{
-								"test_ref": "oval:org.opensuse.security:tst:2009335275",
-								"comment": "kernel-devel is affected"
-							},
-							{
-								"test_ref": "oval:org.opensuse.security:tst:2009335276",
-								"comment": "kernel-macros is affected"
-							},
-							{
-								"test_ref": "oval:org.opensuse.security:tst:2009333995",
-								"comment": "kernel-source is affected"
-							}
-						]
-					}
-				]
-			},
-			{
-				"operator": "AND",
-				"criterias": [
-					{
-						"operator": "OR",
-						"criterions": [
-							{
-								"test_ref": "oval:org.opensuse.security:tst:2009759899",
-								"comment": "SUSE Linux Enterprise High Performance Computing 15 SP5 is installed"
-							},
-							{
-								"test_ref": "oval:org.opensuse.security:tst:2009762868",
-								"comment": "SUSE Linux Enterprise Module for Public Cloud 15 SP5 is installed"
-							},
-							{
-								"test_ref": "oval:org.opensuse.security:tst:2009759901",
-								"comment": "SUSE Linux Enterprise Server 15 SP5 is installed"
-							},
-							{
-								"test_ref": "oval:org.opensuse.security:tst:2009759902",
-								"comment": "SUSE Linux Enterprise Server for SAP Applications 15 SP5 is installed"
-							}
-						]
-					},
-					{
-						"operator": "OR",
-						"criterions": [
-							{
-								"test_ref": "oval:org.opensuse.security:tst:2009340777",
-								"comment": "kernel-devel-azure is affected"
-							},
-							{
-								"test_ref": "oval:org.opensuse.security:tst:2009340767",
-								"comment": "kernel-source-azure is affected"
-							}
-						]
+						"test_ref": "oval:org.opensuse.security:tst:2009302033",
+						"comment": "SUSE Linux Enterprise Server 15-LTSS is installed"
 					}
 				]
 			},
@@ -362,10 +169,6 @@
 						"operator": "OR",
 						"criterions": [
 							{
-								"test_ref": "oval:org.opensuse.security:tst:2009288462",
-								"comment": "SUSE Linux Enterprise Live Patching 15 SP2 is installed"
-							},
-							{
 								"test_ref": "oval:org.opensuse.security:tst:2009478738",
 								"comment": "SUSE Linux Enterprise Live Patching 15 SP3 is installed"
 							},
@@ -395,6 +198,166 @@
 								"comment": "kernel-source is affected"
 							}
 						]
+					}
+				]
+			},
+			{
+				"operator": "AND",
+				"criterias": [
+					{
+						"operator": "OR",
+						"criterions": [
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009958640",
+								"comment": "kernel-default-livepatch-5.3.18-150200.24.212.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009958641",
+								"comment": "kernel-default-livepatch-devel-5.3.18-150200.24.212.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009958642",
+								"comment": "kernel-livepatch-5_3_18-150200_24_212-default-1-150200.5.3.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009333995",
+								"comment": "kernel-source is affected"
+							}
+						]
+					}
+				],
+				"criterions": [
+					{
+						"test_ref": "oval:org.opensuse.security:tst:2009288462",
+						"comment": "SUSE Linux Enterprise Live Patching 15 SP2 is installed"
+					}
+				]
+			},
+			{
+				"operator": "AND",
+				"criterias": [
+					{
+						"operator": "OR",
+						"criterions": [
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009958658",
+								"comment": "kernel-default-5.3.18-150200.24.212.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009958659",
+								"comment": "kernel-default-base-5.3.18-150200.24.212.1.150200.9.111.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009958660",
+								"comment": "kernel-default-devel-5.3.18-150200.24.212.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009958650",
+								"comment": "kernel-devel-5.3.18-150200.24.212.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009958651",
+								"comment": "kernel-docs-5.3.18-150200.24.212.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009958652",
+								"comment": "kernel-macros-5.3.18-150200.24.212.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009958661",
+								"comment": "kernel-obs-build-5.3.18-150200.24.212.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009958654",
+								"comment": "kernel-preempt-5.3.18-150200.24.212.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009958655",
+								"comment": "kernel-preempt-devel-5.3.18-150200.24.212.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009958656",
+								"comment": "kernel-source-5.3.18-150200.24.212.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009958662",
+								"comment": "kernel-syms-5.3.18-150200.24.212.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009958663",
+								"comment": "reiserfs-kmp-default-5.3.18-150200.24.212.1 is installed"
+							}
+						]
+					}
+				],
+				"criterions": [
+					{
+						"test_ref": "oval:org.opensuse.security:tst:2009660213",
+						"comment": "SUSE Linux Enterprise Server 15 SP2-LTSS is installed"
+					}
+				]
+			},
+			{
+				"operator": "AND",
+				"criterias": [
+					{
+						"operator": "OR",
+						"criterions": [
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009958664",
+								"comment": "kernel-default-5.3.18-150200.24.212.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009958665",
+								"comment": "kernel-default-base-5.3.18-150200.24.212.1.150200.9.111.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009958666",
+								"comment": "kernel-default-devel-5.3.18-150200.24.212.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009958650",
+								"comment": "kernel-devel-5.3.18-150200.24.212.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009958651",
+								"comment": "kernel-docs-5.3.18-150200.24.212.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009958652",
+								"comment": "kernel-macros-5.3.18-150200.24.212.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009958667",
+								"comment": "kernel-obs-build-5.3.18-150200.24.212.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009958668",
+								"comment": "kernel-preempt-5.3.18-150200.24.212.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009958669",
+								"comment": "kernel-preempt-devel-5.3.18-150200.24.212.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009958656",
+								"comment": "kernel-source-5.3.18-150200.24.212.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009958670",
+								"comment": "kernel-syms-5.3.18-150200.24.212.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009958671",
+								"comment": "reiserfs-kmp-default-5.3.18-150200.24.212.1 is installed"
+							}
+						]
+					}
+				],
+				"criterions": [
+					{
+						"test_ref": "oval:org.opensuse.security:tst:2009659637",
+						"comment": "SUSE Linux Enterprise Server for SAP Applications 15 SP2 is installed"
 					}
 				]
 			}

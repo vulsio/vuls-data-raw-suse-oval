@@ -18,6 +18,7 @@
 				"SUSE Linux Enterprise Server 12 SP4-LTSS",
 				"SUSE Linux Enterprise Server 12 SP5",
 				"SUSE Linux Enterprise Server 12 SP5-LTSS",
+				"SUSE Linux Enterprise Server LTSS Extended Security 12 SP5",
 				"SUSE Linux Enterprise Server for SAP Applications 12",
 				"SUSE Linux Enterprise Server for SAP Applications 12 SP3",
 				"SUSE Linux Enterprise Server for SAP Applications 12 SP4",
@@ -35,6 +36,16 @@
 				"ref_id": "SUSE CVE-2024-53142",
 				"ref_url": "https://www.suse.com/security/cve/CVE-2024-53142",
 				"source": "SUSE CVE"
+			},
+			{
+				"ref_id": "SUSE-SU-2024:4367-1",
+				"ref_url": "https://lists.suse.com/pipermail/sle-security-updates/2024-December/020025.html",
+				"source": "SUSE-SU"
+			},
+			{
+				"ref_id": "SUSE-SU-2024:4388-1",
+				"ref_url": "https://lists.suse.com/pipermail/sle-security-updates/2024-December/020034.html",
+				"source": "SUSE-SU"
 			}
 		],
 		"description": "\n    In the Linux kernel, the following vulnerability has been resolved:\n\ninitramfs: avoid filename buffer overrun\n\nThe initramfs filename field is defined in\nDocumentation/driver-api/early-userspace/buffer-format.rst as:\n\n 37 cpio_file := ALGN(4) + cpio_header + filename + \"\\0\" + ALGN(4) + data\n...\n 55 ============= ================== =========================\n 56 Field name    Field size         Meaning\n 57 ============= ================== =========================\n...\n 70 c_namesize    8 bytes            Length of filename, including final \\0\n\nWhen extracting an initramfs cpio archive, the kernel's do_name() path\nhandler assumes a zero-terminated path at @collected, passing it\ndirectly to filp_open() / init_mkdir() / init_mknod().\n\nIf a specially crafted cpio entry carries a non-zero-terminated filename\nand is followed by uninitialized memory, then a file may be created with\ntrailing characters that represent the uninitialized memory. The ability\nto create an initramfs entry would imply already having full control of\nthe system, so the buffer overrun shouldn't be considered a security\nvulnerability.\n\nAppend the output of the following bash script to an existing initramfs\nand observe any created /initramfs_test_fname_overrunAA* path. E.g.\n  ./reproducer.sh | gzip >> /myinitramfs\n\nIt's easiest to observe non-zero uninitialized memory when the output is\ngzipped, as it'll overflow the heap allocated @out_buf in __gunzip(),\nrather than the initrd_start+initrd_size block.\n\n---- reproducer.sh ----\nnilchar=\"A\"\t# change to \"\\0\" to properly zero terminate / pad\nmagic=\"070701\"\nino=1\nmode=$(( 0100777 ))\nuid=0\ngid=0\nnlink=1\nmtime=1\nfilesize=0\ndevmajor=0\ndevminor=1\nrdevmajor=0\nrdevminor=0\ncsum=0\nfname=\"initramfs_test_fname_overrun\"\nnamelen=$(( ${#fname} + 1 ))\t# plus one to account for terminator\n\nprintf \"%s%08x%08x%08x%08x%08x%08x%08x%08x%08x%08x%08x%08x%08x%s\" \\\n\t$magic $ino $mode $uid $gid $nlink $mtime $filesize \\\n\t$devmajor $devminor $rdevmajor $rdevminor $namelen $csum $fname\n\ntermpadlen=$(( 1 + ((4 - ((110 + $namelen) & 3)) % 4) ))\nprintf \"%.s${nilchar}\" $(seq 1 $termpadlen)\n---- reproducer.sh ----\n\nSymlink filename fields handled in do_symlink() won't overrun past the\ndata segment, due to the explicit zero-termination of the symlink\ntarget.\n\nFix filename buffer overrun by aborting the initramfs FSM if any cpio\nentry doesn't carry a zero-terminator at the expected (name_len - 1)\noffset.\n    ",
@@ -65,7 +76,7 @@
 				"date": "2024-12-07"
 			},
 			"updated": {
-				"date": "2024-12-11"
+				"date": "2024-12-23"
 			},
 			"affected_cpe_list": {
 				"cpe": [
@@ -190,19 +201,6 @@
 						"operator": "OR",
 						"criterions": [
 							{
-								"test_ref": "oval:org.opensuse.security:tst:2009258033",
-								"comment": "SUSE Linux Enterprise Server 12 SP5 is installed"
-							},
-							{
-								"test_ref": "oval:org.opensuse.security:tst:2009258033",
-								"comment": "SUSE Linux Enterprise Server 12 SP5-LTSS is installed"
-							}
-						]
-					},
-					{
-						"operator": "OR",
-						"criterions": [
-							{
 								"test_ref": "oval:org.opensuse.security:tst:2009338032",
 								"comment": "kernel-default is affected"
 							},
@@ -239,6 +237,12 @@
 								"comment": "kernel-source-azure is affected"
 							}
 						]
+					}
+				],
+				"criterions": [
+					{
+						"test_ref": "oval:org.opensuse.security:tst:2009258033",
+						"comment": "SUSE Linux Enterprise Server 12 SP5 is installed"
 					}
 				]
 			},
@@ -300,34 +304,6 @@
 						"operator": "OR",
 						"criterions": [
 							{
-								"test_ref": "oval:org.opensuse.security:tst:2009338035",
-								"comment": "kernel-default-kgraft is affected"
-							},
-							{
-								"test_ref": "oval:org.opensuse.security:tst:2009809200",
-								"comment": "kernel-default-kgraft-devel is affected"
-							},
-							{
-								"test_ref": "oval:org.opensuse.security:tst:2009333995",
-								"comment": "kernel-source is affected"
-							}
-						]
-					}
-				],
-				"criterions": [
-					{
-						"test_ref": "oval:org.opensuse.security:tst:2009273148",
-						"comment": "SUSE Linux Enterprise Live Patching 12 SP5 is installed"
-					}
-				]
-			},
-			{
-				"operator": "AND",
-				"criterias": [
-					{
-						"operator": "OR",
-						"criterions": [
-							{
 								"test_ref": "oval:org.opensuse.security:tst:2009258033",
 								"comment": "SUSE Linux Enterprise Server 12 SP5 is installed"
 							},
@@ -377,6 +353,138 @@
 					{
 						"test_ref": "oval:org.opensuse.security:tst:2009279486",
 						"comment": "SUSE Linux Enterprise Real Time 12 SP5 is installed"
+					}
+				]
+			},
+			{
+				"operator": "AND",
+				"criterias": [
+					{
+						"operator": "OR",
+						"criterions": [
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009958472",
+								"comment": "kernel-default-kgraft-4.12.14-122.237.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009958473",
+								"comment": "kernel-default-kgraft-devel-4.12.14-122.237.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009958474",
+								"comment": "kgraft-patch-4_12_14-122_237-default-1-8.3.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009333995",
+								"comment": "kernel-source is affected"
+							}
+						]
+					}
+				],
+				"criterions": [
+					{
+						"test_ref": "oval:org.opensuse.security:tst:2009273148",
+						"comment": "SUSE Linux Enterprise Live Patching 12 SP5 is installed"
+					}
+				]
+			},
+			{
+				"operator": "AND",
+				"criterias": [
+					{
+						"operator": "OR",
+						"criterions": [
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009958475",
+								"comment": "kernel-default-4.12.14-122.237.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009958476",
+								"comment": "kernel-default-base-4.12.14-122.237.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009958477",
+								"comment": "kernel-default-devel-4.12.14-122.237.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009958478",
+								"comment": "kernel-default-man-4.12.14-122.237.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009958479",
+								"comment": "kernel-devel-4.12.14-122.237.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009958480",
+								"comment": "kernel-macros-4.12.14-122.237.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009958481",
+								"comment": "kernel-source-4.12.14-122.237.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009958482",
+								"comment": "kernel-syms-4.12.14-122.237.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009340777",
+								"comment": "kernel-devel-azure is affected"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009340767",
+								"comment": "kernel-source-azure is affected"
+							}
+						]
+					}
+				],
+				"criterions": [
+					{
+						"test_ref": "oval:org.opensuse.security:tst:2009258033",
+						"comment": "SUSE Linux Enterprise Server 12 SP5-LTSS is installed"
+					}
+				]
+			},
+			{
+				"operator": "AND",
+				"criterias": [
+					{
+						"operator": "OR",
+						"criterions": [
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009958483",
+								"comment": "kernel-default-4.12.14-122.237.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009958484",
+								"comment": "kernel-default-base-4.12.14-122.237.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009958485",
+								"comment": "kernel-default-devel-4.12.14-122.237.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009958479",
+								"comment": "kernel-devel-4.12.14-122.237.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009958480",
+								"comment": "kernel-macros-4.12.14-122.237.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009958481",
+								"comment": "kernel-source-4.12.14-122.237.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009958486",
+								"comment": "kernel-syms-4.12.14-122.237.1 is installed"
+							}
+						]
+					}
+				],
+				"criterions": [
+					{
+						"test_ref": "oval:org.opensuse.security:tst:2009952096",
+						"comment": "SUSE Linux Enterprise Server LTSS Extended Security 12 SP5 is installed"
 					}
 				]
 			}

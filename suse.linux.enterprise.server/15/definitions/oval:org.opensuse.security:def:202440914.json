@@ -18,8 +18,10 @@
 				"SUSE Linux Enterprise Live Patching 15 SP6",
 				"SUSE Linux Enterprise Module for Basesystem 15 SP5",
 				"SUSE Linux Enterprise Module for Basesystem 15 SP6",
+				"SUSE Linux Enterprise Module for Confidential Computing Technical Preview 15 SP6",
 				"SUSE Linux Enterprise Module for Development Tools 15 SP5",
 				"SUSE Linux Enterprise Module for Development Tools 15 SP6",
+				"SUSE Linux Enterprise Module for Legacy 15 SP5",
 				"SUSE Linux Enterprise Module for Legacy 15 SP6",
 				"SUSE Linux Enterprise Module for Public Cloud 15 SP5",
 				"SUSE Linux Enterprise Module for Public Cloud 15 SP6",
@@ -63,6 +65,11 @@
 				"ref_id": "SUSE-SU-2024:4318-1",
 				"ref_url": "https://lists.suse.com/pipermail/sle-security-updates/2024-December/019999.html",
 				"source": "SUSE-SU"
+			},
+			{
+				"ref_id": "SUSE-SU-2024:4387-1",
+				"ref_url": "https://lists.suse.com/pipermail/sle-security-updates/2024-December/020032.html",
+				"source": "SUSE-SU"
 			}
 		],
 		"description": "\n    In the Linux kernel, the following vulnerability has been resolved:\n\nmm/huge_memory: don't unpoison huge_zero_folio\n\nWhen I did memory failure tests recently, below panic occurs:\n\n kernel BUG at include/linux/mm.h:1135!\n invalid opcode: 0000 [#1] PREEMPT SMP NOPTI\n CPU: 9 PID: 137 Comm: kswapd1 Not tainted 6.9.0-rc4-00491-gd5ce28f156fe-dirty #14\n RIP: 0010:shrink_huge_zero_page_scan+0x168/0x1a0\n RSP: 0018:ffff9933c6c57bd0 EFLAGS: 00000246\n RAX: 000000000000003e RBX: 0000000000000000 RCX: ffff88f61fc5c9c8\n RDX: 0000000000000000 RSI: 0000000000000027 RDI: ffff88f61fc5c9c0\n RBP: ffffcd7c446b0000 R08: ffffffff9a9405f0 R09: 0000000000005492\n R10: 00000000000030ea R11: ffffffff9a9405f0 R12: 0000000000000000\n R13: 0000000000000000 R14: 0000000000000000 R15: ffff88e703c4ac00\n FS:  0000000000000000(0000) GS:ffff88f61fc40000(0000) knlGS:0000000000000000\n CS:  0010 DS: 0000 ES: 0000 CR0: 0000000080050033\n CR2: 000055f4da6e9878 CR3: 0000000c71048000 CR4: 00000000000006f0\n Call Trace:\n  <TASK>\n  do_shrink_slab+0x14f/0x6a0\n  shrink_slab+0xca/0x8c0\n  shrink_node+0x2d0/0x7d0\n  balance_pgdat+0x33a/0x720\n  kswapd+0x1f3/0x410\n  kthread+0xd5/0x100\n  ret_from_fork+0x2f/0x50\n  ret_from_fork_asm+0x1a/0x30\n  </TASK>\n Modules linked in: mce_inject hwpoison_inject\n ---[ end trace 0000000000000000 ]---\n RIP: 0010:shrink_huge_zero_page_scan+0x168/0x1a0\n RSP: 0018:ffff9933c6c57bd0 EFLAGS: 00000246\n RAX: 000000000000003e RBX: 0000000000000000 RCX: ffff88f61fc5c9c8\n RDX: 0000000000000000 RSI: 0000000000000027 RDI: ffff88f61fc5c9c0\n RBP: ffffcd7c446b0000 R08: ffffffff9a9405f0 R09: 0000000000005492\n R10: 00000000000030ea R11: ffffffff9a9405f0 R12: 0000000000000000\n R13: 0000000000000000 R14: 0000000000000000 R15: ffff88e703c4ac00\n FS:  0000000000000000(0000) GS:ffff88f61fc40000(0000) knlGS:0000000000000000\n CS:  0010 DS: 0000 ES: 0000 CR0: 0000000080050033\n CR2: 000055f4da6e9878 CR3: 0000000c71048000 CR4: 00000000000006f0\n\nThe root cause is that HWPoison flag will be set for huge_zero_folio\nwithout increasing the folio refcnt.  But then unpoison_memory() will\ndecrease the folio refcnt unexpectedly as it appears like a successfully\nhwpoisoned folio leading to VM_BUG_ON_PAGE(page_ref_count(page) == 0) when\nreleasing huge_zero_folio.\n\nSkip unpoisoning huge_zero_folio in unpoison_memory() to fix this issue. \nWe're not prepared to unpoison huge_zero_folio yet.\n    ",
@@ -91,7 +98,7 @@
 				"date": "2024-07-16"
 			},
 			"updated": {
-				"date": "2024-12-14"
+				"date": "2024-12-23"
 			},
 			"affected_cpe_list": {
 				"cpe": [
@@ -99,6 +106,7 @@
 					"cpe:/o:suse:sle-module-basesystem:15:sp6",
 					"cpe:/o:suse:sle-module-development-tools:15:sp5",
 					"cpe:/o:suse:sle-module-development-tools:15:sp6",
+					"cpe:/o:suse:sle-module-legacy:15:sp5",
 					"cpe:/o:suse:sle-module-legacy:15:sp6",
 					"cpe:/o:suse:sle-module-live-patching:15:sp2",
 					"cpe:/o:suse:sle-module-live-patching:15:sp3",
@@ -414,6 +422,45 @@
 								"comment": "SUSE Linux Enterprise High Performance Computing 15 SP5 is installed"
 							},
 							{
+								"test_ref": "oval:org.opensuse.security:tst:2009760608",
+								"comment": "SUSE Linux Enterprise Module for Legacy 15 SP5 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009759901",
+								"comment": "SUSE Linux Enterprise Server 15 SP5 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009759902",
+								"comment": "SUSE Linux Enterprise Server for SAP Applications 15 SP5 is installed"
+							}
+						]
+					},
+					{
+						"operator": "OR",
+						"criterions": [
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009338037",
+								"comment": "reiserfs-kmp-default is not affected"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009333928",
+								"comment": "kernel-source is not affected"
+							}
+						]
+					}
+				]
+			},
+			{
+				"operator": "AND",
+				"criterias": [
+					{
+						"operator": "OR",
+						"criterions": [
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009759899",
+								"comment": "SUSE Linux Enterprise High Performance Computing 15 SP5 is installed"
+							},
+							{
 								"test_ref": "oval:org.opensuse.security:tst:2009762868",
 								"comment": "SUSE Linux Enterprise Module for Public Cloud 15 SP5 is installed"
 							},
@@ -687,6 +734,54 @@
 					{
 						"test_ref": "oval:org.opensuse.security:tst:2009857543",
 						"comment": "SUSE Linux Enterprise Live Patching 15 SP6 is installed"
+					}
+				]
+			},
+			{
+				"operator": "AND",
+				"criterias": [
+					{
+						"operator": "OR",
+						"criterions": [
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009958626",
+								"comment": "kernel-coco-6.4.0-15061.9.coco15sp6.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009958627",
+								"comment": "kernel-coco-devel-6.4.0-15061.9.coco15sp6.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009958628",
+								"comment": "kernel-coco_debug-6.4.0-15061.9.coco15sp6.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009958629",
+								"comment": "kernel-coco_debug-devel-6.4.0-15061.9.coco15sp6.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009958630",
+								"comment": "kernel-devel-coco-6.4.0-15061.9.coco15sp6.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009958631",
+								"comment": "kernel-source-coco-6.4.0-15061.9.coco15sp6.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009958632",
+								"comment": "kernel-syms-coco-6.4.0-15061.9.coco15sp6.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009958633",
+								"comment": "reiserfs-kmp-coco-6.4.0-15061.9.coco15sp6.1 is installed"
+							}
+						]
+					}
+				],
+				"criterions": [
+					{
+						"test_ref": "oval:org.opensuse.security:tst:2009945160",
+						"comment": "SUSE Linux Enterprise Module for Confidential Computing Technical Preview 15 SP6 is installed"
 					}
 				]
 			}

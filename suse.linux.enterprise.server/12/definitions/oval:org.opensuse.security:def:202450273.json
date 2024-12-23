@@ -11,6 +11,7 @@
 				"SUSE Linux Enterprise Server 12 SP2-LTSS",
 				"SUSE Linux Enterprise Server 12 SP4-LTSS",
 				"SUSE Linux Enterprise Server 12 SP5-LTSS",
+				"SUSE Linux Enterprise Server LTSS Extended Security 12 SP5",
 				"SUSE Linux Enterprise Server for SAP Applications 12 SP5"
 			]
 		},
@@ -44,6 +45,26 @@
 				"ref_id": "SUSE-SU-2024:4318-1",
 				"ref_url": "https://lists.suse.com/pipermail/sle-security-updates/2024-December/019999.html",
 				"source": "SUSE-SU"
+			},
+			{
+				"ref_id": "SUSE-SU-2024:4364-1",
+				"ref_url": "https://lists.suse.com/pipermail/sle-security-updates/2024-December/020019.html",
+				"source": "SUSE-SU"
+			},
+			{
+				"ref_id": "SUSE-SU-2024:4367-1",
+				"ref_url": "https://lists.suse.com/pipermail/sle-security-updates/2024-December/020025.html",
+				"source": "SUSE-SU"
+			},
+			{
+				"ref_id": "SUSE-SU-2024:4376-1",
+				"ref_url": "https://lists.suse.com/pipermail/sle-security-updates/2024-December/020028.html",
+				"source": "SUSE-SU"
+			},
+			{
+				"ref_id": "SUSE-SU-2024:4387-1",
+				"ref_url": "https://lists.suse.com/pipermail/sle-security-updates/2024-December/020032.html",
+				"source": "SUSE-SU"
 			}
 		],
 		"description": "\n    In the Linux kernel, the following vulnerability has been resolved:\n\nbtrfs: reinitialize delayed ref list after deleting it from the list\n\nAt insert_delayed_ref() if we need to update the action of an existing\nref to BTRFS_DROP_DELAYED_REF, we delete the ref from its ref head's\nref_add_list using list_del(), which leaves the ref's add_list member\nnot reinitialized, as list_del() sets the next and prev members of the\nlist to LIST_POISON1 and LIST_POISON2, respectively.\n\nIf later we end up calling drop_delayed_ref() against the ref, which can\nhappen during merging or when destroying delayed refs due to a transaction\nabort, we can trigger a crash since at drop_delayed_ref() we call\nlist_empty() against the ref's add_list, which returns false since\nthe list was not reinitialized after the list_del() and as a consequence\nwe call list_del() again at drop_delayed_ref(). This results in an\ninvalid list access since the next and prev members are set to poison\npointers, resulting in a splat if CONFIG_LIST_HARDENED and\nCONFIG_DEBUG_LIST are set or invalid poison pointer dereferences\notherwise.\n\nSo fix this by deleting from the list with list_del_init() instead.\n    ",
@@ -74,7 +95,7 @@
 				"date": "2024-11-21"
 			},
 			"updated": {
-				"date": "2024-12-14"
+				"date": "2024-12-23"
 			},
 			"affected_cpe_list": {
 				"cpe": [
@@ -191,6 +212,86 @@
 							{
 								"test_ref": "oval:org.opensuse.security:tst:2009333995",
 								"comment": "kernel-source is affected"
+							}
+						]
+					}
+				],
+				"criterions": [
+					{
+						"test_ref": "oval:org.opensuse.security:tst:2009240280",
+						"comment": "SUSE Linux Enterprise Server 12 SP4-LTSS is installed"
+					}
+				]
+			},
+			{
+				"operator": "AND",
+				"criterias": [
+					{
+						"operator": "OR",
+						"criterions": [
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009958472",
+								"comment": "kernel-default-kgraft-4.12.14-122.237.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009958473",
+								"comment": "kernel-default-kgraft-devel-4.12.14-122.237.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009958474",
+								"comment": "kgraft-patch-4_12_14-122_237-default-1-8.3.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009333995",
+								"comment": "kernel-source is affected"
+							}
+						]
+					}
+				],
+				"criterions": [
+					{
+						"test_ref": "oval:org.opensuse.security:tst:2009273148",
+						"comment": "SUSE Linux Enterprise Live Patching 12 SP5 is installed"
+					}
+				]
+			},
+			{
+				"operator": "AND",
+				"criterias": [
+					{
+						"operator": "OR",
+						"criterions": [
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009958475",
+								"comment": "kernel-default-4.12.14-122.237.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009958476",
+								"comment": "kernel-default-base-4.12.14-122.237.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009958477",
+								"comment": "kernel-default-devel-4.12.14-122.237.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009958478",
+								"comment": "kernel-default-man-4.12.14-122.237.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009958479",
+								"comment": "kernel-devel-4.12.14-122.237.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009958480",
+								"comment": "kernel-macros-4.12.14-122.237.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009958481",
+								"comment": "kernel-source-4.12.14-122.237.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009958482",
+								"comment": "kernel-syms-4.12.14-122.237.1 is installed"
 							},
 							{
 								"test_ref": "oval:org.opensuse.security:tst:2009340777",
@@ -217,68 +318,40 @@
 						"operator": "OR",
 						"criterions": [
 							{
-								"test_ref": "oval:org.opensuse.security:tst:2009338032",
-								"comment": "kernel-default is affected"
+								"test_ref": "oval:org.opensuse.security:tst:2009958483",
+								"comment": "kernel-default-4.12.14-122.237.1 is installed"
 							},
 							{
-								"test_ref": "oval:org.opensuse.security:tst:2009338033",
-								"comment": "kernel-default-base is affected"
+								"test_ref": "oval:org.opensuse.security:tst:2009958484",
+								"comment": "kernel-default-base-4.12.14-122.237.1 is installed"
 							},
 							{
-								"test_ref": "oval:org.opensuse.security:tst:2009338034",
-								"comment": "kernel-default-devel is affected"
+								"test_ref": "oval:org.opensuse.security:tst:2009958485",
+								"comment": "kernel-default-devel-4.12.14-122.237.1 is installed"
 							},
 							{
-								"test_ref": "oval:org.opensuse.security:tst:2009338036",
-								"comment": "kernel-default-man is affected"
+								"test_ref": "oval:org.opensuse.security:tst:2009958479",
+								"comment": "kernel-devel-4.12.14-122.237.1 is installed"
 							},
 							{
-								"test_ref": "oval:org.opensuse.security:tst:2009335275",
-								"comment": "kernel-devel is affected"
+								"test_ref": "oval:org.opensuse.security:tst:2009958480",
+								"comment": "kernel-macros-4.12.14-122.237.1 is installed"
 							},
 							{
-								"test_ref": "oval:org.opensuse.security:tst:2009335276",
-								"comment": "kernel-macros is affected"
+								"test_ref": "oval:org.opensuse.security:tst:2009958481",
+								"comment": "kernel-source-4.12.14-122.237.1 is installed"
 							},
 							{
-								"test_ref": "oval:org.opensuse.security:tst:2009333995",
-								"comment": "kernel-source is affected"
+								"test_ref": "oval:org.opensuse.security:tst:2009958486",
+								"comment": "kernel-syms-4.12.14-122.237.1 is installed"
 							}
 						]
 					}
 				],
 				"criterions": [
 					{
-						"test_ref": "oval:org.opensuse.security:tst:2009240280",
-						"comment": "SUSE Linux Enterprise Server 12 SP4-LTSS is installed"
-					}
-				]
-			},
-			{
-				"operator": "AND",
-				"criterias": [
-					{
-						"operator": "OR",
-						"criterions": [
-							{
-								"test_ref": "oval:org.opensuse.security:tst:2009338035",
-								"comment": "kernel-default-kgraft is affected"
-							},
-							{
-								"test_ref": "oval:org.opensuse.security:tst:2009809200",
-								"comment": "kernel-default-kgraft-devel is affected"
-							},
-							{
-								"test_ref": "oval:org.opensuse.security:tst:2009333995",
-								"comment": "kernel-source is affected"
-							}
-						]
-					}
-				],
-				"criterions": [
-					{
-						"test_ref": "oval:org.opensuse.security:tst:2009273148",
-						"comment": "SUSE Linux Enterprise Live Patching 12 SP5 is installed"
+						"test_ref": "oval:org.opensuse.security:tst:2009952096",
+						"comment": "SUSE Linux Enterprise Server LTSS Extended Security 12 SP5 is installed"
 					}
 				]
 			}
