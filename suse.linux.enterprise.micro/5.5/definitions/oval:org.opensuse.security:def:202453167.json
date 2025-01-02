@@ -1,0 +1,88 @@
+{
+	"id": "oval:org.opensuse.security:def:202453167",
+	"version": "1",
+	"class": "vulnerability",
+	"metadata": {
+		"title": "CVE-2024-53167",
+		"affected": {
+			"family": "unix",
+			"platform": [
+				"SUSE Linux Enterprise Micro 5.5"
+			]
+		},
+		"reference": [
+			{
+				"ref_id": "Mitre CVE-2024-53167",
+				"ref_url": "https://cve.mitre.org/cgi-bin/cvename.cgi?name=CVE-2024-53167",
+				"source": "CVE"
+			},
+			{
+				"ref_id": "SUSE CVE-2024-53167",
+				"ref_url": "https://www.suse.com/security/cve/CVE-2024-53167",
+				"source": "SUSE CVE"
+			}
+		],
+		"description": "\n    In the Linux kernel, the following vulnerability has been resolved:\n\nnfs/blocklayout: Don't attempt unregister for invalid block device\n\nSince commit d869da91cccb (\"nfs/blocklayout: Fix premature PR key\nunregistration\") an unmount of a pNFS SCSI layout-enabled NFS may\ndereference a NULL block_device in:\n\n  bl_unregister_scsi+0x16/0xe0 [blocklayoutdriver]\n  bl_free_device+0x70/0x80 [blocklayoutdriver]\n  bl_free_deviceid_node+0x12/0x30 [blocklayoutdriver]\n  nfs4_put_deviceid_node+0x60/0xc0 [nfsv4]\n  nfs4_deviceid_purge_client+0x132/0x190 [nfsv4]\n  unset_pnfs_layoutdriver+0x59/0x60 [nfsv4]\n  nfs4_destroy_server+0x36/0x70 [nfsv4]\n  nfs_free_server+0x23/0xe0 [nfs]\n  deactivate_locked_super+0x30/0xb0\n  cleanup_mnt+0xba/0x150\n  task_work_run+0x59/0x90\n  syscall_exit_to_user_mode+0x217/0x220\n  do_syscall_64+0x8e/0x160\n\nThis happens because even though we were able to create the\nnfs4_deviceid_node, the lookup for the device was unable to attach the\nblock device to the pnfs_block_dev.\n\nIf we never found a block device to register, we can avoid this case with\nthe PNFS_BDEV_REGISTERED flag.  Move the deref behind the test for the\nflag.\n    ",
+		"advisory": {
+			"from": "security@suse.de",
+			"severity": "Moderate",
+			"cve": [
+				{
+					"text": "CVE-2024-53167 at SUSE",
+					"href": "https://www.suse.com/security/cve/CVE-2024-53167/",
+					"impact": "medium",
+					"cvss3": "5.5/CVSS:3.1/AV:L/AC:L/PR:L/UI:N/S:U/C:N/I:N/A:H"
+				},
+				{
+					"text": "CVE-2024-53167 at NVD",
+					"href": "https://nvd.nist.gov/vuln/detail/CVE-2024-53167"
+				}
+			],
+			"bugzilla": [
+				{
+					"text": "SUSE bug 1234886",
+					"href": "https://bugzilla.suse.com/1234886"
+				}
+			],
+			"issued": {
+				"date": "2025-01-02"
+			},
+			"updated": {
+				"date": "2025-01-02"
+			},
+			"affected_cpe_list": {
+				"cpe": [
+					"cpe:/o:suse:sle-micro:5.5"
+				]
+			}
+		}
+	},
+	"criteria": {
+		"operator": "AND",
+		"criterias": [
+			{
+				"operator": "OR",
+				"criterions": [
+					{
+						"test_ref": "oval:org.opensuse.security:tst:2009334017",
+						"comment": "kernel-default is not affected"
+					},
+					{
+						"test_ref": "oval:org.opensuse.security:tst:2009333928",
+						"comment": "kernel-source is not affected"
+					},
+					{
+						"test_ref": "oval:org.opensuse.security:tst:2009728712",
+						"comment": "kernel-source-rt is not affected"
+					}
+				]
+			}
+		],
+		"criterions": [
+			{
+				"test_ref": "oval:org.opensuse.security:tst:2009951955",
+				"comment": "SUSE Linux Enterprise Micro 5.5 is installed"
+			}
+		]
+	}
+}

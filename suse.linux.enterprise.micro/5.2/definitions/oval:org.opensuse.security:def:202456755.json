@@ -1,0 +1,92 @@
+{
+	"id": "oval:org.opensuse.security:def:202456755",
+	"version": "1",
+	"class": "vulnerability",
+	"metadata": {
+		"title": "CVE-2024-56755",
+		"affected": {
+			"family": "unix",
+			"platform": [
+				"SUSE Linux Enterprise Micro 5.2"
+			]
+		},
+		"reference": [
+			{
+				"ref_id": "Mitre CVE-2024-56755",
+				"ref_url": "https://cve.mitre.org/cgi-bin/cvename.cgi?name=CVE-2024-56755",
+				"source": "CVE"
+			},
+			{
+				"ref_id": "SUSE CVE-2024-56755",
+				"ref_url": "https://www.suse.com/security/cve/CVE-2024-56755",
+				"source": "SUSE CVE"
+			}
+		],
+		"description": "\n    In the Linux kernel, the following vulnerability has been resolved:\n\nnetfs/fscache: Add a memory barrier for FSCACHE_VOLUME_CREATING\n\nIn fscache_create_volume(), there is a missing memory barrier between the\nbit-clearing operation and the wake-up operation. This may cause a\nsituation where, after a wake-up, the bit-clearing operation hasn't been\ndetected yet, leading to an indefinite wait. The triggering process is as\nfollows:\n\n  [cookie1]                [cookie2]                  [volume_work]\nfscache_perform_lookup\n  fscache_create_volume\n                        fscache_perform_lookup\n                          fscache_create_volume\n\t\t\t                        fscache_create_volume_work\n                                                  cachefiles_acquire_volume\n                                                  clear_and_wake_up_bit\n    test_and_set_bit\n                            test_and_set_bit\n                              goto maybe_wait\n      goto no_wait\n\nIn the above process, cookie1 and cookie2 has the same volume. When cookie1\nenters the -no_wait- process, it will clear the bit and wake up the waiting\nprocess. If a barrier is missing, it may cause cookie2 to remain in the\n-wait- process indefinitely.\n\nIn commit 3288666c7256 (\"fscache: Use clear_and_wake_up_bit() in\nfscache_create_volume_work()\"), barriers were added to similar operations\nin fscache_create_volume_work(), but fscache_create_volume() was missed.\n\nBy combining the clear and wake operations into clear_and_wake_up_bit() to\nfix this issue.\n    ",
+		"advisory": {
+			"from": "security@suse.de",
+			"severity": "Low",
+			"cve": [
+				{
+					"text": "CVE-2024-56755 at SUSE",
+					"href": "https://www.suse.com/security/cve/CVE-2024-56755/",
+					"impact": "low",
+					"cvss3": "2.5/CVSS:3.1/AV:L/AC:H/PR:L/UI:N/S:U/C:N/I:N/A:L"
+				},
+				{
+					"text": "CVE-2024-56755 at NVD",
+					"href": "https://nvd.nist.gov/vuln/detail/CVE-2024-56755"
+				}
+			],
+			"bugzilla": [
+				{
+					"text": "SUSE bug 1234920",
+					"href": "https://bugzilla.suse.com/1234920"
+				}
+			],
+			"issued": {
+				"date": "2025-01-02"
+			},
+			"updated": {
+				"date": "2025-01-02"
+			},
+			"affected_cpe_list": {
+				"cpe": [
+					"cpe:/o:suse:suse-microos:5.2"
+				]
+			}
+		}
+	},
+	"criteria": {
+		"operator": "AND",
+		"criterias": [
+			{
+				"operator": "OR",
+				"criterions": [
+					{
+						"test_ref": "oval:org.opensuse.security:tst:2009334017",
+						"comment": "kernel-default is not affected"
+					},
+					{
+						"test_ref": "oval:org.opensuse.security:tst:2009705046",
+						"comment": "kernel-rt is not affected"
+					},
+					{
+						"test_ref": "oval:org.opensuse.security:tst:2009333928",
+						"comment": "kernel-source is not affected"
+					},
+					{
+						"test_ref": "oval:org.opensuse.security:tst:2009728712",
+						"comment": "kernel-source-rt is not affected"
+					}
+				]
+			}
+		],
+		"criterions": [
+			{
+				"test_ref": "oval:org.opensuse.security:tst:2009681300",
+				"comment": "SUSE Linux Enterprise Micro 5.2 is installed"
+			}
+		]
+	}
+}

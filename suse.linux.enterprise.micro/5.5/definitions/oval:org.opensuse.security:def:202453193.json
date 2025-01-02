@@ -1,0 +1,88 @@
+{
+	"id": "oval:org.opensuse.security:def:202453193",
+	"version": "1",
+	"class": "vulnerability",
+	"metadata": {
+		"title": "CVE-2024-53193",
+		"affected": {
+			"family": "unix",
+			"platform": [
+				"SUSE Linux Enterprise Micro 5.5"
+			]
+		},
+		"reference": [
+			{
+				"ref_id": "Mitre CVE-2024-53193",
+				"ref_url": "https://cve.mitre.org/cgi-bin/cvename.cgi?name=CVE-2024-53193",
+				"source": "CVE"
+			},
+			{
+				"ref_id": "SUSE CVE-2024-53193",
+				"ref_url": "https://www.suse.com/security/cve/CVE-2024-53193",
+				"source": "SUSE CVE"
+			}
+		],
+		"description": "\n    In the Linux kernel, the following vulnerability has been resolved:\n\nclk: clk-loongson2: Fix memory corruption bug in struct loongson2_clk_provider\n\nSome heap space is allocated for the flexible structure `struct\nclk_hw_onecell_data` and its flexible-array member `hws` through\nthe composite structure `struct loongson2_clk_provider` in function\n`loongson2_clk_probe()`, as shown below:\n\n289         struct loongson2_clk_provider *clp;\n\t...\n296         for (p = data; p->name; p++)\n297                 clks_num++;\n298\n299         clp = devm_kzalloc(dev, struct_size(clp, clk_data.hws, clks_num),\n300                            GFP_KERNEL);\n\nThen some data is written into the flexible array:\n\n350                 clp->clk_data.hws[p->id] = hw;\n\nThis corrupts `clk_lock`, which is the spinlock variable immediately\nfollowing the `clk_data` member in `struct loongson2_clk_provider`:\n\nstruct loongson2_clk_provider {\n\tvoid __iomem *base;\n\tstruct device *dev;\n\tstruct clk_hw_onecell_data clk_data;\n\tspinlock_t clk_lock;\t/* protect access to DIV registers */\n};\n\nThe problem is that the flexible structure is currently placed in the\nmiddle of `struct loongson2_clk_provider` instead of at the end.\n\nFix this by moving `struct clk_hw_onecell_data clk_data;` to the end of\n`struct loongson2_clk_provider`. Also, add a code comment to help\nprevent this from happening again in case new members are added to the\nstructure in the future.\n\nThis change also fixes the following -Wflex-array-member-not-at-end\nwarning:\n\ndrivers/clk/clk-loongson2.c:32:36: warning: structure containing a flexible array member is not at the end of another structure [-Wflex-array-member-not-at-end]\n    ",
+		"advisory": {
+			"from": "security@suse.de",
+			"severity": "Moderate",
+			"cve": [
+				{
+					"text": "CVE-2024-53193 at SUSE",
+					"href": "https://www.suse.com/security/cve/CVE-2024-53193/",
+					"impact": "medium",
+					"cvss3": "6.3/CVSS:3.1/AV:L/AC:H/PR:L/UI:N/S:U/C:N/I:H/A:H"
+				},
+				{
+					"text": "CVE-2024-53193 at NVD",
+					"href": "https://nvd.nist.gov/vuln/detail/CVE-2024-53193"
+				}
+			],
+			"bugzilla": [
+				{
+					"text": "SUSE bug 1234902",
+					"href": "https://bugzilla.suse.com/1234902"
+				}
+			],
+			"issued": {
+				"date": "2025-01-02"
+			},
+			"updated": {
+				"date": "2025-01-02"
+			},
+			"affected_cpe_list": {
+				"cpe": [
+					"cpe:/o:suse:sle-micro:5.5"
+				]
+			}
+		}
+	},
+	"criteria": {
+		"operator": "AND",
+		"criterias": [
+			{
+				"operator": "OR",
+				"criterions": [
+					{
+						"test_ref": "oval:org.opensuse.security:tst:2009334017",
+						"comment": "kernel-default is not affected"
+					},
+					{
+						"test_ref": "oval:org.opensuse.security:tst:2009333928",
+						"comment": "kernel-source is not affected"
+					},
+					{
+						"test_ref": "oval:org.opensuse.security:tst:2009728712",
+						"comment": "kernel-source-rt is not affected"
+					}
+				]
+			}
+		],
+		"criterions": [
+			{
+				"test_ref": "oval:org.opensuse.security:tst:2009951955",
+				"comment": "SUSE Linux Enterprise Micro 5.5 is installed"
+			}
+		]
+	}
+}

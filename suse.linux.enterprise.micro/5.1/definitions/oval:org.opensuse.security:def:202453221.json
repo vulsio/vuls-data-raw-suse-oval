@@ -1,0 +1,92 @@
+{
+	"id": "oval:org.opensuse.security:def:202453221",
+	"version": "1",
+	"class": "vulnerability",
+	"metadata": {
+		"title": "CVE-2024-53221",
+		"affected": {
+			"family": "unix",
+			"platform": [
+				"SUSE Linux Enterprise Micro 5.1"
+			]
+		},
+		"reference": [
+			{
+				"ref_id": "Mitre CVE-2024-53221",
+				"ref_url": "https://cve.mitre.org/cgi-bin/cvename.cgi?name=CVE-2024-53221",
+				"source": "CVE"
+			},
+			{
+				"ref_id": "SUSE CVE-2024-53221",
+				"ref_url": "https://www.suse.com/security/cve/CVE-2024-53221",
+				"source": "SUSE CVE"
+			}
+		],
+		"description": "\n    In the Linux kernel, the following vulnerability has been resolved:\n\nf2fs: fix null-ptr-deref in f2fs_submit_page_bio()\n\nThere's issue as follows when concurrently installing the f2fs.ko\nmodule and mounting the f2fs file system:\nKASAN: null-ptr-deref in range [0x0000000000000020-0x0000000000000027]\nRIP: 0010:__bio_alloc+0x2fb/0x6c0 [f2fs]\nCall Trace:\n <TASK>\n f2fs_submit_page_bio+0x126/0x8b0 [f2fs]\n __get_meta_page+0x1d4/0x920 [f2fs]\n get_checkpoint_version.constprop.0+0x2b/0x3c0 [f2fs]\n validate_checkpoint+0xac/0x290 [f2fs]\n f2fs_get_valid_checkpoint+0x207/0x950 [f2fs]\n f2fs_fill_super+0x1007/0x39b0 [f2fs]\n mount_bdev+0x183/0x250\n legacy_get_tree+0xf4/0x1e0\n vfs_get_tree+0x88/0x340\n do_new_mount+0x283/0x5e0\n path_mount+0x2b2/0x15b0\n __x64_sys_mount+0x1fe/0x270\n do_syscall_64+0x5f/0x170\n entry_SYSCALL_64_after_hwframe+0x76/0x7e\n\nAbove issue happens as the biset of the f2fs file system is not\ninitialized before register \"f2fs_fs_type\".\nTo address above issue just register \"f2fs_fs_type\" at the last in\ninit_f2fs_fs(). Ensure that all f2fs file system resources are\ninitialized.\n    ",
+		"advisory": {
+			"from": "security@suse.de",
+			"severity": "Moderate",
+			"cve": [
+				{
+					"text": "CVE-2024-53221 at SUSE",
+					"href": "https://www.suse.com/security/cve/CVE-2024-53221/",
+					"impact": "medium",
+					"cvss3": "4.1/CVSS:3.1/AV:L/AC:H/PR:H/UI:N/S:U/C:N/I:N/A:H"
+				},
+				{
+					"text": "CVE-2024-53221 at NVD",
+					"href": "https://nvd.nist.gov/vuln/detail/CVE-2024-53221"
+				}
+			],
+			"bugzilla": [
+				{
+					"text": "SUSE bug 1234903",
+					"href": "https://bugzilla.suse.com/1234903"
+				}
+			],
+			"issued": {
+				"date": "2025-01-02"
+			},
+			"updated": {
+				"date": "2025-01-02"
+			},
+			"affected_cpe_list": {
+				"cpe": [
+					"cpe:/o:suse:suse-microos:5.1"
+				]
+			}
+		}
+	},
+	"criteria": {
+		"operator": "AND",
+		"criterias": [
+			{
+				"operator": "OR",
+				"criterions": [
+					{
+						"test_ref": "oval:org.opensuse.security:tst:2009334017",
+						"comment": "kernel-default is not affected"
+					},
+					{
+						"test_ref": "oval:org.opensuse.security:tst:2009705046",
+						"comment": "kernel-rt is not affected"
+					},
+					{
+						"test_ref": "oval:org.opensuse.security:tst:2009333928",
+						"comment": "kernel-source is not affected"
+					},
+					{
+						"test_ref": "oval:org.opensuse.security:tst:2009728712",
+						"comment": "kernel-source-rt is not affected"
+					}
+				]
+			}
+		],
+		"criterions": [
+			{
+				"test_ref": "oval:org.opensuse.security:tst:2009669964",
+				"comment": "SUSE Linux Enterprise Micro 5.1 is installed"
+			}
+		]
+	}
+}
