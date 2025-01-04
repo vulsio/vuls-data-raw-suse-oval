@@ -1,0 +1,88 @@
+{
+	"id": "oval:org.opensuse.security:def:202456568",
+	"version": "1",
+	"class": "vulnerability",
+	"metadata": {
+		"title": "CVE-2024-56568",
+		"affected": {
+			"family": "unix",
+			"platform": [
+				"SUSE Linux Enterprise Micro 5.5"
+			]
+		},
+		"reference": [
+			{
+				"ref_id": "Mitre CVE-2024-56568",
+				"ref_url": "https://cve.mitre.org/cgi-bin/cvename.cgi?name=CVE-2024-56568",
+				"source": "CVE"
+			},
+			{
+				"ref_id": "SUSE CVE-2024-56568",
+				"ref_url": "https://www.suse.com/security/cve/CVE-2024-56568",
+				"source": "SUSE CVE"
+			}
+		],
+		"description": "\n    In the Linux kernel, the following vulnerability has been resolved:\n\niommu/arm-smmu: Defer probe of clients after smmu device bound\n\nNull pointer dereference occurs due to a race between smmu\ndriver probe and client driver probe, when of_dma_configure()\nfor client is called after the iommu_device_register() for smmu driver\nprobe has executed but before the driver_bound() for smmu driver\nhas been called.\n\nFollowing is how the race occurs:\n\nT1:Smmu device probe\t\tT2: Client device probe\n\nreally_probe()\narm_smmu_device_probe()\niommu_device_register()\n\t\t\t\t\treally_probe()\n\t\t\t\t\tplatform_dma_configure()\n\t\t\t\t\tof_dma_configure()\n\t\t\t\t\tof_dma_configure_id()\n\t\t\t\t\tof_iommu_configure()\n\t\t\t\t\tiommu_probe_device()\n\t\t\t\t\tiommu_init_device()\n\t\t\t\t\tarm_smmu_probe_device()\n\t\t\t\t\tarm_smmu_get_by_fwnode()\n\t\t\t\t\t\tdriver_find_device_by_fwnode()\n\t\t\t\t\t\tdriver_find_device()\n\t\t\t\t\t\tnext_device()\n\t\t\t\t\t\tklist_next()\n\t\t\t\t\t\t    /* null ptr\n\t\t\t\t\t\t       assigned to smmu */\n\t\t\t\t\t/* null ptr dereference\n\t\t\t\t\t   while smmu->streamid_mask */\ndriver_bound()\n\tklist_add_tail()\n\nWhen this null smmu pointer is dereferenced later in\narm_smmu_probe_device, the device crashes.\n\nFix this by deferring the probe of the client device\nuntil the smmu device has bound to the arm smmu driver.\n\n[will: Add comment]\n    ",
+		"advisory": {
+			"from": "security@suse.de",
+			"severity": "Moderate",
+			"cve": [
+				{
+					"text": "CVE-2024-56568 at SUSE",
+					"href": "https://www.suse.com/security/cve/CVE-2024-56568/",
+					"impact": "medium",
+					"cvss3": "4.7/CVSS:3.1/AV:L/AC:H/PR:L/UI:N/S:U/C:N/I:N/A:H"
+				},
+				{
+					"text": "CVE-2024-56568 at NVD",
+					"href": "https://nvd.nist.gov/vuln/detail/CVE-2024-56568"
+				}
+			],
+			"bugzilla": [
+				{
+					"text": "SUSE bug 1235032",
+					"href": "https://bugzilla.suse.com/1235032"
+				}
+			],
+			"issued": {
+				"date": "2025-01-04"
+			},
+			"updated": {
+				"date": "2025-01-04"
+			},
+			"affected_cpe_list": {
+				"cpe": [
+					"cpe:/o:suse:sle-micro:5.5"
+				]
+			}
+		}
+	},
+	"criteria": {
+		"operator": "AND",
+		"criterias": [
+			{
+				"operator": "OR",
+				"criterions": [
+					{
+						"test_ref": "oval:org.opensuse.security:tst:2009338032",
+						"comment": "kernel-default is affected"
+					},
+					{
+						"test_ref": "oval:org.opensuse.security:tst:2009333995",
+						"comment": "kernel-source is affected"
+					},
+					{
+						"test_ref": "oval:org.opensuse.security:tst:2009728714",
+						"comment": "kernel-source-rt is affected"
+					}
+				]
+			}
+		],
+		"criterions": [
+			{
+				"test_ref": "oval:org.opensuse.security:tst:2009951955",
+				"comment": "SUSE Linux Enterprise Micro 5.5 is installed"
+			}
+		]
+	}
+}

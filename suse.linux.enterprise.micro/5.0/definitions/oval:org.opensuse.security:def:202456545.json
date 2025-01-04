@@ -1,0 +1,73 @@
+{
+	"id": "oval:org.opensuse.security:def:202456545",
+	"version": "1",
+	"class": "vulnerability",
+	"metadata": {
+		"title": "CVE-2024-56545",
+		"affected": {
+			"family": "unix",
+			"platform": [
+				"SUSE Linux Enterprise Micro 5.0"
+			]
+		},
+		"reference": [
+			{
+				"ref_id": "Mitre CVE-2024-56545",
+				"ref_url": "https://cve.mitre.org/cgi-bin/cvename.cgi?name=CVE-2024-56545",
+				"source": "CVE"
+			},
+			{
+				"ref_id": "SUSE CVE-2024-56545",
+				"ref_url": "https://www.suse.com/security/cve/CVE-2024-56545",
+				"source": "SUSE CVE"
+			}
+		],
+		"description": "\n    In the Linux kernel, the following vulnerability has been resolved:\n\nHID: hyperv: streamline driver probe to avoid devres issues\n\nIt was found that unloading 'hid_hyperv' module results in a devres\ncomplaint:\n\n ...\n hv_vmbus: unregistering driver hid_hyperv\n ------------[ cut here ]------------\n WARNING: CPU: 2 PID: 3983 at drivers/base/devres.c:691 devres_release_group+0x1f2/0x2c0\n ...\n Call Trace:\n  <TASK>\n  ? devres_release_group+0x1f2/0x2c0\n  ? __warn+0xd1/0x1c0\n  ? devres_release_group+0x1f2/0x2c0\n  ? report_bug+0x32a/0x3c0\n  ? handle_bug+0x53/0xa0\n  ? exc_invalid_op+0x18/0x50\n  ? asm_exc_invalid_op+0x1a/0x20\n  ? devres_release_group+0x1f2/0x2c0\n  ? devres_release_group+0x90/0x2c0\n  ? rcu_is_watching+0x15/0xb0\n  ? __pfx_devres_release_group+0x10/0x10\n  hid_device_remove+0xf5/0x220\n  device_release_driver_internal+0x371/0x540\n  ? klist_put+0xf3/0x170\n  bus_remove_device+0x1f1/0x3f0\n  device_del+0x33f/0x8c0\n  ? __pfx_device_del+0x10/0x10\n  ? cleanup_srcu_struct+0x337/0x500\n  hid_destroy_device+0xc8/0x130\n  mousevsc_remove+0xd2/0x1d0 [hid_hyperv]\n  device_release_driver_internal+0x371/0x540\n  driver_detach+0xc5/0x180\n  bus_remove_driver+0x11e/0x2a0\n  ? __mutex_unlock_slowpath+0x160/0x5e0\n  vmbus_driver_unregister+0x62/0x2b0 [hv_vmbus]\n  ...\n\nAnd the issue seems to be that the corresponding devres group is not\nallocated. Normally, devres_open_group() is called from\n__hid_device_probe() but Hyper-V HID driver overrides 'hid_dev->driver'\nwith 'mousevsc_hid_driver' stub and basically re-implements\n__hid_device_probe() by calling hid_parse() and hid_hw_start() but not\ndevres_open_group(). hid_device_probe() does not call __hid_device_probe()\nfor it. Later, when the driver is removed, hid_device_remove() calls\ndevres_release_group() as it doesn't check whether hdev->driver was\ninitially overridden or not.\n\nThe issue seems to be related to the commit 62c68e7cee33 (\"HID: ensure\ntimely release of driver-allocated resources\") but the commit itself seems\nto be correct.\n\nFix the issue by dropping the 'hid_dev->driver' override and using\nhid_register_driver()/hid_unregister_driver() instead. Alternatively, it\nwould have been possible to rely on the default handling but\nHID_CONNECT_DEFAULT implies HID_CONNECT_HIDRAW and it doesn't seem to work\nfor mousevsc as-is.\n    ",
+		"advisory": {
+			"from": "security@suse.de",
+			"severity": "Moderate",
+			"cve": [
+				{
+					"text": "CVE-2024-56545 at SUSE",
+					"href": "https://www.suse.com/security/cve/CVE-2024-56545/",
+					"impact": "medium",
+					"cvss3": "5.5/CVSS:3.1/AV:L/AC:L/PR:L/UI:N/S:U/C:N/I:N/A:H"
+				},
+				{
+					"text": "CVE-2024-56545 at NVD",
+					"href": "https://nvd.nist.gov/vuln/detail/CVE-2024-56545"
+				}
+			],
+			"bugzilla": [
+				{
+					"text": "SUSE bug 1235069",
+					"href": "https://bugzilla.suse.com/1235069"
+				}
+			],
+			"issued": {
+				"date": "2025-01-04"
+			},
+			"updated": {
+				"date": "2025-01-04"
+			},
+			"affected_cpe_list": {
+				"cpe": [
+					"cpe:/o:suse:suse-microos:5.0"
+				]
+			}
+		}
+	},
+	"criteria": {
+		"operator": "AND",
+		"criterions": [
+			{
+				"test_ref": "oval:org.opensuse.security:tst:2009704855",
+				"comment": "SUSE Linux Enterprise Micro 5.0 is installed"
+			},
+			{
+				"test_ref": "oval:org.opensuse.security:tst:2009334017",
+				"comment": "kernel-default is not affected"
+			}
+		]
+	}
+}

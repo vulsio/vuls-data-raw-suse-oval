@@ -1,0 +1,160 @@
+{
+	"id": "oval:org.opensuse.security:def:202453214",
+	"version": "1",
+	"class": "vulnerability",
+	"metadata": {
+		"title": "CVE-2024-53214",
+		"affected": {
+			"family": "unix",
+			"platform": [
+				"openSUSE Leap 15.6"
+			]
+		},
+		"reference": [
+			{
+				"ref_id": "Mitre CVE-2024-53214",
+				"ref_url": "https://cve.mitre.org/cgi-bin/cvename.cgi?name=CVE-2024-53214",
+				"source": "CVE"
+			},
+			{
+				"ref_id": "SUSE CVE-2024-53214",
+				"ref_url": "https://www.suse.com/security/cve/CVE-2024-53214",
+				"source": "SUSE CVE"
+			}
+		],
+		"description": "\n    In the Linux kernel, the following vulnerability has been resolved:\n\nvfio/pci: Properly hide first-in-list PCIe extended capability\n\nThere are cases where a PCIe extended capability should be hidden from\nthe user. For example, an unknown capability (i.e., capability with ID\ngreater than PCI_EXT_CAP_ID_MAX) or a capability that is intentionally\nchosen to be hidden from the user.\n\nHiding a capability is done by virtualizing and modifying the 'Next\nCapability Offset' field of the previous capability so it points to the\ncapability after the one that should be hidden.\n\nThe special case where the first capability in the list should be hidden\nis handled differently because there is no previous capability that can\nbe modified. In this case, the capability ID and version are zeroed\nwhile leaving the next pointer intact. This hides the capability and\nleaves an anchor for the rest of the capability list.\n\nHowever, today, hiding the first capability in the list is not done\nproperly if the capability is unknown, as struct\nvfio_pci_core_device->pci_config_map is set to the capability ID during\ninitialization but the capability ID is not properly checked later when\nused in vfio_config_do_rw(). This leads to the following warning [1] and\nto an out-of-bounds access to ecap_perms array.\n\nFix it by checking cap_id in vfio_config_do_rw(), and if it is greater\nthan PCI_EXT_CAP_ID_MAX, use an alternative struct perm_bits for direct\nread only access instead of the ecap_perms array.\n\nNote that this is safe since the above is the only case where cap_id can\nexceed PCI_EXT_CAP_ID_MAX (except for the special capabilities, which\nare already checked before).\n\n[1]\n\nWARNING: CPU: 118 PID: 5329 at drivers/vfio/pci/vfio_pci_config.c:1900 vfio_pci_config_rw+0x395/0x430 [vfio_pci_core]\nCPU: 118 UID: 0 PID: 5329 Comm: simx-qemu-syste Not tainted 6.12.0+ #1\n(snip)\nCall Trace:\n <TASK>\n ? show_regs+0x69/0x80\n ? __warn+0x8d/0x140\n ? vfio_pci_config_rw+0x395/0x430 [vfio_pci_core]\n ? report_bug+0x18f/0x1a0\n ? handle_bug+0x63/0xa0\n ? exc_invalid_op+0x19/0x70\n ? asm_exc_invalid_op+0x1b/0x20\n ? vfio_pci_config_rw+0x395/0x430 [vfio_pci_core]\n ? vfio_pci_config_rw+0x244/0x430 [vfio_pci_core]\n vfio_pci_rw+0x101/0x1b0 [vfio_pci_core]\n vfio_pci_core_read+0x1d/0x30 [vfio_pci_core]\n vfio_device_fops_read+0x27/0x40 [vfio]\n vfs_read+0xbd/0x340\n ? vfio_device_fops_unl_ioctl+0xbb/0x740 [vfio]\n ? __rseq_handle_notify_resume+0xa4/0x4b0\n __x64_sys_pread64+0x96/0xc0\n x64_sys_call+0x1c3d/0x20d0\n do_syscall_64+0x4d/0x120\n entry_SYSCALL_64_after_hwframe+0x76/0x7e\n    ",
+		"advisory": {
+			"from": "security@suse.de",
+			"severity": "Important",
+			"cve": [
+				{
+					"text": "CVE-2024-53214 at SUSE",
+					"href": "https://www.suse.com/security/cve/CVE-2024-53214/",
+					"impact": "high",
+					"cvss3": "7.8/CVSS:3.1/AV:L/AC:L/PR:L/UI:N/S:U/C:H/I:H/A:H"
+				},
+				{
+					"text": "CVE-2024-53214 at NVD",
+					"href": "https://nvd.nist.gov/vuln/detail/CVE-2024-53214"
+				}
+			],
+			"bugzilla": [
+				{
+					"text": "SUSE bug 1235004",
+					"href": "https://bugzilla.suse.com/1235004"
+				}
+			],
+			"issued": {
+				"date": "2025-01-04"
+			},
+			"updated": {
+				"date": "2025-01-04"
+			},
+			"affected_cpe_list": {
+				"cpe": [
+					"cpe:/o:opensuse:leap:15.6"
+				]
+			}
+		}
+	},
+	"criteria": {
+		"operator": "AND",
+		"criterias": [
+			{
+				"operator": "OR",
+				"criterions": [
+					{
+						"test_ref": "oval:org.opensuse.security:tst:2009766997",
+						"comment": "cluster-md-kmp-default is affected"
+					},
+					{
+						"test_ref": "oval:org.opensuse.security:tst:2009766998",
+						"comment": "dlm-kmp-default is affected"
+					},
+					{
+						"test_ref": "oval:org.opensuse.security:tst:2009766999",
+						"comment": "gfs2-kmp-default is affected"
+					},
+					{
+						"test_ref": "oval:org.opensuse.security:tst:2009338032",
+						"comment": "kernel-default is affected"
+					},
+					{
+						"test_ref": "oval:org.opensuse.security:tst:2009338034",
+						"comment": "kernel-default-devel is affected"
+					},
+					{
+						"test_ref": "oval:org.opensuse.security:tst:2009715290",
+						"comment": "kernel-default-extra is affected"
+					},
+					{
+						"test_ref": "oval:org.opensuse.security:tst:2009764854",
+						"comment": "kernel-default-livepatch is affected"
+					},
+					{
+						"test_ref": "oval:org.opensuse.security:tst:2009764855",
+						"comment": "kernel-default-livepatch-devel is affected"
+					},
+					{
+						"test_ref": "oval:org.opensuse.security:tst:2009870815",
+						"comment": "kernel-default-optional is affected"
+					},
+					{
+						"test_ref": "oval:org.opensuse.security:tst:2009870816",
+						"comment": "kernel-default-vdso is affected"
+					},
+					{
+						"test_ref": "oval:org.opensuse.security:tst:2009870817",
+						"comment": "kselftests-kmp-default is affected"
+					},
+					{
+						"test_ref": "oval:org.opensuse.security:tst:2009767000",
+						"comment": "ocfs2-kmp-default is affected"
+					},
+					{
+						"test_ref": "oval:org.opensuse.security:tst:2009338038",
+						"comment": "reiserfs-kmp-default is affected"
+					},
+					{
+						"test_ref": "oval:org.opensuse.security:tst:2009335275",
+						"comment": "kernel-devel is affected"
+					},
+					{
+						"test_ref": "oval:org.opensuse.security:tst:2009335276",
+						"comment": "kernel-macros is affected"
+					},
+					{
+						"test_ref": "oval:org.opensuse.security:tst:2009333995",
+						"comment": "kernel-source is affected"
+					},
+					{
+						"test_ref": "oval:org.opensuse.security:tst:2009870818",
+						"comment": "kernel-source-vanilla is affected"
+					},
+					{
+						"test_ref": "oval:org.opensuse.security:tst:2009340777",
+						"comment": "kernel-devel-azure is affected"
+					},
+					{
+						"test_ref": "oval:org.opensuse.security:tst:2009340767",
+						"comment": "kernel-source-azure is affected"
+					},
+					{
+						"test_ref": "oval:org.opensuse.security:tst:2009728713",
+						"comment": "kernel-devel-rt is affected"
+					},
+					{
+						"test_ref": "oval:org.opensuse.security:tst:2009728714",
+						"comment": "kernel-source-rt is affected"
+					}
+				]
+			}
+		],
+		"criterions": [
+			{
+				"test_ref": "oval:org.opensuse.security:tst:2009864054",
+				"comment": "openSUSE Leap 15.6 is installed"
+			}
+		]
+	}
+}

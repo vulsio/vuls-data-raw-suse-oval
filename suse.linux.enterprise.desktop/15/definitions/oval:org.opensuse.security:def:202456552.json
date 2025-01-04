@@ -1,0 +1,217 @@
+{
+	"id": "oval:org.opensuse.security:def:202456552",
+	"version": "1",
+	"class": "vulnerability",
+	"metadata": {
+		"title": "CVE-2024-56552",
+		"affected": {
+			"family": "unix",
+			"platform": [
+				"SUSE Linux Enterprise Desktop 15 SP5",
+				"SUSE Linux Enterprise Desktop 15 SP6",
+				"SUSE Linux Enterprise High Performance Computing 15 SP5",
+				"SUSE Linux Enterprise High Performance Computing 15 SP6",
+				"SUSE Linux Enterprise Module for Basesystem 15 SP5",
+				"SUSE Linux Enterprise Module for Basesystem 15 SP6",
+				"SUSE Linux Enterprise Module for Development Tools 15 SP5",
+				"SUSE Linux Enterprise Module for Development Tools 15 SP6",
+				"SUSE Linux Enterprise Server 15 SP5",
+				"SUSE Linux Enterprise Server 15 SP6",
+				"SUSE Linux Enterprise Server for SAP Applications 15 SP5",
+				"SUSE Linux Enterprise Server for SAP Applications 15 SP6"
+			]
+		},
+		"reference": [
+			{
+				"ref_id": "Mitre CVE-2024-56552",
+				"ref_url": "https://cve.mitre.org/cgi-bin/cvename.cgi?name=CVE-2024-56552",
+				"source": "CVE"
+			},
+			{
+				"ref_id": "SUSE CVE-2024-56552",
+				"ref_url": "https://www.suse.com/security/cve/CVE-2024-56552",
+				"source": "SUSE CVE"
+			}
+		],
+		"description": "\n    In the Linux kernel, the following vulnerability has been resolved:\n\ndrm/xe/guc_submit: fix race around suspend_pending\n\nCurrently in some testcases we can trigger:\n\nxe 0000:03:00.0: [drm] Assertion `exec_queue_destroyed(q)` failed!\n....\nWARNING: CPU: 18 PID: 2640 at drivers/gpu/drm/xe/xe_guc_submit.c:1826 xe_guc_sched_done_handler+0xa54/0xef0 [xe]\nxe 0000:03:00.0: [drm] *ERROR* GT1: DEREGISTER_DONE: Unexpected engine state 0x00a1, guc_id=57\n\nLooking at a snippet of corresponding ftrace for this GuC id we can see:\n\n162.673311: xe_sched_msg_add:     dev=0000:03:00.0, gt=1 guc_id=57, opcode=3\n162.673317: xe_sched_msg_recv:    dev=0000:03:00.0, gt=1 guc_id=57, opcode=3\n162.673319: xe_exec_queue_scheduling_disable: dev=0000:03:00.0, 1:0x2, gt=1, width=1, guc_id=57, guc_state=0x29, flags=0x0\n162.674089: xe_exec_queue_kill:   dev=0000:03:00.0, 1:0x2, gt=1, width=1, guc_id=57, guc_state=0x29, flags=0x0\n162.674108: xe_exec_queue_close:  dev=0000:03:00.0, 1:0x2, gt=1, width=1, guc_id=57, guc_state=0xa9, flags=0x0\n162.674488: xe_exec_queue_scheduling_done: dev=0000:03:00.0, 1:0x2, gt=1, width=1, guc_id=57, guc_state=0xa9, flags=0x0\n162.678452: xe_exec_queue_deregister: dev=0000:03:00.0, 1:0x2, gt=1, width=1, guc_id=57, guc_state=0xa1, flags=0x0\n\nIt looks like we try to suspend the queue (opcode=3), setting\nsuspend_pending and triggering a disable_scheduling. The user then\ncloses the queue. However the close will also forcefully signal the\nsuspend fence after killing the queue, later when the G2H response for\ndisable_scheduling comes back we have now cleared suspend_pending when\nsignalling the suspend fence, so the disable_scheduling now incorrectly\ntries to also deregister the queue. This leads to warnings since the queue\nhas yet to even be marked for destruction. We also seem to trigger\nerrors later with trying to double unregister the same queue.\n\nTo fix this tweak the ordering when handling the response to ensure we\ndon't race with a disable_scheduling that didn't actually intend to\nperform an unregister.  The destruction path should now also correctly\nwait for any pending_disable before marking as destroyed.\n\n(cherry picked from commit f161809b362f027b6d72bd998e47f8f0bad60a2e)\n    ",
+		"advisory": {
+			"from": "security@suse.de",
+			"severity": "Moderate",
+			"cve": [
+				{
+					"text": "CVE-2024-56552 at SUSE",
+					"href": "https://www.suse.com/security/cve/CVE-2024-56552/",
+					"impact": "medium",
+					"cvss3": "5.5/CVSS:3.1/AV:L/AC:L/PR:L/UI:N/S:U/C:N/I:N/A:H"
+				},
+				{
+					"text": "CVE-2024-56552 at NVD",
+					"href": "https://nvd.nist.gov/vuln/detail/CVE-2024-56552"
+				}
+			],
+			"bugzilla": [
+				{
+					"text": "SUSE bug 1235071",
+					"href": "https://bugzilla.suse.com/1235071"
+				}
+			],
+			"issued": {
+				"date": "2025-01-04"
+			},
+			"updated": {
+				"date": "2025-01-04"
+			},
+			"affected_cpe_list": {
+				"cpe": [
+					"cpe:/o:suse:sle-module-basesystem:15:sp5",
+					"cpe:/o:suse:sle-module-basesystem:15:sp6",
+					"cpe:/o:suse:sle-module-development-tools:15:sp5",
+					"cpe:/o:suse:sle-module-development-tools:15:sp6",
+					"cpe:/o:suse:sle_hpc:15:sp5",
+					"cpe:/o:suse:sled:15:sp5",
+					"cpe:/o:suse:sles:15:sp5",
+					"cpe:/o:suse:sles_sap:15:sp5"
+				]
+			}
+		}
+	},
+	"criteria": {
+		"operator": "OR",
+		"criterias": [
+			{
+				"operator": "AND",
+				"criterias": [
+					{
+						"operator": "OR",
+						"criterions": [
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009759898",
+								"comment": "SUSE Linux Enterprise Desktop 15 SP5 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009856171",
+								"comment": "SUSE Linux Enterprise Desktop 15 SP6 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009759899",
+								"comment": "SUSE Linux Enterprise High Performance Computing 15 SP5 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009856172",
+								"comment": "SUSE Linux Enterprise High Performance Computing 15 SP6 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009760583",
+								"comment": "SUSE Linux Enterprise Module for Development Tools 15 SP5 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009856253",
+								"comment": "SUSE Linux Enterprise Module for Development Tools 15 SP6 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009759901",
+								"comment": "SUSE Linux Enterprise Server 15 SP5 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009856174",
+								"comment": "SUSE Linux Enterprise Server 15 SP6 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009759902",
+								"comment": "SUSE Linux Enterprise Server for SAP Applications 15 SP5 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009856175",
+								"comment": "SUSE Linux Enterprise Server for SAP Applications 15 SP6 is installed"
+							}
+						]
+					},
+					{
+						"operator": "OR",
+						"criterions": [
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009334017",
+								"comment": "kernel-default is not affected"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009333928",
+								"comment": "kernel-source is not affected"
+							}
+						]
+					}
+				]
+			},
+			{
+				"operator": "AND",
+				"criterias": [
+					{
+						"operator": "OR",
+						"criterions": [
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009759898",
+								"comment": "SUSE Linux Enterprise Desktop 15 SP5 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009856171",
+								"comment": "SUSE Linux Enterprise Desktop 15 SP6 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009759899",
+								"comment": "SUSE Linux Enterprise High Performance Computing 15 SP5 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009856172",
+								"comment": "SUSE Linux Enterprise High Performance Computing 15 SP6 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009759900",
+								"comment": "SUSE Linux Enterprise Module for Basesystem 15 SP5 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009856173",
+								"comment": "SUSE Linux Enterprise Module for Basesystem 15 SP6 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009759901",
+								"comment": "SUSE Linux Enterprise Server 15 SP5 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009856174",
+								"comment": "SUSE Linux Enterprise Server 15 SP6 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009759902",
+								"comment": "SUSE Linux Enterprise Server for SAP Applications 15 SP5 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009856175",
+								"comment": "SUSE Linux Enterprise Server for SAP Applications 15 SP6 is installed"
+							}
+						]
+					},
+					{
+						"operator": "OR",
+						"criterions": [
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009334017",
+								"comment": "kernel-default is not affected"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009335423",
+								"comment": "kernel-default-devel is not affected"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009334791",
+								"comment": "kernel-devel is not affected"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009334792",
+								"comment": "kernel-macros is not affected"
+							}
+						]
+					}
+				]
+			}
+		]
+	}
+}

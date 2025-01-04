@@ -1,0 +1,228 @@
+{
+	"id": "oval:org.opensuse.security:def:202453209",
+	"version": "1",
+	"class": "vulnerability",
+	"metadata": {
+		"title": "CVE-2024-53209",
+		"affected": {
+			"family": "unix",
+			"platform": [
+				"SUSE Linux Enterprise Live Patching 12 SP5",
+				"SUSE Linux Enterprise Server 12 SP2-LTSS",
+				"SUSE Linux Enterprise Server 12 SP4-LTSS",
+				"SUSE Linux Enterprise Server 12 SP5-LTSS",
+				"SUSE Linux Enterprise Server for SAP Applications 12 SP5"
+			]
+		},
+		"reference": [
+			{
+				"ref_id": "Mitre CVE-2024-53209",
+				"ref_url": "https://cve.mitre.org/cgi-bin/cvename.cgi?name=CVE-2024-53209",
+				"source": "CVE"
+			},
+			{
+				"ref_id": "SUSE CVE-2024-53209",
+				"ref_url": "https://www.suse.com/security/cve/CVE-2024-53209",
+				"source": "SUSE CVE"
+			}
+		],
+		"description": "\n    In the Linux kernel, the following vulnerability has been resolved:\n\nbnxt_en: Fix receive ring space parameters when XDP is active\n\nThe MTU setting at the time an XDP multi-buffer is attached\ndetermines whether the aggregation ring will be used and the\nrx_skb_func handler.  This is done in bnxt_set_rx_skb_mode().\n\nIf the MTU is later changed, the aggregation ring setting may need\nto be changed and it may become out-of-sync with the settings\ninitially done in bnxt_set_rx_skb_mode().  This may result in\nrandom memory corruption and crashes as the HW may DMA data larger\nthan the allocated buffer size, such as:\n\nBUG: kernel NULL pointer dereference, address: 00000000000003c0\nPGD 0 P4D 0\nOops: 0000 [#1] PREEMPT SMP NOPTI\nCPU: 17 PID: 0 Comm: swapper/17 Kdump: loaded Tainted: G S         OE      6.1.0-226bf9805506 #1\nHardware name: Wiwynn Delta Lake PVT BZA.02601.0150/Delta Lake-Class1, BIOS F0E_3A12 08/26/2021\nRIP: 0010:bnxt_rx_pkt+0xe97/0x1ae0 [bnxt_en]\nCode: 8b 95 70 ff ff ff 4c 8b 9d 48 ff ff ff 66 41 89 87 b4 00 00 00 e9 0b f7 ff ff 0f b7 43 0a 49 8b 95 a8 04 00 00 25 ff 0f 00 00 <0f> b7 14 42 48 c1 e2 06 49 03 95 a0 04 00 00 0f b6 42 33f\nRSP: 0018:ffffa19f40cc0d18 EFLAGS: 00010202\nRAX: 00000000000001e0 RBX: ffff8e2c805c6100 RCX: 00000000000007ff\nRDX: 0000000000000000 RSI: ffff8e2c271ab990 RDI: ffff8e2c84f12380\nRBP: ffffa19f40cc0e48 R08: 000000000001000d R09: 974ea2fcddfa4cbf\nR10: 0000000000000000 R11: ffffa19f40cc0ff8 R12: ffff8e2c94b58980\nR13: ffff8e2c952d6600 R14: 0000000000000016 R15: ffff8e2c271ab990\nFS:  0000000000000000(0000) GS:ffff8e3b3f840000(0000) knlGS:0000000000000000\nCS:  0010 DS: 0000 ES: 0000 CR0: 0000000080050033\nCR2: 00000000000003c0 CR3: 0000000e8580a004 CR4: 00000000007706e0\nDR0: 0000000000000000 DR1: 0000000000000000 DR2: 0000000000000000\nDR3: 0000000000000000 DR6: 00000000fffe0ff0 DR7: 0000000000000400\nPKRU: 55555554\nCall Trace:\n <IRQ>\n __bnxt_poll_work+0x1c2/0x3e0 [bnxt_en]\n\nTo address the issue, we now call bnxt_set_rx_skb_mode() within\nbnxt_change_mtu() to properly set the AGG rings configuration and\nupdate rx_skb_func based on the new MTU value.\nAdditionally, BNXT_FLAG_NO_AGG_RINGS is cleared at the beginning of\nbnxt_set_rx_skb_mode() to make sure it gets set or cleared based on\nthe current MTU.\n    ",
+		"advisory": {
+			"from": "security@suse.de",
+			"severity": "Moderate",
+			"cve": [
+				{
+					"text": "CVE-2024-53209 at SUSE",
+					"href": "https://www.suse.com/security/cve/CVE-2024-53209/",
+					"impact": "medium",
+					"cvss3": "5.3/CVSS:3.1/AV:L/AC:H/PR:L/UI:N/S:U/C:N/I:L/A:H"
+				},
+				{
+					"text": "CVE-2024-53209 at NVD",
+					"href": "https://nvd.nist.gov/vuln/detail/CVE-2024-53209"
+				}
+			],
+			"bugzilla": [
+				{
+					"text": "SUSE bug 1235002",
+					"href": "https://bugzilla.suse.com/1235002"
+				}
+			],
+			"issued": {
+				"date": "2025-01-04"
+			},
+			"updated": {
+				"date": "2025-01-04"
+			},
+			"affected_cpe_list": {
+				"cpe": [
+					"cpe:/o:suse:sle-live-patching:12:sp5",
+					"cpe:/o:suse:sles-ltss-extended-security:12:sp5",
+					"cpe:/o:suse:sles-ltss:12:sp2",
+					"cpe:/o:suse:sles-ltss:12:sp4",
+					"cpe:/o:suse:sles_sap:12:sp5"
+				]
+			}
+		}
+	},
+	"criteria": {
+		"operator": "OR",
+		"criterias": [
+			{
+				"operator": "AND",
+				"criterias": [
+					{
+						"operator": "OR",
+						"criterions": [
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009334017",
+								"comment": "kernel-default is not affected"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009333928",
+								"comment": "kernel-source is not affected"
+							}
+						]
+					}
+				],
+				"criterions": [
+					{
+						"test_ref": "oval:org.opensuse.security:tst:2009258806",
+						"comment": "SUSE Linux Enterprise Server for SAP Applications 12 SP5 is installed"
+					}
+				]
+			},
+			{
+				"operator": "AND",
+				"criterias": [
+					{
+						"operator": "OR",
+						"criterions": [
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009334017",
+								"comment": "kernel-default is not affected"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009335425",
+								"comment": "kernel-default-base is not affected"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009335423",
+								"comment": "kernel-default-devel is not affected"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009335426",
+								"comment": "kernel-default-man is not affected"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009334791",
+								"comment": "kernel-devel is not affected"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009334792",
+								"comment": "kernel-macros is not affected"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009333928",
+								"comment": "kernel-source is not affected"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009340306",
+								"comment": "kernel-devel-azure is not affected"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009340305",
+								"comment": "kernel-source-azure is not affected"
+							}
+						]
+					}
+				],
+				"criterions": [
+					{
+						"test_ref": "oval:org.opensuse.security:tst:2009258033",
+						"comment": "SUSE Linux Enterprise Server 12 SP5-LTSS is installed"
+					}
+				]
+			},
+			{
+				"operator": "AND",
+				"criterias": [
+					{
+						"operator": "OR",
+						"criterions": [
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009128018",
+								"comment": "SUSE Linux Enterprise Server 12 SP2-LTSS is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009240280",
+								"comment": "SUSE Linux Enterprise Server 12 SP4-LTSS is installed"
+							}
+						]
+					},
+					{
+						"operator": "OR",
+						"criterions": [
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009334017",
+								"comment": "kernel-default is not affected"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009335425",
+								"comment": "kernel-default-base is not affected"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009335423",
+								"comment": "kernel-default-devel is not affected"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009335426",
+								"comment": "kernel-default-man is not affected"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009334791",
+								"comment": "kernel-devel is not affected"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009334792",
+								"comment": "kernel-macros is not affected"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009333928",
+								"comment": "kernel-source is not affected"
+							}
+						]
+					}
+				]
+			},
+			{
+				"operator": "AND",
+				"criterias": [
+					{
+						"operator": "OR",
+						"criterions": [
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009338031",
+								"comment": "kernel-default-kgraft is not affected"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009696923",
+								"comment": "kernel-default-kgraft-devel is not affected"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009333928",
+								"comment": "kernel-source is not affected"
+							}
+						]
+					}
+				],
+				"criterions": [
+					{
+						"test_ref": "oval:org.opensuse.security:tst:2009273148",
+						"comment": "SUSE Linux Enterprise Live Patching 12 SP5 is installed"
+					}
+				]
+			}
+		]
+	}
+}
