@@ -1,0 +1,92 @@
+{
+	"id": "oval:org.opensuse.security:def:202456565",
+	"version": "1",
+	"class": "vulnerability",
+	"metadata": {
+		"title": "CVE-2024-56565",
+		"affected": {
+			"family": "unix",
+			"platform": [
+				"SUSE Linux Enterprise Micro 5.2"
+			]
+		},
+		"reference": [
+			{
+				"ref_id": "Mitre CVE-2024-56565",
+				"ref_url": "https://cve.mitre.org/cgi-bin/cvename.cgi?name=CVE-2024-56565",
+				"source": "CVE"
+			},
+			{
+				"ref_id": "SUSE CVE-2024-56565",
+				"ref_url": "https://www.suse.com/security/cve/CVE-2024-56565",
+				"source": "SUSE CVE"
+			}
+		],
+		"description": "\n    In the Linux kernel, the following vulnerability has been resolved:\n\nf2fs: fix to drop all discards after creating snapshot on lvm device\n\nPiergiorgio reported a bug in bugzilla as below:\n\n------------[ cut here ]------------\nWARNING: CPU: 2 PID: 969 at fs/f2fs/segment.c:1330\nRIP: 0010:__submit_discard_cmd+0x27d/0x400 [f2fs]\nCall Trace:\n __issue_discard_cmd+0x1ca/0x350 [f2fs]\n issue_discard_thread+0x191/0x480 [f2fs]\n kthread+0xcf/0x100\n ret_from_fork+0x31/0x50\n ret_from_fork_asm+0x1a/0x30\n\nw/ below testcase, it can reproduce this bug quickly:\n- pvcreate /dev/vdb\n- vgcreate myvg1 /dev/vdb\n- lvcreate -L 1024m -n mylv1 myvg1\n- mount /dev/myvg1/mylv1 /mnt/f2fs\n- dd if=/dev/zero of=/mnt/f2fs/file bs=1M count=20\n- sync\n- rm /mnt/f2fs/file\n- sync\n- lvcreate -L 1024m -s -n mylv1-snapshot /dev/myvg1/mylv1\n- umount /mnt/f2fs\n\nThe root cause is: it will update discard_max_bytes of mounted lvm\ndevice to zero after creating snapshot on this lvm device, then,\n__submit_discard_cmd() will pass parameter @nr_sects w/ zero value\nto __blkdev_issue_discard(), it returns a NULL bio pointer, result\nin panic.\n\nThis patch changes as below for fixing:\n1. Let's drop all remained discards in f2fs_unfreeze() if snapshot\nof lvm device is created.\n2. Checking discard_max_bytes before submitting discard during\n__submit_discard_cmd().\n    ",
+		"advisory": {
+			"from": "security@suse.de",
+			"severity": "Moderate",
+			"cve": [
+				{
+					"text": "CVE-2024-56565 at SUSE",
+					"href": "https://www.suse.com/security/cve/CVE-2024-56565/",
+					"impact": "medium",
+					"cvss3": "5.5/CVSS:3.1/AV:L/AC:L/PR:L/UI:N/S:U/C:N/I:N/A:H"
+				},
+				{
+					"text": "CVE-2024-56565 at NVD",
+					"href": "https://nvd.nist.gov/vuln/detail/CVE-2024-56565"
+				}
+			],
+			"bugzilla": [
+				{
+					"text": "SUSE bug 1235110",
+					"href": "https://bugzilla.suse.com/1235110"
+				}
+			],
+			"issued": {
+				"date": "2025-01-07"
+			},
+			"updated": {
+				"date": "2025-01-07"
+			},
+			"affected_cpe_list": {
+				"cpe": [
+					"cpe:/o:suse:suse-microos:5.2"
+				]
+			}
+		}
+	},
+	"criteria": {
+		"operator": "AND",
+		"criterias": [
+			{
+				"operator": "OR",
+				"criterions": [
+					{
+						"test_ref": "oval:org.opensuse.security:tst:2009338032",
+						"comment": "kernel-default is affected"
+					},
+					{
+						"test_ref": "oval:org.opensuse.security:tst:2009705050",
+						"comment": "kernel-rt is affected"
+					},
+					{
+						"test_ref": "oval:org.opensuse.security:tst:2009333995",
+						"comment": "kernel-source is affected"
+					},
+					{
+						"test_ref": "oval:org.opensuse.security:tst:2009728714",
+						"comment": "kernel-source-rt is affected"
+					}
+				]
+			}
+		],
+		"criterions": [
+			{
+				"test_ref": "oval:org.opensuse.security:tst:2009681300",
+				"comment": "SUSE Linux Enterprise Micro 5.2 is installed"
+			}
+		]
+	}
+}

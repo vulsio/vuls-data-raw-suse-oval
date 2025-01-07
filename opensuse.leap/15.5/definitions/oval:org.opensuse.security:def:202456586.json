@@ -1,0 +1,160 @@
+{
+	"id": "oval:org.opensuse.security:def:202456586",
+	"version": "1",
+	"class": "vulnerability",
+	"metadata": {
+		"title": "CVE-2024-56586",
+		"affected": {
+			"family": "unix",
+			"platform": [
+				"openSUSE Leap 15.5"
+			]
+		},
+		"reference": [
+			{
+				"ref_id": "Mitre CVE-2024-56586",
+				"ref_url": "https://cve.mitre.org/cgi-bin/cvename.cgi?name=CVE-2024-56586",
+				"source": "CVE"
+			},
+			{
+				"ref_id": "SUSE CVE-2024-56586",
+				"ref_url": "https://www.suse.com/security/cve/CVE-2024-56586",
+				"source": "SUSE CVE"
+			}
+		],
+		"description": "\n    In the Linux kernel, the following vulnerability has been resolved:\n\nf2fs: fix f2fs_bug_on when uninstalling filesystem call f2fs_evict_inode.\n\ncreating a large files during checkpoint disable until it runs out of\nspace and then delete it, then remount to enable checkpoint again, and\nthen unmount the filesystem triggers the f2fs_bug_on as below:\n\n------------[ cut here ]------------\nkernel BUG at fs/f2fs/inode.c:896!\nCPU: 2 UID: 0 PID: 1286 Comm: umount Not tainted 6.11.0-rc7-dirty #360\nOops: invalid opcode: 0000 [#1] PREEMPT SMP NOPTI\nRIP: 0010:f2fs_evict_inode+0x58c/0x610\nCall Trace:\n __die_body+0x15/0x60\n die+0x33/0x50\n do_trap+0x10a/0x120\n f2fs_evict_inode+0x58c/0x610\n do_error_trap+0x60/0x80\n f2fs_evict_inode+0x58c/0x610\n exc_invalid_op+0x53/0x60\n f2fs_evict_inode+0x58c/0x610\n asm_exc_invalid_op+0x16/0x20\n f2fs_evict_inode+0x58c/0x610\n evict+0x101/0x260\n dispose_list+0x30/0x50\n evict_inodes+0x140/0x190\n generic_shutdown_super+0x2f/0x150\n kill_block_super+0x11/0x40\n kill_f2fs_super+0x7d/0x140\n deactivate_locked_super+0x2a/0x70\n cleanup_mnt+0xb3/0x140\n task_work_run+0x61/0x90\n\nThe root cause is: creating large files during disable checkpoint\nperiod results in not enough free segments, so when writing back root\ninode will failed in f2fs_enable_checkpoint. When umount the file\nsystem after enabling checkpoint, the root inode is dirty in\nf2fs_evict_inode function, which triggers BUG_ON. The steps to\nreproduce are as follows:\n\ndd if=/dev/zero of=f2fs.img bs=1M count=55\nmount f2fs.img f2fs_dir -o checkpoint=disable:10%\ndd if=/dev/zero of=big bs=1M count=50\nsync\nrm big\nmount -o remount,checkpoint=enable f2fs_dir\numount f2fs_dir\n\nLet's redirty inode when there is not free segments during checkpoint\nis disable.\n    ",
+		"advisory": {
+			"from": "security@suse.de",
+			"severity": "Moderate",
+			"cve": [
+				{
+					"text": "CVE-2024-56586 at SUSE",
+					"href": "https://www.suse.com/security/cve/CVE-2024-56586/",
+					"impact": "medium",
+					"cvss3": "4.4/CVSS:3.1/AV:L/AC:L/PR:H/UI:N/S:U/C:N/I:N/A:H"
+				},
+				{
+					"text": "CVE-2024-56586 at NVD",
+					"href": "https://nvd.nist.gov/vuln/detail/CVE-2024-56586"
+				}
+			],
+			"bugzilla": [
+				{
+					"text": "SUSE bug 1235126",
+					"href": "https://bugzilla.suse.com/1235126"
+				}
+			],
+			"issued": {
+				"date": "2025-01-07"
+			},
+			"updated": {
+				"date": "2025-01-07"
+			},
+			"affected_cpe_list": {
+				"cpe": [
+					"cpe:/o:opensuse:leap:15.5"
+				]
+			}
+		}
+	},
+	"criteria": {
+		"operator": "AND",
+		"criterias": [
+			{
+				"operator": "OR",
+				"criterions": [
+					{
+						"test_ref": "oval:org.opensuse.security:tst:2009766997",
+						"comment": "cluster-md-kmp-default is affected"
+					},
+					{
+						"test_ref": "oval:org.opensuse.security:tst:2009766998",
+						"comment": "dlm-kmp-default is affected"
+					},
+					{
+						"test_ref": "oval:org.opensuse.security:tst:2009766999",
+						"comment": "gfs2-kmp-default is affected"
+					},
+					{
+						"test_ref": "oval:org.opensuse.security:tst:2009338032",
+						"comment": "kernel-default is affected"
+					},
+					{
+						"test_ref": "oval:org.opensuse.security:tst:2009338034",
+						"comment": "kernel-default-devel is affected"
+					},
+					{
+						"test_ref": "oval:org.opensuse.security:tst:2009715290",
+						"comment": "kernel-default-extra is affected"
+					},
+					{
+						"test_ref": "oval:org.opensuse.security:tst:2009764854",
+						"comment": "kernel-default-livepatch is affected"
+					},
+					{
+						"test_ref": "oval:org.opensuse.security:tst:2009764855",
+						"comment": "kernel-default-livepatch-devel is affected"
+					},
+					{
+						"test_ref": "oval:org.opensuse.security:tst:2009870815",
+						"comment": "kernel-default-optional is affected"
+					},
+					{
+						"test_ref": "oval:org.opensuse.security:tst:2009870816",
+						"comment": "kernel-default-vdso is affected"
+					},
+					{
+						"test_ref": "oval:org.opensuse.security:tst:2009870817",
+						"comment": "kselftests-kmp-default is affected"
+					},
+					{
+						"test_ref": "oval:org.opensuse.security:tst:2009767000",
+						"comment": "ocfs2-kmp-default is affected"
+					},
+					{
+						"test_ref": "oval:org.opensuse.security:tst:2009338038",
+						"comment": "reiserfs-kmp-default is affected"
+					},
+					{
+						"test_ref": "oval:org.opensuse.security:tst:2009335275",
+						"comment": "kernel-devel is affected"
+					},
+					{
+						"test_ref": "oval:org.opensuse.security:tst:2009335276",
+						"comment": "kernel-macros is affected"
+					},
+					{
+						"test_ref": "oval:org.opensuse.security:tst:2009333995",
+						"comment": "kernel-source is affected"
+					},
+					{
+						"test_ref": "oval:org.opensuse.security:tst:2009870818",
+						"comment": "kernel-source-vanilla is affected"
+					},
+					{
+						"test_ref": "oval:org.opensuse.security:tst:2009340777",
+						"comment": "kernel-devel-azure is affected"
+					},
+					{
+						"test_ref": "oval:org.opensuse.security:tst:2009340767",
+						"comment": "kernel-source-azure is affected"
+					},
+					{
+						"test_ref": "oval:org.opensuse.security:tst:2009728713",
+						"comment": "kernel-devel-rt is affected"
+					},
+					{
+						"test_ref": "oval:org.opensuse.security:tst:2009728714",
+						"comment": "kernel-source-rt is affected"
+					}
+				]
+			}
+		],
+		"criterions": [
+			{
+				"test_ref": "oval:org.opensuse.security:tst:2009752682",
+				"comment": "openSUSE Leap 15.5 is installed"
+			}
+		]
+	}
+}
