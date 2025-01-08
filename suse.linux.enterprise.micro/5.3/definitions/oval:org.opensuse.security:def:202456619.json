@@ -1,0 +1,92 @@
+{
+	"id": "oval:org.opensuse.security:def:202456619",
+	"version": "1",
+	"class": "vulnerability",
+	"metadata": {
+		"title": "CVE-2024-56619",
+		"affected": {
+			"family": "unix",
+			"platform": [
+				"SUSE Linux Enterprise Micro 5.3"
+			]
+		},
+		"reference": [
+			{
+				"ref_id": "Mitre CVE-2024-56619",
+				"ref_url": "https://cve.mitre.org/cgi-bin/cvename.cgi?name=CVE-2024-56619",
+				"source": "CVE"
+			},
+			{
+				"ref_id": "SUSE CVE-2024-56619",
+				"ref_url": "https://www.suse.com/security/cve/CVE-2024-56619",
+				"source": "SUSE CVE"
+			}
+		],
+		"description": "\n    In the Linux kernel, the following vulnerability has been resolved:\n\nnilfs2: fix potential out-of-bounds memory access in nilfs_find_entry()\n\nSyzbot reported that when searching for records in a directory where the\ninode's i_size is corrupted and has a large value, memory access outside\nthe folio/page range may occur, or a use-after-free bug may be detected if\nKASAN is enabled.\n\nThis is because nilfs_last_byte(), which is called by nilfs_find_entry()\nand others to calculate the number of valid bytes of directory data in a\npage from i_size and the page index, loses the upper 32 bits of the 64-bit\nsize information due to an inappropriate type of local variable to which\nthe i_size value is assigned.\n\nThis caused a large byte offset value due to underflow in the end address\ncalculation in the calling nilfs_find_entry(), resulting in memory access\nthat exceeds the folio/page size.\n\nFix this issue by changing the type of the local variable causing the bit\nloss from \"unsigned int\" to \"u64\".  The return value of nilfs_last_byte()\nis also of type \"unsigned int\", but it is truncated so as not to exceed\nPAGE_SIZE and no bit loss occurs, so no change is required.\n    ",
+		"advisory": {
+			"from": "security@suse.de",
+			"severity": "Important",
+			"cve": [
+				{
+					"text": "CVE-2024-56619 at SUSE",
+					"href": "https://www.suse.com/security/cve/CVE-2024-56619/",
+					"impact": "high",
+					"cvss3": "7.8/CVSS:3.1/AV:L/AC:L/PR:L/UI:N/S:U/C:H/I:H/A:H"
+				},
+				{
+					"text": "CVE-2024-56619 at NVD",
+					"href": "https://nvd.nist.gov/vuln/detail/CVE-2024-56619"
+				}
+			],
+			"bugzilla": [
+				{
+					"text": "SUSE bug 1235224",
+					"href": "https://bugzilla.suse.com/1235224"
+				}
+			],
+			"issued": {
+				"date": "2025-01-08"
+			},
+			"updated": {
+				"date": "2025-01-08"
+			},
+			"affected_cpe_list": {
+				"cpe": [
+					"cpe:/o:suse:sle-micro:5.3"
+				]
+			}
+		}
+	},
+	"criteria": {
+		"operator": "AND",
+		"criterias": [
+			{
+				"operator": "OR",
+				"criterions": [
+					{
+						"test_ref": "oval:org.opensuse.security:tst:2009338032",
+						"comment": "kernel-default is affected"
+					},
+					{
+						"test_ref": "oval:org.opensuse.security:tst:2009705050",
+						"comment": "kernel-rt is affected"
+					},
+					{
+						"test_ref": "oval:org.opensuse.security:tst:2009333995",
+						"comment": "kernel-source is affected"
+					},
+					{
+						"test_ref": "oval:org.opensuse.security:tst:2009728714",
+						"comment": "kernel-source-rt is affected"
+					}
+				]
+			}
+		],
+		"criterions": [
+			{
+				"test_ref": "oval:org.opensuse.security:tst:2009952222",
+				"comment": "SUSE Linux Enterprise Micro 5.3 is installed"
+			}
+		]
+	}
+}
