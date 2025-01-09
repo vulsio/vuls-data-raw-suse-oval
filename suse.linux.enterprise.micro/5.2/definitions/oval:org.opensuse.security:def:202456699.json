@@ -1,0 +1,92 @@
+{
+	"id": "oval:org.opensuse.security:def:202456699",
+	"version": "1",
+	"class": "vulnerability",
+	"metadata": {
+		"title": "CVE-2024-56699",
+		"affected": {
+			"family": "unix",
+			"platform": [
+				"SUSE Linux Enterprise Micro 5.2"
+			]
+		},
+		"reference": [
+			{
+				"ref_id": "Mitre CVE-2024-56699",
+				"ref_url": "https://cve.mitre.org/cgi-bin/cvename.cgi?name=CVE-2024-56699",
+				"source": "CVE"
+			},
+			{
+				"ref_id": "SUSE CVE-2024-56699",
+				"ref_url": "https://www.suse.com/security/cve/CVE-2024-56699",
+				"source": "SUSE CVE"
+			}
+		],
+		"description": "\n    In the Linux kernel, the following vulnerability has been resolved:\n\ns390/pci: Fix potential double remove of hotplug slot\n\nIn commit 6ee600bfbe0f (\"s390/pci: remove hotplug slot when releasing the\ndevice\") the zpci_exit_slot() was moved from zpci_device_reserved() to\nzpci_release_device() with the intention of keeping the hotplug slot\naround until the device is actually removed.\n\nNow zpci_release_device() is only called once all references are\ndropped. Since the zPCI subsystem only drops its reference once the\ndevice is in the reserved state it follows that zpci_release_device()\nmust only deal with devices in the reserved state. Despite that it\ncontains code to tear down from both configured and standby state. For\nthe standby case this already includes the removal of the hotplug slot\nso would cause a double removal if a device was ever removed in\neither configured or standby state.\n\nInstead of causing a potential double removal in a case that should\nnever happen explicitly WARN_ON() if a device in non-reserved state is\nreleased and get rid of the dead code cases.\n    ",
+		"advisory": {
+			"from": "security@suse.de",
+			"severity": "Moderate",
+			"cve": [
+				{
+					"text": "CVE-2024-56699 at SUSE",
+					"href": "https://www.suse.com/security/cve/CVE-2024-56699/",
+					"impact": "medium",
+					"cvss3": "6.1/CVSS:3.1/AV:L/AC:L/PR:L/UI:N/S:U/C:N/I:L/A:H"
+				},
+				{
+					"text": "CVE-2024-56699 at NVD",
+					"href": "https://nvd.nist.gov/vuln/detail/CVE-2024-56699"
+				}
+			],
+			"bugzilla": [
+				{
+					"text": "SUSE bug 1235490",
+					"href": "https://bugzilla.suse.com/1235490"
+				}
+			],
+			"issued": {
+				"date": "2025-01-09"
+			},
+			"updated": {
+				"date": "2025-01-09"
+			},
+			"affected_cpe_list": {
+				"cpe": [
+					"cpe:/o:suse:suse-microos:5.2"
+				]
+			}
+		}
+	},
+	"criteria": {
+		"operator": "AND",
+		"criterias": [
+			{
+				"operator": "OR",
+				"criterions": [
+					{
+						"test_ref": "oval:org.opensuse.security:tst:2009334017",
+						"comment": "kernel-default is not affected"
+					},
+					{
+						"test_ref": "oval:org.opensuse.security:tst:2009705046",
+						"comment": "kernel-rt is not affected"
+					},
+					{
+						"test_ref": "oval:org.opensuse.security:tst:2009333928",
+						"comment": "kernel-source is not affected"
+					},
+					{
+						"test_ref": "oval:org.opensuse.security:tst:2009728712",
+						"comment": "kernel-source-rt is not affected"
+					}
+				]
+			}
+		],
+		"criterions": [
+			{
+				"test_ref": "oval:org.opensuse.security:tst:2009681300",
+				"comment": "SUSE Linux Enterprise Micro 5.2 is installed"
+			}
+		]
+	}
+}

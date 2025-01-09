@@ -36,6 +36,11 @@
 				"ref_id": "SUSE-SU-2024:4100-1",
 				"ref_url": "https://lists.suse.com/pipermail/sle-security-updates/2024-November/019864.html",
 				"source": "SUSE-SU"
+			},
+			{
+				"ref_id": "SUSE-SU-2025:0034-1",
+				"ref_url": "https://lists.suse.com/pipermail/sle-security-updates/2025-January/020071.html",
+				"source": "SUSE-SU"
 			}
 		],
 		"description": "\n    In the Linux kernel, the following vulnerability has been resolved:\n\ntipc: wait and exit until all work queues are done\n\nOn some host, a crash could be triggered simply by repeating these\ncommands several times:\n\n  # modprobe tipc\n  # tipc bearer enable media udp name UDP1 localip 127.0.0.1\n  # rmmod tipc\n\n  [] BUG: unable to handle kernel paging request at ffffffffc096bb00\n  [] Workqueue: events 0xffffffffc096bb00\n  [] Call Trace:\n  []  ? process_one_work+0x1a7/0x360\n  []  ? worker_thread+0x30/0x390\n  []  ? create_worker+0x1a0/0x1a0\n  []  ? kthread+0x116/0x130\n  []  ? kthread_flush_work_fn+0x10/0x10\n  []  ? ret_from_fork+0x35/0x40\n\nWhen removing the TIPC module, the UDP tunnel sock will be delayed to\nrelease in a work queue as sock_release() can't be done in rtnl_lock().\nIf the work queue is schedule to run after the TIPC module is removed,\nkernel will crash as the work queue function cleanup_beareri() code no\nlonger exists when trying to invoke it.\n\nTo fix it, this patch introduce a member wq_count in tipc_net to track\nthe numbers of work queues in schedule, and  wait and exit until all\nwork queues are done in tipc_exit_net().\n    ",
@@ -64,7 +69,7 @@
 				"date": "2024-03-28"
 			},
 			"updated": {
-				"date": "2024-11-29"
+				"date": "2025-01-09"
 			},
 			"affected_cpe_list": {
 				"cpe": [
@@ -406,6 +411,18 @@
 						"operator": "OR",
 						"criterions": [
 							{
+								"test_ref": "oval:org.opensuse.security:tst:2009959286",
+								"comment": "cluster-md-kmp-default-4.12.14-122.234.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009959287",
+								"comment": "dlm-kmp-default-4.12.14-122.234.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009959288",
+								"comment": "gfs2-kmp-default-4.12.14-122.234.1 is installed"
+							},
+							{
 								"test_ref": "oval:org.opensuse.security:tst:2009955452",
 								"comment": "kernel-default-4.12.14-122.234.1 is installed"
 							},
@@ -436,6 +453,10 @@
 							{
 								"test_ref": "oval:org.opensuse.security:tst:2009955459",
 								"comment": "kernel-syms-4.12.14-122.234.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009959289",
+								"comment": "ocfs2-kmp-default-4.12.14-122.234.1 is installed"
 							}
 						]
 					}
@@ -453,6 +474,18 @@
 					{
 						"operator": "OR",
 						"criterions": [
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009959294",
+								"comment": "cluster-md-kmp-default-4.12.14-122.234.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009959295",
+								"comment": "dlm-kmp-default-4.12.14-122.234.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009959296",
+								"comment": "gfs2-kmp-default-4.12.14-122.234.1 is installed"
+							},
 							{
 								"test_ref": "oval:org.opensuse.security:tst:2009955478",
 								"comment": "kernel-default-4.12.14-122.234.1 is installed"
@@ -480,6 +513,10 @@
 							{
 								"test_ref": "oval:org.opensuse.security:tst:2009955481",
 								"comment": "kernel-syms-4.12.14-122.234.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009959297",
+								"comment": "ocfs2-kmp-default-4.12.14-122.234.1 is installed"
 							}
 						]
 					}

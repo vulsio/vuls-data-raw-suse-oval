@@ -1,0 +1,165 @@
+{
+	"id": "oval:org.opensuse.security:def:202456631",
+	"version": "1",
+	"class": "vulnerability",
+	"metadata": {
+		"title": "CVE-2024-56631",
+		"affected": {
+			"family": "unix",
+			"platform": [
+				"SUSE Linux Enterprise Micro 5.0",
+				"SUSE Linux Enterprise Micro 5.1",
+				"SUSE Linux Enterprise Micro 5.2",
+				"SUSE Linux Enterprise Micro 5.3",
+				"SUSE Linux Enterprise Micro 5.4",
+				"SUSE Linux Enterprise Micro 5.5"
+			]
+		},
+		"reference": [
+			{
+				"ref_id": "Mitre CVE-2024-56631",
+				"ref_url": "https://cve.mitre.org/cgi-bin/cvename.cgi?name=CVE-2024-56631",
+				"source": "CVE"
+			},
+			{
+				"ref_id": "SUSE CVE-2024-56631",
+				"ref_url": "https://www.suse.com/security/cve/CVE-2024-56631",
+				"source": "SUSE CVE"
+			}
+		],
+		"description": "\n    In the Linux kernel, the following vulnerability has been resolved:\n\nscsi: sg: Fix slab-use-after-free read in sg_release()\n\nFix a use-after-free bug in sg_release(), detected by syzbot with KASAN:\n\nBUG: KASAN: slab-use-after-free in lock_release+0x151/0xa30\nkernel/locking/lockdep.c:5838\n__mutex_unlock_slowpath+0xe2/0x750 kernel/locking/mutex.c:912\nsg_release+0x1f4/0x2e0 drivers/scsi/sg.c:407\n\nIn sg_release(), the function kref_put(&sfp->f_ref, sg_remove_sfp) is\ncalled before releasing the open_rel_lock mutex. The kref_put() call may\ndecrement the reference count of sfp to zero, triggering its cleanup\nthrough sg_remove_sfp(). This cleanup includes scheduling deferred work\nvia sg_remove_sfp_usercontext(), which ultimately frees sfp.\n\nAfter kref_put(), sg_release() continues to unlock open_rel_lock and may\nreference sfp or sdp. If sfp has already been freed, this results in a\nslab-use-after-free error.\n\nMove the kref_put(&sfp->f_ref, sg_remove_sfp) call after unlocking the\nopen_rel_lock mutex. This ensures:\n\n - No references to sfp or sdp occur after the reference count is\n   decremented.\n\n - Cleanup functions such as sg_remove_sfp() and\n   sg_remove_sfp_usercontext() can safely execute without impacting the\n   mutex handling in sg_release().\n\nThe fix has been tested and validated by syzbot. This patch closes the\nbug reported at the following syzkaller link and ensures proper\nsequencing of resource cleanup and mutex operations, eliminating the\nrisk of use-after-free errors in sg_release().\n    ",
+		"advisory": {
+			"from": "security@suse.de",
+			"severity": "Important",
+			"cve": [
+				{
+					"text": "CVE-2024-56631 at SUSE",
+					"href": "https://www.suse.com/security/cve/CVE-2024-56631/",
+					"impact": "high",
+					"cvss3": "7/CVSS:3.1/AV:L/AC:H/PR:L/UI:N/S:U/C:H/I:H/A:H"
+				},
+				{
+					"text": "CVE-2024-56631 at NVD",
+					"href": "https://nvd.nist.gov/vuln/detail/CVE-2024-56631",
+					"impact": "high",
+					"cvss3": "7.8/CVSS:3.1/AV:L/AC:L/PR:L/UI:N/S:U/C:H/I:H/A:H"
+				}
+			],
+			"bugzilla": [
+				{
+					"text": "SUSE bug 1235480",
+					"href": "https://bugzilla.suse.com/1235480"
+				}
+			],
+			"issued": {
+				"date": "2025-01-09"
+			},
+			"updated": {
+				"date": "2025-01-09"
+			},
+			"affected_cpe_list": {
+				"cpe": [
+					"cpe:/o:suse:sle-micro:5.3",
+					"cpe:/o:suse:sle-micro:5.4",
+					"cpe:/o:suse:sle-micro:5.5",
+					"cpe:/o:suse:suse-microos:5.0",
+					"cpe:/o:suse:suse-microos:5.1",
+					"cpe:/o:suse:suse-microos:5.2"
+				]
+			}
+		}
+	},
+	"criteria": {
+		"operator": "OR",
+		"criterias": [
+			{
+				"operator": "AND",
+				"criterions": [
+					{
+						"test_ref": "oval:org.opensuse.security:tst:2009704855",
+						"comment": "SUSE Linux Enterprise Micro 5.0 is installed"
+					},
+					{
+						"test_ref": "oval:org.opensuse.security:tst:2009338032",
+						"comment": "kernel-default is affected"
+					}
+				]
+			},
+			{
+				"operator": "AND",
+				"criterias": [
+					{
+						"operator": "OR",
+						"criterions": [
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009338032",
+								"comment": "kernel-default is affected"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009333995",
+								"comment": "kernel-source is affected"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009728714",
+								"comment": "kernel-source-rt is affected"
+							}
+						]
+					}
+				],
+				"criterions": [
+					{
+						"test_ref": "oval:org.opensuse.security:tst:2009951955",
+						"comment": "SUSE Linux Enterprise Micro 5.5 is installed"
+					}
+				]
+			},
+			{
+				"operator": "AND",
+				"criterias": [
+					{
+						"operator": "OR",
+						"criterions": [
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009669964",
+								"comment": "SUSE Linux Enterprise Micro 5.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009681300",
+								"comment": "SUSE Linux Enterprise Micro 5.2 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009952222",
+								"comment": "SUSE Linux Enterprise Micro 5.3 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009952223",
+								"comment": "SUSE Linux Enterprise Micro 5.4 is installed"
+							}
+						]
+					},
+					{
+						"operator": "OR",
+						"criterions": [
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009338032",
+								"comment": "kernel-default is affected"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009705050",
+								"comment": "kernel-rt is affected"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009333995",
+								"comment": "kernel-source is affected"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009728714",
+								"comment": "kernel-source-rt is affected"
+							}
+						]
+					}
+				]
+			}
+		]
+	}
+}
