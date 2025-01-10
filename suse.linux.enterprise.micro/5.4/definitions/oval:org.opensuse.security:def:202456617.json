@@ -1,0 +1,92 @@
+{
+	"id": "oval:org.opensuse.security:def:202456617",
+	"version": "1",
+	"class": "vulnerability",
+	"metadata": {
+		"title": "CVE-2024-56617",
+		"affected": {
+			"family": "unix",
+			"platform": [
+				"SUSE Linux Enterprise Micro 5.4"
+			]
+		},
+		"reference": [
+			{
+				"ref_id": "Mitre CVE-2024-56617",
+				"ref_url": "https://cve.mitre.org/cgi-bin/cvename.cgi?name=CVE-2024-56617",
+				"source": "CVE"
+			},
+			{
+				"ref_id": "SUSE CVE-2024-56617",
+				"ref_url": "https://www.suse.com/security/cve/CVE-2024-56617",
+				"source": "SUSE CVE"
+			}
+		],
+		"description": "\n    In the Linux kernel, the following vulnerability has been resolved:\n\ncacheinfo: Allocate memory during CPU hotplug if not done from the primary CPU\n\nCommit\n\n  5944ce092b97 (\"arch_topology: Build cacheinfo from primary CPU\")\n\nadds functionality that architectures can use to optionally allocate and\nbuild cacheinfo early during boot. Commit\n\n  6539cffa9495 (\"cacheinfo: Add arch specific early level initializer\")\n\nlets secondary CPUs correct (and reallocate memory) cacheinfo data if\nneeded.\n\nIf the early build functionality is not used and cacheinfo does not need\ncorrection, memory for cacheinfo is never allocated. x86 does not use\nthe early build functionality. Consequently, during the cacheinfo CPU\nhotplug callback, last_level_cache_is_valid() attempts to dereference\na NULL pointer:\n\n  BUG: kernel NULL pointer dereference, address: 0000000000000100\n  #PF: supervisor read access in kernel mode\n  #PF: error_code(0x0000) - not present page\n  PGD 0 P4D 0\n  Oops: 0000 [#1] PREEPMT SMP NOPTI\n  CPU: 0 PID 19 Comm: cpuhp/0 Not tainted 6.4.0-rc2 #1\n  RIP: 0010: last_level_cache_is_valid+0x95/0xe0a\n\nAllocate memory for cacheinfo during the cacheinfo CPU hotplug callback\nif not done earlier.\n\nMoreover, before determining the validity of the last-level cache info,\nensure that it has been allocated. Simply checking for non-zero\ncache_leaves() is not sufficient, as some architectures (e.g., Intel\nprocessors) have non-zero cache_leaves() before allocation.\n\nDereferencing NULL cacheinfo can occur in update_per_cpu_data_slice_size().\nThis function iterates over all online CPUs. However, a CPU may have come\nonline recently, but its cacheinfo may not have been allocated yet.\n\nWhile here, remove an unnecessary indentation in allocate_cache_info().\n\n  [ bp: Massage. ]\n    ",
+		"advisory": {
+			"from": "security@suse.de",
+			"severity": "Moderate",
+			"cve": [
+				{
+					"text": "CVE-2024-56617 at SUSE",
+					"href": "https://www.suse.com/security/cve/CVE-2024-56617/",
+					"impact": "medium",
+					"cvss3": "5.5/CVSS:3.1/AV:L/AC:L/PR:L/UI:N/S:U/C:N/I:N/A:H"
+				},
+				{
+					"text": "CVE-2024-56617 at NVD",
+					"href": "https://nvd.nist.gov/vuln/detail/CVE-2024-56617"
+				}
+			],
+			"bugzilla": [
+				{
+					"text": "SUSE bug 1235429",
+					"href": "https://bugzilla.suse.com/1235429"
+				}
+			],
+			"issued": {
+				"date": "2025-01-10"
+			},
+			"updated": {
+				"date": "2025-01-10"
+			},
+			"affected_cpe_list": {
+				"cpe": [
+					"cpe:/o:suse:sle-micro:5.4"
+				]
+			}
+		}
+	},
+	"criteria": {
+		"operator": "AND",
+		"criterias": [
+			{
+				"operator": "OR",
+				"criterions": [
+					{
+						"test_ref": "oval:org.opensuse.security:tst:2009334017",
+						"comment": "kernel-default is not affected"
+					},
+					{
+						"test_ref": "oval:org.opensuse.security:tst:2009705046",
+						"comment": "kernel-rt is not affected"
+					},
+					{
+						"test_ref": "oval:org.opensuse.security:tst:2009333928",
+						"comment": "kernel-source is not affected"
+					},
+					{
+						"test_ref": "oval:org.opensuse.security:tst:2009728712",
+						"comment": "kernel-source-rt is not affected"
+					}
+				]
+			}
+		],
+		"criterions": [
+			{
+				"test_ref": "oval:org.opensuse.security:tst:2009952223",
+				"comment": "SUSE Linux Enterprise Micro 5.4 is installed"
+			}
+		]
+	}
+}

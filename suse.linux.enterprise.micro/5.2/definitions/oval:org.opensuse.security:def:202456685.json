@@ -1,0 +1,92 @@
+{
+	"id": "oval:org.opensuse.security:def:202456685",
+	"version": "1",
+	"class": "vulnerability",
+	"metadata": {
+		"title": "CVE-2024-56685",
+		"affected": {
+			"family": "unix",
+			"platform": [
+				"SUSE Linux Enterprise Micro 5.2"
+			]
+		},
+		"reference": [
+			{
+				"ref_id": "Mitre CVE-2024-56685",
+				"ref_url": "https://cve.mitre.org/cgi-bin/cvename.cgi?name=CVE-2024-56685",
+				"source": "CVE"
+			},
+			{
+				"ref_id": "SUSE CVE-2024-56685",
+				"ref_url": "https://www.suse.com/security/cve/CVE-2024-56685",
+				"source": "SUSE CVE"
+			}
+		],
+		"description": "\n    In the Linux kernel, the following vulnerability has been resolved:\n\nASoC: mediatek: Check num_codecs is not zero to avoid panic during probe\n\nFollowing commit 13f58267cda3 (\"ASoC: soc.h: don't create dummy\nComponent via COMP_DUMMY()\"), COMP_DUMMY() became an array with zero\nlength, and only gets populated with the dummy struct after the card is\nregistered. Since the sound card driver's probe happens before the card\nregistration, accessing any of the members of a dummy component during\nprobe will result in undefined behavior.\n\nThis can be observed in the mt8188 and mt8195 machine sound drivers. By\nomitting a dai link subnode in the sound card's node in the Devicetree,\nthe default uninitialized dummy codec is used, and when its dai_name\npointer gets passed to strcmp() it results in a null pointer dereference\nand a kernel panic.\n\nIn addition to that, set_card_codec_info() in the generic helpers file,\nmtk-soundcard-driver.c, will populate a dai link with a dummy codec when\na dai link node is present in DT but with no codec property.\n\nThe result is that at probe time, a dummy codec can either be\nuninitialized with num_codecs = 0, or be an initialized dummy codec,\nwith num_codecs = 1 and dai_name = \"snd-soc-dummy-dai\". In order to\naccommodate for both situations, check that num_codecs is not zero\nbefore accessing the codecs' fields but still check for the codec's dai\nname against \"snd-soc-dummy-dai\" as needed.\n\nWhile at it, also drop the check that dai_name is not null in the mt8192\ndriver, introduced in commit 4d4e1b6319e5 (\"ASoC: mediatek: mt8192:\nCheck existence of dai_name before dereferencing\"), as it is actually\nredundant given the preceding num_codecs != 0 check.\n    ",
+		"advisory": {
+			"from": "security@suse.de",
+			"severity": "Moderate",
+			"cve": [
+				{
+					"text": "CVE-2024-56685 at SUSE",
+					"href": "https://www.suse.com/security/cve/CVE-2024-56685/",
+					"impact": "medium",
+					"cvss3": "5.5/CVSS:3.1/AV:L/AC:L/PR:L/UI:N/S:U/C:N/I:N/A:H"
+				},
+				{
+					"text": "CVE-2024-56685 at NVD",
+					"href": "https://nvd.nist.gov/vuln/detail/CVE-2024-56685"
+				}
+			],
+			"bugzilla": [
+				{
+					"text": "SUSE bug 1235561",
+					"href": "https://bugzilla.suse.com/1235561"
+				}
+			],
+			"issued": {
+				"date": "2025-01-10"
+			},
+			"updated": {
+				"date": "2025-01-10"
+			},
+			"affected_cpe_list": {
+				"cpe": [
+					"cpe:/o:suse:suse-microos:5.2"
+				]
+			}
+		}
+	},
+	"criteria": {
+		"operator": "AND",
+		"criterias": [
+			{
+				"operator": "OR",
+				"criterions": [
+					{
+						"test_ref": "oval:org.opensuse.security:tst:2009334017",
+						"comment": "kernel-default is not affected"
+					},
+					{
+						"test_ref": "oval:org.opensuse.security:tst:2009705046",
+						"comment": "kernel-rt is not affected"
+					},
+					{
+						"test_ref": "oval:org.opensuse.security:tst:2009333928",
+						"comment": "kernel-source is not affected"
+					},
+					{
+						"test_ref": "oval:org.opensuse.security:tst:2009728712",
+						"comment": "kernel-source-rt is not affected"
+					}
+				]
+			}
+		],
+		"criterions": [
+			{
+				"test_ref": "oval:org.opensuse.security:tst:2009681300",
+				"comment": "SUSE Linux Enterprise Micro 5.2 is installed"
+			}
+		]
+	}
+}
