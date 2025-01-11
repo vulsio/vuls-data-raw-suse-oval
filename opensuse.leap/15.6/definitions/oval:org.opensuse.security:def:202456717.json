@@ -1,0 +1,162 @@
+{
+	"id": "oval:org.opensuse.security:def:202456717",
+	"version": "1",
+	"class": "vulnerability",
+	"metadata": {
+		"title": "CVE-2024-56717",
+		"affected": {
+			"family": "unix",
+			"platform": [
+				"openSUSE Leap 15.6"
+			]
+		},
+		"reference": [
+			{
+				"ref_id": "Mitre CVE-2024-56717",
+				"ref_url": "https://cve.mitre.org/cgi-bin/cvename.cgi?name=CVE-2024-56717",
+				"source": "CVE"
+			},
+			{
+				"ref_id": "SUSE CVE-2024-56717",
+				"ref_url": "https://www.suse.com/security/cve/CVE-2024-56717",
+				"source": "SUSE CVE"
+			}
+		],
+		"description": "\n    In the Linux kernel, the following vulnerability has been resolved:\n\nnet: mscc: ocelot: fix incorrect IFH SRC_PORT field in ocelot_ifh_set_basic()\n\nPackets injected by the CPU should have a SRC_PORT field equal to the\nCPU port module index in the Analyzer block (ocelot->num_phys_ports).\n\nThe blamed commit copied the ocelot_ifh_set_basic() call incorrectly\nfrom ocelot_xmit_common() in net/dsa/tag_ocelot.c. Instead of calling\nwith \"x\", it calls with BIT_ULL(x), but the field is not a port mask,\nbut rather a single port index.\n\n[ side note: this is the technical debt of code duplication :( ]\n\nThe error used to be silent and doesn't appear to have other\nuser-visible manifestations, but with new changes in the packing\nlibrary, it now fails loudly as follows:\n\n------------[ cut here ]------------\nCannot store 0x40 inside bits 46-43 - will truncate\nsja1105 spi2.0: xmit timed out\nWARNING: CPU: 1 PID: 102 at lib/packing.c:98 __pack+0x90/0x198\nsja1105 spi2.0: timed out polling for tstamp\nCPU: 1 UID: 0 PID: 102 Comm: felix_xmit\nTainted: G        W        N 6.13.0-rc1-00372-gf706b85d972d-dirty #2605\nCall trace:\n __pack+0x90/0x198 (P)\n __pack+0x90/0x198 (L)\n packing+0x78/0x98\n ocelot_ifh_set_basic+0x260/0x368\n ocelot_port_inject_frame+0xa8/0x250\n felix_port_deferred_xmit+0x14c/0x258\n kthread_worker_fn+0x134/0x350\n kthread+0x114/0x138\n\nThe code path pertains to the ocelot switchdev driver and to the felix\nsecondary DSA tag protocol, ocelot-8021q. Here seen with ocelot-8021q.\n\nThe messenger (packing) is not really to blame, so fix the original\ncommit instead.\n    ",
+		"advisory": {
+			"from": "security@suse.de",
+			"severity": "Moderate",
+			"cve": [
+				{
+					"text": "CVE-2024-56717 at SUSE",
+					"href": "https://www.suse.com/security/cve/CVE-2024-56717/",
+					"impact": "medium",
+					"cvss3": "6.1/CVSS:3.1/AV:L/AC:L/PR:L/UI:N/S:U/C:N/I:L/A:H"
+				},
+				{
+					"text": "CVE-2024-56717 at NVD",
+					"href": "https://nvd.nist.gov/vuln/detail/CVE-2024-56717",
+					"impact": "medium",
+					"cvss3": "5.5/CVSS:3.1/AV:L/AC:L/PR:L/UI:N/S:U/C:N/I:N/A:H"
+				}
+			],
+			"bugzilla": [
+				{
+					"text": "SUSE bug 1235588",
+					"href": "https://bugzilla.suse.com/1235588"
+				}
+			],
+			"issued": {
+				"date": "2025-01-11"
+			},
+			"updated": {
+				"date": "2025-01-11"
+			},
+			"affected_cpe_list": {
+				"cpe": [
+					"cpe:/o:opensuse:leap:15.6"
+				]
+			}
+		}
+	},
+	"criteria": {
+		"operator": "AND",
+		"criterias": [
+			{
+				"operator": "OR",
+				"criterions": [
+					{
+						"test_ref": "oval:org.opensuse.security:tst:2009729794",
+						"comment": "cluster-md-kmp-default is not affected"
+					},
+					{
+						"test_ref": "oval:org.opensuse.security:tst:2009729795",
+						"comment": "dlm-kmp-default is not affected"
+					},
+					{
+						"test_ref": "oval:org.opensuse.security:tst:2009729796",
+						"comment": "gfs2-kmp-default is not affected"
+					},
+					{
+						"test_ref": "oval:org.opensuse.security:tst:2009334017",
+						"comment": "kernel-default is not affected"
+					},
+					{
+						"test_ref": "oval:org.opensuse.security:tst:2009335423",
+						"comment": "kernel-default-devel is not affected"
+					},
+					{
+						"test_ref": "oval:org.opensuse.security:tst:2009335424",
+						"comment": "kernel-default-extra is not affected"
+					},
+					{
+						"test_ref": "oval:org.opensuse.security:tst:2009728675",
+						"comment": "kernel-default-livepatch is not affected"
+					},
+					{
+						"test_ref": "oval:org.opensuse.security:tst:2009728676",
+						"comment": "kernel-default-livepatch-devel is not affected"
+					},
+					{
+						"test_ref": "oval:org.opensuse.security:tst:2009870467",
+						"comment": "kernel-default-optional is not affected"
+					},
+					{
+						"test_ref": "oval:org.opensuse.security:tst:2009870468",
+						"comment": "kernel-default-vdso is not affected"
+					},
+					{
+						"test_ref": "oval:org.opensuse.security:tst:2009870469",
+						"comment": "kselftests-kmp-default is not affected"
+					},
+					{
+						"test_ref": "oval:org.opensuse.security:tst:2009729797",
+						"comment": "ocfs2-kmp-default is not affected"
+					},
+					{
+						"test_ref": "oval:org.opensuse.security:tst:2009338037",
+						"comment": "reiserfs-kmp-default is not affected"
+					},
+					{
+						"test_ref": "oval:org.opensuse.security:tst:2009334791",
+						"comment": "kernel-devel is not affected"
+					},
+					{
+						"test_ref": "oval:org.opensuse.security:tst:2009334792",
+						"comment": "kernel-macros is not affected"
+					},
+					{
+						"test_ref": "oval:org.opensuse.security:tst:2009333928",
+						"comment": "kernel-source is not affected"
+					},
+					{
+						"test_ref": "oval:org.opensuse.security:tst:2009870470",
+						"comment": "kernel-source-vanilla is not affected"
+					},
+					{
+						"test_ref": "oval:org.opensuse.security:tst:2009340306",
+						"comment": "kernel-devel-azure is not affected"
+					},
+					{
+						"test_ref": "oval:org.opensuse.security:tst:2009340305",
+						"comment": "kernel-source-azure is not affected"
+					},
+					{
+						"test_ref": "oval:org.opensuse.security:tst:2009728711",
+						"comment": "kernel-devel-rt is not affected"
+					},
+					{
+						"test_ref": "oval:org.opensuse.security:tst:2009728712",
+						"comment": "kernel-source-rt is not affected"
+					}
+				]
+			}
+		],
+		"criterions": [
+			{
+				"test_ref": "oval:org.opensuse.security:tst:2009864054",
+				"comment": "openSUSE Leap 15.6 is installed"
+			}
+		]
+	}
+}
