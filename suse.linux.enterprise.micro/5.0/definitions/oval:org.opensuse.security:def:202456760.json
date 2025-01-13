@@ -1,0 +1,75 @@
+{
+	"id": "oval:org.opensuse.security:def:202456760",
+	"version": "1",
+	"class": "vulnerability",
+	"metadata": {
+		"title": "CVE-2024-56760",
+		"affected": {
+			"family": "unix",
+			"platform": [
+				"SUSE Linux Enterprise Micro 5.0"
+			]
+		},
+		"reference": [
+			{
+				"ref_id": "Mitre CVE-2024-56760",
+				"ref_url": "https://cve.mitre.org/cgi-bin/cvename.cgi?name=CVE-2024-56760",
+				"source": "CVE"
+			},
+			{
+				"ref_id": "SUSE CVE-2024-56760",
+				"ref_url": "https://www.suse.com/security/cve/CVE-2024-56760",
+				"source": "SUSE CVE"
+			}
+		],
+		"description": "\n    In the Linux kernel, the following vulnerability has been resolved:\n\nPCI/MSI: Handle lack of irqdomain gracefully\n\nAlexandre observed a warning emitted from pci_msi_setup_msi_irqs() on a\nRISCV platform which does not provide PCI/MSI support:\n\n WARNING: CPU: 1 PID: 1 at drivers/pci/msi/msi.h:121 pci_msi_setup_msi_irqs+0x2c/0x32\n __pci_enable_msix_range+0x30c/0x596\n pci_msi_setup_msi_irqs+0x2c/0x32\n pci_alloc_irq_vectors_affinity+0xb8/0xe2\n\nRISCV uses hierarchical interrupt domains and correctly does not implement\nthe legacy fallback. The warning triggers from the legacy fallback stub.\n\nThat warning is bogus as the PCI/MSI layer knows whether a PCI/MSI parent\ndomain is associated with the device or not. There is a check for MSI-X,\nwhich has a legacy assumption. But that legacy fallback assumption is only\nvalid when legacy support is enabled, but otherwise the check should simply\nreturn -ENOTSUPP.\n\nLoongarch tripped over the same problem and blindly enabled legacy support\nwithout implementing the legacy fallbacks. There are weak implementations\nwhich return an error, so the problem was papered over.\n\nCorrect pci_msi_domain_supports() to evaluate the legacy mode and add\nthe missing supported check into the MSI enable path to complete it.\n    ",
+		"advisory": {
+			"from": "security@suse.de",
+			"severity": "Moderate",
+			"cve": [
+				{
+					"text": "CVE-2024-56760 at SUSE",
+					"href": "https://www.suse.com/security/cve/CVE-2024-56760/",
+					"impact": "medium",
+					"cvss3": "5.5/CVSS:3.1/AV:L/AC:L/PR:L/UI:N/S:U/C:N/I:N/A:H"
+				},
+				{
+					"text": "CVE-2024-56760 at NVD",
+					"href": "https://nvd.nist.gov/vuln/detail/CVE-2024-56760",
+					"impact": "medium",
+					"cvss3": "5.5/CVSS:3.1/AV:L/AC:L/PR:L/UI:N/S:U/C:N/I:N/A:H"
+				}
+			],
+			"bugzilla": [
+				{
+					"text": "SUSE bug 1235616",
+					"href": "https://bugzilla.suse.com/1235616"
+				}
+			],
+			"issued": {
+				"date": "2025-01-13"
+			},
+			"updated": {
+				"date": "2025-01-13"
+			},
+			"affected_cpe_list": {
+				"cpe": [
+					"cpe:/o:suse:suse-microos:5.0"
+				]
+			}
+		}
+	},
+	"criteria": {
+		"operator": "AND",
+		"criterions": [
+			{
+				"test_ref": "oval:org.opensuse.security:tst:2009704855",
+				"comment": "SUSE Linux Enterprise Micro 5.0 is installed"
+			},
+			{
+				"test_ref": "oval:org.opensuse.security:tst:2009334017",
+				"comment": "kernel-default is not affected"
+			}
+		]
+	}
+}

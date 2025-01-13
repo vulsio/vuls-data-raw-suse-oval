@@ -1,0 +1,90 @@
+{
+	"id": "oval:org.opensuse.security:def:202456759",
+	"version": "1",
+	"class": "vulnerability",
+	"metadata": {
+		"title": "CVE-2024-56759",
+		"affected": {
+			"family": "unix",
+			"platform": [
+				"SUSE Linux Enterprise Micro 5.5"
+			]
+		},
+		"reference": [
+			{
+				"ref_id": "Mitre CVE-2024-56759",
+				"ref_url": "https://cve.mitre.org/cgi-bin/cvename.cgi?name=CVE-2024-56759",
+				"source": "CVE"
+			},
+			{
+				"ref_id": "SUSE CVE-2024-56759",
+				"ref_url": "https://www.suse.com/security/cve/CVE-2024-56759",
+				"source": "SUSE CVE"
+			}
+		],
+		"description": "\n    In the Linux kernel, the following vulnerability has been resolved:\n\nbtrfs: fix use-after-free when COWing tree bock and tracing is enabled\n\nWhen a COWing a tree block, at btrfs_cow_block(), and we have the\ntracepoint trace_btrfs_cow_block() enabled and preemption is also enabled\n(CONFIG_PREEMPT=y), we can trigger a use-after-free in the COWed extent\nbuffer while inside the tracepoint code. This is because in some paths\nthat call btrfs_cow_block(), such as btrfs_search_slot(), we are holding\nthe last reference on the extent buffer @buf so btrfs_force_cow_block()\ndrops the last reference on the @buf extent buffer when it calls\nfree_extent_buffer_stale(buf), which schedules the release of the extent\nbuffer with RCU. This means that if we are on a kernel with preemption,\nthe current task may be preempted before calling trace_btrfs_cow_block()\nand the extent buffer already released by the time trace_btrfs_cow_block()\nis called, resulting in a use-after-free.\n\nFix this by moving the trace_btrfs_cow_block() from btrfs_cow_block() to\nbtrfs_force_cow_block() before the COWed extent buffer is freed.\nThis also has a side effect of invoking the tracepoint in the tree defrag\ncode, at defrag.c:btrfs_realloc_node(), since btrfs_force_cow_block() is\ncalled there, but this is fine and it was actually missing there.\n    ",
+		"advisory": {
+			"from": "security@suse.de",
+			"severity": "Important",
+			"cve": [
+				{
+					"text": "CVE-2024-56759 at SUSE",
+					"href": "https://www.suse.com/security/cve/CVE-2024-56759/",
+					"impact": "high",
+					"cvss3": "7/CVSS:3.1/AV:L/AC:H/PR:L/UI:N/S:U/C:H/I:H/A:H"
+				},
+				{
+					"text": "CVE-2024-56759 at NVD",
+					"href": "https://nvd.nist.gov/vuln/detail/CVE-2024-56759",
+					"impact": "high",
+					"cvss3": "7.8/CVSS:3.1/AV:L/AC:L/PR:L/UI:N/S:U/C:H/I:H/A:H"
+				}
+			],
+			"bugzilla": [
+				{
+					"text": "SUSE bug 1235645",
+					"href": "https://bugzilla.suse.com/1235645"
+				}
+			],
+			"issued": {
+				"date": "2025-01-13"
+			},
+			"updated": {
+				"date": "2025-01-13"
+			},
+			"affected_cpe_list": {
+				"cpe": [
+					"cpe:/o:suse:sle-micro:5.5"
+				]
+			}
+		}
+	},
+	"criteria": {
+		"operator": "AND",
+		"criterias": [
+			{
+				"operator": "OR",
+				"criterions": [
+					{
+						"test_ref": "oval:org.opensuse.security:tst:2009338032",
+						"comment": "kernel-default is affected"
+					},
+					{
+						"test_ref": "oval:org.opensuse.security:tst:2009333995",
+						"comment": "kernel-source is affected"
+					},
+					{
+						"test_ref": "oval:org.opensuse.security:tst:2009728714",
+						"comment": "kernel-source-rt is affected"
+					}
+				]
+			}
+		],
+		"criterions": [
+			{
+				"test_ref": "oval:org.opensuse.security:tst:2009951955",
+				"comment": "SUSE Linux Enterprise Micro 5.5 is installed"
+			}
+		]
+	}
+}
