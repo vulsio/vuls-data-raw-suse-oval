@@ -1,0 +1,92 @@
+{
+	"id": "oval:org.opensuse.security:def:202457874",
+	"version": "1",
+	"class": "vulnerability",
+	"metadata": {
+		"title": "CVE-2024-57874",
+		"affected": {
+			"family": "unix",
+			"platform": [
+				"SUSE Linux Enterprise Micro 5.4"
+			]
+		},
+		"reference": [
+			{
+				"ref_id": "Mitre CVE-2024-57874",
+				"ref_url": "https://cve.mitre.org/cgi-bin/cvename.cgi?name=CVE-2024-57874",
+				"source": "CVE"
+			},
+			{
+				"ref_id": "SUSE CVE-2024-57874",
+				"ref_url": "https://www.suse.com/security/cve/CVE-2024-57874",
+				"source": "SUSE CVE"
+			}
+		],
+		"description": "\n    In the Linux kernel, the following vulnerability has been resolved:\n\narm64: ptrace: fix partial SETREGSET for NT_ARM_TAGGED_ADDR_CTRL\n\nCurrently tagged_addr_ctrl_set() doesn't initialize the temporary 'ctrl'\nvariable, and a SETREGSET call with a length of zero will leave this\nuninitialized. Consequently tagged_addr_ctrl_set() will consume an\narbitrary value, potentially leaking up to 64 bits of memory from the\nkernel stack. The read is limited to a specific slot on the stack, and\nthe issue does not provide a write mechanism.\n\nAs set_tagged_addr_ctrl() only accepts values where bits [63:4] zero and\nrejects other values, a partial SETREGSET attempt will randomly succeed\nor fail depending on the value of the uninitialized value, and the\nexposure is significantly limited.\n\nFix this by initializing the temporary value before copying the regset\nfrom userspace, as for other regsets (e.g. NT_PRSTATUS, NT_PRFPREG,\nNT_ARM_SYSTEM_CALL). In the case of a zero-length write, the existing\nvalue of the tagged address ctrl will be retained.\n\nThe NT_ARM_TAGGED_ADDR_CTRL regset is only visible in the\nuser_aarch64_view used by a native AArch64 task to manipulate another\nnative AArch64 task. As get_tagged_addr_ctrl() only returns an error\nvalue when called for a compat task, tagged_addr_ctrl_get() and\ntagged_addr_ctrl_set() should never observe an error value from\nget_tagged_addr_ctrl(). Add a WARN_ON_ONCE() to both to indicate that\nsuch an error would be unexpected, and error handlnig is not missing in\neither case.\n    ",
+		"advisory": {
+			"from": "security@suse.de",
+			"severity": "Low",
+			"cve": [
+				{
+					"text": "CVE-2024-57874 at SUSE",
+					"href": "https://www.suse.com/security/cve/CVE-2024-57874/",
+					"impact": "low",
+					"cvss3": "3.3/CVSS:3.1/AV:L/AC:L/PR:L/UI:N/S:U/C:L/I:N/A:N"
+				},
+				{
+					"text": "CVE-2024-57874 at NVD",
+					"href": "https://nvd.nist.gov/vuln/detail/CVE-2024-57874"
+				}
+			],
+			"bugzilla": [
+				{
+					"text": "SUSE bug 1235808",
+					"href": "https://bugzilla.suse.com/1235808"
+				}
+			],
+			"issued": {
+				"date": "2025-01-15"
+			},
+			"updated": {
+				"date": "2025-01-15"
+			},
+			"affected_cpe_list": {
+				"cpe": [
+					"cpe:/o:suse:sle-micro:5.4"
+				]
+			}
+		}
+	},
+	"criteria": {
+		"operator": "AND",
+		"criterias": [
+			{
+				"operator": "OR",
+				"criterions": [
+					{
+						"test_ref": "oval:org.opensuse.security:tst:2009338032",
+						"comment": "kernel-default is affected"
+					},
+					{
+						"test_ref": "oval:org.opensuse.security:tst:2009705050",
+						"comment": "kernel-rt is affected"
+					},
+					{
+						"test_ref": "oval:org.opensuse.security:tst:2009333995",
+						"comment": "kernel-source is affected"
+					},
+					{
+						"test_ref": "oval:org.opensuse.security:tst:2009728714",
+						"comment": "kernel-source-rt is affected"
+					}
+				]
+			}
+		],
+		"criterions": [
+			{
+				"test_ref": "oval:org.opensuse.security:tst:2009952223",
+				"comment": "SUSE Linux Enterprise Micro 5.4 is installed"
+			}
+		]
+	}
+}

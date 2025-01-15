@@ -791,6 +791,31 @@
 				"ref_id": "SUSE-SU-2024:4266-1",
 				"ref_url": "https://lists.suse.com/pipermail/sle-security-updates/2024-December/019968.html",
 				"source": "SUSE-SU"
+			},
+			{
+				"ref_id": "SUSE-SU-2025:0101-1",
+				"ref_url": "https://lists.suse.com/pipermail/sle-security-updates/2025-January/020116.html",
+				"source": "SUSE-SU"
+			},
+			{
+				"ref_id": "SUSE-SU-2025:0103-1",
+				"ref_url": "https://lists.suse.com/pipermail/sle-security-updates/2025-January/020115.html",
+				"source": "SUSE-SU"
+			},
+			{
+				"ref_id": "SUSE-SU-2025:0106-1",
+				"ref_url": "https://lists.suse.com/pipermail/sle-security-updates/2025-January/020113.html",
+				"source": "SUSE-SU"
+			},
+			{
+				"ref_id": "SUSE-SU-2025:0107-1",
+				"ref_url": "https://lists.suse.com/pipermail/sle-security-updates/2025-January/020112.html",
+				"source": "SUSE-SU"
+			},
+			{
+				"ref_id": "SUSE-SU-2025:0109-1",
+				"ref_url": "https://lists.suse.com/pipermail/sle-security-updates/2025-January/020110.html",
+				"source": "SUSE-SU"
 			}
 		],
 		"description": "\n    In the Linux kernel, the following vulnerability has been resolved:\n\nipvlan: Fix out-of-bound bugs caused by unset skb->mac_header\n\nIf an AF_PACKET socket is used to send packets through ipvlan and the\ndefault xmit function of the AF_PACKET socket is changed from\ndev_queue_xmit() to packet_direct_xmit() via setsockopt() with the option\nname of PACKET_QDISC_BYPASS, the skb->mac_header may not be reset and\nremains as the initial value of 65535, this may trigger slab-out-of-bounds\nbugs as following:\n\n=================================================================\nUG: KASAN: slab-out-of-bounds in ipvlan_xmit_mode_l2+0xdb/0x330 [ipvlan]\nPU: 2 PID: 1768 Comm: raw_send Kdump: loaded Not tainted 6.0.0-rc4+ #6\nardware name: QEMU Standard PC (i440FX + PIIX, 1996), BIOS 1.14.0-1.fc33\nall Trace:\nprint_address_description.constprop.0+0x1d/0x160\nprint_report.cold+0x4f/0x112\nkasan_report+0xa3/0x130\nipvlan_xmit_mode_l2+0xdb/0x330 [ipvlan]\nipvlan_start_xmit+0x29/0xa0 [ipvlan]\n__dev_direct_xmit+0x2e2/0x380\npacket_direct_xmit+0x22/0x60\npacket_snd+0x7c9/0xc40\nsock_sendmsg+0x9a/0xa0\n__sys_sendto+0x18a/0x230\n__x64_sys_sendto+0x74/0x90\ndo_syscall_64+0x3b/0x90\nentry_SYSCALL_64_after_hwframe+0x63/0xcd\n\nThe root cause is:\n  1. packet_snd() only reset skb->mac_header when sock->type is SOCK_RAW\n     and skb->protocol is not specified as in packet_parse_headers()\n\n  2. packet_direct_xmit() doesn't reset skb->mac_header as dev_queue_xmit()\n\nIn this case, skb->mac_header is 65535 when ipvlan_xmit_mode_l2() is\ncalled. So when ipvlan_xmit_mode_l2() gets mac header with eth_hdr() which\nuse \"skb->head + skb->mac_header\", out-of-bound access occurs.\n\nThis patch replaces eth_hdr() with skb_eth_hdr() in ipvlan_xmit_mode_l2()\nand reset mac header in multicast to solve this out-of-bound bug.\n    ",
@@ -823,7 +848,7 @@
 				"date": "2024-04-30"
 			},
 			"updated": {
-				"date": "2024-12-10"
+				"date": "2025-01-15"
 			},
 			"affected_cpe_list": {
 				"cpe": [
@@ -1295,8 +1320,8 @@
 												"comment": "kernel-default 5.3.18-150300.59.153.2 is installed"
 											},
 											{
-												"test_ref": "oval:org.opensuse.security:tst:2009956849",
-												"comment": "no kernel-livepatch-5_3_18-150300_59_153-default is greater or equal than 10-150300.7.6.1"
+												"test_ref": "oval:org.opensuse.security:tst:2009960103",
+												"comment": "no kernel-livepatch-5_3_18-150300_59_153-default is greater or equal than 11-150300.7.6.1"
 											}
 										]
 									},
@@ -1308,8 +1333,8 @@
 												"comment": "kernel-default 5.3.18-150300.59.158.1 is installed"
 											},
 											{
-												"test_ref": "oval:org.opensuse.security:tst:2009957142",
-												"comment": "no kernel-livepatch-5_3_18-150300_59_158-default is greater or equal than 9-150300.7.6.1"
+												"test_ref": "oval:org.opensuse.security:tst:2009960104",
+												"comment": "no kernel-livepatch-5_3_18-150300_59_158-default is greater or equal than 10-150300.7.6.1"
 											}
 										]
 									}
@@ -1420,8 +1445,8 @@
 												"comment": "kernel-default 5.14.21-150400.24.108.1 is installed"
 											},
 											{
-												"test_ref": "oval:org.opensuse.security:tst:2009956860",
-												"comment": "no kernel-livepatch-5_14_21-150400_24_108-default is greater or equal than 11-150400.9.8.1"
+												"test_ref": "oval:org.opensuse.security:tst:2009960106",
+												"comment": "no kernel-livepatch-5_14_21-150400_24_108-default is greater or equal than 12-150400.9.8.1"
 											}
 										]
 									},
@@ -1433,8 +1458,8 @@
 												"comment": "kernel-default 5.14.21-150400.24.111.2 is installed"
 											},
 											{
-												"test_ref": "oval:org.opensuse.security:tst:2009957143",
-												"comment": "no kernel-livepatch-5_14_21-150400_24_111-default is greater or equal than 9-150400.9.6.1"
+												"test_ref": "oval:org.opensuse.security:tst:2009960107",
+												"comment": "no kernel-livepatch-5_14_21-150400_24_111-default is greater or equal than 10-150400.9.6.1"
 											}
 										]
 									},
@@ -1785,12 +1810,12 @@
 								"comment": "kernel-livepatch-5_3_18-150300_59_150-default-6-150300.2.1 is installed"
 							},
 							{
-								"test_ref": "oval:org.opensuse.security:tst:2009956955",
-								"comment": "kernel-livepatch-5_3_18-150300_59_153-default-10-150300.7.6.1 is installed"
+								"test_ref": "oval:org.opensuse.security:tst:2009960187",
+								"comment": "kernel-livepatch-5_3_18-150300_59_153-default-11-150300.7.6.1 is installed"
 							},
 							{
-								"test_ref": "oval:org.opensuse.security:tst:2009957221",
-								"comment": "kernel-livepatch-5_3_18-150300_59_158-default-9-150300.7.6.1 is installed"
+								"test_ref": "oval:org.opensuse.security:tst:2009960189",
+								"comment": "kernel-livepatch-5_3_18-150300_59_158-default-10-150300.7.6.1 is installed"
 							},
 							{
 								"test_ref": "oval:org.opensuse.security:tst:2009860813",
@@ -1905,12 +1930,12 @@
 								"comment": "kernel-livepatch-5_14_21-150400_24_103-default-5-150400.2.1 is installed"
 							},
 							{
-								"test_ref": "oval:org.opensuse.security:tst:2009956956",
-								"comment": "kernel-livepatch-5_14_21-150400_24_108-default-11-150400.9.8.1 is installed"
+								"test_ref": "oval:org.opensuse.security:tst:2009960192",
+								"comment": "kernel-livepatch-5_14_21-150400_24_108-default-12-150400.9.8.1 is installed"
 							},
 							{
-								"test_ref": "oval:org.opensuse.security:tst:2009957224",
-								"comment": "kernel-livepatch-5_14_21-150400_24_111-default-9-150400.9.6.1 is installed"
+								"test_ref": "oval:org.opensuse.security:tst:2009960194",
+								"comment": "kernel-livepatch-5_14_21-150400_24_111-default-10-150400.9.6.1 is installed"
 							},
 							{
 								"test_ref": "oval:org.opensuse.security:tst:2009956957",

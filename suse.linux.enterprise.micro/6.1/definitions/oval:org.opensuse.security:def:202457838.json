@@ -1,0 +1,100 @@
+{
+	"id": "oval:org.opensuse.security:def:202457838",
+	"version": "1",
+	"class": "vulnerability",
+	"metadata": {
+		"title": "CVE-2024-57838",
+		"affected": {
+			"family": "unix",
+			"platform": [
+				"SUSE Linux Micro 6.1"
+			]
+		},
+		"reference": [
+			{
+				"ref_id": "Mitre CVE-2024-57838",
+				"ref_url": "https://cve.mitre.org/cgi-bin/cvename.cgi?name=CVE-2024-57838",
+				"source": "CVE"
+			},
+			{
+				"ref_id": "SUSE CVE-2024-57838",
+				"ref_url": "https://www.suse.com/security/cve/CVE-2024-57838",
+				"source": "SUSE CVE"
+			}
+		],
+		"description": "\n    In the Linux kernel, the following vulnerability has been resolved:\n\ns390/entry: Mark IRQ entries to fix stack depot warnings\n\nThe stack depot filters out everything outside of the top interrupt\ncontext as an uninteresting or irrelevant part of the stack traces. This\nhelps with stack trace de-duplication, avoiding an explosion of saved\nstack traces that share the same IRQ context code path but originate\nfrom different randomly interrupted points, eventually exhausting the\nstack depot.\n\nFiltering uses in_irqentry_text() to identify functions within the\n.irqentry.text and .softirqentry.text sections, which then become the\nlast stack trace entries being saved.\n\nWhile __do_softirq() is placed into the .softirqentry.text section by\ncommon code, populating .irqentry.text is architecture-specific.\n\nCurrently, the .irqentry.text section on s390 is empty, which prevents\nstack depot filtering and de-duplication and could result in warnings\nlike:\n\nStack depot reached limit capacity\nWARNING: CPU: 0 PID: 286113 at lib/stackdepot.c:252 depot_alloc_stack+0x39a/0x3c8\n\nwith PREEMPT and KASAN enabled.\n\nFix this by moving the IO/EXT interrupt handlers from .kprobes.text into\nthe .irqentry.text section and updating the kprobes blacklist to include\nthe .irqentry.text section.\n\nThis is done only for asynchronous interrupts and explicitly not for\nprogram checks, which are synchronous and where the context beyond the\nprogram check is important to preserve. Despite machine checks being\nsomewhat in between, they are extremely rare, and preserving context\nwhen possible is also of value.\n\nSVCs and Restart Interrupts are not relevant, one being always at the\nboundary to user space and the other being a one-time thing.\n\nIRQ entries filtering is also optionally used in ftrace function graph,\nwhere the same logic applies.\n    ",
+		"advisory": {
+			"from": "security@suse.de",
+			"severity": "Moderate",
+			"cve": [
+				{
+					"text": "CVE-2024-57838 at SUSE",
+					"href": "https://www.suse.com/security/cve/CVE-2024-57838/",
+					"impact": "medium",
+					"cvss3": "5.5/CVSS:3.1/AV:L/AC:L/PR:L/UI:N/S:U/C:N/I:N/A:H"
+				},
+				{
+					"text": "CVE-2024-57838 at NVD",
+					"href": "https://nvd.nist.gov/vuln/detail/CVE-2024-57838"
+				}
+			],
+			"bugzilla": [
+				{
+					"text": "SUSE bug 1235798",
+					"href": "https://bugzilla.suse.com/1235798"
+				}
+			],
+			"issued": {
+				"date": "2025-01-15"
+			},
+			"updated": {
+				"date": "2025-01-15"
+			},
+			"affected_cpe_list": {
+				"cpe": [
+					"cpe:/o:suse:sl-micro:6.1"
+				]
+			}
+		}
+	},
+	"criteria": {
+		"operator": "AND",
+		"criterias": [
+			{
+				"operator": "OR",
+				"criterions": [
+					{
+						"test_ref": "oval:org.opensuse.security:tst:2009338032",
+						"comment": "kernel-default is affected"
+					},
+					{
+						"test_ref": "oval:org.opensuse.security:tst:2009335275",
+						"comment": "kernel-devel is affected"
+					},
+					{
+						"test_ref": "oval:org.opensuse.security:tst:2009335276",
+						"comment": "kernel-macros is affected"
+					},
+					{
+						"test_ref": "oval:org.opensuse.security:tst:2009333995",
+						"comment": "kernel-source is affected"
+					},
+					{
+						"test_ref": "oval:org.opensuse.security:tst:2009728713",
+						"comment": "kernel-devel-rt is affected"
+					},
+					{
+						"test_ref": "oval:org.opensuse.security:tst:2009728714",
+						"comment": "kernel-source-rt is affected"
+					}
+				]
+			}
+		],
+		"criterions": [
+			{
+				"test_ref": "oval:org.opensuse.security:tst:2009954035",
+				"comment": "SUSE Linux Micro 6.1 is installed"
+			}
+		]
+	}
+}

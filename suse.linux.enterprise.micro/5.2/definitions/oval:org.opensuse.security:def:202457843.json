@@ -1,0 +1,92 @@
+{
+	"id": "oval:org.opensuse.security:def:202457843",
+	"version": "1",
+	"class": "vulnerability",
+	"metadata": {
+		"title": "CVE-2024-57843",
+		"affected": {
+			"family": "unix",
+			"platform": [
+				"SUSE Linux Enterprise Micro 5.2"
+			]
+		},
+		"reference": [
+			{
+				"ref_id": "Mitre CVE-2024-57843",
+				"ref_url": "https://cve.mitre.org/cgi-bin/cvename.cgi?name=CVE-2024-57843",
+				"source": "CVE"
+			},
+			{
+				"ref_id": "SUSE CVE-2024-57843",
+				"ref_url": "https://www.suse.com/security/cve/CVE-2024-57843",
+				"source": "SUSE CVE"
+			}
+		],
+		"description": "\n    In the Linux kernel, the following vulnerability has been resolved:\n\nvirtio-net: fix overflow inside virtnet_rq_alloc\n\nWhen the frag just got a page, then may lead to regression on VM.\nSpecially if the sysctl net.core.high_order_alloc_disable value is 1,\nthen the frag always get a page when do refill.\n\nWhich could see reliable crashes or scp failure (scp a file 100M in size\nto VM).\n\nThe issue is that the virtnet_rq_dma takes up 16 bytes at the beginning\nof a new frag. When the frag size is larger than PAGE_SIZE,\neverything is fine. However, if the frag is only one page and the\ntotal size of the buffer and virtnet_rq_dma is larger than one page, an\noverflow may occur.\n\nThe commit f9dac92ba908 (\"virtio_ring: enable premapped mode whatever\nuse_dma_api\") introduced this problem. And we reverted some commits to\nfix this in last linux version. Now we try to enable it and fix this\nbug directly.\n\nHere, when the frag size is not enough, we reduce the buffer len to fix\nthis problem.\n    ",
+		"advisory": {
+			"from": "security@suse.de",
+			"severity": "Moderate",
+			"cve": [
+				{
+					"text": "CVE-2024-57843 at SUSE",
+					"href": "https://www.suse.com/security/cve/CVE-2024-57843/",
+					"impact": "medium",
+					"cvss3": "5.5/CVSS:3.1/AV:L/AC:L/PR:L/UI:N/S:U/C:N/I:N/A:H"
+				},
+				{
+					"text": "CVE-2024-57843 at NVD",
+					"href": "https://nvd.nist.gov/vuln/detail/CVE-2024-57843"
+				}
+			],
+			"bugzilla": [
+				{
+					"text": "SUSE bug 1235816",
+					"href": "https://bugzilla.suse.com/1235816"
+				}
+			],
+			"issued": {
+				"date": "2025-01-15"
+			},
+			"updated": {
+				"date": "2025-01-15"
+			},
+			"affected_cpe_list": {
+				"cpe": [
+					"cpe:/o:suse:suse-microos:5.2"
+				]
+			}
+		}
+	},
+	"criteria": {
+		"operator": "AND",
+		"criterias": [
+			{
+				"operator": "OR",
+				"criterions": [
+					{
+						"test_ref": "oval:org.opensuse.security:tst:2009334017",
+						"comment": "kernel-default is not affected"
+					},
+					{
+						"test_ref": "oval:org.opensuse.security:tst:2009705046",
+						"comment": "kernel-rt is not affected"
+					},
+					{
+						"test_ref": "oval:org.opensuse.security:tst:2009333928",
+						"comment": "kernel-source is not affected"
+					},
+					{
+						"test_ref": "oval:org.opensuse.security:tst:2009728712",
+						"comment": "kernel-source-rt is not affected"
+					}
+				]
+			}
+		],
+		"criterions": [
+			{
+				"test_ref": "oval:org.opensuse.security:tst:2009681300",
+				"comment": "SUSE Linux Enterprise Micro 5.2 is installed"
+			}
+		]
+	}
+}
