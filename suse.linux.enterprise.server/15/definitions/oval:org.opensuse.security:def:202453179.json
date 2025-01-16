@@ -48,6 +48,11 @@
 				"ref_id": "SUSE CVE-2024-53179",
 				"ref_url": "https://www.suse.com/security/cve/CVE-2024-53179",
 				"source": "SUSE CVE"
+			},
+			{
+				"ref_id": "SUSE-SU-2025:0117-1",
+				"ref_url": "https://lists.suse.com/pipermail/sle-security-updates/2025-January/020131.html",
+				"source": "SUSE-SU"
 			}
 		],
 		"description": "\n    In the Linux kernel, the following vulnerability has been resolved:\n\nsmb: client: fix use-after-free of signing key\n\nCustomers have reported use-after-free in @ses->auth_key.response with\nSMB2.1 + sign mounts which occurs due to following race:\n\ntask A                         task B\ncifs_mount()\n dfs_mount_share()\n  get_session()\n   cifs_mount_get_session()    cifs_send_recv()\n    cifs_get_smb_ses()          compound_send_recv()\n     cifs_setup_session()        smb2_setup_request()\n      kfree_sensitive()           smb2_calc_signature()\n                                   crypto_shash_setkey() *UAF*\n\nFix this by ensuring that we have a valid @ses->auth_key.response by\nchecking whether @ses->ses_status is SES_GOOD or SES_EXITING with\n@ses->ses_lock held.  After commit 24a9799aa8ef (\"smb: client: fix UAF\nin smb2_reconnect_server()\"), we made sure to call ->logoff() only\nwhen @ses was known to be good (e.g. valid ->auth_key.response), so\nit's safe to access signing key when @ses->ses_status == SES_EXITING.\n    ",
@@ -82,7 +87,7 @@
 				"date": "2025-01-02"
 			},
 			"updated": {
-				"date": "2025-01-15"
+				"date": "2025-01-16"
 			},
 			"affected_cpe_list": {
 				"cpe": [
@@ -424,45 +429,6 @@
 						"operator": "OR",
 						"criterions": [
 							{
-								"test_ref": "oval:org.opensuse.security:tst:2009856172",
-								"comment": "SUSE Linux Enterprise High Performance Computing 15 SP6 is installed"
-							},
-							{
-								"test_ref": "oval:org.opensuse.security:tst:2009856320",
-								"comment": "SUSE Linux Enterprise Module for Public Cloud 15 SP6 is installed"
-							},
-							{
-								"test_ref": "oval:org.opensuse.security:tst:2009856174",
-								"comment": "SUSE Linux Enterprise Server 15 SP6 is installed"
-							},
-							{
-								"test_ref": "oval:org.opensuse.security:tst:2009856175",
-								"comment": "SUSE Linux Enterprise Server for SAP Applications 15 SP6 is installed"
-							}
-						]
-					},
-					{
-						"operator": "OR",
-						"criterions": [
-							{
-								"test_ref": "oval:org.opensuse.security:tst:2009340777",
-								"comment": "kernel-devel-azure is affected"
-							},
-							{
-								"test_ref": "oval:org.opensuse.security:tst:2009340767",
-								"comment": "kernel-source-azure is affected"
-							}
-						]
-					}
-				]
-			},
-			{
-				"operator": "AND",
-				"criterias": [
-					{
-						"operator": "OR",
-						"criterions": [
-							{
 								"test_ref": "oval:org.opensuse.security:tst:2009759898",
 								"comment": "SUSE Linux Enterprise Desktop 15 SP5 is installed"
 							},
@@ -537,6 +503,57 @@
 							{
 								"test_ref": "oval:org.opensuse.security:tst:2009333995",
 								"comment": "kernel-source is affected"
+							}
+						]
+					}
+				]
+			},
+			{
+				"operator": "AND",
+				"criterias": [
+					{
+						"operator": "OR",
+						"criterions": [
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009856172",
+								"comment": "SUSE Linux Enterprise High Performance Computing 15 SP6 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009856320",
+								"comment": "SUSE Linux Enterprise Module for Public Cloud 15 SP6 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009856174",
+								"comment": "SUSE Linux Enterprise Server 15 SP6 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009856175",
+								"comment": "SUSE Linux Enterprise Server for SAP Applications 15 SP6 is installed"
+							}
+						]
+					},
+					{
+						"operator": "OR",
+						"criterions": [
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009960373",
+								"comment": "kernel-azure-6.4.0-150600.8.23.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009960374",
+								"comment": "kernel-azure-devel-6.4.0-150600.8.23.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009960378",
+								"comment": "kernel-devel-azure-6.4.0-150600.8.23.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009960379",
+								"comment": "kernel-source-azure-6.4.0-150600.8.23.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009960380",
+								"comment": "kernel-syms-azure-6.4.0-150600.8.23.1 is installed"
 							}
 						]
 					}

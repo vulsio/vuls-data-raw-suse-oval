@@ -20,6 +20,11 @@
 				"ref_id": "SUSE CVE-2024-53119",
 				"ref_url": "https://www.suse.com/security/cve/CVE-2024-53119",
 				"source": "SUSE CVE"
+			},
+			{
+				"ref_id": "SUSE-SU-2025:0117-1",
+				"ref_url": "https://lists.suse.com/pipermail/sle-security-updates/2025-January/020131.html",
+				"source": "SUSE-SU"
 			}
 		],
 		"description": "\n    In the Linux kernel, the following vulnerability has been resolved:\n\nvirtio/vsock: Fix accept_queue memory leak\n\nAs the final stages of socket destruction may be delayed, it is possible\nthat virtio_transport_recv_listen() will be called after the accept_queue\nhas been flushed, but before the SOCK_DONE flag has been set. As a result,\nsockets enqueued after the flush would remain unremoved, leading to a\nmemory leak.\n\nvsock_release\n  __vsock_release\n    lock\n    virtio_transport_release\n      virtio_transport_close\n        schedule_delayed_work(close_work)\n    sk_shutdown = SHUTDOWN_MASK\n(!) flush accept_queue\n    release\n                                        virtio_transport_recv_pkt\n                                          vsock_find_bound_socket\n                                          lock\n                                          if flag(SOCK_DONE) return\n                                          virtio_transport_recv_listen\n                                            child = vsock_create_connected\n                                      (!)   vsock_enqueue_accept(child)\n                                          release\nclose_work\n  lock\n  virtio_transport_do_close\n    set_flag(SOCK_DONE)\n    virtio_transport_remove_sock\n      vsock_remove_sock\n        vsock_remove_bound\n  release\n\nIntroduce a sk_shutdown check to disallow vsock_enqueue_accept() during\nsocket destruction.\n\nunreferenced object 0xffff888109e3f800 (size 2040):\n  comm \"kworker/5:2\", pid 371, jiffies 4294940105\n  hex dump (first 32 bytes):\n    00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00  ................\n    28 00 0b 40 00 00 00 00 00 00 00 00 00 00 00 00  (..@............\n  backtrace (crc 9e5f4e84):\n    [<ffffffff81418ff1>] kmem_cache_alloc_noprof+0x2c1/0x360\n    [<ffffffff81d27aa0>] sk_prot_alloc+0x30/0x120\n    [<ffffffff81d2b54c>] sk_alloc+0x2c/0x4b0\n    [<ffffffff81fe049a>] __vsock_create.constprop.0+0x2a/0x310\n    [<ffffffff81fe6d6c>] virtio_transport_recv_pkt+0x4dc/0x9a0\n    [<ffffffff81fe745d>] vsock_loopback_work+0xfd/0x140\n    [<ffffffff810fc6ac>] process_one_work+0x20c/0x570\n    [<ffffffff810fce3f>] worker_thread+0x1bf/0x3a0\n    [<ffffffff811070dd>] kthread+0xdd/0x110\n    [<ffffffff81044fdd>] ret_from_fork+0x2d/0x50\n    [<ffffffff8100785a>] ret_from_fork_asm+0x1a/0x30\n    ",
@@ -50,7 +55,7 @@
 				"date": "2024-12-04"
 			},
 			"updated": {
-				"date": "2024-12-13"
+				"date": "2025-01-16"
 			},
 			"affected_cpe_list": {
 				"cpe": [
@@ -64,6 +69,190 @@
 		"criterias": [
 			{
 				"operator": "OR",
+				"criterias": [
+					{
+						"operator": "AND",
+						"criterions": [
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009960370",
+								"comment": "cluster-md-kmp-azure-6.4.0-150600.8.23.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009623277",
+								"comment": "cluster-md-kmp-azure is signed with openSUSE key"
+							}
+						]
+					},
+					{
+						"operator": "AND",
+						"criterions": [
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009960371",
+								"comment": "dlm-kmp-azure-6.4.0-150600.8.23.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009623279",
+								"comment": "dlm-kmp-azure is signed with openSUSE key"
+							}
+						]
+					},
+					{
+						"operator": "AND",
+						"criterions": [
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009960372",
+								"comment": "gfs2-kmp-azure-6.4.0-150600.8.23.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009623281",
+								"comment": "gfs2-kmp-azure is signed with openSUSE key"
+							}
+						]
+					},
+					{
+						"operator": "AND",
+						"criterions": [
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009960373",
+								"comment": "kernel-azure-6.4.0-150600.8.23.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009623283",
+								"comment": "kernel-azure is signed with openSUSE key"
+							}
+						]
+					},
+					{
+						"operator": "AND",
+						"criterions": [
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009960374",
+								"comment": "kernel-azure-devel-6.4.0-150600.8.23.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009623285",
+								"comment": "kernel-azure-devel is signed with openSUSE key"
+							}
+						]
+					},
+					{
+						"operator": "AND",
+						"criterions": [
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009960375",
+								"comment": "kernel-azure-extra-6.4.0-150600.8.23.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009623286",
+								"comment": "kernel-azure-extra is signed with openSUSE key"
+							}
+						]
+					},
+					{
+						"operator": "AND",
+						"criterions": [
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009960376",
+								"comment": "kernel-azure-optional-6.4.0-150600.8.23.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009623427",
+								"comment": "kernel-azure-optional is signed with openSUSE key"
+							}
+						]
+					},
+					{
+						"operator": "AND",
+						"criterions": [
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009960377",
+								"comment": "kernel-azure-vdso-6.4.0-150600.8.23.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009769740",
+								"comment": "kernel-azure-vdso is signed with openSUSE key"
+							}
+						]
+					},
+					{
+						"operator": "AND",
+						"criterions": [
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009960378",
+								"comment": "kernel-devel-azure-6.4.0-150600.8.23.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009623293",
+								"comment": "kernel-devel-azure is signed with openSUSE key"
+							}
+						]
+					},
+					{
+						"operator": "AND",
+						"criterions": [
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009960379",
+								"comment": "kernel-source-azure-6.4.0-150600.8.23.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009623300",
+								"comment": "kernel-source-azure is signed with openSUSE key"
+							}
+						]
+					},
+					{
+						"operator": "AND",
+						"criterions": [
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009960380",
+								"comment": "kernel-syms-azure-6.4.0-150600.8.23.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009623301",
+								"comment": "kernel-syms-azure is signed with openSUSE key"
+							}
+						]
+					},
+					{
+						"operator": "AND",
+						"criterions": [
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009960381",
+								"comment": "kselftests-kmp-azure-6.4.0-150600.8.23.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009623305",
+								"comment": "kselftests-kmp-azure is signed with openSUSE key"
+							}
+						]
+					},
+					{
+						"operator": "AND",
+						"criterions": [
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009960382",
+								"comment": "ocfs2-kmp-azure-6.4.0-150600.8.23.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009623306",
+								"comment": "ocfs2-kmp-azure is signed with openSUSE key"
+							}
+						]
+					},
+					{
+						"operator": "AND",
+						"criterions": [
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009960383",
+								"comment": "reiserfs-kmp-azure-6.4.0-150600.8.23.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009623308",
+								"comment": "reiserfs-kmp-azure is signed with openSUSE key"
+							}
+						]
+					}
+				],
 				"criterions": [
 					{
 						"test_ref": "oval:org.opensuse.security:tst:2009766997",
@@ -132,14 +321,6 @@
 					{
 						"test_ref": "oval:org.opensuse.security:tst:2009870818",
 						"comment": "kernel-source-vanilla is affected"
-					},
-					{
-						"test_ref": "oval:org.opensuse.security:tst:2009340777",
-						"comment": "kernel-devel-azure is affected"
-					},
-					{
-						"test_ref": "oval:org.opensuse.security:tst:2009340767",
-						"comment": "kernel-source-azure is affected"
 					},
 					{
 						"test_ref": "oval:org.opensuse.security:tst:2009728713",

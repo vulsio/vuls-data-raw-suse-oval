@@ -90,6 +90,11 @@
 				"ref_id": "SUSE-SU-2025:0035-1",
 				"ref_url": "https://lists.suse.com/pipermail/sle-security-updates/2025-January/020070.html",
 				"source": "SUSE-SU"
+			},
+			{
+				"ref_id": "SUSE-SU-2025:0117-1",
+				"ref_url": "https://lists.suse.com/pipermail/sle-security-updates/2025-January/020131.html",
+				"source": "SUSE-SU"
 			}
 		],
 		"description": "\n    In the Linux kernel, the following vulnerability has been resolved:\n\ndm cache: fix out-of-bounds access to the dirty bitset when resizing\n\ndm-cache checks the dirty bits of the cache blocks to be dropped when\nshrinking the fast device, but an index bug in bitset iteration causes\nout-of-bounds access.\n\nReproduce steps:\n\n1. create a cache device of 1024 cache blocks (128 bytes dirty bitset)\n\ndmsetup create cmeta --table \"0 8192 linear /dev/sdc 0\"\ndmsetup create cdata --table \"0 131072 linear /dev/sdc 8192\"\ndmsetup create corig --table \"0 524288 linear /dev/sdc 262144\"\ndd if=/dev/zero of=/dev/mapper/cmeta bs=4k count=1 oflag=direct\ndmsetup create cache --table \"0 524288 cache /dev/mapper/cmeta \\\n/dev/mapper/cdata /dev/mapper/corig 128 2 metadata2 writethrough smq 0\"\n\n2. shrink the fast device to 512 cache blocks, triggering out-of-bounds\n   access to the dirty bitset (offset 0x80)\n\ndmsetup suspend cache\ndmsetup reload cdata --table \"0 65536 linear /dev/sdc 8192\"\ndmsetup resume cdata\ndmsetup resume cache\n\nKASAN reports:\n\n  BUG: KASAN: vmalloc-out-of-bounds in cache_preresume+0x269/0x7b0\n  Read of size 8 at addr ffffc900000f3080 by task dmsetup/131\n\n  (...snip...)\n  The buggy address belongs to the virtual mapping at\n   [ffffc900000f3000, ffffc900000f5000) created by:\n   cache_ctr+0x176a/0x35f0\n\n  (...snip...)\n  Memory state around the buggy address:\n   ffffc900000f2f80: f8 f8 f8 f8 f8 f8 f8 f8 f8 f8 f8 f8 f8 f8 f8 f8\n   ffffc900000f3000: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00\n  >ffffc900000f3080: f8 f8 f8 f8 f8 f8 f8 f8 f8 f8 f8 f8 f8 f8 f8 f8\n                     ^\n   ffffc900000f3100: f8 f8 f8 f8 f8 f8 f8 f8 f8 f8 f8 f8 f8 f8 f8 f8\n   ffffc900000f3180: f8 f8 f8 f8 f8 f8 f8 f8 f8 f8 f8 f8 f8 f8 f8 f8\n\nFix by making the index post-incremented.\n    ",
@@ -124,7 +129,7 @@
 				"date": "2024-11-21"
 			},
 			"updated": {
-				"date": "2025-01-09"
+				"date": "2025-01-16"
 			},
 			"affected_cpe_list": {
 				"cpe": [
@@ -156,8 +161,8 @@
 						"operator": "AND",
 						"criterions": [
 							{
-								"test_ref": "oval:org.opensuse.security:tst:2009957847",
-								"comment": "cluster-md-kmp-azure-6.4.0-150600.8.20.1 is installed"
+								"test_ref": "oval:org.opensuse.security:tst:2009960370",
+								"comment": "cluster-md-kmp-azure-6.4.0-150600.8.23.1 is installed"
 							},
 							{
 								"test_ref": "oval:org.opensuse.security:tst:2009623277",
@@ -208,8 +213,8 @@
 						"operator": "AND",
 						"criterions": [
 							{
-								"test_ref": "oval:org.opensuse.security:tst:2009957848",
-								"comment": "dlm-kmp-azure-6.4.0-150600.8.20.1 is installed"
+								"test_ref": "oval:org.opensuse.security:tst:2009960371",
+								"comment": "dlm-kmp-azure-6.4.0-150600.8.23.1 is installed"
 							},
 							{
 								"test_ref": "oval:org.opensuse.security:tst:2009623279",
@@ -559,8 +564,8 @@
 						"operator": "AND",
 						"criterions": [
 							{
-								"test_ref": "oval:org.opensuse.security:tst:2009957849",
-								"comment": "gfs2-kmp-azure-6.4.0-150600.8.20.1 is installed"
+								"test_ref": "oval:org.opensuse.security:tst:2009960372",
+								"comment": "gfs2-kmp-azure-6.4.0-150600.8.23.1 is installed"
 							},
 							{
 								"test_ref": "oval:org.opensuse.security:tst:2009623281",
@@ -650,8 +655,8 @@
 						"operator": "AND",
 						"criterions": [
 							{
-								"test_ref": "oval:org.opensuse.security:tst:2009957850",
-								"comment": "kernel-azure-6.4.0-150600.8.20.1 is installed"
+								"test_ref": "oval:org.opensuse.security:tst:2009960373",
+								"comment": "kernel-azure-6.4.0-150600.8.23.1 is installed"
 							},
 							{
 								"test_ref": "oval:org.opensuse.security:tst:2009623283",
@@ -663,8 +668,8 @@
 						"operator": "AND",
 						"criterions": [
 							{
-								"test_ref": "oval:org.opensuse.security:tst:2009957851",
-								"comment": "kernel-azure-devel-6.4.0-150600.8.20.1 is installed"
+								"test_ref": "oval:org.opensuse.security:tst:2009960374",
+								"comment": "kernel-azure-devel-6.4.0-150600.8.23.1 is installed"
 							},
 							{
 								"test_ref": "oval:org.opensuse.security:tst:2009623285",
@@ -676,8 +681,8 @@
 						"operator": "AND",
 						"criterions": [
 							{
-								"test_ref": "oval:org.opensuse.security:tst:2009957852",
-								"comment": "kernel-azure-extra-6.4.0-150600.8.20.1 is installed"
+								"test_ref": "oval:org.opensuse.security:tst:2009960375",
+								"comment": "kernel-azure-extra-6.4.0-150600.8.23.1 is installed"
 							},
 							{
 								"test_ref": "oval:org.opensuse.security:tst:2009623286",
@@ -689,8 +694,8 @@
 						"operator": "AND",
 						"criterions": [
 							{
-								"test_ref": "oval:org.opensuse.security:tst:2009957853",
-								"comment": "kernel-azure-optional-6.4.0-150600.8.20.1 is installed"
+								"test_ref": "oval:org.opensuse.security:tst:2009960376",
+								"comment": "kernel-azure-optional-6.4.0-150600.8.23.1 is installed"
 							},
 							{
 								"test_ref": "oval:org.opensuse.security:tst:2009623427",
@@ -702,8 +707,8 @@
 						"operator": "AND",
 						"criterions": [
 							{
-								"test_ref": "oval:org.opensuse.security:tst:2009957854",
-								"comment": "kernel-azure-vdso-6.4.0-150600.8.20.1 is installed"
+								"test_ref": "oval:org.opensuse.security:tst:2009960377",
+								"comment": "kernel-azure-vdso-6.4.0-150600.8.23.1 is installed"
 							},
 							{
 								"test_ref": "oval:org.opensuse.security:tst:2009769740",
@@ -884,8 +889,8 @@
 						"operator": "AND",
 						"criterions": [
 							{
-								"test_ref": "oval:org.opensuse.security:tst:2009957855",
-								"comment": "kernel-devel-azure-6.4.0-150600.8.20.1 is installed"
+								"test_ref": "oval:org.opensuse.security:tst:2009960378",
+								"comment": "kernel-devel-azure-6.4.0-150600.8.23.1 is installed"
 							},
 							{
 								"test_ref": "oval:org.opensuse.security:tst:2009623293",
@@ -1144,8 +1149,8 @@
 						"operator": "AND",
 						"criterions": [
 							{
-								"test_ref": "oval:org.opensuse.security:tst:2009957856",
-								"comment": "kernel-source-azure-6.4.0-150600.8.20.1 is installed"
+								"test_ref": "oval:org.opensuse.security:tst:2009960379",
+								"comment": "kernel-source-azure-6.4.0-150600.8.23.1 is installed"
 							},
 							{
 								"test_ref": "oval:org.opensuse.security:tst:2009623300",
@@ -1196,8 +1201,8 @@
 						"operator": "AND",
 						"criterions": [
 							{
-								"test_ref": "oval:org.opensuse.security:tst:2009957857",
-								"comment": "kernel-syms-azure-6.4.0-150600.8.20.1 is installed"
+								"test_ref": "oval:org.opensuse.security:tst:2009960380",
+								"comment": "kernel-syms-azure-6.4.0-150600.8.23.1 is installed"
 							},
 							{
 								"test_ref": "oval:org.opensuse.security:tst:2009623301",
@@ -1248,8 +1253,8 @@
 						"operator": "AND",
 						"criterions": [
 							{
-								"test_ref": "oval:org.opensuse.security:tst:2009957858",
-								"comment": "kselftests-kmp-azure-6.4.0-150600.8.20.1 is installed"
+								"test_ref": "oval:org.opensuse.security:tst:2009960381",
+								"comment": "kselftests-kmp-azure-6.4.0-150600.8.23.1 is installed"
 							},
 							{
 								"test_ref": "oval:org.opensuse.security:tst:2009623305",
@@ -1300,8 +1305,8 @@
 						"operator": "AND",
 						"criterions": [
 							{
-								"test_ref": "oval:org.opensuse.security:tst:2009957859",
-								"comment": "ocfs2-kmp-azure-6.4.0-150600.8.20.1 is installed"
+								"test_ref": "oval:org.opensuse.security:tst:2009960382",
+								"comment": "ocfs2-kmp-azure-6.4.0-150600.8.23.1 is installed"
 							},
 							{
 								"test_ref": "oval:org.opensuse.security:tst:2009623306",
@@ -1352,8 +1357,8 @@
 						"operator": "AND",
 						"criterions": [
 							{
-								"test_ref": "oval:org.opensuse.security:tst:2009957860",
-								"comment": "reiserfs-kmp-azure-6.4.0-150600.8.20.1 is installed"
+								"test_ref": "oval:org.opensuse.security:tst:2009960383",
+								"comment": "reiserfs-kmp-azure-6.4.0-150600.8.23.1 is installed"
 							},
 							{
 								"test_ref": "oval:org.opensuse.security:tst:2009623308",

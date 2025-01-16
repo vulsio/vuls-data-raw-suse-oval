@@ -1,0 +1,263 @@
+{
+	"id": "oval:org.opensuse.security:def:202453190",
+	"version": "1",
+	"class": "vulnerability",
+	"metadata": {
+		"title": "CVE-2024-53190",
+		"affected": {
+			"family": "unix",
+			"platform": [
+				"openSUSE Leap 15.6"
+			]
+		},
+		"reference": [
+			{
+				"ref_id": "Mitre CVE-2024-53190",
+				"ref_url": "https://cve.mitre.org/cgi-bin/cvename.cgi?name=CVE-2024-53190",
+				"source": "CVE"
+			},
+			{
+				"ref_id": "SUSE CVE-2024-53190",
+				"ref_url": "https://www.suse.com/security/cve/CVE-2024-53190",
+				"source": "SUSE CVE"
+			},
+			{
+				"ref_id": "SUSE-SU-2025:0117-1",
+				"ref_url": "https://lists.suse.com/pipermail/sle-security-updates/2025-January/020131.html",
+				"source": "SUSE-SU"
+			}
+		],
+		"description": "\n    In the Linux kernel, the following vulnerability has been resolved:\n\nwifi: rtlwifi: Drastically reduce the attempts to read efuse in case of failures\n\nSyzkaller reported a hung task with uevent_show() on stack trace. That\nspecific issue was addressed by another commit [0], but even with that\nfix applied (for example, running v6.12-rc5) we face another type of hung\ntask that comes from the same reproducer [1]. By investigating that, we\ncould narrow it to the following path:\n\n(a) Syzkaller emulates a Realtek USB WiFi adapter using raw-gadget and\ndummy_hcd infrastructure.\n\n(b) During the probe of rtl8192cu, the driver ends-up performing an efuse\nread procedure (which is related to EEPROM load IIUC), and here lies the\nissue: the function read_efuse() calls read_efuse_byte() many times, as\nloop iterations depending on the efuse size (in our example, 512 in total).\n\nThis procedure for reading efuse bytes relies in a loop that performs an\nI/O read up to *10k* times in case of failures. We measured the time of\nthe loop inside read_efuse_byte() alone, and in this reproducer (which\ninvolves the dummy_hcd emulation layer), it takes 15 seconds each. As a\nconsequence, we have the driver stuck in its probe routine for big time,\nexposing a stack trace like below if we attempt to reboot the system, for\nexample:\n\ntask:kworker/0:3 state:D stack:0 pid:662 tgid:662 ppid:2 flags:0x00004000\nWorkqueue: usb_hub_wq hub_event\nCall Trace:\n __schedule+0xe22/0xeb6\n schedule_timeout+0xe7/0x132\n __wait_for_common+0xb5/0x12e\n usb_start_wait_urb+0xc5/0x1ef\n ? usb_alloc_urb+0x95/0xa4\n usb_control_msg+0xff/0x184\n _usbctrl_vendorreq_sync+0xa0/0x161\n _usb_read_sync+0xb3/0xc5\n read_efuse_byte+0x13c/0x146\n read_efuse+0x351/0x5f0\n efuse_read_all_map+0x42/0x52\n rtl_efuse_shadow_map_update+0x60/0xef\n rtl_get_hwinfo+0x5d/0x1c2\n rtl92cu_read_eeprom_info+0x10a/0x8d5\n ? rtl92c_read_chip_version+0x14f/0x17e\n rtl_usb_probe+0x323/0x851\n usb_probe_interface+0x278/0x34b\n really_probe+0x202/0x4a4\n __driver_probe_device+0x166/0x1b2\n driver_probe_device+0x2f/0xd8\n [...]\n\nWe propose hereby to drastically reduce the attempts of doing the I/O\nreads in case of failures, restricted to USB devices (given that\nthey're inherently slower than PCIe ones). By retrying up to 10 times\n(instead of 10000), we got reponsiveness in the reproducer, while seems\nreasonable to believe that there's no sane USB device implementation in\nthe field requiring this amount of retries at every I/O read in order\nto properly work. Based on that assumption, it'd be good to have it\nbackported to stable but maybe not since driver implementation (the 10k\nnumber comes from day 0), perhaps up to 6.x series makes sense.\n\n[0] Commit 15fffc6a5624 (\"driver core: Fix uevent_show() vs driver detach race\")\n\n[1] A note about that: this syzkaller report presents multiple reproducers\nthat differs by the type of emulated USB device. For this specific case,\ncheck the entry from 2024/08/08 06:23 in the list of crashes; the C repro\nis available at https://syzkaller.appspot.com/text?tag=ReproC&x=1521fc83980000.\n    ",
+		"advisory": {
+			"from": "security@suse.de",
+			"severity": "Low",
+			"cve": [
+				{
+					"text": "CVE-2024-53190 at SUSE",
+					"href": "https://www.suse.com/security/cve/CVE-2024-53190/",
+					"impact": "low",
+					"cvss3": "2.3/CVSS:3.1/AV:L/AC:L/PR:H/UI:N/S:U/C:N/I:N/A:L"
+				},
+				{
+					"text": "CVE-2024-53190 at NVD",
+					"href": "https://nvd.nist.gov/vuln/detail/CVE-2024-53190"
+				}
+			],
+			"bugzilla": [
+				{
+					"text": "SUSE bug 1234950",
+					"href": "https://bugzilla.suse.com/1234950"
+				}
+			],
+			"issued": {
+				"date": "2025-01-16"
+			},
+			"updated": {
+				"date": "2025-01-16"
+			},
+			"affected_cpe_list": {
+				"cpe": [
+					"cpe:/o:opensuse:leap:15.6"
+				]
+			}
+		}
+	},
+	"criteria": {
+		"operator": "AND",
+		"criterias": [
+			{
+				"operator": "OR",
+				"criterias": [
+					{
+						"operator": "AND",
+						"criterions": [
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009960370",
+								"comment": "cluster-md-kmp-azure-6.4.0-150600.8.23.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009623277",
+								"comment": "cluster-md-kmp-azure is signed with openSUSE key"
+							}
+						]
+					},
+					{
+						"operator": "AND",
+						"criterions": [
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009960371",
+								"comment": "dlm-kmp-azure-6.4.0-150600.8.23.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009623279",
+								"comment": "dlm-kmp-azure is signed with openSUSE key"
+							}
+						]
+					},
+					{
+						"operator": "AND",
+						"criterions": [
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009960372",
+								"comment": "gfs2-kmp-azure-6.4.0-150600.8.23.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009623281",
+								"comment": "gfs2-kmp-azure is signed with openSUSE key"
+							}
+						]
+					},
+					{
+						"operator": "AND",
+						"criterions": [
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009960373",
+								"comment": "kernel-azure-6.4.0-150600.8.23.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009623283",
+								"comment": "kernel-azure is signed with openSUSE key"
+							}
+						]
+					},
+					{
+						"operator": "AND",
+						"criterions": [
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009960374",
+								"comment": "kernel-azure-devel-6.4.0-150600.8.23.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009623285",
+								"comment": "kernel-azure-devel is signed with openSUSE key"
+							}
+						]
+					},
+					{
+						"operator": "AND",
+						"criterions": [
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009960375",
+								"comment": "kernel-azure-extra-6.4.0-150600.8.23.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009623286",
+								"comment": "kernel-azure-extra is signed with openSUSE key"
+							}
+						]
+					},
+					{
+						"operator": "AND",
+						"criterions": [
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009960376",
+								"comment": "kernel-azure-optional-6.4.0-150600.8.23.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009623427",
+								"comment": "kernel-azure-optional is signed with openSUSE key"
+							}
+						]
+					},
+					{
+						"operator": "AND",
+						"criterions": [
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009960377",
+								"comment": "kernel-azure-vdso-6.4.0-150600.8.23.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009769740",
+								"comment": "kernel-azure-vdso is signed with openSUSE key"
+							}
+						]
+					},
+					{
+						"operator": "AND",
+						"criterions": [
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009960378",
+								"comment": "kernel-devel-azure-6.4.0-150600.8.23.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009623293",
+								"comment": "kernel-devel-azure is signed with openSUSE key"
+							}
+						]
+					},
+					{
+						"operator": "AND",
+						"criterions": [
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009960379",
+								"comment": "kernel-source-azure-6.4.0-150600.8.23.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009623300",
+								"comment": "kernel-source-azure is signed with openSUSE key"
+							}
+						]
+					},
+					{
+						"operator": "AND",
+						"criterions": [
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009960380",
+								"comment": "kernel-syms-azure-6.4.0-150600.8.23.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009623301",
+								"comment": "kernel-syms-azure is signed with openSUSE key"
+							}
+						]
+					},
+					{
+						"operator": "AND",
+						"criterions": [
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009960381",
+								"comment": "kselftests-kmp-azure-6.4.0-150600.8.23.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009623305",
+								"comment": "kselftests-kmp-azure is signed with openSUSE key"
+							}
+						]
+					},
+					{
+						"operator": "AND",
+						"criterions": [
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009960382",
+								"comment": "ocfs2-kmp-azure-6.4.0-150600.8.23.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009623306",
+								"comment": "ocfs2-kmp-azure is signed with openSUSE key"
+							}
+						]
+					},
+					{
+						"operator": "AND",
+						"criterions": [
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009960383",
+								"comment": "reiserfs-kmp-azure-6.4.0-150600.8.23.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009623308",
+								"comment": "reiserfs-kmp-azure is signed with openSUSE key"
+							}
+						]
+					}
+				]
+			}
+		],
+		"criterions": [
+			{
+				"test_ref": "oval:org.opensuse.security:tst:2009864054",
+				"comment": "openSUSE Leap 15.6 is installed"
+			}
+		]
+	}
+}

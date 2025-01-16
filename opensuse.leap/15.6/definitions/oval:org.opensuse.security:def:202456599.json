@@ -20,6 +20,11 @@
 				"ref_id": "SUSE CVE-2024-56599",
 				"ref_url": "https://www.suse.com/security/cve/CVE-2024-56599",
 				"source": "SUSE CVE"
+			},
+			{
+				"ref_id": "SUSE-SU-2025:0117-1",
+				"ref_url": "https://lists.suse.com/pipermail/sle-security-updates/2025-January/020131.html",
+				"source": "SUSE-SU"
 			}
 		],
 		"description": "\n    In the Linux kernel, the following vulnerability has been resolved:\n\nwifi: ath10k: avoid NULL pointer error during sdio remove\n\nWhen running 'rmmod ath10k', ath10k_sdio_remove() will free sdio\nworkqueue by destroy_workqueue(). But if CONFIG_INIT_ON_FREE_DEFAULT_ON\nis set to yes, kernel panic will happen:\nCall trace:\n destroy_workqueue+0x1c/0x258\n ath10k_sdio_remove+0x84/0x94\n sdio_bus_remove+0x50/0x16c\n device_release_driver_internal+0x188/0x25c\n device_driver_detach+0x20/0x2c\n\nThis is because during 'rmmod ath10k', ath10k_sdio_remove() will call\nath10k_core_destroy() before destroy_workqueue(). wiphy_dev_release()\nwill finally be called in ath10k_core_destroy(). This function will free\nstruct cfg80211_registered_device *rdev and all its members, including\nwiphy, dev and the pointer of sdio workqueue. Then the pointer of sdio\nworkqueue will be set to NULL due to CONFIG_INIT_ON_FREE_DEFAULT_ON.\n\nAfter device release, destroy_workqueue() will use NULL pointer then the\nkernel panic happen.\n\nCall trace:\nath10k_sdio_remove\n  ->ath10k_core_unregister\n    ……\n    ->ath10k_core_stop\n      ->ath10k_hif_stop\n        ->ath10k_sdio_irq_disable\n    ->ath10k_hif_power_down\n      ->del_timer_sync(&ar_sdio->sleep_timer)\n  ->ath10k_core_destroy\n    ->ath10k_mac_destroy\n      ->ieee80211_free_hw\n        ->wiphy_free\n    ……\n          ->wiphy_dev_release\n  ->destroy_workqueue\n\nNeed to call destroy_workqueue() before ath10k_core_destroy(), free\nthe work queue buffer first and then free pointer of work queue by\nath10k_core_destroy(). This order matches the error path order in\nath10k_sdio_probe().\n\nNo work will be queued on sdio workqueue between it is destroyed and\nath10k_core_destroy() is called. Based on the call_stack above, the\nreason is:\nOnly ath10k_sdio_sleep_timer_handler(), ath10k_sdio_hif_tx_sg() and\nath10k_sdio_irq_disable() will queue work on sdio workqueue.\nSleep timer will be deleted before ath10k_core_destroy() in\nath10k_hif_power_down().\nath10k_sdio_irq_disable() only be called in ath10k_hif_stop().\nath10k_core_unregister() will call ath10k_hif_power_down() to stop hif\nbus, so ath10k_sdio_hif_tx_sg() won't be called anymore.\n\nTested-on: QCA6174 hw3.2 SDIO WLAN.RMH.4.4.1-00189\n    ",
@@ -50,7 +55,7 @@
 				"date": "2025-01-07"
 			},
 			"updated": {
-				"date": "2025-01-09"
+				"date": "2025-01-16"
 			},
 			"affected_cpe_list": {
 				"cpe": [
@@ -64,6 +69,190 @@
 		"criterias": [
 			{
 				"operator": "OR",
+				"criterias": [
+					{
+						"operator": "AND",
+						"criterions": [
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009960370",
+								"comment": "cluster-md-kmp-azure-6.4.0-150600.8.23.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009623277",
+								"comment": "cluster-md-kmp-azure is signed with openSUSE key"
+							}
+						]
+					},
+					{
+						"operator": "AND",
+						"criterions": [
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009960371",
+								"comment": "dlm-kmp-azure-6.4.0-150600.8.23.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009623279",
+								"comment": "dlm-kmp-azure is signed with openSUSE key"
+							}
+						]
+					},
+					{
+						"operator": "AND",
+						"criterions": [
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009960372",
+								"comment": "gfs2-kmp-azure-6.4.0-150600.8.23.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009623281",
+								"comment": "gfs2-kmp-azure is signed with openSUSE key"
+							}
+						]
+					},
+					{
+						"operator": "AND",
+						"criterions": [
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009960373",
+								"comment": "kernel-azure-6.4.0-150600.8.23.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009623283",
+								"comment": "kernel-azure is signed with openSUSE key"
+							}
+						]
+					},
+					{
+						"operator": "AND",
+						"criterions": [
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009960374",
+								"comment": "kernel-azure-devel-6.4.0-150600.8.23.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009623285",
+								"comment": "kernel-azure-devel is signed with openSUSE key"
+							}
+						]
+					},
+					{
+						"operator": "AND",
+						"criterions": [
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009960375",
+								"comment": "kernel-azure-extra-6.4.0-150600.8.23.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009623286",
+								"comment": "kernel-azure-extra is signed with openSUSE key"
+							}
+						]
+					},
+					{
+						"operator": "AND",
+						"criterions": [
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009960376",
+								"comment": "kernel-azure-optional-6.4.0-150600.8.23.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009623427",
+								"comment": "kernel-azure-optional is signed with openSUSE key"
+							}
+						]
+					},
+					{
+						"operator": "AND",
+						"criterions": [
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009960377",
+								"comment": "kernel-azure-vdso-6.4.0-150600.8.23.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009769740",
+								"comment": "kernel-azure-vdso is signed with openSUSE key"
+							}
+						]
+					},
+					{
+						"operator": "AND",
+						"criterions": [
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009960378",
+								"comment": "kernel-devel-azure-6.4.0-150600.8.23.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009623293",
+								"comment": "kernel-devel-azure is signed with openSUSE key"
+							}
+						]
+					},
+					{
+						"operator": "AND",
+						"criterions": [
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009960379",
+								"comment": "kernel-source-azure-6.4.0-150600.8.23.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009623300",
+								"comment": "kernel-source-azure is signed with openSUSE key"
+							}
+						]
+					},
+					{
+						"operator": "AND",
+						"criterions": [
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009960380",
+								"comment": "kernel-syms-azure-6.4.0-150600.8.23.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009623301",
+								"comment": "kernel-syms-azure is signed with openSUSE key"
+							}
+						]
+					},
+					{
+						"operator": "AND",
+						"criterions": [
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009960381",
+								"comment": "kselftests-kmp-azure-6.4.0-150600.8.23.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009623305",
+								"comment": "kselftests-kmp-azure is signed with openSUSE key"
+							}
+						]
+					},
+					{
+						"operator": "AND",
+						"criterions": [
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009960382",
+								"comment": "ocfs2-kmp-azure-6.4.0-150600.8.23.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009623306",
+								"comment": "ocfs2-kmp-azure is signed with openSUSE key"
+							}
+						]
+					},
+					{
+						"operator": "AND",
+						"criterions": [
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009960383",
+								"comment": "reiserfs-kmp-azure-6.4.0-150600.8.23.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009623308",
+								"comment": "reiserfs-kmp-azure is signed with openSUSE key"
+							}
+						]
+					}
+				],
 				"criterions": [
 					{
 						"test_ref": "oval:org.opensuse.security:tst:2009766997",
@@ -132,14 +321,6 @@
 					{
 						"test_ref": "oval:org.opensuse.security:tst:2009870818",
 						"comment": "kernel-source-vanilla is affected"
-					},
-					{
-						"test_ref": "oval:org.opensuse.security:tst:2009340777",
-						"comment": "kernel-devel-azure is affected"
-					},
-					{
-						"test_ref": "oval:org.opensuse.security:tst:2009340767",
-						"comment": "kernel-source-azure is affected"
 					},
 					{
 						"test_ref": "oval:org.opensuse.security:tst:2009728713",
