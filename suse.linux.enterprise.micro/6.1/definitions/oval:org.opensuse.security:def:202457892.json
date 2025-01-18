@@ -1,0 +1,100 @@
+{
+	"id": "oval:org.opensuse.security:def:202457892",
+	"version": "1",
+	"class": "vulnerability",
+	"metadata": {
+		"title": "CVE-2024-57892",
+		"affected": {
+			"family": "unix",
+			"platform": [
+				"SUSE Linux Micro 6.1"
+			]
+		},
+		"reference": [
+			{
+				"ref_id": "Mitre CVE-2024-57892",
+				"ref_url": "https://cve.mitre.org/cgi-bin/cvename.cgi?name=CVE-2024-57892",
+				"source": "CVE"
+			},
+			{
+				"ref_id": "SUSE CVE-2024-57892",
+				"ref_url": "https://www.suse.com/security/cve/CVE-2024-57892",
+				"source": "SUSE CVE"
+			}
+		],
+		"description": "\n    In the Linux kernel, the following vulnerability has been resolved:\n\nocfs2: fix slab-use-after-free due to dangling pointer dqi_priv\n\nWhen mounting ocfs2 and then remounting it as read-only, a\nslab-use-after-free occurs after the user uses a syscall to\nquota_getnextquota.  Specifically, sb_dqinfo(sb, type)->dqi_priv is the\ndangling pointer.\n\nDuring the remounting process, the pointer dqi_priv is freed but is never\nset as null leaving it to be accessed.  Additionally, the read-only option\nfor remounting sets the DQUOT_SUSPENDED flag instead of setting the\nDQUOT_USAGE_ENABLED flags.  Moreover, later in the process of getting the\nnext quota, the function ocfs2_get_next_id is called and only checks the\nquota usage flags and not the quota suspended flags.\n\nTo fix this, I set dqi_priv to null when it is freed after remounting with\nread-only and put a check for DQUOT_SUSPENDED in ocfs2_get_next_id.\n\n[akpm@linux-foundation.org: coding-style cleanups]\n    ",
+		"advisory": {
+			"from": "security@suse.de",
+			"severity": "Moderate",
+			"cve": [
+				{
+					"text": "CVE-2024-57892 at SUSE",
+					"href": "https://www.suse.com/security/cve/CVE-2024-57892/",
+					"impact": "medium",
+					"cvss3": "5.5/CVSS:3.1/AV:L/AC:L/PR:L/UI:N/S:U/C:N/I:N/A:H"
+				},
+				{
+					"text": "CVE-2024-57892 at NVD",
+					"href": "https://nvd.nist.gov/vuln/detail/CVE-2024-57892"
+				}
+			],
+			"bugzilla": [
+				{
+					"text": "SUSE bug 1235964",
+					"href": "https://bugzilla.suse.com/1235964"
+				}
+			],
+			"issued": {
+				"date": "2025-01-18"
+			},
+			"updated": {
+				"date": "2025-01-18"
+			},
+			"affected_cpe_list": {
+				"cpe": [
+					"cpe:/o:suse:sl-micro:6.1"
+				]
+			}
+		}
+	},
+	"criteria": {
+		"operator": "AND",
+		"criterias": [
+			{
+				"operator": "OR",
+				"criterions": [
+					{
+						"test_ref": "oval:org.opensuse.security:tst:2009338032",
+						"comment": "kernel-default is affected"
+					},
+					{
+						"test_ref": "oval:org.opensuse.security:tst:2009335275",
+						"comment": "kernel-devel is affected"
+					},
+					{
+						"test_ref": "oval:org.opensuse.security:tst:2009335276",
+						"comment": "kernel-macros is affected"
+					},
+					{
+						"test_ref": "oval:org.opensuse.security:tst:2009333995",
+						"comment": "kernel-source is affected"
+					},
+					{
+						"test_ref": "oval:org.opensuse.security:tst:2009728713",
+						"comment": "kernel-devel-rt is affected"
+					},
+					{
+						"test_ref": "oval:org.opensuse.security:tst:2009728714",
+						"comment": "kernel-source-rt is affected"
+					}
+				]
+			}
+		],
+		"criterions": [
+			{
+				"test_ref": "oval:org.opensuse.security:tst:2009954035",
+				"comment": "SUSE Linux Micro 6.1 is installed"
+			}
+		]
+	}
+}
