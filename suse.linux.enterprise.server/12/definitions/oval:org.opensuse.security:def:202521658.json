@@ -1,0 +1,244 @@
+{
+	"id": "oval:org.opensuse.security:def:202521658",
+	"version": "1",
+	"class": "vulnerability",
+	"metadata": {
+		"title": "CVE-2025-21658",
+		"affected": {
+			"family": "unix",
+			"platform": [
+				"SUSE Linux Enterprise Live Patching 12 SP5",
+				"SUSE Linux Enterprise Server 12 SP2-LTSS",
+				"SUSE Linux Enterprise Server 12 SP4-LTSS",
+				"SUSE Linux Enterprise Server 12 SP5-LTSS",
+				"SUSE Linux Enterprise Server for SAP Applications 12 SP5"
+			]
+		},
+		"reference": [
+			{
+				"ref_id": "Mitre CVE-2025-21658",
+				"ref_url": "https://cve.mitre.org/cgi-bin/cvename.cgi?name=CVE-2025-21658",
+				"source": "CVE"
+			},
+			{
+				"ref_id": "SUSE CVE-2025-21658",
+				"ref_url": "https://www.suse.com/security/cve/CVE-2025-21658",
+				"source": "SUSE CVE"
+			}
+		],
+		"description": "\n    In the Linux kernel, the following vulnerability has been resolved:\n\nbtrfs: avoid NULL pointer dereference if no valid extent tree\n\n[BUG]\nSyzbot reported a crash with the following call trace:\n\n  BTRFS info (device loop0): scrub: started on devid 1\n  BUG: kernel NULL pointer dereference, address: 0000000000000208\n  #PF: supervisor read access in kernel mode\n  #PF: error_code(0x0000) - not-present page\n  PGD 106e70067 P4D 106e70067 PUD 107143067 PMD 0\n  Oops: Oops: 0000 [#1] PREEMPT SMP NOPTI\n  CPU: 1 UID: 0 PID: 689 Comm: repro Kdump: loaded Tainted: G           O       6.13.0-rc4-custom+ #206\n  Tainted: [O]=OOT_MODULE\n  Hardware name: QEMU Standard PC (Q35 + ICH9, 2009), BIOS unknown 02/02/2022\n  RIP: 0010:find_first_extent_item+0x26/0x1f0 [btrfs]\n  Call Trace:\n   <TASK>\n   scrub_find_fill_first_stripe+0x13d/0x3b0 [btrfs]\n   scrub_simple_mirror+0x175/0x260 [btrfs]\n   scrub_stripe+0x5d4/0x6c0 [btrfs]\n   scrub_chunk+0xbb/0x170 [btrfs]\n   scrub_enumerate_chunks+0x2f4/0x5f0 [btrfs]\n   btrfs_scrub_dev+0x240/0x600 [btrfs]\n   btrfs_ioctl+0x1dc8/0x2fa0 [btrfs]\n   ? do_sys_openat2+0xa5/0xf0\n   __x64_sys_ioctl+0x97/0xc0\n   do_syscall_64+0x4f/0x120\n   entry_SYSCALL_64_after_hwframe+0x76/0x7e\n   </TASK>\n\n[CAUSE]\nThe reproducer is using a corrupted image where extent tree root is\ncorrupted, thus forcing to use \"rescue=all,ro\" mount option to mount the\nimage.\n\nThen it triggered a scrub, but since scrub relies on extent tree to find\nwhere the data/metadata extents are, scrub_find_fill_first_stripe()\nrelies on an non-empty extent root.\n\nBut unfortunately scrub_find_fill_first_stripe() doesn't really expect\nan NULL pointer for extent root, it use extent_root to grab fs_info and\ntriggered a NULL pointer dereference.\n\n[FIX]\nAdd an extra check for a valid extent root at the beginning of\nscrub_find_fill_first_stripe().\n\nThe new error path is introduced by 42437a6386ff (\"btrfs: introduce\nmount option rescue=ignorebadroots\"), but that's pretty old, and later\ncommit b979547513ff (\"btrfs: scrub: introduce helper to find and fill\nsector info for a scrub_stripe\") changed how we do scrub.\n\nSo for kernels older than 6.6, the fix will need manual backport.\n    ",
+		"advisory": {
+			"from": "security@suse.de",
+			"severity": "Moderate",
+			"cve": [
+				{
+					"text": "CVE-2025-21658 at SUSE",
+					"href": "https://www.suse.com/security/cve/CVE-2025-21658/",
+					"impact": "medium",
+					"cvss3": "5.5/CVSS:3.1/AV:L/AC:L/PR:L/UI:N/S:U/C:N/I:N/A:H"
+				},
+				{
+					"text": "CVE-2025-21658 at NVD",
+					"href": "https://nvd.nist.gov/vuln/detail/CVE-2025-21658"
+				}
+			],
+			"bugzilla": [
+				{
+					"text": "SUSE bug 1236208",
+					"href": "https://bugzilla.suse.com/1236208"
+				}
+			],
+			"issued": {
+				"date": "2025-01-22"
+			},
+			"updated": {
+				"date": "2025-01-22"
+			},
+			"affected_cpe_list": {
+				"cpe": [
+					"cpe:/o:suse:sle-live-patching:12:sp5",
+					"cpe:/o:suse:sles-ltss-extended-security:12:sp5",
+					"cpe:/o:suse:sles-ltss:12:sp2",
+					"cpe:/o:suse:sles-ltss:12:sp4",
+					"cpe:/o:suse:sles_sap:12:sp5"
+				]
+			}
+		}
+	},
+	"criteria": {
+		"operator": "OR",
+		"criterias": [
+			{
+				"operator": "AND",
+				"criterias": [
+					{
+						"operator": "OR",
+						"criterions": [
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009334017",
+								"comment": "kernel-default is not affected"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009333928",
+								"comment": "kernel-source is not affected"
+							}
+						]
+					}
+				],
+				"criterions": [
+					{
+						"test_ref": "oval:org.opensuse.security:tst:2009258806",
+						"comment": "SUSE Linux Enterprise Server for SAP Applications 12 SP5 is installed"
+					}
+				]
+			},
+			{
+				"operator": "AND",
+				"criterias": [
+					{
+						"operator": "OR",
+						"criterions": [
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009128018",
+								"comment": "SUSE Linux Enterprise Server 12 SP2-LTSS is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009240280",
+								"comment": "SUSE Linux Enterprise Server 12 SP4-LTSS is installed"
+							}
+						]
+					},
+					{
+						"operator": "OR",
+						"criterions": [
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009334017",
+								"comment": "kernel-default is not affected"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009335425",
+								"comment": "kernel-default-base is not affected"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009335423",
+								"comment": "kernel-default-devel is not affected"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009335426",
+								"comment": "kernel-default-man is not affected"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009334791",
+								"comment": "kernel-devel is not affected"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009334792",
+								"comment": "kernel-macros is not affected"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009333928",
+								"comment": "kernel-source is not affected"
+							}
+						]
+					}
+				]
+			},
+			{
+				"operator": "AND",
+				"criterias": [
+					{
+						"operator": "OR",
+						"criterions": [
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009338031",
+								"comment": "kernel-default-kgraft is not affected"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009696923",
+								"comment": "kernel-default-kgraft-devel is not affected"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009333928",
+								"comment": "kernel-source is not affected"
+							}
+						]
+					}
+				],
+				"criterions": [
+					{
+						"test_ref": "oval:org.opensuse.security:tst:2009273148",
+						"comment": "SUSE Linux Enterprise Live Patching 12 SP5 is installed"
+					}
+				]
+			},
+			{
+				"operator": "AND",
+				"criterias": [
+					{
+						"operator": "OR",
+						"criterions": [
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009729794",
+								"comment": "cluster-md-kmp-default is not affected"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009729795",
+								"comment": "dlm-kmp-default is not affected"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009729796",
+								"comment": "gfs2-kmp-default is not affected"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009334017",
+								"comment": "kernel-default is not affected"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009335425",
+								"comment": "kernel-default-base is not affected"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009335423",
+								"comment": "kernel-default-devel is not affected"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009335426",
+								"comment": "kernel-default-man is not affected"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009729797",
+								"comment": "ocfs2-kmp-default is not affected"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009334791",
+								"comment": "kernel-devel is not affected"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009334792",
+								"comment": "kernel-macros is not affected"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009333928",
+								"comment": "kernel-source is not affected"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009340306",
+								"comment": "kernel-devel-azure is not affected"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009340305",
+								"comment": "kernel-source-azure is not affected"
+							}
+						]
+					}
+				],
+				"criterions": [
+					{
+						"test_ref": "oval:org.opensuse.security:tst:2009258033",
+						"comment": "SUSE Linux Enterprise Server 12 SP5-LTSS is installed"
+					}
+				]
+			}
+		]
+	}
+}

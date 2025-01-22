@@ -29,6 +29,7 @@
 				"SUSE Linux Enterprise Server 15 SP3-LTSS",
 				"SUSE Linux Enterprise Server 15 SP4-LTSS",
 				"SUSE Linux Enterprise Server 15 SP5",
+				"SUSE Linux Enterprise Server 15 SP5-LTSS",
 				"SUSE Linux Enterprise Server 15 SP6",
 				"SUSE Linux Enterprise Server 15-LTSS",
 				"SUSE Linux Enterprise Server for SAP Applications 15 SP2",
@@ -65,6 +66,11 @@
 				"ref_id": "SUSE-SU-2025:0154-1",
 				"ref_url": "https://lists.suse.com/pipermail/sle-security-updates/2025-January/020151.html",
 				"source": "SUSE-SU"
+			},
+			{
+				"ref_id": "SUSE-SU-2025:0201-1",
+				"ref_url": "https://lists.suse.com/pipermail/sle-security-updates/2025-January/020185.html",
+				"source": "SUSE-SU"
 			}
 		],
 		"description": "\n    In the Linux kernel, the following vulnerability has been resolved:\n\nbpf: sync_linked_regs() must preserve subreg_def\n\nRange propagation must not affect subreg_def marks, otherwise the\nfollowing example is rewritten by verifier incorrectly when\nBPF_F_TEST_RND_HI32 flag is set:\n\n  0: call bpf_ktime_get_ns                   call bpf_ktime_get_ns\n  1: r0 &= 0x7fffffff       after verifier   r0 &= 0x7fffffff\n  2: w1 = w0                rewrites         w1 = w0\n  3: if w0 < 10 goto +0     -------------->  r11 = 0x2f5674a6     (r)\n  4: r1 >>= 32                               r11 <<= 32           (r)\n  5: r0 = r1                                 r1 |= r11            (r)\n  6: exit;                                   if w0 < 0xa goto pc+0\n                                             r1 >>= 32\n                                             r0 = r1\n                                             exit\n\n(or zero extension of w1 at (2) is missing for architectures that\n require zero extension for upper register half).\n\nThe following happens w/o this patch:\n- r0 is marked as not a subreg at (0);\n- w1 is marked as subreg at (2);\n- w1 subreg_def is overridden at (3) by copy_register_state();\n- w1 is read at (5) but mark_insn_zext() does not mark (2)\n  for zero extension, because w1 subreg_def is not set;\n- because of BPF_F_TEST_RND_HI32 flag verifier inserts random\n  value for hi32 bits of (2) (marked (r));\n- this random value is read at (5).\n    ",
@@ -93,7 +99,7 @@
 				"date": "2024-12-06"
 			},
 			"updated": {
-				"date": "2025-01-18"
+				"date": "2025-01-22"
 			},
 			"affected_cpe_list": {
 				"cpe": [
@@ -119,6 +125,7 @@
 					"cpe:/o:suse:sles-ltss:15:sp2",
 					"cpe:/o:suse:sles-ltss:15:sp3",
 					"cpe:/o:suse:sles-ltss:15:sp4",
+					"cpe:/o:suse:sles-ltss:15:sp5",
 					"cpe:/o:suse:sles:15:sp5",
 					"cpe:/o:suse:sles_sap:15:sp2",
 					"cpe:/o:suse:sles_sap:15:sp3",
@@ -605,19 +612,6 @@
 						"operator": "OR",
 						"criterions": [
 							{
-								"test_ref": "oval:org.opensuse.security:tst:2009698985",
-								"comment": "SUSE Linux Enterprise Live Patching 15 SP4 is installed"
-							},
-							{
-								"test_ref": "oval:org.opensuse.security:tst:2009764853",
-								"comment": "SUSE Linux Enterprise Live Patching 15 SP5 is installed"
-							}
-						]
-					},
-					{
-						"operator": "OR",
-						"criterions": [
-							{
 								"test_ref": "oval:org.opensuse.security:tst:2009764854",
 								"comment": "kernel-default-livepatch is affected"
 							},
@@ -630,6 +624,12 @@
 								"comment": "kernel-source is affected"
 							}
 						]
+					}
+				],
+				"criterions": [
+					{
+						"test_ref": "oval:org.opensuse.security:tst:2009698985",
+						"comment": "SUSE Linux Enterprise Live Patching 15 SP4 is installed"
 					}
 				]
 			},
@@ -835,6 +835,162 @@
 					{
 						"test_ref": "oval:org.opensuse.security:tst:2009857543",
 						"comment": "SUSE Linux Enterprise Live Patching 15 SP6 is installed"
+					}
+				]
+			},
+			{
+				"operator": "AND",
+				"criterias": [
+					{
+						"operator": "OR",
+						"criterions": [
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009960943",
+								"comment": "kernel-default-livepatch-5.14.21-150500.55.91.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009960944",
+								"comment": "kernel-default-livepatch-devel-5.14.21-150500.55.91.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009960945",
+								"comment": "kernel-livepatch-5_14_21-150500_55_91-default-1-150500.11.3.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009333995",
+								"comment": "kernel-source is affected"
+							}
+						]
+					}
+				],
+				"criterions": [
+					{
+						"test_ref": "oval:org.opensuse.security:tst:2009764853",
+						"comment": "SUSE Linux Enterprise Live Patching 15 SP5 is installed"
+					}
+				]
+			},
+			{
+				"operator": "AND",
+				"criterias": [
+					{
+						"operator": "OR",
+						"criterions": [
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009960954",
+								"comment": "kernel-64kb-5.14.21-150500.55.91.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009960955",
+								"comment": "kernel-64kb-devel-5.14.21-150500.55.91.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009960978",
+								"comment": "kernel-default-5.14.21-150500.55.91.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009960979",
+								"comment": "kernel-default-base-5.14.21-150500.55.91.1.150500.6.41.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009960980",
+								"comment": "kernel-default-devel-5.14.21-150500.55.91.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009960959",
+								"comment": "kernel-devel-5.14.21-150500.55.91.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009960960",
+								"comment": "kernel-docs-5.14.21-150500.55.91.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009960961",
+								"comment": "kernel-macros-5.14.21-150500.55.91.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009960981",
+								"comment": "kernel-obs-build-5.14.21-150500.55.91.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009960963",
+								"comment": "kernel-source-5.14.21-150500.55.91.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009960982",
+								"comment": "kernel-syms-5.14.21-150500.55.91.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009960983",
+								"comment": "kernel-zfcpdump-5.14.21-150500.55.91.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009960984",
+								"comment": "reiserfs-kmp-default-5.14.21-150500.55.91.1 is installed"
+							}
+						]
+					}
+				],
+				"criterions": [
+					{
+						"test_ref": "oval:org.opensuse.security:tst:2009958873",
+						"comment": "SUSE Linux Enterprise Server 15 SP5-LTSS is installed"
+					}
+				]
+			},
+			{
+				"operator": "AND",
+				"criterias": [
+					{
+						"operator": "OR",
+						"criterions": [
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009960985",
+								"comment": "kernel-default-5.14.21-150500.55.91.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009960986",
+								"comment": "kernel-default-base-5.14.21-150500.55.91.1.150500.6.41.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009960987",
+								"comment": "kernel-default-devel-5.14.21-150500.55.91.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009960959",
+								"comment": "kernel-devel-5.14.21-150500.55.91.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009960960",
+								"comment": "kernel-docs-5.14.21-150500.55.91.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009960961",
+								"comment": "kernel-macros-5.14.21-150500.55.91.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009960988",
+								"comment": "kernel-obs-build-5.14.21-150500.55.91.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009960963",
+								"comment": "kernel-source-5.14.21-150500.55.91.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009960989",
+								"comment": "kernel-syms-5.14.21-150500.55.91.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009960990",
+								"comment": "reiserfs-kmp-default-5.14.21-150500.55.91.1 is installed"
+							}
+						]
+					}
+				],
+				"criterions": [
+					{
+						"test_ref": "oval:org.opensuse.security:tst:2009759902",
+						"comment": "SUSE Linux Enterprise Server for SAP Applications 15 SP5 is installed"
 					}
 				]
 			}

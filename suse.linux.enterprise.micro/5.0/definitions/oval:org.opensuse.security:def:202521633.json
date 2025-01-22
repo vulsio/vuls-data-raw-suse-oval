@@ -1,0 +1,73 @@
+{
+	"id": "oval:org.opensuse.security:def:202521633",
+	"version": "1",
+	"class": "vulnerability",
+	"metadata": {
+		"title": "CVE-2025-21633",
+		"affected": {
+			"family": "unix",
+			"platform": [
+				"SUSE Linux Enterprise Micro 5.0"
+			]
+		},
+		"reference": [
+			{
+				"ref_id": "Mitre CVE-2025-21633",
+				"ref_url": "https://cve.mitre.org/cgi-bin/cvename.cgi?name=CVE-2025-21633",
+				"source": "CVE"
+			},
+			{
+				"ref_id": "SUSE CVE-2025-21633",
+				"ref_url": "https://www.suse.com/security/cve/CVE-2025-21633",
+				"source": "SUSE CVE"
+			}
+		],
+		"description": "\n    In the Linux kernel, the following vulnerability has been resolved:\n\nio_uring/sqpoll: zero sqd->thread on tctx errors\n\nSyzkeller reports:\n\nBUG: KASAN: slab-use-after-free in thread_group_cputime+0x409/0x700 kernel/sched/cputime.c:341\nRead of size 8 at addr ffff88803578c510 by task syz.2.3223/27552\n Call Trace:\n  <TASK>\n  ...\n  kasan_report+0x143/0x180 mm/kasan/report.c:602\n  thread_group_cputime+0x409/0x700 kernel/sched/cputime.c:341\n  thread_group_cputime_adjusted+0xa6/0x340 kernel/sched/cputime.c:639\n  getrusage+0x1000/0x1340 kernel/sys.c:1863\n  io_uring_show_fdinfo+0xdfe/0x1770 io_uring/fdinfo.c:197\n  seq_show+0x608/0x770 fs/proc/fd.c:68\n  ...\n\nThat's due to sqd->task not being cleared properly in cases where\nSQPOLL task tctx setup fails, which can essentially only happen with\nfault injection to insert allocation errors.\n    ",
+		"advisory": {
+			"from": "security@suse.de",
+			"severity": "Important",
+			"cve": [
+				{
+					"text": "CVE-2025-21633 at SUSE",
+					"href": "https://www.suse.com/security/cve/CVE-2025-21633/",
+					"impact": "high",
+					"cvss3": "7/CVSS:3.1/AV:L/AC:H/PR:L/UI:N/S:U/C:H/I:H/A:H"
+				},
+				{
+					"text": "CVE-2025-21633 at NVD",
+					"href": "https://nvd.nist.gov/vuln/detail/CVE-2025-21633"
+				}
+			],
+			"bugzilla": [
+				{
+					"text": "SUSE bug 1236108",
+					"href": "https://bugzilla.suse.com/1236108"
+				}
+			],
+			"issued": {
+				"date": "2025-01-22"
+			},
+			"updated": {
+				"date": "2025-01-22"
+			},
+			"affected_cpe_list": {
+				"cpe": [
+					"cpe:/o:suse:suse-microos:5.0"
+				]
+			}
+		}
+	},
+	"criteria": {
+		"operator": "AND",
+		"criterions": [
+			{
+				"test_ref": "oval:org.opensuse.security:tst:2009704855",
+				"comment": "SUSE Linux Enterprise Micro 5.0 is installed"
+			},
+			{
+				"test_ref": "oval:org.opensuse.security:tst:2009334017",
+				"comment": "kernel-default is not affected"
+			}
+		]
+	}
+}

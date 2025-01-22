@@ -40,6 +40,11 @@
 				"ref_id": "SUSE-SU-2025:0154-1",
 				"ref_url": "https://lists.suse.com/pipermail/sle-security-updates/2025-January/020151.html",
 				"source": "SUSE-SU"
+			},
+			{
+				"ref_id": "SUSE-SU-2025:0201-1",
+				"ref_url": "https://lists.suse.com/pipermail/sle-security-updates/2025-January/020185.html",
+				"source": "SUSE-SU"
 			}
 		],
 		"description": "\n    In the Linux kernel, the following vulnerability has been resolved:\n\nnilfs2: fix null-ptr-deref in block_touch_buffer tracepoint\n\nPatch series \"nilfs2: fix null-ptr-deref bugs on block tracepoints\".\n\nThis series fixes null pointer dereference bugs that occur when using\nnilfs2 and two block-related tracepoints.\n\n\nThis patch (of 2):\n\nIt has been reported that when using \"block:block_touch_buffer\"\ntracepoint, touch_buffer() called from __nilfs_get_folio_block() causes a\nNULL pointer dereference, or a general protection fault when KASAN is\nenabled.\n\nThis happens because since the tracepoint was added in touch_buffer(), it\nreferences the dev_t member bh->b_bdev->bd_dev regardless of whether the\nbuffer head has a pointer to a block_device structure.  In the current\nimplementation, the block_device structure is set after the function\nreturns to the caller.\n\nHere, touch_buffer() is used to mark the folio/page that owns the buffer\nhead as accessed, but the common search helper for folio/page used by the\ncaller function was optimized to mark the folio/page as accessed when it\nwas reimplemented a long time ago, eliminating the need to call\ntouch_buffer() here in the first place.\n\nSo this solves the issue by eliminating the touch_buffer() call itself.\n    ",
@@ -70,7 +75,7 @@
 				"date": "2024-12-06"
 			},
 			"updated": {
-				"date": "2025-01-18"
+				"date": "2025-01-22"
 			},
 			"affected_cpe_list": {
 				"cpe": [
@@ -97,34 +102,6 @@
 					{
 						"test_ref": "oval:org.opensuse.security:tst:2009338032",
 						"comment": "kernel-default is affected"
-					}
-				]
-			},
-			{
-				"operator": "AND",
-				"criterias": [
-					{
-						"operator": "OR",
-						"criterions": [
-							{
-								"test_ref": "oval:org.opensuse.security:tst:2009338032",
-								"comment": "kernel-default is affected"
-							},
-							{
-								"test_ref": "oval:org.opensuse.security:tst:2009333995",
-								"comment": "kernel-source is affected"
-							},
-							{
-								"test_ref": "oval:org.opensuse.security:tst:2009728714",
-								"comment": "kernel-source-rt is affected"
-							}
-						]
-					}
-				],
-				"criterions": [
-					{
-						"test_ref": "oval:org.opensuse.security:tst:2009951955",
-						"comment": "SUSE Linux Enterprise Micro 5.5 is installed"
 					}
 				]
 			},
@@ -172,6 +149,38 @@
 								"comment": "kernel-source-rt is affected"
 							}
 						]
+					}
+				]
+			},
+			{
+				"operator": "AND",
+				"criterias": [
+					{
+						"operator": "OR",
+						"criterions": [
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009960978",
+								"comment": "kernel-default-5.14.21-150500.55.91.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009960957",
+								"comment": "kernel-default-base-5.14.21-150500.55.91.1.150500.6.41.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009333995",
+								"comment": "kernel-source is affected"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009728714",
+								"comment": "kernel-source-rt is affected"
+							}
+						]
+					}
+				],
+				"criterions": [
+					{
+						"test_ref": "oval:org.opensuse.security:tst:2009951955",
+						"comment": "SUSE Linux Enterprise Micro 5.5 is installed"
 					}
 				]
 			}
