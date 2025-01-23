@@ -1,0 +1,165 @@
+{
+	"id": "oval:org.opensuse.security:def:202521664",
+	"version": "1",
+	"class": "vulnerability",
+	"metadata": {
+		"title": "CVE-2025-21664",
+		"affected": {
+			"family": "unix",
+			"platform": [
+				"SUSE Linux Enterprise Desktop 15 SP6",
+				"SUSE Linux Enterprise High Performance Computing 15 SP6",
+				"SUSE Linux Enterprise Module for Basesystem 15 SP6",
+				"SUSE Linux Enterprise Module for Development Tools 15 SP6",
+				"SUSE Linux Enterprise Server 15 SP6",
+				"SUSE Linux Enterprise Server for SAP Applications 15 SP6"
+			]
+		},
+		"reference": [
+			{
+				"ref_id": "Mitre CVE-2025-21664",
+				"ref_url": "https://cve.mitre.org/cgi-bin/cvename.cgi?name=CVE-2025-21664",
+				"source": "CVE"
+			},
+			{
+				"ref_id": "SUSE CVE-2025-21664",
+				"ref_url": "https://www.suse.com/security/cve/CVE-2025-21664",
+				"source": "SUSE CVE"
+			}
+		],
+		"description": "\n    In the Linux kernel, the following vulnerability has been resolved:\n\ndm thin: make get_first_thin use rcu-safe list first function\n\nThe documentation in rculist.h explains the absence of list_empty_rcu()\nand cautions programmers against relying on a list_empty() ->\nlist_first() sequence in RCU safe code.  This is because each of these\nfunctions performs its own READ_ONCE() of the list head.  This can lead\nto a situation where the list_empty() sees a valid list entry, but the\nsubsequent list_first() sees a different view of list head state after a\nmodification.\n\nIn the case of dm-thin, this author had a production box crash from a GP\nfault in the process_deferred_bios path.  This function saw a valid list\nhead in get_first_thin() but when it subsequently dereferenced that and\nturned it into a thin_c, it got the inside of the struct pool, since the\nlist was now empty and referring to itself.  The kernel on which this\noccurred printed both a warning about a refcount_t being saturated, and\na UBSAN error for an out-of-bounds cpuid access in the queued spinlock,\nprior to the fault itself.  When the resulting kdump was examined, it\nwas possible to see another thread patiently waiting in thin_dtr's\nsynchronize_rcu.\n\nThe thin_dtr call managed to pull the thin_c out of the active thins\nlist (and have it be the last entry in the active_thins list) at just\nthe wrong moment which lead to this crash.\n\nFortunately, the fix here is straight forward.  Switch get_first_thin()\nfunction to use list_first_or_null_rcu() which performs just a single\nREAD_ONCE() and returns NULL if the list is already empty.\n\nThis was run against the devicemapper test suite's thin-provisioning\nsuites for delete and suspend and no regressions were observed.\n    ",
+		"advisory": {
+			"from": "security@suse.de",
+			"severity": "Moderate",
+			"cve": [
+				{
+					"text": "CVE-2025-21664 at SUSE",
+					"href": "https://www.suse.com/security/cve/CVE-2025-21664/",
+					"impact": "medium",
+					"cvss3": "4.7/CVSS:3.1/AV:L/AC:H/PR:L/UI:N/S:U/C:N/I:N/A:H"
+				},
+				{
+					"text": "CVE-2025-21664 at NVD",
+					"href": "https://nvd.nist.gov/vuln/detail/CVE-2025-21664"
+				}
+			],
+			"bugzilla": [
+				{
+					"text": "SUSE bug 1236262",
+					"href": "https://bugzilla.suse.com/1236262"
+				}
+			],
+			"issued": {
+				"date": "2025-01-23"
+			},
+			"updated": {
+				"date": "2025-01-23"
+			},
+			"affected_cpe_list": {
+				"cpe": [
+					"cpe:/o:suse:sle-module-basesystem:15:sp6",
+					"cpe:/o:suse:sle-module-development-tools:15:sp6"
+				]
+			}
+		}
+	},
+	"criteria": {
+		"operator": "OR",
+		"criterias": [
+			{
+				"operator": "AND",
+				"criterias": [
+					{
+						"operator": "OR",
+						"criterions": [
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009856171",
+								"comment": "SUSE Linux Enterprise Desktop 15 SP6 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009856172",
+								"comment": "SUSE Linux Enterprise High Performance Computing 15 SP6 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009856253",
+								"comment": "SUSE Linux Enterprise Module for Development Tools 15 SP6 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009856174",
+								"comment": "SUSE Linux Enterprise Server 15 SP6 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009856175",
+								"comment": "SUSE Linux Enterprise Server for SAP Applications 15 SP6 is installed"
+							}
+						]
+					},
+					{
+						"operator": "OR",
+						"criterions": [
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009338032",
+								"comment": "kernel-default is affected"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009333995",
+								"comment": "kernel-source is affected"
+							}
+						]
+					}
+				]
+			},
+			{
+				"operator": "AND",
+				"criterias": [
+					{
+						"operator": "OR",
+						"criterions": [
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009856171",
+								"comment": "SUSE Linux Enterprise Desktop 15 SP6 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009856172",
+								"comment": "SUSE Linux Enterprise High Performance Computing 15 SP6 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009856173",
+								"comment": "SUSE Linux Enterprise Module for Basesystem 15 SP6 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009856174",
+								"comment": "SUSE Linux Enterprise Server 15 SP6 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009856175",
+								"comment": "SUSE Linux Enterprise Server for SAP Applications 15 SP6 is installed"
+							}
+						]
+					},
+					{
+						"operator": "OR",
+						"criterions": [
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009338032",
+								"comment": "kernel-default is affected"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009338034",
+								"comment": "kernel-default-devel is affected"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009335275",
+								"comment": "kernel-devel is affected"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009335276",
+								"comment": "kernel-macros is affected"
+							}
+						]
+					}
+				]
+			}
+		]
+	}
+}
