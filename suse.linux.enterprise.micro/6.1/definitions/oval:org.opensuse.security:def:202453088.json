@@ -1,0 +1,184 @@
+{
+	"id": "oval:org.opensuse.security:def:202453088",
+	"version": "1",
+	"class": "vulnerability",
+	"metadata": {
+		"title": "CVE-2024-53088",
+		"affected": {
+			"family": "unix",
+			"platform": [
+				"SUSE Linux Micro 6.1"
+			]
+		},
+		"reference": [
+			{
+				"ref_id": "Mitre CVE-2024-53088",
+				"ref_url": "https://cve.mitre.org/cgi-bin/cvename.cgi?name=CVE-2024-53088",
+				"source": "CVE"
+			},
+			{
+				"ref_id": "SUSE CVE-2024-53088",
+				"ref_url": "https://www.suse.com/security/cve/CVE-2024-53088",
+				"source": "SUSE CVE"
+			},
+			{
+				"ref_id": "RHSA-2025:0065",
+				"ref_url": "https://lists.suse.com/pipermail/suse-liberty-linux-updates/2025-January/000741.html",
+				"source": "SUSE-SU"
+			},
+			{
+				"ref_id": "SUSE-SU-2024:4314-1",
+				"ref_url": "https://lists.suse.com/pipermail/sle-security-updates/2024-December/019998.html",
+				"source": "SUSE-SU"
+			},
+			{
+				"ref_id": "SUSE-SU-2024:4315-1",
+				"ref_url": "https://lists.suse.com/pipermail/sle-security-updates/2024-December/019997.html",
+				"source": "SUSE-SU"
+			},
+			{
+				"ref_id": "SUSE-SU-2024:4316-1",
+				"ref_url": "https://lists.suse.com/pipermail/sle-security-updates/2024-December/020001.html",
+				"source": "SUSE-SU"
+			},
+			{
+				"ref_id": "SUSE-SU-2024:4318-1",
+				"ref_url": "https://lists.suse.com/pipermail/sle-security-updates/2024-December/019999.html",
+				"source": "SUSE-SU"
+			},
+			{
+				"ref_id": "SUSE-SU-2024:4364-1",
+				"ref_url": "https://lists.suse.com/pipermail/sle-security-updates/2024-December/020019.html",
+				"source": "SUSE-SU"
+			},
+			{
+				"ref_id": "SUSE-SU-2024:4367-1",
+				"ref_url": "https://lists.suse.com/pipermail/sle-security-updates/2024-December/020025.html",
+				"source": "SUSE-SU"
+			},
+			{
+				"ref_id": "SUSE-SU-2024:4376-1",
+				"ref_url": "https://lists.suse.com/pipermail/sle-security-updates/2024-December/020028.html",
+				"source": "SUSE-SU"
+			},
+			{
+				"ref_id": "SUSE-SU-2024:4387-1",
+				"ref_url": "https://lists.suse.com/pipermail/sle-security-updates/2024-December/020032.html",
+				"source": "SUSE-SU"
+			},
+			{
+				"ref_id": "SUSE-SU-2025:0035-1",
+				"ref_url": "https://lists.suse.com/pipermail/sle-security-updates/2025-January/020070.html",
+				"source": "SUSE-SU"
+			}
+		],
+		"description": "\n    In the Linux kernel, the following vulnerability has been resolved:\n\ni40e: fix race condition by adding filter's intermediate sync state\n\nFix a race condition in the i40e driver that leads to MAC/VLAN filters\nbecoming corrupted and leaking. Address the issue that occurs under\nheavy load when multiple threads are concurrently modifying MAC/VLAN\nfilters by setting mac and port VLAN.\n\n1. Thread T0 allocates a filter in i40e_add_filter() within\n        i40e_ndo_set_vf_port_vlan().\n2. Thread T1 concurrently frees the filter in __i40e_del_filter() within\n        i40e_ndo_set_vf_mac().\n3. Subsequently, i40e_service_task() calls i40e_sync_vsi_filters(), which\n        refers to the already freed filter memory, causing corruption.\n\nReproduction steps:\n1. Spawn multiple VFs.\n2. Apply a concurrent heavy load by running parallel operations to change\n        MAC addresses on the VFs and change port VLANs on the host.\n3. Observe errors in dmesg:\n\"Error I40E_AQ_RC_ENOSPC adding RX filters on VF XX,\n\tplease set promiscuous on manually for VF XX\".\n\nExact code for stable reproduction Intel can't open-source now.\n\nThe fix involves implementing a new intermediate filter state,\nI40E_FILTER_NEW_SYNC, for the time when a filter is on a tmp_add_list.\nThese filters cannot be deleted from the hash list directly but\nmust be removed using the full process.\n    ",
+		"advisory": {
+			"from": "security@suse.de",
+			"severity": "Moderate",
+			"cve": [
+				{
+					"text": "CVE-2024-53088 at SUSE",
+					"href": "https://www.suse.com/security/cve/CVE-2024-53088/",
+					"impact": "medium",
+					"cvss3": "6.3/CVSS:3.1/AV:L/AC:H/PR:L/UI:N/S:U/C:N/I:H/A:H"
+				},
+				{
+					"text": "CVE-2024-53088 at NVD",
+					"href": "https://nvd.nist.gov/vuln/detail/CVE-2024-53088",
+					"impact": "medium",
+					"cvss3": "4.7/CVSS:3.1/AV:L/AC:H/PR:L/UI:N/S:U/C:N/I:N/A:H"
+				}
+			],
+			"bugzilla": [
+				{
+					"text": "SUSE bug 1233580",
+					"href": "https://bugzilla.suse.com/1233580"
+				}
+			],
+			"issued": {
+				"date": "2025-01-24"
+			},
+			"updated": {
+				"date": "2025-01-24"
+			},
+			"affected_cpe_list": {
+				"cpe": [
+					"cpe:/o:suse:sl-micro:6.1"
+				]
+			}
+		}
+	},
+	"criteria": {
+		"operator": "AND",
+		"criterias": [
+			{
+				"operator": "OR",
+				"criterions": [
+					{
+						"test_ref": "oval:org.opensuse.security:tst:2009961137",
+						"comment": "kernel-default-6.4.0-22.1 is installed"
+					},
+					{
+						"test_ref": "oval:org.opensuse.security:tst:2009961138",
+						"comment": "kernel-default-base-6.4.0-21.3.21.3 is installed"
+					},
+					{
+						"test_ref": "oval:org.opensuse.security:tst:2009961139",
+						"comment": "kernel-default-devel-6.4.0-22.1 is installed"
+					},
+					{
+						"test_ref": "oval:org.opensuse.security:tst:2009961140",
+						"comment": "kernel-default-livepatch-6.4.0-22.1 is installed"
+					},
+					{
+						"test_ref": "oval:org.opensuse.security:tst:2009961141",
+						"comment": "kernel-devel-6.4.0-22.1 is installed"
+					},
+					{
+						"test_ref": "oval:org.opensuse.security:tst:2009961146",
+						"comment": "kernel-devel-rt-6.4.0-22.1 is installed"
+					},
+					{
+						"test_ref": "oval:org.opensuse.security:tst:2009961142",
+						"comment": "kernel-kvmsmall-6.4.0-22.1 is installed"
+					},
+					{
+						"test_ref": "oval:org.opensuse.security:tst:2009961143",
+						"comment": "kernel-livepatch-6_4_0-21-default-1-1.1 is installed"
+					},
+					{
+						"test_ref": "oval:org.opensuse.security:tst:2009961147",
+						"comment": "kernel-livepatch-6_4_0-22-rt-1-1.1 is installed"
+					},
+					{
+						"test_ref": "oval:org.opensuse.security:tst:2009961144",
+						"comment": "kernel-macros-6.4.0-22.1 is installed"
+					},
+					{
+						"test_ref": "oval:org.opensuse.security:tst:2009961148",
+						"comment": "kernel-rt-6.4.0-22.1 is installed"
+					},
+					{
+						"test_ref": "oval:org.opensuse.security:tst:2009961149",
+						"comment": "kernel-rt-devel-6.4.0-22.1 is installed"
+					},
+					{
+						"test_ref": "oval:org.opensuse.security:tst:2009961145",
+						"comment": "kernel-source-6.4.0-22.1 is installed"
+					},
+					{
+						"test_ref": "oval:org.opensuse.security:tst:2009961150",
+						"comment": "kernel-source-rt-6.4.0-22.1 is installed"
+					}
+				]
+			}
+		],
+		"criterions": [
+			{
+				"test_ref": "oval:org.opensuse.security:tst:2009954035",
+				"comment": "SUSE Linux Micro 6.1 is installed"
+			}
+		]
+	}
+}

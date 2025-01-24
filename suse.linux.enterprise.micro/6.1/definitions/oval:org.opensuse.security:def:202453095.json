@@ -1,0 +1,162 @@
+{
+	"id": "oval:org.opensuse.security:def:202453095",
+	"version": "1",
+	"class": "vulnerability",
+	"metadata": {
+		"title": "CVE-2024-53095",
+		"affected": {
+			"family": "unix",
+			"platform": [
+				"SUSE Linux Micro 6.1"
+			]
+		},
+		"reference": [
+			{
+				"ref_id": "Mitre CVE-2024-53095",
+				"ref_url": "https://cve.mitre.org/cgi-bin/cvename.cgi?name=CVE-2024-53095",
+				"source": "CVE"
+			},
+			{
+				"ref_id": "SUSE CVE-2024-53095",
+				"ref_url": "https://www.suse.com/security/cve/CVE-2024-53095",
+				"source": "SUSE CVE"
+			},
+			{
+				"ref_id": "SUSE-SU-2024:4314-1",
+				"ref_url": "https://lists.suse.com/pipermail/sle-security-updates/2024-December/019998.html",
+				"source": "SUSE-SU"
+			},
+			{
+				"ref_id": "SUSE-SU-2024:4316-1",
+				"ref_url": "https://lists.suse.com/pipermail/sle-security-updates/2024-December/020001.html",
+				"source": "SUSE-SU"
+			},
+			{
+				"ref_id": "SUSE-SU-2024:4318-1",
+				"ref_url": "https://lists.suse.com/pipermail/sle-security-updates/2024-December/019999.html",
+				"source": "SUSE-SU"
+			},
+			{
+				"ref_id": "SUSE-SU-2025:0154-1",
+				"ref_url": "https://lists.suse.com/pipermail/sle-security-updates/2025-January/020151.html",
+				"source": "SUSE-SU"
+			},
+			{
+				"ref_id": "SUSE-SU-2025:0201-1",
+				"ref_url": "https://lists.suse.com/pipermail/sle-security-updates/2025-January/020185.html",
+				"source": "SUSE-SU"
+			},
+			{
+				"ref_id": "SUSE-SU-2025:0203-1",
+				"ref_url": "https://lists.suse.com/pipermail/sle-security-updates/2025-January/020183.html",
+				"source": "SUSE-SU"
+			}
+		],
+		"description": "\n    In the Linux kernel, the following vulnerability has been resolved:\n\nsmb: client: Fix use-after-free of network namespace.\n\nRecently, we got a customer report that CIFS triggers oops while\nreconnecting to a server.  [0]\n\nThe workload runs on Kubernetes, and some pods mount CIFS servers\nin non-root network namespaces.  The problem rarely happened, but\nit was always while the pod was dying.\n\nThe root cause is wrong reference counting for network namespace.\n\nCIFS uses kernel sockets, which do not hold refcnt of the netns that\nthe socket belongs to.  That means CIFS must ensure the socket is\nalways freed before its netns; otherwise, use-after-free happens.\n\nThe repro steps are roughly:\n\n  1. mount CIFS in a non-root netns\n  2. drop packets from the netns\n  3. destroy the netns\n  4. unmount CIFS\n\nWe can reproduce the issue quickly with the script [1] below and see\nthe splat [2] if CONFIG_NET_NS_REFCNT_TRACKER is enabled.\n\nWhen the socket is TCP, it is hard to guarantee the netns lifetime\nwithout holding refcnt due to async timers.\n\nLet's hold netns refcnt for each socket as done for SMC in commit\n9744d2bf1976 (\"smc: Fix use-after-free in tcp_write_timer_handler().\").\n\nNote that we need to move put_net() from cifs_put_tcp_session() to\nclean_demultiplex_info(); otherwise, __sock_create() still could touch a\nfreed netns while cifsd tries to reconnect from cifs_demultiplex_thread().\n\nAlso, maybe_get_net() cannot be put just before __sock_create() because\nthe code is not under RCU and there is a small chance that the same\naddress happened to be reallocated to another netns.\n\n[0]:\nCIFS: VFS: \\\\XXXXXXXXXXX has not responded in 15 seconds. Reconnecting...\nCIFS: Serverclose failed 4 times, giving up\nUnable to handle kernel paging request at virtual address 14de99e461f84a07\nMem abort info:\n  ESR = 0x0000000096000004\n  EC = 0x25: DABT (current EL), IL = 32 bits\n  SET = 0, FnV = 0\n  EA = 0, S1PTW = 0\n  FSC = 0x04: level 0 translation fault\nData abort info:\n  ISV = 0, ISS = 0x00000004\n  CM = 0, WnR = 0\n[14de99e461f84a07] address between user and kernel address ranges\nInternal error: Oops: 0000000096000004 [#1] SMP\nModules linked in: cls_bpf sch_ingress nls_utf8 cifs cifs_arc4 cifs_md4 dns_resolver tcp_diag inet_diag veth xt_state xt_connmark nf_conntrack_netlink xt_nat xt_statistic xt_MASQUERADE xt_mark xt_addrtype ipt_REJECT nf_reject_ipv4 nft_chain_nat nf_nat xt_conntrack nf_conntrack nf_defrag_ipv6 nf_defrag_ipv4 xt_comment nft_compat nf_tables nfnetlink overlay nls_ascii nls_cp437 sunrpc vfat fat aes_ce_blk aes_ce_cipher ghash_ce sm4_ce_cipher sm4 sm3_ce sm3 sha3_ce sha512_ce sha512_arm64 sha1_ce ena button sch_fq_codel loop fuse configfs dmi_sysfs sha2_ce sha256_arm64 dm_mirror dm_region_hash dm_log dm_mod dax efivarfs\nCPU: 5 PID: 2690970 Comm: cifsd Not tainted 6.1.103-109.184.amzn2023.aarch64 #1\nHardware name: Amazon EC2 r7g.4xlarge/, BIOS 1.0 11/1/2018\npstate: 00400005 (nzcv daif +PAN -UAO -TCO -DIT -SSBS BTYPE=--)\npc : fib_rules_lookup+0x44/0x238\nlr : __fib_lookup+0x64/0xbc\nsp : ffff8000265db790\nx29: ffff8000265db790 x28: 0000000000000000 x27: 000000000000bd01\nx26: 0000000000000000 x25: ffff000b4baf8000 x24: ffff00047b5e4580\nx23: ffff8000265db7e0 x22: 0000000000000000 x21: ffff00047b5e4500\nx20: ffff0010e3f694f8 x19: 14de99e461f849f7 x18: 0000000000000000\nx17: 0000000000000000 x16: 0000000000000000 x15: 0000000000000000\nx14: 0000000000000000 x13: 0000000000000000 x12: 3f92800abd010002\nx11: 0000000000000001 x10: ffff0010e3f69420 x9 : ffff800008a6f294\nx8 : 0000000000000000 x7 : 0000000000000006 x6 : 0000000000000000\nx5 : 0000000000000001 x4 : ffff001924354280 x3 : ffff8000265db7e0\nx2 : 0000000000000000 x1 : ffff0010e3f694f8 x0 : ffff00047b5e4500\nCall trace:\n fib_rules_lookup+0x44/0x238\n __fib_lookup+0x64/0xbc\n ip_route_output_key_hash_rcu+0x2c4/0x398\n ip_route_output_key_hash+0x60/0x8c\n tcp_v4_connect+0x290/0x488\n __inet_stream_connect+0x108/0x3d0\n inet_stream_connect+0x50/0x78\n kernel_connect+0x6c/0xac\n generic_ip_conne\n---truncated---\n    ",
+		"advisory": {
+			"from": "security@suse.de",
+			"severity": "Moderate",
+			"cve": [
+				{
+					"text": "CVE-2024-53095 at SUSE",
+					"href": "https://www.suse.com/security/cve/CVE-2024-53095/",
+					"impact": "medium",
+					"cvss3": "5.5/CVSS:3.1/AV:L/AC:L/PR:L/UI:N/S:U/C:N/I:N/A:H"
+				},
+				{
+					"text": "CVE-2024-53095 at NVD",
+					"href": "https://nvd.nist.gov/vuln/detail/CVE-2024-53095"
+				}
+			],
+			"bugzilla": [
+				{
+					"text": "SUSE bug 1233642",
+					"href": "https://bugzilla.suse.com/1233642"
+				}
+			],
+			"issued": {
+				"date": "2025-01-24"
+			},
+			"updated": {
+				"date": "2025-01-24"
+			},
+			"affected_cpe_list": {
+				"cpe": [
+					"cpe:/o:suse:sl-micro:6.1"
+				]
+			}
+		}
+	},
+	"criteria": {
+		"operator": "AND",
+		"criterias": [
+			{
+				"operator": "OR",
+				"criterions": [
+					{
+						"test_ref": "oval:org.opensuse.security:tst:2009961137",
+						"comment": "kernel-default-6.4.0-22.1 is installed"
+					},
+					{
+						"test_ref": "oval:org.opensuse.security:tst:2009961138",
+						"comment": "kernel-default-base-6.4.0-21.3.21.3 is installed"
+					},
+					{
+						"test_ref": "oval:org.opensuse.security:tst:2009961139",
+						"comment": "kernel-default-devel-6.4.0-22.1 is installed"
+					},
+					{
+						"test_ref": "oval:org.opensuse.security:tst:2009961140",
+						"comment": "kernel-default-livepatch-6.4.0-22.1 is installed"
+					},
+					{
+						"test_ref": "oval:org.opensuse.security:tst:2009961141",
+						"comment": "kernel-devel-6.4.0-22.1 is installed"
+					},
+					{
+						"test_ref": "oval:org.opensuse.security:tst:2009961146",
+						"comment": "kernel-devel-rt-6.4.0-22.1 is installed"
+					},
+					{
+						"test_ref": "oval:org.opensuse.security:tst:2009961142",
+						"comment": "kernel-kvmsmall-6.4.0-22.1 is installed"
+					},
+					{
+						"test_ref": "oval:org.opensuse.security:tst:2009961143",
+						"comment": "kernel-livepatch-6_4_0-21-default-1-1.1 is installed"
+					},
+					{
+						"test_ref": "oval:org.opensuse.security:tst:2009961147",
+						"comment": "kernel-livepatch-6_4_0-22-rt-1-1.1 is installed"
+					},
+					{
+						"test_ref": "oval:org.opensuse.security:tst:2009961144",
+						"comment": "kernel-macros-6.4.0-22.1 is installed"
+					},
+					{
+						"test_ref": "oval:org.opensuse.security:tst:2009961148",
+						"comment": "kernel-rt-6.4.0-22.1 is installed"
+					},
+					{
+						"test_ref": "oval:org.opensuse.security:tst:2009961149",
+						"comment": "kernel-rt-devel-6.4.0-22.1 is installed"
+					},
+					{
+						"test_ref": "oval:org.opensuse.security:tst:2009961145",
+						"comment": "kernel-source-6.4.0-22.1 is installed"
+					},
+					{
+						"test_ref": "oval:org.opensuse.security:tst:2009961150",
+						"comment": "kernel-source-rt-6.4.0-22.1 is installed"
+					}
+				]
+			}
+		],
+		"criterions": [
+			{
+				"test_ref": "oval:org.opensuse.security:tst:2009954035",
+				"comment": "SUSE Linux Micro 6.1 is installed"
+			}
+		]
+	}
+}

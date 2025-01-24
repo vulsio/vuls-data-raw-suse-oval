@@ -1,0 +1,174 @@
+{
+	"id": "oval:org.opensuse.security:def:202447728",
+	"version": "1",
+	"class": "vulnerability",
+	"metadata": {
+		"title": "CVE-2024-47728",
+		"affected": {
+			"family": "unix",
+			"platform": [
+				"SUSE Linux Micro 6.1"
+			]
+		},
+		"reference": [
+			{
+				"ref_id": "Mitre CVE-2024-47728",
+				"ref_url": "https://cve.mitre.org/cgi-bin/cvename.cgi?name=CVE-2024-47728",
+				"source": "CVE"
+			},
+			{
+				"ref_id": "SUSE CVE-2024-47728",
+				"ref_url": "https://www.suse.com/security/cve/CVE-2024-47728",
+				"source": "SUSE CVE"
+			},
+			{
+				"ref_id": "SUSE-SU-2024:3984-1",
+				"ref_url": "https://lists.suse.com/pipermail/sle-security-updates/2024-November/019815.html",
+				"source": "SUSE-SU"
+			},
+			{
+				"ref_id": "SUSE-SU-2024:3986-1",
+				"ref_url": "https://lists.suse.com/pipermail/sle-security-updates/2024-November/019813.html",
+				"source": "SUSE-SU"
+			},
+			{
+				"ref_id": "SUSE-SU-2024:4315-1",
+				"ref_url": "https://lists.suse.com/pipermail/sle-security-updates/2024-December/019997.html",
+				"source": "SUSE-SU"
+			},
+			{
+				"ref_id": "SUSE-SU-2024:4318-1",
+				"ref_url": "https://lists.suse.com/pipermail/sle-security-updates/2024-December/019999.html",
+				"source": "SUSE-SU"
+			},
+			{
+				"ref_id": "SUSE-SU-2024:4364-1",
+				"ref_url": "https://lists.suse.com/pipermail/sle-security-updates/2024-December/020019.html",
+				"source": "SUSE-SU"
+			},
+			{
+				"ref_id": "SUSE-SU-2024:4376-1",
+				"ref_url": "https://lists.suse.com/pipermail/sle-security-updates/2024-December/020028.html",
+				"source": "SUSE-SU"
+			},
+			{
+				"ref_id": "SUSE-SU-2024:4387-1",
+				"ref_url": "https://lists.suse.com/pipermail/sle-security-updates/2024-December/020032.html",
+				"source": "SUSE-SU"
+			},
+			{
+				"ref_id": "openSUSE-SU-2024:14500-1",
+				"ref_url": "https://lists.opensuse.org/archives/list/security-announce@lists.opensuse.org/thread/2NO44GTYBSPPWKFDREFWHITK4XKTNVLP/",
+				"source": "SUSE-SU"
+			}
+		],
+		"description": "\n    In the Linux kernel, the following vulnerability has been resolved:\n\nbpf: Zero former ARG_PTR_TO_{LONG,INT} args in case of error\n\nFor all non-tracing helpers which formerly had ARG_PTR_TO_{LONG,INT} as input\narguments, zero the value for the case of an error as otherwise it could leak\nmemory. For tracing, it is not needed given CAP_PERFMON can already read all\nkernel memory anyway hence bpf_get_func_arg() and bpf_get_func_ret() is skipped\nin here.\n\nAlso, the MTU helpers mtu_len pointer value is being written but also read.\nTechnically, the MEM_UNINIT should not be there in order to always force init.\nRemoving MEM_UNINIT needs more verifier rework though: MEM_UNINIT right now\nimplies two things actually: i) write into memory, ii) memory does not have\nto be initialized. If we lift MEM_UNINIT, it then becomes: i) read into memory,\nii) memory must be initialized. This means that for bpf_*_check_mtu() we're\nreadding the issue we're trying to fix, that is, it would then be able to\nwrite back into things like .rodata BPF maps. Follow-up work will rework the\nMEM_UNINIT semantics such that the intent can be better expressed. For now\njust clear the *mtu_len on error path which can be lifted later again.\n    ",
+		"advisory": {
+			"from": "security@suse.de",
+			"severity": "Moderate",
+			"cve": [
+				{
+					"text": "CVE-2024-47728 at SUSE",
+					"href": "https://www.suse.com/security/cve/CVE-2024-47728/",
+					"impact": "medium",
+					"cvss3": "5.5/CVSS:3.1/AV:L/AC:L/PR:L/UI:N/S:U/C:N/I:N/A:H"
+				},
+				{
+					"text": "CVE-2024-47728 at NVD",
+					"href": "https://nvd.nist.gov/vuln/detail/CVE-2024-47728",
+					"impact": "medium",
+					"cvss3": "5.5/CVSS:3.1/AV:L/AC:L/PR:L/UI:N/S:U/C:N/I:N/A:H"
+				}
+			],
+			"bugzilla": [
+				{
+					"text": "SUSE bug 1232076",
+					"href": "https://bugzilla.suse.com/1232076"
+				}
+			],
+			"issued": {
+				"date": "2025-01-24"
+			},
+			"updated": {
+				"date": "2025-01-24"
+			},
+			"affected_cpe_list": {
+				"cpe": [
+					"cpe:/o:suse:sl-micro:6.1"
+				]
+			}
+		}
+	},
+	"criteria": {
+		"operator": "AND",
+		"criterias": [
+			{
+				"operator": "OR",
+				"criterions": [
+					{
+						"test_ref": "oval:org.opensuse.security:tst:2009961137",
+						"comment": "kernel-default-6.4.0-22.1 is installed"
+					},
+					{
+						"test_ref": "oval:org.opensuse.security:tst:2009961138",
+						"comment": "kernel-default-base-6.4.0-21.3.21.3 is installed"
+					},
+					{
+						"test_ref": "oval:org.opensuse.security:tst:2009961139",
+						"comment": "kernel-default-devel-6.4.0-22.1 is installed"
+					},
+					{
+						"test_ref": "oval:org.opensuse.security:tst:2009961140",
+						"comment": "kernel-default-livepatch-6.4.0-22.1 is installed"
+					},
+					{
+						"test_ref": "oval:org.opensuse.security:tst:2009961141",
+						"comment": "kernel-devel-6.4.0-22.1 is installed"
+					},
+					{
+						"test_ref": "oval:org.opensuse.security:tst:2009961146",
+						"comment": "kernel-devel-rt-6.4.0-22.1 is installed"
+					},
+					{
+						"test_ref": "oval:org.opensuse.security:tst:2009961142",
+						"comment": "kernel-kvmsmall-6.4.0-22.1 is installed"
+					},
+					{
+						"test_ref": "oval:org.opensuse.security:tst:2009961143",
+						"comment": "kernel-livepatch-6_4_0-21-default-1-1.1 is installed"
+					},
+					{
+						"test_ref": "oval:org.opensuse.security:tst:2009961147",
+						"comment": "kernel-livepatch-6_4_0-22-rt-1-1.1 is installed"
+					},
+					{
+						"test_ref": "oval:org.opensuse.security:tst:2009961144",
+						"comment": "kernel-macros-6.4.0-22.1 is installed"
+					},
+					{
+						"test_ref": "oval:org.opensuse.security:tst:2009961148",
+						"comment": "kernel-rt-6.4.0-22.1 is installed"
+					},
+					{
+						"test_ref": "oval:org.opensuse.security:tst:2009961149",
+						"comment": "kernel-rt-devel-6.4.0-22.1 is installed"
+					},
+					{
+						"test_ref": "oval:org.opensuse.security:tst:2009961145",
+						"comment": "kernel-source-6.4.0-22.1 is installed"
+					},
+					{
+						"test_ref": "oval:org.opensuse.security:tst:2009961150",
+						"comment": "kernel-source-rt-6.4.0-22.1 is installed"
+					}
+				]
+			}
+		],
+		"criterions": [
+			{
+				"test_ref": "oval:org.opensuse.security:tst:2009954035",
+				"comment": "SUSE Linux Micro 6.1 is installed"
+			}
+		]
+	}
+}

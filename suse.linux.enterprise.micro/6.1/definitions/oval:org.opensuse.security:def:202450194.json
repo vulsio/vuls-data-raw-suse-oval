@@ -1,0 +1,184 @@
+{
+	"id": "oval:org.opensuse.security:def:202450194",
+	"version": "1",
+	"class": "vulnerability",
+	"metadata": {
+		"title": "CVE-2024-50194",
+		"affected": {
+			"family": "unix",
+			"platform": [
+				"SUSE Linux Micro 6.1"
+			]
+		},
+		"reference": [
+			{
+				"ref_id": "Mitre CVE-2024-50194",
+				"ref_url": "https://cve.mitre.org/cgi-bin/cvename.cgi?name=CVE-2024-50194",
+				"source": "CVE"
+			},
+			{
+				"ref_id": "SUSE CVE-2024-50194",
+				"ref_url": "https://www.suse.com/security/cve/CVE-2024-50194",
+				"source": "SUSE CVE"
+			},
+			{
+				"ref_id": "SUSE-SU-2024:4314-1",
+				"ref_url": "https://lists.suse.com/pipermail/sle-security-updates/2024-December/019998.html",
+				"source": "SUSE-SU"
+			},
+			{
+				"ref_id": "SUSE-SU-2024:4315-1",
+				"ref_url": "https://lists.suse.com/pipermail/sle-security-updates/2024-December/019997.html",
+				"source": "SUSE-SU"
+			},
+			{
+				"ref_id": "SUSE-SU-2024:4316-1",
+				"ref_url": "https://lists.suse.com/pipermail/sle-security-updates/2024-December/020001.html",
+				"source": "SUSE-SU"
+			},
+			{
+				"ref_id": "SUSE-SU-2024:4318-1",
+				"ref_url": "https://lists.suse.com/pipermail/sle-security-updates/2024-December/019999.html",
+				"source": "SUSE-SU"
+			},
+			{
+				"ref_id": "SUSE-SU-2024:4364-1",
+				"ref_url": "https://lists.suse.com/pipermail/sle-security-updates/2024-December/020019.html",
+				"source": "SUSE-SU"
+			},
+			{
+				"ref_id": "SUSE-SU-2024:4367-1",
+				"ref_url": "https://lists.suse.com/pipermail/sle-security-updates/2024-December/020025.html",
+				"source": "SUSE-SU"
+			},
+			{
+				"ref_id": "SUSE-SU-2024:4376-1",
+				"ref_url": "https://lists.suse.com/pipermail/sle-security-updates/2024-December/020028.html",
+				"source": "SUSE-SU"
+			},
+			{
+				"ref_id": "SUSE-SU-2024:4387-1",
+				"ref_url": "https://lists.suse.com/pipermail/sle-security-updates/2024-December/020032.html",
+				"source": "SUSE-SU"
+			},
+			{
+				"ref_id": "SUSE-SU-2025:0035-1",
+				"ref_url": "https://lists.suse.com/pipermail/sle-security-updates/2025-January/020070.html",
+				"source": "SUSE-SU"
+			},
+			{
+				"ref_id": "openSUSE-SU-2024:14500-1",
+				"ref_url": "https://lists.opensuse.org/archives/list/security-announce@lists.opensuse.org/thread/2NO44GTYBSPPWKFDREFWHITK4XKTNVLP/",
+				"source": "SUSE-SU"
+			}
+		],
+		"description": "\n    In the Linux kernel, the following vulnerability has been resolved:\n\narm64: probes: Fix uprobes for big-endian kernels\n\nThe arm64 uprobes code is broken for big-endian kernels as it doesn't\nconvert the in-memory instruction encoding (which is always\nlittle-endian) into the kernel's native endianness before analyzing and\nsimulating instructions. This may result in a few distinct problems:\n\n* The kernel may may erroneously reject probing an instruction which can\n  safely be probed.\n\n* The kernel may erroneously erroneously permit stepping an\n  instruction out-of-line when that instruction cannot be stepped\n  out-of-line safely.\n\n* The kernel may erroneously simulate instruction incorrectly dur to\n  interpretting the byte-swapped encoding.\n\nThe endianness mismatch isn't caught by the compiler or sparse because:\n\n* The arch_uprobe::{insn,ixol} fields are encoded as arrays of u8, so\n  the compiler and sparse have no idea these contain a little-endian\n  32-bit value. The core uprobes code populates these with a memcpy()\n  which similarly does not handle endianness.\n\n* While the uprobe_opcode_t type is an alias for __le32, both\n  arch_uprobe_analyze_insn() and arch_uprobe_skip_sstep() cast from u8[]\n  to the similarly-named probe_opcode_t, which is an alias for u32.\n  Hence there is no endianness conversion warning.\n\nFix this by changing the arch_uprobe::{insn,ixol} fields to __le32 and\nadding the appropriate __le32_to_cpu() conversions prior to consuming\nthe instruction encoding. The core uprobes copies these fields as opaque\nranges of bytes, and so is unaffected by this change.\n\nAt the same time, remove MAX_UINSN_BYTES and consistently use\nAARCH64_INSN_SIZE for clarity.\n\nTested with the following:\n\n| #include <stdio.h>\n| #include <stdbool.h>\n|\n| #define noinline __attribute__((noinline))\n|\n| static noinline void *adrp_self(void)\n| {\n|         void *addr;\n|\n|         asm volatile(\n|         \"       adrp    %x0, adrp_self\\n\"\n|         \"       add     %x0, %x0, :lo12:adrp_self\\n\"\n|         : \"=r\" (addr));\n| }\n|\n|\n| int main(int argc, char *argv)\n| {\n|         void *ptr = adrp_self();\n|         bool equal = (ptr == adrp_self);\n|\n|         printf(\"adrp_self   => %p\\n\"\n|                \"adrp_self() => %p\\n\"\n|                \"%s\\n\",\n|                adrp_self, ptr, equal ? \"EQUAL\" : \"NOT EQUAL\");\n|\n|         return 0;\n| }\n\n.... where the adrp_self() function was compiled to:\n\n| 00000000004007e0 <adrp_self>:\n|   4007e0:       90000000        adrp    x0, 400000 <__ehdr_start>\n|   4007e4:       911f8000        add     x0, x0, #0x7e0\n|   4007e8:       d65f03c0        ret\n\nBefore this patch, the ADRP is not recognized, and is assumed to be\nsteppable, resulting in corruption of the result:\n\n| # ./adrp-self\n| adrp_self   => 0x4007e0\n| adrp_self() => 0x4007e0\n| EQUAL\n| # echo 'p /root/adrp-self:0x007e0' > /sys/kernel/tracing/uprobe_events\n| # echo 1 > /sys/kernel/tracing/events/uprobes/enable\n| # ./adrp-self\n| adrp_self   => 0x4007e0\n| adrp_self() => 0xffffffffff7e0\n| NOT EQUAL\n\nAfter this patch, the ADRP is correctly recognized and simulated:\n\n| # ./adrp-self\n| adrp_self   => 0x4007e0\n| adrp_self() => 0x4007e0\n| EQUAL\n| #\n| # echo 'p /root/adrp-self:0x007e0' > /sys/kernel/tracing/uprobe_events\n| # echo 1 > /sys/kernel/tracing/events/uprobes/enable\n| # ./adrp-self\n| adrp_self   => 0x4007e0\n| adrp_self() => 0x4007e0\n| EQUAL\n    ",
+		"advisory": {
+			"from": "security@suse.de",
+			"severity": "Moderate",
+			"cve": [
+				{
+					"text": "CVE-2024-50194 at SUSE",
+					"href": "https://www.suse.com/security/cve/CVE-2024-50194/",
+					"impact": "medium",
+					"cvss3": "5.5/CVSS:3.1/AV:L/AC:L/PR:L/UI:N/S:U/C:N/I:N/A:H"
+				},
+				{
+					"text": "CVE-2024-50194 at NVD",
+					"href": "https://nvd.nist.gov/vuln/detail/CVE-2024-50194",
+					"impact": "medium",
+					"cvss3": "5.5/CVSS:3.1/AV:L/AC:L/PR:L/UI:N/S:U/C:N/I:N/A:H"
+				}
+			],
+			"bugzilla": [
+				{
+					"text": "SUSE bug 1233111",
+					"href": "https://bugzilla.suse.com/1233111"
+				}
+			],
+			"issued": {
+				"date": "2025-01-24"
+			},
+			"updated": {
+				"date": "2025-01-24"
+			},
+			"affected_cpe_list": {
+				"cpe": [
+					"cpe:/o:suse:sl-micro:6.1"
+				]
+			}
+		}
+	},
+	"criteria": {
+		"operator": "AND",
+		"criterias": [
+			{
+				"operator": "OR",
+				"criterions": [
+					{
+						"test_ref": "oval:org.opensuse.security:tst:2009961137",
+						"comment": "kernel-default-6.4.0-22.1 is installed"
+					},
+					{
+						"test_ref": "oval:org.opensuse.security:tst:2009961138",
+						"comment": "kernel-default-base-6.4.0-21.3.21.3 is installed"
+					},
+					{
+						"test_ref": "oval:org.opensuse.security:tst:2009961139",
+						"comment": "kernel-default-devel-6.4.0-22.1 is installed"
+					},
+					{
+						"test_ref": "oval:org.opensuse.security:tst:2009961140",
+						"comment": "kernel-default-livepatch-6.4.0-22.1 is installed"
+					},
+					{
+						"test_ref": "oval:org.opensuse.security:tst:2009961141",
+						"comment": "kernel-devel-6.4.0-22.1 is installed"
+					},
+					{
+						"test_ref": "oval:org.opensuse.security:tst:2009961146",
+						"comment": "kernel-devel-rt-6.4.0-22.1 is installed"
+					},
+					{
+						"test_ref": "oval:org.opensuse.security:tst:2009961142",
+						"comment": "kernel-kvmsmall-6.4.0-22.1 is installed"
+					},
+					{
+						"test_ref": "oval:org.opensuse.security:tst:2009961143",
+						"comment": "kernel-livepatch-6_4_0-21-default-1-1.1 is installed"
+					},
+					{
+						"test_ref": "oval:org.opensuse.security:tst:2009961147",
+						"comment": "kernel-livepatch-6_4_0-22-rt-1-1.1 is installed"
+					},
+					{
+						"test_ref": "oval:org.opensuse.security:tst:2009961144",
+						"comment": "kernel-macros-6.4.0-22.1 is installed"
+					},
+					{
+						"test_ref": "oval:org.opensuse.security:tst:2009961148",
+						"comment": "kernel-rt-6.4.0-22.1 is installed"
+					},
+					{
+						"test_ref": "oval:org.opensuse.security:tst:2009961149",
+						"comment": "kernel-rt-devel-6.4.0-22.1 is installed"
+					},
+					{
+						"test_ref": "oval:org.opensuse.security:tst:2009961145",
+						"comment": "kernel-source-6.4.0-22.1 is installed"
+					},
+					{
+						"test_ref": "oval:org.opensuse.security:tst:2009961150",
+						"comment": "kernel-source-rt-6.4.0-22.1 is installed"
+					}
+				]
+			}
+		],
+		"criterions": [
+			{
+				"test_ref": "oval:org.opensuse.security:tst:2009954035",
+				"comment": "SUSE Linux Micro 6.1 is installed"
+			}
+		]
+	}
+}
