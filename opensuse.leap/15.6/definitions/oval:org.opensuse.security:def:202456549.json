@@ -40,6 +40,11 @@
 				"ref_id": "SUSE-SU-2025:0201-1",
 				"ref_url": "https://lists.suse.com/pipermail/sle-security-updates/2025-January/020185.html",
 				"source": "SUSE-SU"
+			},
+			{
+				"ref_id": "SUSE-SU-2025:0229-1",
+				"ref_url": "https://lists.suse.com/pipermail/sle-security-updates/2025-January/020194.html",
+				"source": "SUSE-SU"
 			}
 		],
 		"description": "\n    In the Linux kernel, the following vulnerability has been resolved:\n\ncachefiles: Fix NULL pointer dereference in object->file\n\nAt present, the object->file has the NULL pointer dereference problem in\nondemand-mode. The root cause is that the allocated fd and object->file\nlifetime are inconsistent, and the user-space invocation to anon_fd uses\nobject->file. Following is the process that triggers the issue:\n\n\t  [write fd]\t\t\t\t[umount]\ncachefiles_ondemand_fd_write_iter\n\t\t\t\t       fscache_cookie_state_machine\n\t\t\t\t\t cachefiles_withdraw_cookie\n  if (!file) return -ENOBUFS\n\t\t\t\t\t   cachefiles_clean_up_object\n\t\t\t\t\t     cachefiles_unmark_inode_in_use\n\t\t\t\t\t     fput(object->file)\n\t\t\t\t\t     object->file = NULL\n  // file NULL pointer dereference!\n  __cachefiles_write(..., file, ...)\n\nFix this issue by add an additional reference count to the object->file\nbefore write/llseek, and decrement after it finished.\n    ",
@@ -70,7 +75,7 @@
 				"date": "2025-01-02"
 			},
 			"updated": {
-				"date": "2025-01-22"
+				"date": "2025-01-25"
 			},
 			"affected_cpe_list": {
 				"cpe": [
