@@ -11,6 +11,7 @@
 				"SUSE Linux Enterprise Server 12 SP2-LTSS",
 				"SUSE Linux Enterprise Server 12 SP4-LTSS",
 				"SUSE Linux Enterprise Server 12 SP5-LTSS",
+				"SUSE Linux Enterprise Server LTSS Extended Security 12 SP5",
 				"SUSE Linux Enterprise Server for SAP Applications 12 SP5"
 			]
 		},
@@ -24,6 +25,11 @@
 				"ref_id": "SUSE CVE-2024-56642",
 				"ref_url": "https://www.suse.com/security/cve/CVE-2024-56642",
 				"source": "SUSE CVE"
+			},
+			{
+				"ref_id": "SUSE-SU-2025:0236-1",
+				"ref_url": "https://lists.suse.com/pipermail/sle-security-updates/2025-January/020196.html",
+				"source": "SUSE-SU"
 			}
 		],
 		"description": "\n    In the Linux kernel, the following vulnerability has been resolved:\n\ntipc: Fix use-after-free of kernel socket in cleanup_bearer().\n\nsyzkaller reported a use-after-free of UDP kernel socket\nin cleanup_bearer() without repro. [0][1]\n\nWhen bearer_disable() calls tipc_udp_disable(), cleanup\nof the UDP kernel socket is deferred by work calling\ncleanup_bearer().\n\ntipc_net_stop() waits for such works to finish by checking\ntipc_net(net)->wq_count.  However, the work decrements the\ncount too early before releasing the kernel socket,\nunblocking cleanup_net() and resulting in use-after-free.\n\nLet's move the decrement after releasing the socket in\ncleanup_bearer().\n\n[0]:\nref_tracker: net notrefcnt@000000009b3d1faf has 1/1 users at\n     sk_alloc+0x438/0x608\n     inet_create+0x4c8/0xcb0\n     __sock_create+0x350/0x6b8\n     sock_create_kern+0x58/0x78\n     udp_sock_create4+0x68/0x398\n     udp_sock_create+0x88/0xc8\n     tipc_udp_enable+0x5e8/0x848\n     __tipc_nl_bearer_enable+0x84c/0xed8\n     tipc_nl_bearer_enable+0x38/0x60\n     genl_family_rcv_msg_doit+0x170/0x248\n     genl_rcv_msg+0x400/0x5b0\n     netlink_rcv_skb+0x1dc/0x398\n     genl_rcv+0x44/0x68\n     netlink_unicast+0x678/0x8b0\n     netlink_sendmsg+0x5e4/0x898\n     ____sys_sendmsg+0x500/0x830\n\n[1]:\nBUG: KMSAN: use-after-free in udp_hashslot include/net/udp.h:85 [inline]\nBUG: KMSAN: use-after-free in udp_lib_unhash+0x3b8/0x930 net/ipv4/udp.c:1979\n udp_hashslot include/net/udp.h:85 [inline]\n udp_lib_unhash+0x3b8/0x930 net/ipv4/udp.c:1979\n sk_common_release+0xaf/0x3f0 net/core/sock.c:3820\n inet_release+0x1e0/0x260 net/ipv4/af_inet.c:437\n inet6_release+0x6f/0xd0 net/ipv6/af_inet6.c:489\n __sock_release net/socket.c:658 [inline]\n sock_release+0xa0/0x210 net/socket.c:686\n cleanup_bearer+0x42d/0x4c0 net/tipc/udp_media.c:819\n process_one_work kernel/workqueue.c:3229 [inline]\n process_scheduled_works+0xcaf/0x1c90 kernel/workqueue.c:3310\n worker_thread+0xf6c/0x1510 kernel/workqueue.c:3391\n kthread+0x531/0x6b0 kernel/kthread.c:389\n ret_from_fork+0x60/0x80 arch/x86/kernel/process.c:147\n ret_from_fork_asm+0x11/0x20 arch/x86/entry/entry_64.S:244\n\nUninit was created at:\n slab_free_hook mm/slub.c:2269 [inline]\n slab_free mm/slub.c:4580 [inline]\n kmem_cache_free+0x207/0xc40 mm/slub.c:4682\n net_free net/core/net_namespace.c:454 [inline]\n cleanup_net+0x16f2/0x19d0 net/core/net_namespace.c:647\n process_one_work kernel/workqueue.c:3229 [inline]\n process_scheduled_works+0xcaf/0x1c90 kernel/workqueue.c:3310\n worker_thread+0xf6c/0x1510 kernel/workqueue.c:3391\n kthread+0x531/0x6b0 kernel/kthread.c:389\n ret_from_fork+0x60/0x80 arch/x86/kernel/process.c:147\n ret_from_fork_asm+0x11/0x20 arch/x86/entry/entry_64.S:244\n\nCPU: 0 UID: 0 PID: 54 Comm: kworker/0:2 Not tainted 6.12.0-rc1-00131-gf66ebf37d69c #7 91723d6f74857f70725e1583cba3cf4adc716cfa\nHardware name: QEMU Standard PC (i440FX + PIIX, 1996), BIOS rel-1.16.3-0-ga6ed6b701f0a-prebuilt.qemu.org 04/01/2014\nWorkqueue: events cleanup_bearer\n    ",
@@ -58,7 +64,7 @@
 				"date": "2025-01-10"
 			},
 			"updated": {
-				"date": "2025-01-10"
+				"date": "2025-01-29"
 			},
 			"affected_cpe_list": {
 				"cpe": [
@@ -74,6 +80,50 @@
 	"criteria": {
 		"operator": "OR",
 		"criterias": [
+			{
+				"operator": "AND",
+				"criterias": [
+					{
+						"operator": "OR",
+						"criterions": [
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009334017",
+								"comment": "kernel-default is not affected"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009335425",
+								"comment": "kernel-default-base is not affected"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009335423",
+								"comment": "kernel-default-devel is not affected"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009335426",
+								"comment": "kernel-default-man is not affected"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009334791",
+								"comment": "kernel-devel is not affected"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009334792",
+								"comment": "kernel-macros is not affected"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009333928",
+								"comment": "kernel-source is not affected"
+							}
+						]
+					}
+				],
+				"criterions": [
+					{
+						"test_ref": "oval:org.opensuse.security:tst:2009128018",
+						"comment": "SUSE Linux Enterprise Server 12 SP2-LTSS is installed"
+					}
+				]
+			},
 			{
 				"operator": "AND",
 				"criterias": [
@@ -105,19 +155,6 @@
 						"operator": "OR",
 						"criterions": [
 							{
-								"test_ref": "oval:org.opensuse.security:tst:2009128018",
-								"comment": "SUSE Linux Enterprise Server 12 SP2-LTSS is installed"
-							},
-							{
-								"test_ref": "oval:org.opensuse.security:tst:2009240280",
-								"comment": "SUSE Linux Enterprise Server 12 SP4-LTSS is installed"
-							}
-						]
-					},
-					{
-						"operator": "OR",
-						"criterions": [
-							{
 								"test_ref": "oval:org.opensuse.security:tst:2009338032",
 								"comment": "kernel-default is affected"
 							},
@@ -147,6 +184,12 @@
 							}
 						]
 					}
+				],
+				"criterions": [
+					{
+						"test_ref": "oval:org.opensuse.security:tst:2009240280",
+						"comment": "SUSE Linux Enterprise Server 12 SP4-LTSS is installed"
+					}
 				]
 			},
 			{
@@ -156,12 +199,16 @@
 						"operator": "OR",
 						"criterions": [
 							{
-								"test_ref": "oval:org.opensuse.security:tst:2009338035",
-								"comment": "kernel-default-kgraft is affected"
+								"test_ref": "oval:org.opensuse.security:tst:2009961239",
+								"comment": "kernel-default-kgraft-4.12.14-122.244.1 is installed"
 							},
 							{
-								"test_ref": "oval:org.opensuse.security:tst:2009809200",
-								"comment": "kernel-default-kgraft-devel is affected"
+								"test_ref": "oval:org.opensuse.security:tst:2009961240",
+								"comment": "kernel-default-kgraft-devel-4.12.14-122.244.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009961241",
+								"comment": "kgraft-patch-4_12_14-122_244-default-1-8.5.1 is installed"
 							},
 							{
 								"test_ref": "oval:org.opensuse.security:tst:2009333995",
@@ -184,48 +231,52 @@
 						"operator": "OR",
 						"criterions": [
 							{
-								"test_ref": "oval:org.opensuse.security:tst:2009766997",
-								"comment": "cluster-md-kmp-default is affected"
+								"test_ref": "oval:org.opensuse.security:tst:2009961250",
+								"comment": "cluster-md-kmp-default-4.12.14-122.244.1 is installed"
 							},
 							{
-								"test_ref": "oval:org.opensuse.security:tst:2009766998",
-								"comment": "dlm-kmp-default is affected"
+								"test_ref": "oval:org.opensuse.security:tst:2009961251",
+								"comment": "dlm-kmp-default-4.12.14-122.244.1 is installed"
 							},
 							{
-								"test_ref": "oval:org.opensuse.security:tst:2009766999",
-								"comment": "gfs2-kmp-default is affected"
+								"test_ref": "oval:org.opensuse.security:tst:2009961252",
+								"comment": "gfs2-kmp-default-4.12.14-122.244.1 is installed"
 							},
 							{
-								"test_ref": "oval:org.opensuse.security:tst:2009338032",
-								"comment": "kernel-default is affected"
+								"test_ref": "oval:org.opensuse.security:tst:2009961253",
+								"comment": "kernel-default-4.12.14-122.244.1 is installed"
 							},
 							{
-								"test_ref": "oval:org.opensuse.security:tst:2009338033",
-								"comment": "kernel-default-base is affected"
+								"test_ref": "oval:org.opensuse.security:tst:2009961254",
+								"comment": "kernel-default-base-4.12.14-122.244.1 is installed"
 							},
 							{
-								"test_ref": "oval:org.opensuse.security:tst:2009338034",
-								"comment": "kernel-default-devel is affected"
+								"test_ref": "oval:org.opensuse.security:tst:2009961255",
+								"comment": "kernel-default-devel-4.12.14-122.244.1 is installed"
 							},
 							{
-								"test_ref": "oval:org.opensuse.security:tst:2009338036",
-								"comment": "kernel-default-man is affected"
+								"test_ref": "oval:org.opensuse.security:tst:2009961256",
+								"comment": "kernel-default-man-4.12.14-122.244.1 is installed"
 							},
 							{
-								"test_ref": "oval:org.opensuse.security:tst:2009767000",
-								"comment": "ocfs2-kmp-default is affected"
+								"test_ref": "oval:org.opensuse.security:tst:2009961257",
+								"comment": "kernel-devel-4.12.14-122.244.1 is installed"
 							},
 							{
-								"test_ref": "oval:org.opensuse.security:tst:2009335275",
-								"comment": "kernel-devel is affected"
+								"test_ref": "oval:org.opensuse.security:tst:2009961258",
+								"comment": "kernel-macros-4.12.14-122.244.1 is installed"
 							},
 							{
-								"test_ref": "oval:org.opensuse.security:tst:2009335276",
-								"comment": "kernel-macros is affected"
+								"test_ref": "oval:org.opensuse.security:tst:2009961259",
+								"comment": "kernel-source-4.12.14-122.244.1 is installed"
 							},
 							{
-								"test_ref": "oval:org.opensuse.security:tst:2009333995",
-								"comment": "kernel-source is affected"
+								"test_ref": "oval:org.opensuse.security:tst:2009961260",
+								"comment": "kernel-syms-4.12.14-122.244.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009961261",
+								"comment": "ocfs2-kmp-default-4.12.14-122.244.1 is installed"
 							}
 						]
 					}
@@ -234,6 +285,66 @@
 					{
 						"test_ref": "oval:org.opensuse.security:tst:2009258033",
 						"comment": "SUSE Linux Enterprise Server 12 SP5-LTSS is installed"
+					}
+				]
+			},
+			{
+				"operator": "AND",
+				"criterias": [
+					{
+						"operator": "OR",
+						"criterions": [
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009961269",
+								"comment": "cluster-md-kmp-default-4.12.14-122.244.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009961270",
+								"comment": "dlm-kmp-default-4.12.14-122.244.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009961271",
+								"comment": "gfs2-kmp-default-4.12.14-122.244.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009961272",
+								"comment": "kernel-default-4.12.14-122.244.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009961273",
+								"comment": "kernel-default-base-4.12.14-122.244.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009961274",
+								"comment": "kernel-default-devel-4.12.14-122.244.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009961257",
+								"comment": "kernel-devel-4.12.14-122.244.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009961258",
+								"comment": "kernel-macros-4.12.14-122.244.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009961259",
+								"comment": "kernel-source-4.12.14-122.244.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009961275",
+								"comment": "kernel-syms-4.12.14-122.244.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009961276",
+								"comment": "ocfs2-kmp-default-4.12.14-122.244.1 is installed"
+							}
+						]
+					}
+				],
+				"criterions": [
+					{
+						"test_ref": "oval:org.opensuse.security:tst:2009952096",
+						"comment": "SUSE Linux Enterprise Server LTSS Extended Security 12 SP5 is installed"
 					}
 				]
 			}

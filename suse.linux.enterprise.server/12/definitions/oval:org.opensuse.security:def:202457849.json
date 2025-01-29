@@ -11,6 +11,7 @@
 				"SUSE Linux Enterprise Server 12 SP2-LTSS",
 				"SUSE Linux Enterprise Server 12 SP4-LTSS",
 				"SUSE Linux Enterprise Server 12 SP5-LTSS",
+				"SUSE Linux Enterprise Server LTSS Extended Security 12 SP5",
 				"SUSE Linux Enterprise Server for SAP Applications 12 SP5"
 			]
 		},
@@ -24,6 +25,11 @@
 				"ref_id": "SUSE CVE-2024-57849",
 				"ref_url": "https://www.suse.com/security/cve/CVE-2024-57849",
 				"source": "SUSE CVE"
+			},
+			{
+				"ref_id": "SUSE-SU-2025:0236-1",
+				"ref_url": "https://lists.suse.com/pipermail/sle-security-updates/2025-January/020196.html",
+				"source": "SUSE-SU"
 			}
 		],
 		"description": "\n    In the Linux kernel, the following vulnerability has been resolved:\n\ns390/cpum_sf: Handle CPU hotplug remove during sampling\n\nCPU hotplug remove handling triggers the following function\ncall sequence:\n\n   CPUHP_AP_PERF_S390_SF_ONLINE  --> s390_pmu_sf_offline_cpu()\n   ...\n   CPUHP_AP_PERF_ONLINE          --> perf_event_exit_cpu()\n\nThe s390 CPUMF sampling CPU hotplug handler invokes:\n\n s390_pmu_sf_offline_cpu()\n +-->  cpusf_pmu_setup()\n       +--> setup_pmc_cpu()\n            +--> deallocate_buffers()\n\nThis function de-allocates all sampling data buffers (SDBs) allocated\nfor that CPU at event initialization. It also clears the\nPMU_F_RESERVED bit. The CPU is gone and can not be sampled.\n\nWith the event still being active on the removed CPU, the CPU event\nhotplug support in kernel performance subsystem triggers the\nfollowing function calls on the removed CPU:\n\n  perf_event_exit_cpu()\n  +--> perf_event_exit_cpu_context()\n       +--> __perf_event_exit_context()\n\t    +--> __perf_remove_from_context()\n\t         +--> event_sched_out()\n\t              +--> cpumsf_pmu_del()\n\t                   +--> cpumsf_pmu_stop()\n                                +--> hw_perf_event_update()\n\nto stop and remove the event. During removal of the event, the\nsampling device driver tries to read out the remaining samples from\nthe sample data buffers (SDBs). But they have already been freed\n(and may have been re-assigned). This may lead to a use after free\nsituation in which case the samples are most likely invalid. In the\nbest case the memory has not been reassigned and still contains\nvalid data.\n\nRemedy this situation and check if the CPU is still in reserved\nstate (bit PMU_F_RESERVED set). In this case the SDBs have not been\nreleased an contain valid data. This is always the case when\nthe event is removed (and no CPU hotplug off occured).\nIf the PMU_F_RESERVED bit is not set, the SDB buffers are gone.\n    ",
@@ -46,13 +52,17 @@
 				{
 					"text": "SUSE bug 1235814",
 					"href": "https://bugzilla.suse.com/1235814"
+				},
+				{
+					"text": "SUSE bug 1235815",
+					"href": "https://bugzilla.suse.com/1235815"
 				}
 			],
 			"issued": {
 				"date": "2025-01-15"
 			},
 			"updated": {
-				"date": "2025-01-15"
+				"date": "2025-01-29"
 			},
 			"affected_cpe_list": {
 				"cpe": [
@@ -150,12 +160,16 @@
 						"operator": "OR",
 						"criterions": [
 							{
-								"test_ref": "oval:org.opensuse.security:tst:2009338035",
-								"comment": "kernel-default-kgraft is affected"
+								"test_ref": "oval:org.opensuse.security:tst:2009961239",
+								"comment": "kernel-default-kgraft-4.12.14-122.244.1 is installed"
 							},
 							{
-								"test_ref": "oval:org.opensuse.security:tst:2009809200",
-								"comment": "kernel-default-kgraft-devel is affected"
+								"test_ref": "oval:org.opensuse.security:tst:2009961240",
+								"comment": "kernel-default-kgraft-devel-4.12.14-122.244.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009961241",
+								"comment": "kgraft-patch-4_12_14-122_244-default-1-8.5.1 is installed"
 							},
 							{
 								"test_ref": "oval:org.opensuse.security:tst:2009333995",
@@ -178,48 +192,52 @@
 						"operator": "OR",
 						"criterions": [
 							{
-								"test_ref": "oval:org.opensuse.security:tst:2009766997",
-								"comment": "cluster-md-kmp-default is affected"
+								"test_ref": "oval:org.opensuse.security:tst:2009961250",
+								"comment": "cluster-md-kmp-default-4.12.14-122.244.1 is installed"
 							},
 							{
-								"test_ref": "oval:org.opensuse.security:tst:2009766998",
-								"comment": "dlm-kmp-default is affected"
+								"test_ref": "oval:org.opensuse.security:tst:2009961251",
+								"comment": "dlm-kmp-default-4.12.14-122.244.1 is installed"
 							},
 							{
-								"test_ref": "oval:org.opensuse.security:tst:2009766999",
-								"comment": "gfs2-kmp-default is affected"
+								"test_ref": "oval:org.opensuse.security:tst:2009961252",
+								"comment": "gfs2-kmp-default-4.12.14-122.244.1 is installed"
 							},
 							{
-								"test_ref": "oval:org.opensuse.security:tst:2009338032",
-								"comment": "kernel-default is affected"
+								"test_ref": "oval:org.opensuse.security:tst:2009961253",
+								"comment": "kernel-default-4.12.14-122.244.1 is installed"
 							},
 							{
-								"test_ref": "oval:org.opensuse.security:tst:2009338033",
-								"comment": "kernel-default-base is affected"
+								"test_ref": "oval:org.opensuse.security:tst:2009961254",
+								"comment": "kernel-default-base-4.12.14-122.244.1 is installed"
 							},
 							{
-								"test_ref": "oval:org.opensuse.security:tst:2009338034",
-								"comment": "kernel-default-devel is affected"
+								"test_ref": "oval:org.opensuse.security:tst:2009961255",
+								"comment": "kernel-default-devel-4.12.14-122.244.1 is installed"
 							},
 							{
-								"test_ref": "oval:org.opensuse.security:tst:2009338036",
-								"comment": "kernel-default-man is affected"
+								"test_ref": "oval:org.opensuse.security:tst:2009961256",
+								"comment": "kernel-default-man-4.12.14-122.244.1 is installed"
 							},
 							{
-								"test_ref": "oval:org.opensuse.security:tst:2009767000",
-								"comment": "ocfs2-kmp-default is affected"
+								"test_ref": "oval:org.opensuse.security:tst:2009961257",
+								"comment": "kernel-devel-4.12.14-122.244.1 is installed"
 							},
 							{
-								"test_ref": "oval:org.opensuse.security:tst:2009335275",
-								"comment": "kernel-devel is affected"
+								"test_ref": "oval:org.opensuse.security:tst:2009961258",
+								"comment": "kernel-macros-4.12.14-122.244.1 is installed"
 							},
 							{
-								"test_ref": "oval:org.opensuse.security:tst:2009335276",
-								"comment": "kernel-macros is affected"
+								"test_ref": "oval:org.opensuse.security:tst:2009961259",
+								"comment": "kernel-source-4.12.14-122.244.1 is installed"
 							},
 							{
-								"test_ref": "oval:org.opensuse.security:tst:2009333995",
-								"comment": "kernel-source is affected"
+								"test_ref": "oval:org.opensuse.security:tst:2009961260",
+								"comment": "kernel-syms-4.12.14-122.244.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009961261",
+								"comment": "ocfs2-kmp-default-4.12.14-122.244.1 is installed"
 							},
 							{
 								"test_ref": "oval:org.opensuse.security:tst:2009340777",
@@ -236,6 +254,66 @@
 					{
 						"test_ref": "oval:org.opensuse.security:tst:2009258033",
 						"comment": "SUSE Linux Enterprise Server 12 SP5-LTSS is installed"
+					}
+				]
+			},
+			{
+				"operator": "AND",
+				"criterias": [
+					{
+						"operator": "OR",
+						"criterions": [
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009961269",
+								"comment": "cluster-md-kmp-default-4.12.14-122.244.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009961270",
+								"comment": "dlm-kmp-default-4.12.14-122.244.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009961271",
+								"comment": "gfs2-kmp-default-4.12.14-122.244.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009961272",
+								"comment": "kernel-default-4.12.14-122.244.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009961273",
+								"comment": "kernel-default-base-4.12.14-122.244.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009961274",
+								"comment": "kernel-default-devel-4.12.14-122.244.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009961257",
+								"comment": "kernel-devel-4.12.14-122.244.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009961258",
+								"comment": "kernel-macros-4.12.14-122.244.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009961259",
+								"comment": "kernel-source-4.12.14-122.244.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009961275",
+								"comment": "kernel-syms-4.12.14-122.244.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009961276",
+								"comment": "ocfs2-kmp-default-4.12.14-122.244.1 is installed"
+							}
+						]
+					}
+				],
+				"criterions": [
+					{
+						"test_ref": "oval:org.opensuse.security:tst:2009952096",
+						"comment": "SUSE Linux Enterprise Server LTSS Extended Security 12 SP5 is installed"
 					}
 				]
 			}

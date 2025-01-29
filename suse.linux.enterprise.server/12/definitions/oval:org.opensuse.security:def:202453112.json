@@ -10,6 +10,8 @@
 				"SUSE Linux Enterprise Live Patching 12 SP5",
 				"SUSE Linux Enterprise Server 12 SP2-LTSS",
 				"SUSE Linux Enterprise Server 12 SP4-LTSS",
+				"SUSE Linux Enterprise Server 12 SP5-LTSS",
+				"SUSE Linux Enterprise Server LTSS Extended Security 12 SP5",
 				"SUSE Linux Enterprise Server for SAP Applications 12 SP5"
 			]
 		},
@@ -43,6 +45,11 @@
 				"ref_id": "SUSE-SU-2024:4387-1",
 				"ref_url": "https://lists.suse.com/pipermail/sle-security-updates/2024-December/020032.html",
 				"source": "SUSE-SU"
+			},
+			{
+				"ref_id": "SUSE-SU-2025:0236-1",
+				"ref_url": "https://lists.suse.com/pipermail/sle-security-updates/2025-January/020196.html",
+				"source": "SUSE-SU"
 			}
 		],
 		"description": "\n    In the Linux kernel, the following vulnerability has been resolved:\n\nocfs2: uncache inode which has failed entering the group\n\nSyzbot has reported the following BUG:\n\nkernel BUG at fs/ocfs2/uptodate.c:509!\n...\nCall Trace:\n <TASK>\n ? __die_body+0x5f/0xb0\n ? die+0x9e/0xc0\n ? do_trap+0x15a/0x3a0\n ? ocfs2_set_new_buffer_uptodate+0x145/0x160\n ? do_error_trap+0x1dc/0x2c0\n ? ocfs2_set_new_buffer_uptodate+0x145/0x160\n ? __pfx_do_error_trap+0x10/0x10\n ? handle_invalid_op+0x34/0x40\n ? ocfs2_set_new_buffer_uptodate+0x145/0x160\n ? exc_invalid_op+0x38/0x50\n ? asm_exc_invalid_op+0x1a/0x20\n ? ocfs2_set_new_buffer_uptodate+0x2e/0x160\n ? ocfs2_set_new_buffer_uptodate+0x144/0x160\n ? ocfs2_set_new_buffer_uptodate+0x145/0x160\n ocfs2_group_add+0x39f/0x15a0\n ? __pfx_ocfs2_group_add+0x10/0x10\n ? __pfx_lock_acquire+0x10/0x10\n ? mnt_get_write_access+0x68/0x2b0\n ? __pfx_lock_release+0x10/0x10\n ? rcu_read_lock_any_held+0xb7/0x160\n ? __pfx_rcu_read_lock_any_held+0x10/0x10\n ? smack_log+0x123/0x540\n ? mnt_get_write_access+0x68/0x2b0\n ? mnt_get_write_access+0x68/0x2b0\n ? mnt_get_write_access+0x226/0x2b0\n ocfs2_ioctl+0x65e/0x7d0\n ? __pfx_ocfs2_ioctl+0x10/0x10\n ? smack_file_ioctl+0x29e/0x3a0\n ? __pfx_smack_file_ioctl+0x10/0x10\n ? lockdep_hardirqs_on_prepare+0x43d/0x780\n ? __pfx_lockdep_hardirqs_on_prepare+0x10/0x10\n ? __pfx_ocfs2_ioctl+0x10/0x10\n __se_sys_ioctl+0xfb/0x170\n do_syscall_64+0xf3/0x230\n entry_SYSCALL_64_after_hwframe+0x77/0x7f\n...\n </TASK>\n\nWhen 'ioctl(OCFS2_IOC_GROUP_ADD, ...)' has failed for the particular\ninode in 'ocfs2_verify_group_and_input()', corresponding buffer head\nremains cached and subsequent call to the same 'ioctl()' for the same\ninode issues the BUG() in 'ocfs2_set_new_buffer_uptodate()' (trying\nto cache the same buffer head of that inode). Fix this by uncaching\nthe buffer head with 'ocfs2_remove_from_cache()' on error path in\n'ocfs2_group_add()'.\n    ",
@@ -73,11 +80,12 @@
 				"date": "2024-12-04"
 			},
 			"updated": {
-				"date": "2025-01-09"
+				"date": "2025-01-29"
 			},
 			"affected_cpe_list": {
 				"cpe": [
 					"cpe:/o:suse:sle-live-patching:12:sp5",
+					"cpe:/o:suse:sles-ltss-extended-security:12:sp5",
 					"cpe:/o:suse:sles-ltss:12:sp2",
 					"cpe:/o:suse:sles-ltss:12:sp4",
 					"cpe:/o:suse:sles_sap:12:sp5"
@@ -170,12 +178,16 @@
 						"operator": "OR",
 						"criterions": [
 							{
-								"test_ref": "oval:org.opensuse.security:tst:2009338035",
-								"comment": "kernel-default-kgraft is affected"
+								"test_ref": "oval:org.opensuse.security:tst:2009961239",
+								"comment": "kernel-default-kgraft-4.12.14-122.244.1 is installed"
 							},
 							{
-								"test_ref": "oval:org.opensuse.security:tst:2009809200",
-								"comment": "kernel-default-kgraft-devel is affected"
+								"test_ref": "oval:org.opensuse.security:tst:2009961240",
+								"comment": "kernel-default-kgraft-devel-4.12.14-122.244.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009961241",
+								"comment": "kgraft-patch-4_12_14-122_244-default-1-8.5.1 is installed"
 							},
 							{
 								"test_ref": "oval:org.opensuse.security:tst:2009333995",
@@ -188,6 +200,130 @@
 					{
 						"test_ref": "oval:org.opensuse.security:tst:2009273148",
 						"comment": "SUSE Linux Enterprise Live Patching 12 SP5 is installed"
+					}
+				]
+			},
+			{
+				"operator": "AND",
+				"criterias": [
+					{
+						"operator": "OR",
+						"criterions": [
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009961250",
+								"comment": "cluster-md-kmp-default-4.12.14-122.244.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009961251",
+								"comment": "dlm-kmp-default-4.12.14-122.244.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009961252",
+								"comment": "gfs2-kmp-default-4.12.14-122.244.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009961253",
+								"comment": "kernel-default-4.12.14-122.244.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009961254",
+								"comment": "kernel-default-base-4.12.14-122.244.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009961255",
+								"comment": "kernel-default-devel-4.12.14-122.244.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009961256",
+								"comment": "kernel-default-man-4.12.14-122.244.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009961257",
+								"comment": "kernel-devel-4.12.14-122.244.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009961258",
+								"comment": "kernel-macros-4.12.14-122.244.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009961259",
+								"comment": "kernel-source-4.12.14-122.244.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009961260",
+								"comment": "kernel-syms-4.12.14-122.244.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009961261",
+								"comment": "ocfs2-kmp-default-4.12.14-122.244.1 is installed"
+							}
+						]
+					}
+				],
+				"criterions": [
+					{
+						"test_ref": "oval:org.opensuse.security:tst:2009258033",
+						"comment": "SUSE Linux Enterprise Server 12 SP5-LTSS is installed"
+					}
+				]
+			},
+			{
+				"operator": "AND",
+				"criterias": [
+					{
+						"operator": "OR",
+						"criterions": [
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009961269",
+								"comment": "cluster-md-kmp-default-4.12.14-122.244.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009961270",
+								"comment": "dlm-kmp-default-4.12.14-122.244.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009961271",
+								"comment": "gfs2-kmp-default-4.12.14-122.244.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009961272",
+								"comment": "kernel-default-4.12.14-122.244.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009961273",
+								"comment": "kernel-default-base-4.12.14-122.244.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009961274",
+								"comment": "kernel-default-devel-4.12.14-122.244.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009961257",
+								"comment": "kernel-devel-4.12.14-122.244.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009961258",
+								"comment": "kernel-macros-4.12.14-122.244.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009961259",
+								"comment": "kernel-source-4.12.14-122.244.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009961275",
+								"comment": "kernel-syms-4.12.14-122.244.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009961276",
+								"comment": "ocfs2-kmp-default-4.12.14-122.244.1 is installed"
+							}
+						]
+					}
+				],
+				"criterions": [
+					{
+						"test_ref": "oval:org.opensuse.security:tst:2009952096",
+						"comment": "SUSE Linux Enterprise Server LTSS Extended Security 12 SP5 is installed"
 					}
 				]
 			}
