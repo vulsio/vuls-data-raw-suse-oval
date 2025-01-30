@@ -25,6 +25,11 @@
 				"ref_id": "openSUSE-SU-2024:14500-1",
 				"ref_url": "https://lists.opensuse.org/archives/list/security-announce@lists.opensuse.org/thread/2NO44GTYBSPPWKFDREFWHITK4XKTNVLP/",
 				"source": "SUSE-SU"
+			},
+			{
+				"ref_id": "openSUSE-SU-2025:14705-1",
+				"ref_url": "https://lists.opensuse.org/archives/list/security-announce@lists.opensuse.org/thread/T7LN2FDZYBYZRLX5LOA3REDAXV7VKGW4/",
+				"source": "SUSE-SU"
 			}
 		],
 		"description": "\n    In the Linux kernel, the following vulnerability has been resolved:\n\nfork: only invoke khugepaged, ksm hooks if no error\n\nThere is no reason to invoke these hooks early against an mm that is in an\nincomplete state.\n\nThe change in commit d24062914837 (\"fork: use __mt_dup() to duplicate\nmaple tree in dup_mmap()\") makes this more pertinent as we may be in a\nstate where entries in the maple tree are not yet consistent.\n\nTheir placement early in dup_mmap() only appears to have been meaningful\nfor early error checking, and since functionally it'd require a very small\nallocation to fail (in practice 'too small to fail') that'd only occur in\nthe most dire circumstances, meaning the fork would fail or be OOM'd in\nany case.\n\nSince both khugepaged and KSM tracking are there to provide optimisations\nto memory performance rather than critical functionality, it doesn't\nreally matter all that much if, under such dire memory pressure, we fail\nto register an mm with these.\n\nAs a result, we follow the example of commit d2081b2bf819 (\"mm:\nkhugepaged: make khugepaged_enter() void function\") and make ksm_fork() a\nvoid function also.\n\nWe only expose the mm to these functions once we are done with them and\nonly if no error occurred in the fork operation.\n    ",
@@ -55,7 +60,7 @@
 				"date": "2024-11-17"
 			},
 			"updated": {
-				"date": "2024-11-17"
+				"date": "2025-01-29"
 			},
 			"affected_cpe_list": {
 				"cpe": [
@@ -75,12 +80,20 @@
 						"comment": "kernel-devel-6.11.8-1.1 is installed"
 					},
 					{
+						"test_ref": "oval:org.opensuse.security:tst:2009962024",
+						"comment": "kernel-devel-longterm-6.12.11-1.1 is installed"
+					},
+					{
 						"test_ref": "oval:org.opensuse.security:tst:2009952406",
 						"comment": "kernel-macros-6.11.8-1.1 is installed"
 					},
 					{
 						"test_ref": "oval:org.opensuse.security:tst:2009952407",
 						"comment": "kernel-source-6.11.8-1.1 is installed"
+					},
+					{
+						"test_ref": "oval:org.opensuse.security:tst:2009962025",
+						"comment": "kernel-source-longterm-6.12.11-1.1 is installed"
 					},
 					{
 						"test_ref": "oval:org.opensuse.security:tst:2009952408",

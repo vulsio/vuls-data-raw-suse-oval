@@ -45,6 +45,11 @@
 				"ref_id": "openSUSE-SU-2024:14500-1",
 				"ref_url": "https://lists.opensuse.org/archives/list/security-announce@lists.opensuse.org/thread/2NO44GTYBSPPWKFDREFWHITK4XKTNVLP/",
 				"source": "SUSE-SU"
+			},
+			{
+				"ref_id": "openSUSE-SU-2025:14705-1",
+				"ref_url": "https://lists.opensuse.org/archives/list/security-announce@lists.opensuse.org/thread/T7LN2FDZYBYZRLX5LOA3REDAXV7VKGW4/",
+				"source": "SUSE-SU"
 			}
 		],
 		"description": "\n    In the Linux kernel, the following vulnerability has been resolved:\n\nnetfilter: bpf: must hold reference on net namespace\n\nBUG: KASAN: slab-use-after-free in __nf_unregister_net_hook+0x640/0x6b0\nRead of size 8 at addr ffff8880106fe400 by task repro/72=\nbpf_nf_link_release+0xda/0x1e0\nbpf_link_free+0x139/0x2d0\nbpf_link_release+0x68/0x80\n__fput+0x414/0xb60\n\nEric says:\n It seems that bpf was able to defer the __nf_unregister_net_hook()\n after exit()/close() time.\n Perhaps a netns reference is missing, because the netns has been\n dismantled/freed already.\n bpf_nf_link_attach() does :\n link->net = net;\n But I do not see a reference being taken on net.\n\nAdd such a reference and release it after hook unreg.\nNote that I was unable to get syzbot reproducer to work, so I\ndo not know if this resolves this splat.\n    ",
@@ -75,7 +80,7 @@
 				"date": "2024-11-07"
 			},
 			"updated": {
-				"date": "2024-12-20"
+				"date": "2025-01-29"
 			},
 			"affected_cpe_list": {
 				"cpe": [

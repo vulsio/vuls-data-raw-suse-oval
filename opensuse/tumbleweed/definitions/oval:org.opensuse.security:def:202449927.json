@@ -25,6 +25,11 @@
 				"ref_id": "openSUSE-SU-2024:14500-1",
 				"ref_url": "https://lists.opensuse.org/archives/list/security-announce@lists.opensuse.org/thread/2NO44GTYBSPPWKFDREFWHITK4XKTNVLP/",
 				"source": "SUSE-SU"
+			},
+			{
+				"ref_id": "openSUSE-SU-2025:14705-1",
+				"ref_url": "https://lists.opensuse.org/archives/list/security-announce@lists.opensuse.org/thread/T7LN2FDZYBYZRLX5LOA3REDAXV7VKGW4/",
+				"source": "SUSE-SU"
 			}
 		],
 		"description": "\n    In the Linux kernel, the following vulnerability has been resolved:\n\nx86/ioapic: Handle allocation failures gracefully\n\nBreno observed panics when using failslab under certain conditions during\nruntime:\n\n   can not alloc irq_pin_list (-1,0,20)\n   Kernel panic - not syncing: IO-APIC: failed to add irq-pin. Can not proceed\n\n   panic+0x4e9/0x590\n   mp_irqdomain_alloc+0x9ab/0xa80\n   irq_domain_alloc_irqs_locked+0x25d/0x8d0\n   __irq_domain_alloc_irqs+0x80/0x110\n   mp_map_pin_to_irq+0x645/0x890\n   acpi_register_gsi_ioapic+0xe6/0x150\n   hpet_open+0x313/0x480\n\nThat's a pointless panic which is a leftover of the historic IO/APIC code\nwhich panic'ed during early boot when the interrupt allocation failed.\n\nThe only place which might justify panic is the PIT/HPET timer_check() code\nwhich tries to figure out whether the timer interrupt is delivered through\nthe IO/APIC. But that code does not require to handle interrupt allocation\nfailures. If the interrupt cannot be allocated then timer delivery fails\nand it either panics due to that or falls back to legacy mode.\n\nCure this by removing the panic wrapper around __add_pin_to_irq_node() and\nmaking mp_irqdomain_alloc() aware of the failure condition and handle it as\nany other failure in this function gracefully.\n    ",
@@ -55,7 +60,7 @@
 				"date": "2024-11-17"
 			},
 			"updated": {
-				"date": "2024-11-17"
+				"date": "2025-01-29"
 			},
 			"affected_cpe_list": {
 				"cpe": [
@@ -75,12 +80,20 @@
 						"comment": "kernel-devel-6.11.8-1.1 is installed"
 					},
 					{
+						"test_ref": "oval:org.opensuse.security:tst:2009962024",
+						"comment": "kernel-devel-longterm-6.12.11-1.1 is installed"
+					},
+					{
 						"test_ref": "oval:org.opensuse.security:tst:2009952406",
 						"comment": "kernel-macros-6.11.8-1.1 is installed"
 					},
 					{
 						"test_ref": "oval:org.opensuse.security:tst:2009952407",
 						"comment": "kernel-source-6.11.8-1.1 is installed"
+					},
+					{
+						"test_ref": "oval:org.opensuse.security:tst:2009962025",
+						"comment": "kernel-source-longterm-6.12.11-1.1 is installed"
 					},
 					{
 						"test_ref": "oval:org.opensuse.security:tst:2009952408",

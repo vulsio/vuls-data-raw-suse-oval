@@ -25,6 +25,11 @@
 				"ref_id": "openSUSE-SU-2024:14500-1",
 				"ref_url": "https://lists.opensuse.org/archives/list/security-announce@lists.opensuse.org/thread/2NO44GTYBSPPWKFDREFWHITK4XKTNVLP/",
 				"source": "SUSE-SU"
+			},
+			{
+				"ref_id": "openSUSE-SU-2025:14705-1",
+				"ref_url": "https://lists.opensuse.org/archives/list/security-announce@lists.opensuse.org/thread/T7LN2FDZYBYZRLX5LOA3REDAXV7VKGW4/",
+				"source": "SUSE-SU"
 			}
 		],
 		"description": "\n    In the Linux kernel, the following vulnerability has been resolved:\n\nmm/hugetlb: fix memfd_pin_folios free_huge_pages leak\n\nmemfd_pin_folios followed by unpin_folios fails to restore free_huge_pages\nif the pages were not already faulted in, because the folio refcount for\npages created by memfd_alloc_folio never goes to 0.  memfd_pin_folios\nneeds another folio_put to undo the folio_try_get below:\n\nmemfd_alloc_folio()\n  alloc_hugetlb_folio_nodemask()\n    dequeue_hugetlb_folio_nodemask()\n      dequeue_hugetlb_folio_node_exact()\n        folio_ref_unfreeze(folio, 1);    ; adds 1 refcount\n  folio_try_get()                        ; adds 1 refcount\n  hugetlb_add_to_page_cache()            ; adds 512 refcount (on x86)\n\nWith the fix, after memfd_pin_folios + unpin_folios, the refcount for the\n(unfaulted) page is 512, which is correct, as the refcount for a faulted\nunpinned page is 513.\n    ",
@@ -55,7 +60,7 @@
 				"date": "2024-11-17"
 			},
 			"updated": {
-				"date": "2024-11-17"
+				"date": "2025-01-29"
 			},
 			"affected_cpe_list": {
 				"cpe": [
@@ -75,12 +80,20 @@
 						"comment": "kernel-devel-6.11.8-1.1 is installed"
 					},
 					{
+						"test_ref": "oval:org.opensuse.security:tst:2009962024",
+						"comment": "kernel-devel-longterm-6.12.11-1.1 is installed"
+					},
+					{
 						"test_ref": "oval:org.opensuse.security:tst:2009952406",
 						"comment": "kernel-macros-6.11.8-1.1 is installed"
 					},
 					{
 						"test_ref": "oval:org.opensuse.security:tst:2009952407",
 						"comment": "kernel-source-6.11.8-1.1 is installed"
+					},
+					{
+						"test_ref": "oval:org.opensuse.security:tst:2009962025",
+						"comment": "kernel-source-longterm-6.12.11-1.1 is installed"
 					},
 					{
 						"test_ref": "oval:org.opensuse.security:tst:2009952408",

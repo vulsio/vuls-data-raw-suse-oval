@@ -60,6 +60,11 @@
 				"ref_id": "openSUSE-SU-2024:14500-1",
 				"ref_url": "https://lists.opensuse.org/archives/list/security-announce@lists.opensuse.org/thread/2NO44GTYBSPPWKFDREFWHITK4XKTNVLP/",
 				"source": "SUSE-SU"
+			},
+			{
+				"ref_id": "openSUSE-SU-2025:14705-1",
+				"ref_url": "https://lists.opensuse.org/archives/list/security-announce@lists.opensuse.org/thread/T7LN2FDZYBYZRLX5LOA3REDAXV7VKGW4/",
+				"source": "SUSE-SU"
 			}
 		],
 		"description": "\n    In the Linux kernel, the following vulnerability has been resolved:\n\next4: drop ppath from ext4_ext_replay_update_ex() to avoid double-free\n\nWhen calling ext4_force_split_extent_at() in ext4_ext_replay_update_ex(),\nthe 'ppath' is updated but it is the 'path' that is freed, thus potentially\ntriggering a double-free in the following process:\n\next4_ext_replay_update_ex\n  ppath = path\n  ext4_force_split_extent_at(&ppath)\n    ext4_split_extent_at\n      ext4_ext_insert_extent\n        ext4_ext_create_new_leaf\n          ext4_ext_grow_indepth\n            ext4_find_extent\n              if (depth > path[0].p_maxdepth)\n                kfree(path)                 ---> path First freed\n                *orig_path = path = NULL    ---> null ppath\n  kfree(path)                               ---> path double-free !!!\n\nSo drop the unnecessary ppath and use path directly to avoid this problem.\nAnd use ext4_find_extent() directly to update path, avoiding unnecessary\nmemory allocation and freeing. Also, propagate the error returned by\next4_find_extent() instead of using strange error codes.\n    ",
@@ -90,7 +95,7 @@
 				"date": "2025-01-24"
 			},
 			"updated": {
-				"date": "2025-01-24"
+				"date": "2025-01-29"
 			},
 			"affected_cpe_list": {
 				"cpe": [

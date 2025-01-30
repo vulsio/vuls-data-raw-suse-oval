@@ -74,6 +74,11 @@
 				"ref_id": "openSUSE-SU-2024:14500-1",
 				"ref_url": "https://lists.opensuse.org/archives/list/security-announce@lists.opensuse.org/thread/2NO44GTYBSPPWKFDREFWHITK4XKTNVLP/",
 				"source": "SUSE-SU"
+			},
+			{
+				"ref_id": "openSUSE-SU-2025:14705-1",
+				"ref_url": "https://lists.opensuse.org/archives/list/security-announce@lists.opensuse.org/thread/T7LN2FDZYBYZRLX5LOA3REDAXV7VKGW4/",
+				"source": "SUSE-SU"
 			}
 		],
 		"description": "\n    In the Linux kernel, the following vulnerability has been resolved:\n\nnvme-pci: fix race condition between reset and nvme_dev_disable()\n\nnvme_dev_disable() modifies the dev->online_queues field, therefore\nnvme_pci_update_nr_queues() should avoid racing against it, otherwise\nwe could end up passing invalid values to blk_mq_update_nr_hw_queues().\n\n WARNING: CPU: 39 PID: 61303 at drivers/pci/msi/api.c:347\n          pci_irq_get_affinity+0x187/0x210\n Workqueue: nvme-reset-wq nvme_reset_work [nvme]\n RIP: 0010:pci_irq_get_affinity+0x187/0x210\n Call Trace:\n  <TASK>\n  ? blk_mq_pci_map_queues+0x87/0x3c0\n  ? pci_irq_get_affinity+0x187/0x210\n  blk_mq_pci_map_queues+0x87/0x3c0\n  nvme_pci_map_queues+0x189/0x460 [nvme]\n  blk_mq_update_nr_hw_queues+0x2a/0x40\n  nvme_reset_work+0x1be/0x2a0 [nvme]\n\nFix the bug by locking the shutdown_lock mutex before using\ndev->online_queues. Give up if nvme_dev_disable() is running or if\nit has been executed already.\n    ",
@@ -104,7 +109,7 @@
 				"date": "2024-11-07"
 			},
 			"updated": {
-				"date": "2025-01-09"
+				"date": "2025-01-29"
 			},
 			"affected_cpe_list": {
 				"cpe": [
