@@ -1,0 +1,181 @@
+{
+	"id": "oval:org.opensuse.security:def:202449868",
+	"version": "1",
+	"class": "vulnerability",
+	"metadata": {
+		"title": "CVE-2024-49868",
+		"affected": {
+			"family": "unix",
+			"platform": [
+				"SUSE Linux Micro 6.0"
+			]
+		},
+		"reference": [
+			{
+				"ref_id": "Mitre CVE-2024-49868",
+				"ref_url": "https://cve.mitre.org/cgi-bin/cvename.cgi?name=CVE-2024-49868",
+				"source": "CVE"
+			},
+			{
+				"ref_id": "SUSE CVE-2024-49868",
+				"ref_url": "https://www.suse.com/security/cve/CVE-2024-49868",
+				"source": "SUSE CVE"
+			},
+			{
+				"ref_id": "SUSE-SU-2024:4314-1",
+				"ref_url": "https://lists.suse.com/pipermail/sle-security-updates/2024-December/019998.html",
+				"source": "SUSE-SU"
+			},
+			{
+				"ref_id": "SUSE-SU-2024:4315-1",
+				"ref_url": "https://lists.suse.com/pipermail/sle-security-updates/2024-December/019997.html",
+				"source": "SUSE-SU"
+			},
+			{
+				"ref_id": "SUSE-SU-2024:4316-1",
+				"ref_url": "https://lists.suse.com/pipermail/sle-security-updates/2024-December/020001.html",
+				"source": "SUSE-SU"
+			},
+			{
+				"ref_id": "SUSE-SU-2024:4318-1",
+				"ref_url": "https://lists.suse.com/pipermail/sle-security-updates/2024-December/019999.html",
+				"source": "SUSE-SU"
+			},
+			{
+				"ref_id": "SUSE-SU-2024:4364-1",
+				"ref_url": "https://lists.suse.com/pipermail/sle-security-updates/2024-December/020019.html",
+				"source": "SUSE-SU"
+			},
+			{
+				"ref_id": "SUSE-SU-2024:4367-1",
+				"ref_url": "https://lists.suse.com/pipermail/sle-security-updates/2024-December/020025.html",
+				"source": "SUSE-SU"
+			},
+			{
+				"ref_id": "SUSE-SU-2024:4376-1",
+				"ref_url": "https://lists.suse.com/pipermail/sle-security-updates/2024-December/020028.html",
+				"source": "SUSE-SU"
+			},
+			{
+				"ref_id": "SUSE-SU-2024:4387-1",
+				"ref_url": "https://lists.suse.com/pipermail/sle-security-updates/2024-December/020032.html",
+				"source": "SUSE-SU"
+			},
+			{
+				"ref_id": "SUSE-SU-2025:0035-1",
+				"ref_url": "https://lists.suse.com/pipermail/sle-security-updates/2025-January/020070.html",
+				"source": "SUSE-SU"
+			},
+			{
+				"ref_id": "openSUSE-SU-2024:14500-1",
+				"ref_url": "https://lists.opensuse.org/archives/list/security-announce@lists.opensuse.org/thread/2NO44GTYBSPPWKFDREFWHITK4XKTNVLP/",
+				"source": "SUSE-SU"
+			},
+			{
+				"ref_id": "openSUSE-SU-2025:14705-1",
+				"ref_url": "https://lists.opensuse.org/archives/list/security-announce@lists.opensuse.org/thread/T7LN2FDZYBYZRLX5LOA3REDAXV7VKGW4/",
+				"source": "SUSE-SU"
+			}
+		],
+		"description": "\n    In the Linux kernel, the following vulnerability has been resolved:\n\nbtrfs: fix a NULL pointer dereference when failed to start a new trasacntion\n\n[BUG]\nSyzbot reported a NULL pointer dereference with the following crash:\n\n  FAULT_INJECTION: forcing a failure.\n   start_transaction+0x830/0x1670 fs/btrfs/transaction.c:676\n   prepare_to_relocate+0x31f/0x4c0 fs/btrfs/relocation.c:3642\n   relocate_block_group+0x169/0xd20 fs/btrfs/relocation.c:3678\n  ...\n  BTRFS info (device loop0): balance: ended with status: -12\n  Oops: general protection fault, probably for non-canonical address 0xdffffc00000000cc: 0000 [#1] PREEMPT SMP KASAN NOPTI\n  KASAN: null-ptr-deref in range [0x0000000000000660-0x0000000000000667]\n  RIP: 0010:btrfs_update_reloc_root+0x362/0xa80 fs/btrfs/relocation.c:926\n  Call Trace:\n   <TASK>\n   commit_fs_roots+0x2ee/0x720 fs/btrfs/transaction.c:1496\n   btrfs_commit_transaction+0xfaf/0x3740 fs/btrfs/transaction.c:2430\n   del_balance_item fs/btrfs/volumes.c:3678 [inline]\n   reset_balance_state+0x25e/0x3c0 fs/btrfs/volumes.c:3742\n   btrfs_balance+0xead/0x10c0 fs/btrfs/volumes.c:4574\n   btrfs_ioctl_balance+0x493/0x7c0 fs/btrfs/ioctl.c:3673\n   vfs_ioctl fs/ioctl.c:51 [inline]\n   __do_sys_ioctl fs/ioctl.c:907 [inline]\n   __se_sys_ioctl+0xf9/0x170 fs/ioctl.c:893\n   do_syscall_x64 arch/x86/entry/common.c:52 [inline]\n   do_syscall_64+0xf3/0x230 arch/x86/entry/common.c:83\n   entry_SYSCALL_64_after_hwframe+0x77/0x7f\n\n[CAUSE]\nThe allocation failure happens at the start_transaction() inside\nprepare_to_relocate(), and during the error handling we call\nunset_reloc_control(), which makes fs_info->balance_ctl to be NULL.\n\nThen we continue the error path cleanup in btrfs_balance() by calling\nreset_balance_state() which will call del_balance_item() to fully delete\nthe balance item in the root tree.\n\nHowever during the small window between set_reloc_contrl() and\nunset_reloc_control(), we can have a subvolume tree update and created a\nreloc_root for that subvolume.\n\nThen we go into the final btrfs_commit_transaction() of\ndel_balance_item(), and into btrfs_update_reloc_root() inside\ncommit_fs_roots().\n\nThat function checks if fs_info->reloc_ctl is in the merge_reloc_tree\nstage, but since fs_info->reloc_ctl is NULL, it results a NULL pointer\ndereference.\n\n[FIX]\nJust add extra check on fs_info->reloc_ctl inside\nbtrfs_update_reloc_root(), before checking\nfs_info->reloc_ctl->merge_reloc_tree.\n\nThat DEAD_RELOC_TREE handling is to prevent further modification to the\nreloc tree during merge stage, but since there is no reloc_ctl at all,\nwe do not need to bother that.\n    ",
+		"advisory": {
+			"from": "security@suse.de",
+			"severity": "Moderate",
+			"cve": [
+				{
+					"text": "CVE-2024-49868 at SUSE",
+					"href": "https://www.suse.com/security/cve/CVE-2024-49868/",
+					"impact": "medium",
+					"cvss3": "4.7/CVSS:3.1/AV:L/AC:H/PR:L/UI:N/S:U/C:N/I:N/A:H"
+				},
+				{
+					"text": "CVE-2024-49868 at NVD",
+					"href": "https://nvd.nist.gov/vuln/detail/CVE-2024-49868",
+					"impact": "medium",
+					"cvss3": "5.5/CVSS:3.1/AV:L/AC:L/PR:L/UI:N/S:U/C:N/I:N/A:H"
+				}
+			],
+			"bugzilla": [
+				{
+					"text": "SUSE bug 1232272",
+					"href": "https://bugzilla.suse.com/1232272"
+				}
+			],
+			"issued": {
+				"date": "2025-02-03"
+			},
+			"updated": {
+				"date": "2025-02-03"
+			},
+			"affected_cpe_list": {
+				"cpe": [
+					"cpe:/o:suse:sl-micro:6.0"
+				]
+			}
+		}
+	},
+	"criteria": {
+		"operator": "AND",
+		"criterias": [
+			{
+				"operator": "OR",
+				"criterions": [
+					{
+						"test_ref": "oval:org.opensuse.security:tst:2009961137",
+						"comment": "kernel-default-6.4.0-22.1 is installed"
+					},
+					{
+						"test_ref": "oval:org.opensuse.security:tst:2009961138",
+						"comment": "kernel-default-base-6.4.0-21.3.21.3 is installed"
+					},
+					{
+						"test_ref": "oval:org.opensuse.security:tst:2009961140",
+						"comment": "kernel-default-livepatch-6.4.0-22.1 is installed"
+					},
+					{
+						"test_ref": "oval:org.opensuse.security:tst:2009961141",
+						"comment": "kernel-devel-6.4.0-22.1 is installed"
+					},
+					{
+						"test_ref": "oval:org.opensuse.security:tst:2009961146",
+						"comment": "kernel-devel-rt-6.4.0-22.1 is installed"
+					},
+					{
+						"test_ref": "oval:org.opensuse.security:tst:2009961142",
+						"comment": "kernel-kvmsmall-6.4.0-22.1 is installed"
+					},
+					{
+						"test_ref": "oval:org.opensuse.security:tst:2009961143",
+						"comment": "kernel-livepatch-6_4_0-21-default-1-1.1 is installed"
+					},
+					{
+						"test_ref": "oval:org.opensuse.security:tst:2009961147",
+						"comment": "kernel-livepatch-6_4_0-22-rt-1-1.1 is installed"
+					},
+					{
+						"test_ref": "oval:org.opensuse.security:tst:2009961144",
+						"comment": "kernel-macros-6.4.0-22.1 is installed"
+					},
+					{
+						"test_ref": "oval:org.opensuse.security:tst:2009962342",
+						"comment": "kernel-rt-6.4.0-22.1 is installed"
+					},
+					{
+						"test_ref": "oval:org.opensuse.security:tst:2009961145",
+						"comment": "kernel-source-6.4.0-22.1 is installed"
+					},
+					{
+						"test_ref": "oval:org.opensuse.security:tst:2009961150",
+						"comment": "kernel-source-rt-6.4.0-22.1 is installed"
+					}
+				]
+			}
+		],
+		"criterions": [
+			{
+				"test_ref": "oval:org.opensuse.security:tst:2009864179",
+				"comment": "SUSE Linux Micro 6.0 is installed"
+			}
+		]
+	}
+}

@@ -1,0 +1,171 @@
+{
+	"id": "oval:org.opensuse.security:def:202449866",
+	"version": "1",
+	"class": "vulnerability",
+	"metadata": {
+		"title": "CVE-2024-49866",
+		"affected": {
+			"family": "unix",
+			"platform": [
+				"SUSE Linux Micro 6.0"
+			]
+		},
+		"reference": [
+			{
+				"ref_id": "Mitre CVE-2024-49866",
+				"ref_url": "https://cve.mitre.org/cgi-bin/cvename.cgi?name=CVE-2024-49866",
+				"source": "CVE"
+			},
+			{
+				"ref_id": "SUSE CVE-2024-49866",
+				"ref_url": "https://www.suse.com/security/cve/CVE-2024-49866",
+				"source": "SUSE CVE"
+			},
+			{
+				"ref_id": "SUSE-SU-2024:3983-1",
+				"ref_url": "https://lists.suse.com/pipermail/sle-security-updates/2024-November/019816.html",
+				"source": "SUSE-SU"
+			},
+			{
+				"ref_id": "SUSE-SU-2024:3984-1",
+				"ref_url": "https://lists.suse.com/pipermail/sle-security-updates/2024-November/019815.html",
+				"source": "SUSE-SU"
+			},
+			{
+				"ref_id": "SUSE-SU-2024:3985-1",
+				"ref_url": "https://lists.suse.com/pipermail/sle-security-updates/2024-November/019814.html",
+				"source": "SUSE-SU"
+			},
+			{
+				"ref_id": "SUSE-SU-2024:4314-1",
+				"ref_url": "https://lists.suse.com/pipermail/sle-security-updates/2024-December/019998.html",
+				"source": "SUSE-SU"
+			},
+			{
+				"ref_id": "SUSE-SU-2024:4318-1",
+				"ref_url": "https://lists.suse.com/pipermail/sle-security-updates/2024-December/019999.html",
+				"source": "SUSE-SU"
+			},
+			{
+				"ref_id": "SUSE-SU-2024:4364-1",
+				"ref_url": "https://lists.suse.com/pipermail/sle-security-updates/2024-December/020019.html",
+				"source": "SUSE-SU"
+			},
+			{
+				"ref_id": "SUSE-SU-2024:4387-1",
+				"ref_url": "https://lists.suse.com/pipermail/sle-security-updates/2024-December/020032.html",
+				"source": "SUSE-SU"
+			},
+			{
+				"ref_id": "openSUSE-SU-2024:14500-1",
+				"ref_url": "https://lists.opensuse.org/archives/list/security-announce@lists.opensuse.org/thread/2NO44GTYBSPPWKFDREFWHITK4XKTNVLP/",
+				"source": "SUSE-SU"
+			},
+			{
+				"ref_id": "openSUSE-SU-2025:14705-1",
+				"ref_url": "https://lists.opensuse.org/archives/list/security-announce@lists.opensuse.org/thread/T7LN2FDZYBYZRLX5LOA3REDAXV7VKGW4/",
+				"source": "SUSE-SU"
+			}
+		],
+		"description": "\n    In the Linux kernel, the following vulnerability has been resolved:\n\ntracing/timerlat: Fix a race during cpuhp processing\n\nThere is another found exception that the \"timerlat/1\" thread was\nscheduled on CPU0, and lead to timer corruption finally:\n\n```\nODEBUG: init active (active state 0) object: ffff888237c2e108 object type: hrtimer hint: timerlat_irq+0x0/0x220\nWARNING: CPU: 0 PID: 426 at lib/debugobjects.c:518 debug_print_object+0x7d/0xb0\nModules linked in:\nCPU: 0 UID: 0 PID: 426 Comm: timerlat/1 Not tainted 6.11.0-rc7+ #45\nHardware name: QEMU Standard PC (i440FX + PIIX, 1996), BIOS 1.13.0-1ubuntu1.1 04/01/2014\nRIP: 0010:debug_print_object+0x7d/0xb0\n...\nCall Trace:\n <TASK>\n ? __warn+0x7c/0x110\n ? debug_print_object+0x7d/0xb0\n ? report_bug+0xf1/0x1d0\n ? prb_read_valid+0x17/0x20\n ? handle_bug+0x3f/0x70\n ? exc_invalid_op+0x13/0x60\n ? asm_exc_invalid_op+0x16/0x20\n ? debug_print_object+0x7d/0xb0\n ? debug_print_object+0x7d/0xb0\n ? __pfx_timerlat_irq+0x10/0x10\n __debug_object_init+0x110/0x150\n hrtimer_init+0x1d/0x60\n timerlat_main+0xab/0x2d0\n ? __pfx_timerlat_main+0x10/0x10\n kthread+0xb7/0xe0\n ? __pfx_kthread+0x10/0x10\n ret_from_fork+0x2d/0x40\n ? __pfx_kthread+0x10/0x10\n ret_from_fork_asm+0x1a/0x30\n </TASK>\n```\n\nAfter tracing the scheduling event, it was discovered that the migration\nof the \"timerlat/1\" thread was performed during thread creation. Further\nanalysis confirmed that it is because the CPU online processing for\nosnoise is implemented through workers, which is asynchronous with the\noffline processing. When the worker was scheduled to create a thread, the\nCPU may has already been removed from the cpu_online_mask during the offline\nprocess, resulting in the inability to select the right CPU:\n\nT1                       | T2\n[CPUHP_ONLINE]           | cpu_device_down()\nosnoise_hotplug_workfn() |\n                         |     cpus_write_lock()\n                         |     takedown_cpu(1)\n                         |     cpus_write_unlock()\n[CPUHP_OFFLINE]          |\n    cpus_read_lock()     |\n    start_kthread(1)     |\n    cpus_read_unlock()   |\n\nTo fix this, skip online processing if the CPU is already offline.\n    ",
+		"advisory": {
+			"from": "security@suse.de",
+			"severity": "Moderate",
+			"cve": [
+				{
+					"text": "CVE-2024-49866 at SUSE",
+					"href": "https://www.suse.com/security/cve/CVE-2024-49866/",
+					"impact": "medium",
+					"cvss3": "4.1/CVSS:3.1/AV:L/AC:H/PR:H/UI:N/S:U/C:N/I:N/A:H"
+				},
+				{
+					"text": "CVE-2024-49866 at NVD",
+					"href": "https://nvd.nist.gov/vuln/detail/CVE-2024-49866",
+					"impact": "medium",
+					"cvss3": "4.7/CVSS:3.1/AV:L/AC:H/PR:L/UI:N/S:U/C:N/I:N/A:H"
+				}
+			],
+			"bugzilla": [
+				{
+					"text": "SUSE bug 1232259",
+					"href": "https://bugzilla.suse.com/1232259"
+				}
+			],
+			"issued": {
+				"date": "2025-02-03"
+			},
+			"updated": {
+				"date": "2025-02-03"
+			},
+			"affected_cpe_list": {
+				"cpe": [
+					"cpe:/o:suse:sl-micro:6.0"
+				]
+			}
+		}
+	},
+	"criteria": {
+		"operator": "AND",
+		"criterias": [
+			{
+				"operator": "OR",
+				"criterions": [
+					{
+						"test_ref": "oval:org.opensuse.security:tst:2009961137",
+						"comment": "kernel-default-6.4.0-22.1 is installed"
+					},
+					{
+						"test_ref": "oval:org.opensuse.security:tst:2009961138",
+						"comment": "kernel-default-base-6.4.0-21.3.21.3 is installed"
+					},
+					{
+						"test_ref": "oval:org.opensuse.security:tst:2009961140",
+						"comment": "kernel-default-livepatch-6.4.0-22.1 is installed"
+					},
+					{
+						"test_ref": "oval:org.opensuse.security:tst:2009961141",
+						"comment": "kernel-devel-6.4.0-22.1 is installed"
+					},
+					{
+						"test_ref": "oval:org.opensuse.security:tst:2009961146",
+						"comment": "kernel-devel-rt-6.4.0-22.1 is installed"
+					},
+					{
+						"test_ref": "oval:org.opensuse.security:tst:2009961142",
+						"comment": "kernel-kvmsmall-6.4.0-22.1 is installed"
+					},
+					{
+						"test_ref": "oval:org.opensuse.security:tst:2009961143",
+						"comment": "kernel-livepatch-6_4_0-21-default-1-1.1 is installed"
+					},
+					{
+						"test_ref": "oval:org.opensuse.security:tst:2009961147",
+						"comment": "kernel-livepatch-6_4_0-22-rt-1-1.1 is installed"
+					},
+					{
+						"test_ref": "oval:org.opensuse.security:tst:2009961144",
+						"comment": "kernel-macros-6.4.0-22.1 is installed"
+					},
+					{
+						"test_ref": "oval:org.opensuse.security:tst:2009962342",
+						"comment": "kernel-rt-6.4.0-22.1 is installed"
+					},
+					{
+						"test_ref": "oval:org.opensuse.security:tst:2009961145",
+						"comment": "kernel-source-6.4.0-22.1 is installed"
+					},
+					{
+						"test_ref": "oval:org.opensuse.security:tst:2009961150",
+						"comment": "kernel-source-rt-6.4.0-22.1 is installed"
+					}
+				]
+			}
+		],
+		"criterions": [
+			{
+				"test_ref": "oval:org.opensuse.security:tst:2009864179",
+				"comment": "SUSE Linux Micro 6.0 is installed"
+			}
+		]
+	}
+}
