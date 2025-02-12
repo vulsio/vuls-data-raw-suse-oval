@@ -1,0 +1,270 @@
+{
+	"id": "oval:org.opensuse.security:def:202455916",
+	"version": "1",
+	"class": "vulnerability",
+	"metadata": {
+		"title": "CVE-2024-55916",
+		"affected": {
+			"family": "unix",
+			"platform": [
+				"openSUSE Leap 15.6"
+			]
+		},
+		"reference": [
+			{
+				"ref_id": "Mitre CVE-2024-55916",
+				"ref_url": "https://cve.mitre.org/cgi-bin/cvename.cgi?name=CVE-2024-55916",
+				"source": "CVE"
+			},
+			{
+				"ref_id": "SUSE CVE-2024-55916",
+				"ref_url": "https://www.suse.com/security/cve/CVE-2024-55916",
+				"source": "SUSE CVE"
+			},
+			{
+				"ref_id": "SUSE-SU-2025:0289-1",
+				"ref_url": "https://lists.suse.com/pipermail/sle-security-updates/2025-January/020239.html",
+				"source": "SUSE-SU"
+			},
+			{
+				"ref_id": "SUSE-SU-2025:0428-1",
+				"ref_url": "https://lists.suse.com/pipermail/sle-security-updates/2025-February/020311.html",
+				"source": "SUSE-SU"
+			}
+		],
+		"description": "\n    In the Linux kernel, the following vulnerability has been resolved:\n\nDrivers: hv: util: Avoid accessing a ringbuffer not initialized yet\n\nIf the KVP (or VSS) daemon starts before the VMBus channel's ringbuffer is\nfully initialized, we can hit the panic below:\n\nhv_utils: Registering HyperV Utility Driver\nhv_vmbus: registering driver hv_utils\n...\nBUG: kernel NULL pointer dereference, address: 0000000000000000\nCPU: 44 UID: 0 PID: 2552 Comm: hv_kvp_daemon Tainted: G E 6.11.0-rc3+ #1\nRIP: 0010:hv_pkt_iter_first+0x12/0xd0\nCall Trace:\n...\n vmbus_recvpacket\n hv_kvp_onchannelcallback\n vmbus_on_event\n tasklet_action_common\n tasklet_action\n handle_softirqs\n irq_exit_rcu\n sysvec_hyperv_stimer0\n </IRQ>\n <TASK>\n asm_sysvec_hyperv_stimer0\n...\n kvp_register_done\n hvt_op_read\n vfs_read\n ksys_read\n __x64_sys_read\n\nThis can happen because the KVP/VSS channel callback can be invoked\neven before the channel is fully opened:\n1) as soon as hv_kvp_init() -> hvutil_transport_init() creates\n/dev/vmbus/hv_kvp, the kvp daemon can open the device file immediately and\nregister itself to the driver by writing a message KVP_OP_REGISTER1 to the\nfile (which is handled by kvp_on_msg() ->kvp_handle_handshake()) and\nreading the file for the driver's response, which is handled by\nhvt_op_read(), which calls hvt->on_read(), i.e. kvp_register_done().\n\n2) the problem with kvp_register_done() is that it can cause the\nchannel callback to be called even before the channel is fully opened,\nand when the channel callback is starting to run, util_probe()->\nvmbus_open() may have not initialized the ringbuffer yet, so the\ncallback can hit the panic of NULL pointer dereference.\n\nTo reproduce the panic consistently, we can add a \"ssleep(10)\" for KVP in\n__vmbus_open(), just before the first hv_ringbuffer_init(), and then we\nunload and reload the driver hv_utils, and run the daemon manually within\nthe 10 seconds.\n\nFix the panic by reordering the steps in util_probe() so the char dev\nentry used by the KVP or VSS daemon is not created until after\nvmbus_open() has completed. This reordering prevents the race condition\nfrom happening.\n    ",
+		"advisory": {
+			"from": "security@suse.de",
+			"severity": "Moderate",
+			"cve": [
+				{
+					"text": "CVE-2024-55916 at SUSE",
+					"href": "https://www.suse.com/security/cve/CVE-2024-55916/",
+					"impact": "medium",
+					"cvss3": "4.7/CVSS:3.1/AV:L/AC:H/PR:L/UI:N/S:U/C:N/I:N/A:H"
+				},
+				{
+					"text": "CVE-2024-55916 at NVD",
+					"href": "https://nvd.nist.gov/vuln/detail/CVE-2024-55916",
+					"impact": "medium",
+					"cvss3": "5.5/CVSS:3.1/AV:L/AC:L/PR:L/UI:N/S:U/C:N/I:N/A:H"
+				}
+			],
+			"bugzilla": [
+				{
+					"text": "SUSE bug 1235747",
+					"href": "https://bugzilla.suse.com/1235747"
+				}
+			],
+			"issued": {
+				"date": "2025-02-12"
+			},
+			"updated": {
+				"date": "2025-02-12"
+			},
+			"affected_cpe_list": {
+				"cpe": [
+					"cpe:/o:opensuse:leap:15.6"
+				]
+			}
+		}
+	},
+	"criteria": {
+		"operator": "AND",
+		"criterias": [
+			{
+				"operator": "OR",
+				"criterias": [
+					{
+						"operator": "AND",
+						"criterions": [
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009963590",
+								"comment": "cluster-md-kmp-azure-6.4.0-150600.8.26.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009623277",
+								"comment": "cluster-md-kmp-azure is signed with openSUSE key"
+							}
+						]
+					},
+					{
+						"operator": "AND",
+						"criterions": [
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009963591",
+								"comment": "dlm-kmp-azure-6.4.0-150600.8.26.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009623279",
+								"comment": "dlm-kmp-azure is signed with openSUSE key"
+							}
+						]
+					},
+					{
+						"operator": "AND",
+						"criterions": [
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009963592",
+								"comment": "gfs2-kmp-azure-6.4.0-150600.8.26.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009623281",
+								"comment": "gfs2-kmp-azure is signed with openSUSE key"
+							}
+						]
+					},
+					{
+						"operator": "AND",
+						"criterions": [
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009963481",
+								"comment": "kernel-azure-6.4.0-150600.8.26.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009623283",
+								"comment": "kernel-azure is signed with openSUSE key"
+							}
+						]
+					},
+					{
+						"operator": "AND",
+						"criterions": [
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009963482",
+								"comment": "kernel-azure-devel-6.4.0-150600.8.26.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009623285",
+								"comment": "kernel-azure-devel is signed with openSUSE key"
+							}
+						]
+					},
+					{
+						"operator": "AND",
+						"criterions": [
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009963593",
+								"comment": "kernel-azure-extra-6.4.0-150600.8.26.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009623286",
+								"comment": "kernel-azure-extra is signed with openSUSE key"
+							}
+						]
+					},
+					{
+						"operator": "AND",
+						"criterions": [
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009963594",
+								"comment": "kernel-azure-optional-6.4.0-150600.8.26.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009623427",
+								"comment": "kernel-azure-optional is signed with openSUSE key"
+							}
+						]
+					},
+					{
+						"operator": "AND",
+						"criterions": [
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009963595",
+								"comment": "kernel-azure-vdso-6.4.0-150600.8.26.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009769740",
+								"comment": "kernel-azure-vdso is signed with openSUSE key"
+							}
+						]
+					},
+					{
+						"operator": "AND",
+						"criterions": [
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009963483",
+								"comment": "kernel-devel-azure-6.4.0-150600.8.26.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009623293",
+								"comment": "kernel-devel-azure is signed with openSUSE key"
+							}
+						]
+					},
+					{
+						"operator": "AND",
+						"criterions": [
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009963484",
+								"comment": "kernel-source-azure-6.4.0-150600.8.26.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009623300",
+								"comment": "kernel-source-azure is signed with openSUSE key"
+							}
+						]
+					},
+					{
+						"operator": "AND",
+						"criterions": [
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009963485",
+								"comment": "kernel-syms-azure-6.4.0-150600.8.26.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009623301",
+								"comment": "kernel-syms-azure is signed with openSUSE key"
+							}
+						]
+					},
+					{
+						"operator": "AND",
+						"criterions": [
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009963596",
+								"comment": "kselftests-kmp-azure-6.4.0-150600.8.26.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009623305",
+								"comment": "kselftests-kmp-azure is signed with openSUSE key"
+							}
+						]
+					},
+					{
+						"operator": "AND",
+						"criterions": [
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009963597",
+								"comment": "ocfs2-kmp-azure-6.4.0-150600.8.26.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009623306",
+								"comment": "ocfs2-kmp-azure is signed with openSUSE key"
+							}
+						]
+					},
+					{
+						"operator": "AND",
+						"criterions": [
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009963598",
+								"comment": "reiserfs-kmp-azure-6.4.0-150600.8.26.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009623308",
+								"comment": "reiserfs-kmp-azure is signed with openSUSE key"
+							}
+						]
+					}
+				]
+			}
+		],
+		"criterions": [
+			{
+				"test_ref": "oval:org.opensuse.security:tst:2009864054",
+				"comment": "openSUSE Leap 15.6 is installed"
+			}
+		]
+	}
+}

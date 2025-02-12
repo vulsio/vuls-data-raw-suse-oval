@@ -52,6 +52,11 @@
 				"ref_id": "SUSE-SU-2025:0289-1",
 				"ref_url": "https://lists.suse.com/pipermail/sle-security-updates/2025-January/020239.html",
 				"source": "SUSE-SU"
+			},
+			{
+				"ref_id": "SUSE-SU-2025:0428-1",
+				"ref_url": "https://lists.suse.com/pipermail/sle-security-updates/2025-February/020311.html",
+				"source": "SUSE-SU"
 			}
 		],
 		"description": "\n    In the Linux kernel, the following vulnerability has been resolved:\n\nbtrfs: fix use-after-free when COWing tree bock and tracing is enabled\n\nWhen a COWing a tree block, at btrfs_cow_block(), and we have the\ntracepoint trace_btrfs_cow_block() enabled and preemption is also enabled\n(CONFIG_PREEMPT=y), we can trigger a use-after-free in the COWed extent\nbuffer while inside the tracepoint code. This is because in some paths\nthat call btrfs_cow_block(), such as btrfs_search_slot(), we are holding\nthe last reference on the extent buffer @buf so btrfs_force_cow_block()\ndrops the last reference on the @buf extent buffer when it calls\nfree_extent_buffer_stale(buf), which schedules the release of the extent\nbuffer with RCU. This means that if we are on a kernel with preemption,\nthe current task may be preempted before calling trace_btrfs_cow_block()\nand the extent buffer already released by the time trace_btrfs_cow_block()\nis called, resulting in a use-after-free.\n\nFix this by moving the trace_btrfs_cow_block() from btrfs_cow_block() to\nbtrfs_force_cow_block() before the COWed extent buffer is freed.\nThis also has a side effect of invoking the tracepoint in the tree defrag\ncode, at defrag.c:btrfs_realloc_node(), since btrfs_force_cow_block() is\ncalled there, but this is fine and it was actually missing there.\n    ",
@@ -86,7 +91,7 @@
 				"date": "2025-01-13"
 			},
 			"updated": {
-				"date": "2025-02-03"
+				"date": "2025-02-12"
 			},
 			"affected_cpe_list": {
 				"cpe": [
@@ -515,45 +520,6 @@
 						"operator": "OR",
 						"criterions": [
 							{
-								"test_ref": "oval:org.opensuse.security:tst:2009856172",
-								"comment": "SUSE Linux Enterprise High Performance Computing 15 SP6 is installed"
-							},
-							{
-								"test_ref": "oval:org.opensuse.security:tst:2009856320",
-								"comment": "SUSE Linux Enterprise Module for Public Cloud 15 SP6 is installed"
-							},
-							{
-								"test_ref": "oval:org.opensuse.security:tst:2009856174",
-								"comment": "SUSE Linux Enterprise Server 15 SP6 is installed"
-							},
-							{
-								"test_ref": "oval:org.opensuse.security:tst:2009856175",
-								"comment": "SUSE Linux Enterprise Server for SAP Applications 15 SP6 is installed"
-							}
-						]
-					},
-					{
-						"operator": "OR",
-						"criterions": [
-							{
-								"test_ref": "oval:org.opensuse.security:tst:2009340306",
-								"comment": "kernel-devel-azure is not affected"
-							},
-							{
-								"test_ref": "oval:org.opensuse.security:tst:2009340305",
-								"comment": "kernel-source-azure is not affected"
-							}
-						]
-					}
-				]
-			},
-			{
-				"operator": "AND",
-				"criterias": [
-					{
-						"operator": "OR",
-						"criterions": [
-							{
 								"test_ref": "oval:org.opensuse.security:tst:2009728675",
 								"comment": "kernel-default-livepatch is not affected"
 							},
@@ -659,6 +625,57 @@
 					{
 						"test_ref": "oval:org.opensuse.security:tst:2009945160",
 						"comment": "SUSE Linux Enterprise Module for Confidential Computing Technical Preview 15 SP6 is installed"
+					}
+				]
+			},
+			{
+				"operator": "AND",
+				"criterias": [
+					{
+						"operator": "OR",
+						"criterions": [
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009856172",
+								"comment": "SUSE Linux Enterprise High Performance Computing 15 SP6 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009856320",
+								"comment": "SUSE Linux Enterprise Module for Public Cloud 15 SP6 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009856174",
+								"comment": "SUSE Linux Enterprise Server 15 SP6 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009856175",
+								"comment": "SUSE Linux Enterprise Server for SAP Applications 15 SP6 is installed"
+							}
+						]
+					},
+					{
+						"operator": "OR",
+						"criterions": [
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009963481",
+								"comment": "kernel-azure-6.4.0-150600.8.26.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009963482",
+								"comment": "kernel-azure-devel-6.4.0-150600.8.26.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009963483",
+								"comment": "kernel-devel-azure-6.4.0-150600.8.26.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009963484",
+								"comment": "kernel-source-azure-6.4.0-150600.8.26.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009963485",
+								"comment": "kernel-syms-azure-6.4.0-150600.8.26.1 is installed"
+							}
+						]
 					}
 				]
 			}

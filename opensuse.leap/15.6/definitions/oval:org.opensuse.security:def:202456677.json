@@ -1,0 +1,268 @@
+{
+	"id": "oval:org.opensuse.security:def:202456677",
+	"version": "1",
+	"class": "vulnerability",
+	"metadata": {
+		"title": "CVE-2024-56677",
+		"affected": {
+			"family": "unix",
+			"platform": [
+				"openSUSE Leap 15.6"
+			]
+		},
+		"reference": [
+			{
+				"ref_id": "Mitre CVE-2024-56677",
+				"ref_url": "https://cve.mitre.org/cgi-bin/cvename.cgi?name=CVE-2024-56677",
+				"source": "CVE"
+			},
+			{
+				"ref_id": "SUSE CVE-2024-56677",
+				"ref_url": "https://www.suse.com/security/cve/CVE-2024-56677",
+				"source": "SUSE CVE"
+			},
+			{
+				"ref_id": "SUSE-SU-2025:0289-1",
+				"ref_url": "https://lists.suse.com/pipermail/sle-security-updates/2025-January/020239.html",
+				"source": "SUSE-SU"
+			},
+			{
+				"ref_id": "SUSE-SU-2025:0428-1",
+				"ref_url": "https://lists.suse.com/pipermail/sle-security-updates/2025-February/020311.html",
+				"source": "SUSE-SU"
+			}
+		],
+		"description": "\n    In the Linux kernel, the following vulnerability has been resolved:\n\npowerpc/fadump: Move fadump_cma_init to setup_arch() after initmem_init()\n\nDuring early init CMA_MIN_ALIGNMENT_BYTES can be PAGE_SIZE,\nsince pageblock_order is still zero and it gets initialized\nlater during initmem_init() e.g.\nsetup_arch() -> initmem_init() -> sparse_init() -> set_pageblock_order()\n\nOne such use case where this causes issue is -\nearly_setup() -> early_init_devtree() -> fadump_reserve_mem() -> fadump_cma_init()\n\nThis causes CMA memory alignment check to be bypassed in\ncma_init_reserved_mem(). Then later cma_activate_area() can hit\na VM_BUG_ON_PAGE(pfn & ((1 << order) - 1)) if the reserved memory\narea was not pageblock_order aligned.\n\nFix it by moving the fadump_cma_init() after initmem_init(),\nwhere other such cma reservations also gets called.\n\n<stack trace>\n==============\npage: refcount:0 mapcount:0 mapping:0000000000000000 index:0x0 pfn:0x10010\nflags: 0x13ffff800000000(node=1|zone=0|lastcpupid=0x7ffff) CMA\nraw: 013ffff800000000 5deadbeef0000100 5deadbeef0000122 0000000000000000\nraw: 0000000000000000 0000000000000000 00000000ffffffff 0000000000000000\npage dumped because: VM_BUG_ON_PAGE(pfn & ((1 << order) - 1))\n------------[ cut here ]------------\nkernel BUG at mm/page_alloc.c:778!\n\nCall Trace:\n__free_one_page+0x57c/0x7b0 (unreliable)\nfree_pcppages_bulk+0x1a8/0x2c8\nfree_unref_page_commit+0x3d4/0x4e4\nfree_unref_page+0x458/0x6d0\ninit_cma_reserved_pageblock+0x114/0x198\ncma_init_reserved_areas+0x270/0x3e0\ndo_one_initcall+0x80/0x2f8\nkernel_init_freeable+0x33c/0x530\nkernel_init+0x34/0x26c\nret_from_kernel_user_thread+0x14/0x1c\n    ",
+		"advisory": {
+			"from": "security@suse.de",
+			"severity": "Moderate",
+			"cve": [
+				{
+					"text": "CVE-2024-56677 at SUSE",
+					"href": "https://www.suse.com/security/cve/CVE-2024-56677/",
+					"impact": "medium",
+					"cvss3": "4.7/CVSS:3.1/AV:L/AC:H/PR:L/UI:N/S:U/C:N/I:N/A:H"
+				},
+				{
+					"text": "CVE-2024-56677 at NVD",
+					"href": "https://nvd.nist.gov/vuln/detail/CVE-2024-56677"
+				}
+			],
+			"bugzilla": [
+				{
+					"text": "SUSE bug 1235494",
+					"href": "https://bugzilla.suse.com/1235494"
+				}
+			],
+			"issued": {
+				"date": "2025-02-12"
+			},
+			"updated": {
+				"date": "2025-02-12"
+			},
+			"affected_cpe_list": {
+				"cpe": [
+					"cpe:/o:opensuse:leap:15.6"
+				]
+			}
+		}
+	},
+	"criteria": {
+		"operator": "AND",
+		"criterias": [
+			{
+				"operator": "OR",
+				"criterias": [
+					{
+						"operator": "AND",
+						"criterions": [
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009963590",
+								"comment": "cluster-md-kmp-azure-6.4.0-150600.8.26.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009623277",
+								"comment": "cluster-md-kmp-azure is signed with openSUSE key"
+							}
+						]
+					},
+					{
+						"operator": "AND",
+						"criterions": [
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009963591",
+								"comment": "dlm-kmp-azure-6.4.0-150600.8.26.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009623279",
+								"comment": "dlm-kmp-azure is signed with openSUSE key"
+							}
+						]
+					},
+					{
+						"operator": "AND",
+						"criterions": [
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009963592",
+								"comment": "gfs2-kmp-azure-6.4.0-150600.8.26.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009623281",
+								"comment": "gfs2-kmp-azure is signed with openSUSE key"
+							}
+						]
+					},
+					{
+						"operator": "AND",
+						"criterions": [
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009963481",
+								"comment": "kernel-azure-6.4.0-150600.8.26.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009623283",
+								"comment": "kernel-azure is signed with openSUSE key"
+							}
+						]
+					},
+					{
+						"operator": "AND",
+						"criterions": [
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009963482",
+								"comment": "kernel-azure-devel-6.4.0-150600.8.26.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009623285",
+								"comment": "kernel-azure-devel is signed with openSUSE key"
+							}
+						]
+					},
+					{
+						"operator": "AND",
+						"criterions": [
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009963593",
+								"comment": "kernel-azure-extra-6.4.0-150600.8.26.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009623286",
+								"comment": "kernel-azure-extra is signed with openSUSE key"
+							}
+						]
+					},
+					{
+						"operator": "AND",
+						"criterions": [
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009963594",
+								"comment": "kernel-azure-optional-6.4.0-150600.8.26.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009623427",
+								"comment": "kernel-azure-optional is signed with openSUSE key"
+							}
+						]
+					},
+					{
+						"operator": "AND",
+						"criterions": [
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009963595",
+								"comment": "kernel-azure-vdso-6.4.0-150600.8.26.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009769740",
+								"comment": "kernel-azure-vdso is signed with openSUSE key"
+							}
+						]
+					},
+					{
+						"operator": "AND",
+						"criterions": [
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009963483",
+								"comment": "kernel-devel-azure-6.4.0-150600.8.26.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009623293",
+								"comment": "kernel-devel-azure is signed with openSUSE key"
+							}
+						]
+					},
+					{
+						"operator": "AND",
+						"criterions": [
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009963484",
+								"comment": "kernel-source-azure-6.4.0-150600.8.26.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009623300",
+								"comment": "kernel-source-azure is signed with openSUSE key"
+							}
+						]
+					},
+					{
+						"operator": "AND",
+						"criterions": [
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009963485",
+								"comment": "kernel-syms-azure-6.4.0-150600.8.26.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009623301",
+								"comment": "kernel-syms-azure is signed with openSUSE key"
+							}
+						]
+					},
+					{
+						"operator": "AND",
+						"criterions": [
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009963596",
+								"comment": "kselftests-kmp-azure-6.4.0-150600.8.26.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009623305",
+								"comment": "kselftests-kmp-azure is signed with openSUSE key"
+							}
+						]
+					},
+					{
+						"operator": "AND",
+						"criterions": [
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009963597",
+								"comment": "ocfs2-kmp-azure-6.4.0-150600.8.26.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009623306",
+								"comment": "ocfs2-kmp-azure is signed with openSUSE key"
+							}
+						]
+					},
+					{
+						"operator": "AND",
+						"criterions": [
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009963598",
+								"comment": "reiserfs-kmp-azure-6.4.0-150600.8.26.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009623308",
+								"comment": "reiserfs-kmp-azure is signed with openSUSE key"
+							}
+						]
+					}
+				]
+			}
+		],
+		"criterions": [
+			{
+				"test_ref": "oval:org.opensuse.security:tst:2009864054",
+				"comment": "openSUSE Leap 15.6 is installed"
+			}
+		]
+	}
+}

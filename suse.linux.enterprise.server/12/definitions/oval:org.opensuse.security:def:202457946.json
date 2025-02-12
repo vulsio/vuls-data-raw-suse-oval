@@ -24,6 +24,11 @@
 				"ref_id": "SUSE CVE-2024-57946",
 				"ref_url": "https://www.suse.com/security/cve/CVE-2024-57946",
 				"source": "SUSE CVE"
+			},
+			{
+				"ref_id": "SUSE-SU-2025:0428-1",
+				"ref_url": "https://lists.suse.com/pipermail/sle-security-updates/2025-February/020311.html",
+				"source": "SUSE-SU"
 			}
 		],
 		"description": "\n    In the Linux kernel, the following vulnerability has been resolved:\n\nvirtio-blk: don't keep queue frozen during system suspend\n\nCommit 4ce6e2db00de (\"virtio-blk: Ensure no requests in virtqueues before\ndeleting vqs.\") replaces queue quiesce with queue freeze in virtio-blk's\nPM callbacks. And the motivation is to drain inflight IOs before suspending.\n\nblock layer's queue freeze looks very handy, but it is also easy to cause\ndeadlock, such as, any attempt to call into bio_queue_enter() may run into\ndeadlock if the queue is frozen in current context. There are all kinds\nof ->suspend() called in suspend context, so keeping queue frozen in the\nwhole suspend context isn't one good idea. And Marek reported lockdep\nwarning[1] caused by virtio-blk's freeze queue in virtblk_freeze().\n\n[1] https://lore.kernel.org/linux-block/ca16370e-d646-4eee-b9cc-87277c89c43c@samsung.com/\n\nGiven the motivation is to drain in-flight IOs, it can be done by calling\nfreeze & unfreeze, meantime restore to previous behavior by keeping queue\nquiesced during suspend.\n    ",
@@ -52,7 +57,7 @@
 				"date": "2025-01-23"
 			},
 			"updated": {
-				"date": "2025-01-23"
+				"date": "2025-02-12"
 			},
 			"affected_cpe_list": {
 				"cpe": [

@@ -46,6 +46,11 @@
 				"ref_id": "SUSE-SU-2025:0289-1",
 				"ref_url": "https://lists.suse.com/pipermail/sle-security-updates/2025-January/020239.html",
 				"source": "SUSE-SU"
+			},
+			{
+				"ref_id": "SUSE-SU-2025:0428-1",
+				"ref_url": "https://lists.suse.com/pipermail/sle-security-updates/2025-February/020311.html",
+				"source": "SUSE-SU"
 			}
 		],
 		"description": "\n    In the Linux kernel, the following vulnerability has been resolved:\n\nRDMA/rxe: Remove the direct link to net_device\n\nThe similar patch in siw is in the link:\nhttps://git.kernel.org/rdma/rdma/c/16b87037b48889\n\nThis problem also occurred in RXE. The following analyze this problem.\nIn the following Call Traces:\n\"\nBUG: KASAN: slab-use-after-free in dev_get_flags+0x188/0x1d0 net/core/dev.c:8782\nRead of size 4 at addr ffff8880554640b0 by task kworker/1:4/5295\n\nCPU: 1 UID: 0 PID: 5295 Comm: kworker/1:4 Not tainted\n6.12.0-rc3-syzkaller-00399-g9197b73fd7bb #0\nHardware name: Google Compute Engine/Google Compute Engine,\nBIOS Google 09/13/2024\nWorkqueue: infiniband ib_cache_event_task\nCall Trace:\n <TASK>\n __dump_stack lib/dump_stack.c:94 [inline]\n dump_stack_lvl+0x241/0x360 lib/dump_stack.c:120\n print_address_description mm/kasan/report.c:377 [inline]\n print_report+0x169/0x550 mm/kasan/report.c:488\n kasan_report+0x143/0x180 mm/kasan/report.c:601\n dev_get_flags+0x188/0x1d0 net/core/dev.c:8782\n rxe_query_port+0x12d/0x260 drivers/infiniband/sw/rxe/rxe_verbs.c:60\n __ib_query_port drivers/infiniband/core/device.c:2111 [inline]\n ib_query_port+0x168/0x7d0 drivers/infiniband/core/device.c:2143\n ib_cache_update+0x1a9/0xb80 drivers/infiniband/core/cache.c:1494\n ib_cache_event_task+0xf3/0x1e0 drivers/infiniband/core/cache.c:1568\n process_one_work kernel/workqueue.c:3229 [inline]\n process_scheduled_works+0xa65/0x1850 kernel/workqueue.c:3310\n worker_thread+0x870/0xd30 kernel/workqueue.c:3391\n kthread+0x2f2/0x390 kernel/kthread.c:389\n ret_from_fork+0x4d/0x80 arch/x86/kernel/process.c:147\n ret_from_fork_asm+0x1a/0x30 arch/x86/entry/entry_64.S:244\n </TASK>\n\"\n\n1). In the link [1],\n\n\"\n infiniband syz2: set down\n\"\n\nThis means that on 839.350575, the event ib_cache_event_task was sent andi\nqueued in ib_wq.\n\n2). In the link [1],\n\n\"\n team0 (unregistering): Port device team_slave_0 removed\n\"\n\nIt indicates that before 843.251853, the net device should be freed.\n\n3). In the link [1],\n\n\"\n BUG: KASAN: slab-use-after-free in dev_get_flags+0x188/0x1d0\n\"\n\nThis means that on 850.559070, this slab-use-after-free problem occurred.\n\nIn all, on 839.350575, the event ib_cache_event_task was sent and queued\nin ib_wq,\n\nbefore 843.251853, the net device veth was freed.\n\non 850.559070, this event was executed, and the mentioned freed net device\nwas called. Thus, the above call trace occurred.\n\n[1] https://syzkaller.appspot.com/x/log.txt?x=12e7025f980000\n    ",
@@ -74,7 +79,7 @@
 				"date": "2025-01-16"
 			},
 			"updated": {
-				"date": "2025-02-03"
+				"date": "2025-02-12"
 			},
 			"affected_cpe_list": {
 				"cpe": [
@@ -325,45 +330,6 @@
 						"operator": "OR",
 						"criterions": [
 							{
-								"test_ref": "oval:org.opensuse.security:tst:2009856172",
-								"comment": "SUSE Linux Enterprise High Performance Computing 15 SP6 is installed"
-							},
-							{
-								"test_ref": "oval:org.opensuse.security:tst:2009856320",
-								"comment": "SUSE Linux Enterprise Module for Public Cloud 15 SP6 is installed"
-							},
-							{
-								"test_ref": "oval:org.opensuse.security:tst:2009856174",
-								"comment": "SUSE Linux Enterprise Server 15 SP6 is installed"
-							},
-							{
-								"test_ref": "oval:org.opensuse.security:tst:2009856175",
-								"comment": "SUSE Linux Enterprise Server for SAP Applications 15 SP6 is installed"
-							}
-						]
-					},
-					{
-						"operator": "OR",
-						"criterions": [
-							{
-								"test_ref": "oval:org.opensuse.security:tst:2009340777",
-								"comment": "kernel-devel-azure is affected"
-							},
-							{
-								"test_ref": "oval:org.opensuse.security:tst:2009340767",
-								"comment": "kernel-source-azure is affected"
-							}
-						]
-					}
-				]
-			},
-			{
-				"operator": "AND",
-				"criterias": [
-					{
-						"operator": "OR",
-						"criterions": [
-							{
 								"test_ref": "oval:org.opensuse.security:tst:2009856171",
 								"comment": "SUSE Linux Enterprise Desktop 15 SP6 is installed"
 							},
@@ -484,6 +450,57 @@
 					{
 						"test_ref": "oval:org.opensuse.security:tst:2009945160",
 						"comment": "SUSE Linux Enterprise Module for Confidential Computing Technical Preview 15 SP6 is installed"
+					}
+				]
+			},
+			{
+				"operator": "AND",
+				"criterias": [
+					{
+						"operator": "OR",
+						"criterions": [
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009856172",
+								"comment": "SUSE Linux Enterprise High Performance Computing 15 SP6 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009856320",
+								"comment": "SUSE Linux Enterprise Module for Public Cloud 15 SP6 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009856174",
+								"comment": "SUSE Linux Enterprise Server 15 SP6 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009856175",
+								"comment": "SUSE Linux Enterprise Server for SAP Applications 15 SP6 is installed"
+							}
+						]
+					},
+					{
+						"operator": "OR",
+						"criterions": [
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009963481",
+								"comment": "kernel-azure-6.4.0-150600.8.26.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009963482",
+								"comment": "kernel-azure-devel-6.4.0-150600.8.26.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009963483",
+								"comment": "kernel-devel-azure-6.4.0-150600.8.26.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009963484",
+								"comment": "kernel-source-azure-6.4.0-150600.8.26.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009963485",
+								"comment": "kernel-syms-azure-6.4.0-150600.8.26.1 is installed"
+							}
+						]
 					}
 				]
 			}

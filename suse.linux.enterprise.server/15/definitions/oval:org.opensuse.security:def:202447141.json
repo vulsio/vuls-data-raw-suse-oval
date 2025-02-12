@@ -50,6 +50,11 @@
 				"ref_id": "SUSE-SU-2025:0289-1",
 				"ref_url": "https://lists.suse.com/pipermail/sle-security-updates/2025-January/020239.html",
 				"source": "SUSE-SU"
+			},
+			{
+				"ref_id": "SUSE-SU-2025:0428-1",
+				"ref_url": "https://lists.suse.com/pipermail/sle-security-updates/2025-February/020311.html",
+				"source": "SUSE-SU"
 			}
 		],
 		"description": "\n    In the Linux kernel, the following vulnerability has been resolved:\n\npinmux: Use sequential access to access desc->pinmux data\n\nWhen two client of the same gpio call pinctrl_select_state() for the\nsame functionality, we are seeing NULL pointer issue while accessing\ndesc->mux_owner.\n\nLet's say two processes A, B executing in pin_request() for the same pin\nand process A updates the desc->mux_usecount but not yet updated the\ndesc->mux_owner while process B see the desc->mux_usecount which got\nupdated by A path and further executes strcmp and while accessing\ndesc->mux_owner it crashes with NULL pointer.\n\nSerialize the access to mux related setting with a mutex lock.\n\n\tcpu0 (process A)\t\t\tcpu1(process B)\n\npinctrl_select_state() {\t\t  pinctrl_select_state() {\n  pin_request() {\t\t\t\tpin_request() {\n  ...\n\t\t\t\t\t\t ....\n    } else {\n         desc->mux_usecount++;\n    \t\t\t\t\t\tdesc->mux_usecount && strcmp(desc->mux_owner, owner)) {\n\n         if (desc->mux_usecount > 1)\n               return 0;\n         desc->mux_owner = owner;\n\n  }\t\t\t\t\t\t}\n    ",
@@ -80,7 +85,7 @@
 				"date": "2025-01-15"
 			},
 			"updated": {
-				"date": "2025-02-03"
+				"date": "2025-02-12"
 			},
 			"affected_cpe_list": {
 				"cpe": [
@@ -330,45 +335,6 @@
 						"operator": "OR",
 						"criterions": [
 							{
-								"test_ref": "oval:org.opensuse.security:tst:2009856172",
-								"comment": "SUSE Linux Enterprise High Performance Computing 15 SP6 is installed"
-							},
-							{
-								"test_ref": "oval:org.opensuse.security:tst:2009856320",
-								"comment": "SUSE Linux Enterprise Module for Public Cloud 15 SP6 is installed"
-							},
-							{
-								"test_ref": "oval:org.opensuse.security:tst:2009856174",
-								"comment": "SUSE Linux Enterprise Server 15 SP6 is installed"
-							},
-							{
-								"test_ref": "oval:org.opensuse.security:tst:2009856175",
-								"comment": "SUSE Linux Enterprise Server for SAP Applications 15 SP6 is installed"
-							}
-						]
-					},
-					{
-						"operator": "OR",
-						"criterions": [
-							{
-								"test_ref": "oval:org.opensuse.security:tst:2009340306",
-								"comment": "kernel-devel-azure is not affected"
-							},
-							{
-								"test_ref": "oval:org.opensuse.security:tst:2009340305",
-								"comment": "kernel-source-azure is not affected"
-							}
-						]
-					}
-				]
-			},
-			{
-				"operator": "AND",
-				"criterias": [
-					{
-						"operator": "OR",
-						"criterions": [
-							{
 								"test_ref": "oval:org.opensuse.security:tst:2009728675",
 								"comment": "kernel-default-livepatch is not affected"
 							},
@@ -474,6 +440,57 @@
 					{
 						"test_ref": "oval:org.opensuse.security:tst:2009945160",
 						"comment": "SUSE Linux Enterprise Module for Confidential Computing Technical Preview 15 SP6 is installed"
+					}
+				]
+			},
+			{
+				"operator": "AND",
+				"criterias": [
+					{
+						"operator": "OR",
+						"criterions": [
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009856172",
+								"comment": "SUSE Linux Enterprise High Performance Computing 15 SP6 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009856320",
+								"comment": "SUSE Linux Enterprise Module for Public Cloud 15 SP6 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009856174",
+								"comment": "SUSE Linux Enterprise Server 15 SP6 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009856175",
+								"comment": "SUSE Linux Enterprise Server for SAP Applications 15 SP6 is installed"
+							}
+						]
+					},
+					{
+						"operator": "OR",
+						"criterions": [
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009963481",
+								"comment": "kernel-azure-6.4.0-150600.8.26.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009963482",
+								"comment": "kernel-azure-devel-6.4.0-150600.8.26.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009963483",
+								"comment": "kernel-devel-azure-6.4.0-150600.8.26.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009963484",
+								"comment": "kernel-source-azure-6.4.0-150600.8.26.1 is installed"
+							},
+							{
+								"test_ref": "oval:org.opensuse.security:tst:2009963485",
+								"comment": "kernel-syms-azure-6.4.0-150600.8.26.1 is installed"
+							}
+						]
 					}
 				]
 			}
